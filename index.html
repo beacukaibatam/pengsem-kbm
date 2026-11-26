@@ -1759,18 +1759,26 @@
                 height: 100vh !important;
                 max-height: 100vh !important;
                 overflow: hidden !important;
+                width: 100% !important;
             }
             body.landing-page .left-col {
-                flex: 0 0 clamp(380px, 42vw, 470px) !important;
-                width: clamp(380px, 42vw, 470px) !important;
+                flex: 0 0 50% !important;
+                width: 50% !important;
                 max-width: 50% !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
                 overflow-y: auto !important;
                 scrollbar-width: thin;
+                padding: clamp(24px, 4vh, 44px) clamp(28px, 4.5vw, 60px) !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                box-sizing: border-box !important;
             }
             body.landing-page .right-col {
-                flex: 1 1 auto !important;
+                flex: 0 0 50% !important;
+                width: 50% !important;
+                max-width: 50% !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
                 overflow: hidden !important;
@@ -1778,6 +1786,8 @@
                 align-items: center !important;
                 justify-content: center !important;
                 background: #F8FAFC !important;
+                padding: clamp(16px, 3vh, 36px) !important;
+                box-sizing: border-box !important;
             }
             .mobile-minimal-collage {
                 display: none !important;
@@ -1855,11 +1865,13 @@
             min-height: 100vh;
         }
 
-        /* ================= LEFT SIDE (PROPORSIONAL, ELEGAN & BEBAS GEPENG) ================= */
+        /* ================= LEFT SIDE (50% WIDTH - FORM & AUTH) ================= */
         .left-col {
-            flex: 0 0 46%;
+            flex: 0 0 50%;
+            width: 50%;
+            max-width: 50%;
             background: #FFFFFF;
-            padding: clamp(18px, 2.8vh, 32px) clamp(24px, 3.6vw, 46px);
+            padding: clamp(20px, 3.5vh, 40px) clamp(24px, 4vw, 52px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -1896,8 +1908,10 @@
             margin-top: 0;
             margin-bottom: auto;
             padding: 0;
-            max-width: 460px;
+            max-width: 480px;
             width: 100%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Branding Utama: LAYANAN PENGSEM KBM & BEA CUKAI BATAM */
@@ -1942,14 +1956,14 @@
         .tab-switcher {
             display: flex;
             border-bottom: 2px solid #E2E8F0;
-            margin-bottom: clamp(12px, 1.8vh, 18px);
-            gap: clamp(16px, 2.2vw, 24px);
+            margin-bottom: clamp(16px, 2.2vh, 22px);
+            gap: clamp(18px, 2.5vw, 28px);
         }
         .tab-btn {
             background: none;
             border: none;
-            padding: 6px 0 8px 0;
-            font-size: clamp(0.88rem, 1.05vw, 0.95rem);
+            padding: 8px 0 10px 0;
+            font-size: clamp(0.90rem, 1.1vw, 0.98rem);
             font-weight: 700;
             color: #94A3B8;
             cursor: pointer;
@@ -1970,20 +1984,30 @@
             border-radius: 3px 3px 0 0;
         }
 
-        /* Input Controls (Proporsional & Nyaman Diakses) */
+        /* Input Controls (Proporsional, Lega & Nyaman Diakses) */
         .landing-form-group {
-            margin-bottom: clamp(8px, 1.3vh, 13px);
+            margin-bottom: clamp(14px, 2.0vh, 18px);
         }
         .landing-form-label {
             display: block;
-            font-size: clamp(0.72rem, 0.85vw, 0.78rem);
+            font-size: clamp(0.76rem, 0.88vw, 0.82rem);
             font-weight: 700;
-            color: #334155;
-            margin-bottom: 4px;
+            color: #1E293B;
+            margin-bottom: 7px;
         }
         .landing-form-input {
             width: 100%;
-            padding: clamp(8px, 1.1vh, 10px) 13px;
+            padding: clamp(10px, 1.4vh, 12px) 14px;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 8px;
+            font-size: clamp(0.85rem, 0.98vw, 0.90rem);
+            font-weight: 600;
+            color: #0F172A;
+            transition: border-color 0.2s;
+            outline: none;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
             border: 1.5px solid #CBD5E1;
             border-radius: 8px;
             font-size: clamp(0.82rem, 0.95vw, 0.88rem);
@@ -2082,15 +2106,17 @@
             padding-top: clamp(8px, 1.2vh, 12px);
         }
 
-        /* ================= RIGHT SIDE (56% WIDTH - HERO COLLAGE) ================= */
+        /* ================= RIGHT SIDE (50% WIDTH - HERO COLLAGE) ================= */
         .right-col {
-            flex: 0 0 56%;
+            flex: 0 0 50%;
+            width: 50%;
+            max-width: 50%;
             background: #F8FAFC;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: clamp(14px, 2.5vh, 32px);
+            padding: clamp(16px, 3vh, 36px);
             overflow: hidden;
             box-sizing: border-box;
         }
@@ -2102,17 +2128,17 @@
             grid-template-rows: repeat(3, 195px);
             gap: 16px;
             transform-origin: center center;
-            transform: scale(min(0.96, calc((100vw - 480px) / 630), calc((100vh - 60px) / 630)));
+            transform: scale(min(0.92, calc((50vw - 40px) / 620), calc((100vh - 60px) / 620)));
             transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @media (max-height: 780px) and (min-width: 881px) {
             .collage-container {
-                transform: scale(min(0.82, calc((100vw - 480px) / 630)));
+                transform: scale(min(0.80, calc((50vw - 40px) / 620), calc((100vh - 50px) / 620)));
             }
         }
         @media (max-height: 680px) and (min-width: 881px) {
             .collage-container {
-                transform: scale(min(0.70, calc((100vw - 480px) / 630)));
+                transform: scale(min(0.68, calc((50vw - 40px) / 620), calc((100vh - 40px) / 620)));
             }
         }
 
