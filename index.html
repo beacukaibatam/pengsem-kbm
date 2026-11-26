@@ -8259,8 +8259,8 @@
             // Petugas pada role tertentu HANYA dapat melihat data permohonan pada tahapannya
             let roleFiltered = allPermohonan;
             if (role === 'pemohon') {
-                const userNik = currentAuthSession.nik || '';
-                const userPhone = (currentAuthSession.phone || '').replace(/^0/, '');
+                const userNik = (currentAuthSession.user && currentAuthSession.user.nik) || '';
+                const userPhone = ((currentAuthSession.user && currentAuthSession.user.phone) || '').replace(/^0/, '');
                 roleFiltered = allPermohonan.filter(p => {
                     return (p.nik && userNik && p.nik === userNik) ||
                            (p.no_wa_pemohon && userPhone && p.no_wa_pemohon.includes(userPhone)) ||
