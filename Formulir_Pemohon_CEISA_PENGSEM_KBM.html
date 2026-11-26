@@ -5777,9 +5777,43 @@
                 sampleCornerVar(sw - cornerSize, sh - cornerSize);
 
                 const bgStd = Math.sqrt(bgVar / bgCount);
+                const bgLum = 0.299 * bgR + 0.587 * bgG + 0.114 * bgB;
                 const distThresh = Math.max(22, bgStd * 1.35);
 
-                // 2. Scan energi tepi & perbedaan warna terhadap background
+                // 1b. Deteksi latar BERTEKSTUR/tidak rata (karpet, kain, meja bercorak, dsb).
+                // Latar semacam ini membuat deteksi tepi (Sobel) & jarak-warna di atas jadi tidak
+                // akurat (motif teksturnya sendiri terbaca sebagai "tepi dokumen"), sehingga kotak
+                // dokumen yang terdeteksi bisa melebar ke hampir seluruh frame. Kartu identitas
+                // (KTP/NPWP/dsb.) hampir selalu jauh lebih TERANG daripada latar bertekstur semacam
+                // itu, jadi dipakai strategi cadangan berbasis kecerahan (ambang Otsu) yang terbukti
+                // jauh lebih tahan terhadap tekstur latar dibanding deteksi tepi/warna di atas.
+                const useBrightnessFallback = (bgStd > 12) && (bgLum < 170);
+                let brightThresh = 255;
+                if (useBrightnessFallback) {
+                    const histogram = new Uint32Array(256);
+                    for (let i = 0; i < d.length; i += 4) {
+                        const lum = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+                        histogram[lum]++;
+                    }
+                    const totalPixels = sw * sh;
+                    let sumAll = 0;
+                    for (let i = 0; i < 256; i++) sumAll += i * histogram[i];
+                    let sumB = 0, wB = 0, varMax = -1, otsuT = 127;
+                    for (let t = 0; t < 256; t++) {
+                        wB += histogram[t];
+                        if (wB === 0) continue;
+                        const wF = totalPixels - wB;
+                        if (wF === 0) break;
+                        sumB += t * histogram[t];
+                        const mB = sumB / wB, mF = (sumAll - sumB) / wF;
+                        const varBetween = wB * wF * (mB - mF) * (mB - mF);
+                        if (varBetween > varMax) { varMax = varBetween; otsuT = t; }
+                    }
+                    brightThresh = otsuT;
+                    console.log(`[Auto-Crop] Latar bertekstur terdeteksi (bgStd=${bgStd.toFixed(1)}, bgLum=${bgLum.toFixed(0)}) — pakai mode kecerahan, ambang Otsu=${brightThresh}`);
+                }
+
+                // 2. Scan energi tepi & perbedaan warna terhadap background (atau kecerahan jika mode cadangan aktif)
                 const rowScores = new Float32Array(sh);
                 const colScores = new Float32Array(sw);
 
@@ -5788,20 +5822,26 @@
                         const idx = (y * sw + x) * 4;
                         const r = d[idx], g = d[idx + 1], b = d[idx + 2];
 
-                        // Jarak warna dari background
-                        const dist = Math.sqrt((r - bgR)**2 + (g - bgG)**2 + (b - bgB)**2);
+                        let isDocPixel;
+                        if (useBrightnessFallback) {
+                            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                            isDocPixel = lum > brightThresh;
+                        } else {
+                            // Jarak warna dari background
+                            const dist = Math.sqrt((r - bgR)**2 + (g - bgG)**2 + (b - bgB)**2);
 
-                        // Gradient tepi (Sobel filter sederhana)
-                        const idxL = (y * sw + (x - 1)) * 4;
-                        const idxR = (y * sw + (x + 1)) * 4;
-                        const idxU = ((y - 1) * sw + x) * 4;
-                        const idxD = ((y + 1) * sw + x) * 4;
-                        const gradX = Math.abs(d[idxR] - d[idxL]) + Math.abs(d[idxR+1] - d[idxL+1]) + Math.abs(d[idxR+2] - d[idxL+2]);
-                        const gradY = Math.abs(d[idxD] - d[idxU]) + Math.abs(d[idxD+1] - d[idxU+1]) + Math.abs(d[idxD+2] - d[idxU+2]);
-                        const edgeScore = (gradX + gradY) / 3;
+                            // Gradient tepi (Sobel filter sederhana)
+                            const idxL = (y * sw + (x - 1)) * 4;
+                            const idxR = (y * sw + (x + 1)) * 4;
+                            const idxU = ((y - 1) * sw + x) * 4;
+                            const idxD = ((y + 1) * sw + x) * 4;
+                            const gradX = Math.abs(d[idxR] - d[idxL]) + Math.abs(d[idxR+1] - d[idxL+1]) + Math.abs(d[idxR+2] - d[idxL+2]);
+                            const gradY = Math.abs(d[idxD] - d[idxU]) + Math.abs(d[idxD+1] - d[idxU+1]) + Math.abs(d[idxD+2] - d[idxU+2]);
+                            const edgeScore = (gradX + gradY) / 3;
 
-                        // Pixel adalah bagian dari dokumen jika berbeda dari background atau memiliki tepi kuat
-                        const isDocPixel = (dist > distThresh) || (edgeScore > 35);
+                            // Pixel adalah bagian dari dokumen jika berbeda dari background atau memiliki tepi kuat
+                            isDocPixel = (dist > distThresh) || (edgeScore > 35);
+                        }
                         if (isDocPixel) {
                             rowScores[y] += 1;
                             colScores[x] += 1;
