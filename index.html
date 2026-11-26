@@ -2669,10 +2669,10 @@
                     <div id="contentMainRegister" style="display:none;">
                         <!-- Step 1: Form Registrasi -->
                         <div id="stepLandingRegForm" style="display:block;">
-                            <!-- Nama Lengkap Sesuai KTP -->
+                            <!-- Nama Lengkap Sesuai KTP (Otomatis Huruf Kapital Semua) -->
                             <div class="landing-form-group">
                                 <label class="landing-form-label" for="landingRegNama">Nama Lengkap (Sesuai KTP):</label>
-                                <input type="text" class="landing-form-input" id="landingRegNama" value="" autocomplete="name">
+                                <input type="text" class="landing-form-input" id="landingRegNama" value="" autocomplete="name" style="text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();" placeholder="CONTOH: BUDI SANTOSO">
                             </div>
 
                             <!-- Nomor WhatsApp Aktif -->
@@ -3467,7 +3467,7 @@
                             Nama Lengkap Sesuai KTP
                             <span class="tag-auto" id="tagNamaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
                         </label>
-                        <input type="text" id="pemohon_nama" class="form-input" placeholder="Nama lengkap pemohon" oninput="syncValues()">
+                        <input type="text" id="pemohon_nama" class="form-input" placeholder="Nama lengkap pemohon" style="text-transform:uppercase;" oninput="this.value = this.value.toUpperCase(); syncValues();">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="pemohon_npwp">
@@ -9231,7 +9231,7 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
         let landingRegPendingPassword = '';
 
         async function submitLandingRegisterOtp() {
-            const nama = (document.getElementById('landingRegNama')?.value || '').trim();
+            const nama = (document.getElementById('landingRegNama')?.value || '').trim().toUpperCase();
             let rawPhone = (document.getElementById('landingRegPhone')?.value || '').trim();
             const email = (document.getElementById('landingRegEmail')?.value || '').trim().toLowerCase();
             const password = (document.getElementById('landingRegPassword')?.value || '').trim();
