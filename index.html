@@ -5276,10 +5276,9 @@
             if (source === 'camera') {
                 const inp = document.getElementById('sourcePickerCamera');
                 if (inp) { inp.value = ''; inp.click(); }
-            } else if (source === 'gallery') {
-                const inp = document.getElementById('sourcePickerGallery');
-                if (inp) { inp.value = ''; inp.click(); }
             } else if (source === 'file') {
+                // Galeri, File Manager, dan cloud storage (Google Drive, dll) semuanya sudah
+                // ditawarkan bawaan oleh pemilih berkas HP sendiri lewat satu input ini.
                 const inp = document.getElementById('sourcePickerFile');
                 if (inp) { inp.value = ''; inp.click(); }
             }
@@ -9892,30 +9891,7 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
                     </svg>
                 </button>
 
-                <!-- 2. OPSI GALERI -->
-                <button type="button" class="upload-source-btn" onclick="triggerSourceUpload('gallery')">
-                    <div class="upload-source-icon-wrap" style="background:#F0FDF4; color:#16A34A;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                            <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                    </div>
-                    <div style="text-align:left; flex:1;">
-                        <div style="font-size:0.92rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            Galeri
-                            <span style="font-size:0.65rem; background:#EFF6FF; color:#1D4ED8; padding:2px 7px; border-radius:12px; font-weight:700;">Album Foto</span>
-                        </div>
-                        <div style="font-size:0.75rem; color:#64748B; margin-top:2px; line-height:1.35;">
-                            Pilih foto dokumen yang sudah tersimpan di album foto perangkat Anda.
-                        </div>
-                    </div>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-
-                <!-- 3. OPSI FILE / PDF -->
+                <!-- 2. OPSI PILIH DARI PERANGKAT (Galeri/File/Cloud digabung - pemilih bawaan HP sudah menyediakan semua opsi ini sekaligus) -->
                 <button type="button" class="upload-source-btn" onclick="triggerSourceUpload('file')">
                     <div class="upload-source-icon-wrap" style="background:#FEF3C7; color:#D97706;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -9928,11 +9904,11 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
                     </div>
                     <div style="text-align:left; flex:1;">
                         <div style="font-size:0.92rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            File Dokumen
-                            <span style="font-size:0.65rem; background:#FEF2F2; color:#DC2626; padding:2px 7px; border-radius:12px; font-weight:700;">PDF / Scan</span>
+                            Pilih dari Perangkat
+                            <span style="font-size:0.65rem; background:#FEF2F2; color:#DC2626; padding:2px 7px; border-radius:12px; font-weight:700;">Galeri / File / PDF</span>
                         </div>
                         <div style="font-size:0.75rem; color:#64748B; margin-top:2px; line-height:1.35;">
-                            Pilih dokumen berkas pindaian dalam format PDF atau gambar dari pengelola berkas.
+                            Pilih foto atau berkas PDF dari Galeri, Berkas, atau penyimpanan cloud (Google Drive, dll).
                         </div>
                     </div>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -9960,9 +9936,8 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
         </div>
     </div>
 
-    <!-- Hidden Dedicated Inputs untuk 3 Pilihan Unggah -->
+    <!-- Hidden Dedicated Inputs untuk 2 Pilihan Unggah (Kamera langsung / Pilih dari Perangkat) -->
     <input type="file" id="sourcePickerCamera" accept="image/*" capture="environment" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
-    <input type="file" id="sourcePickerGallery" accept="image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
     <input type="file" id="sourcePickerFile" accept="application/pdf,.pdf,image/jpeg,image/png,image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
     <!-- ================= FLOATING ACTION BUTTON WHATSAPP (CLIENT COORDINATOR) ================= -->
     <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="fab-wa-clean" title="Hubungi Client Coordinator Bea Cukai Batam (0851-5814-8448)">
