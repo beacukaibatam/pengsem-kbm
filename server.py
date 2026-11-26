@@ -948,6 +948,23 @@ def save_db_users(data):
         print('[!] Error syncing users to SQLite:', e)
     return True
 
+def repair_sqlite_users_from_json_once():
+    """Perbaikan sekali-jalan saat startup: re-sinkronkan db_users.json ke SQLite.
+    Menambal akun yang sempat dibuat selagi bug regresi save_db_users() aktif
+    (lihat catatan di atas) - akun itu ada di JSON tapi hilang dari SQLite,
+    sehingga pemiliknya tidak bisa login meski registrasi sempat "berhasil"."""
+    try:
+        if os.path.exists(DB_USERS_PATH):
+            with open(DB_USERS_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            for u in data.get('pemohon', []):
+                database.save_or_update_user(u)
+            for u in data.get('pegawai', []):
+                database.save_or_update_user(u)
+            print('[+] Perbaikan startup: akun di db_users.json disinkronkan ulang ke SQLite.')
+    except Exception as e:
+        print('[!] Gagal menjalankan perbaikan startup sinkronisasi user:', e)
+
 def _strip_password(user_dict):
     """Salinan dict user tanpa field 'password' — dipakai setiap kali data user dikirim ke client (JSON response)."""
     if not isinstance(user_dict, dict):
@@ -2828,6 +2845,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "Endpoint not found")
 
 if __name__ == '__main__':
+    repair_sqlite_users_from_json_once()
     lan_ip = get_lan_ip()
     access_url, qr_img_path = generate_access_qr(lan_ip, PORT)
     
