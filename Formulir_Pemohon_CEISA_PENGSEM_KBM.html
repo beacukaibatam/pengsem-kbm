@@ -7290,11 +7290,11 @@
             const body = document.getElementById('gateQrResultBody');
             body.innerHTML = `
                 <div style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:8px; padding:14px; font-size:0.84rem; line-height:1.7;">
-                    <div><strong>Nama Pemohon:</strong> ${item.nama_pemohon || '-'}</div>
-                    <div><strong>Nomor Polisi:</strong> ${item.nopol || '-'}</div>
-                    <div><strong>Merek / Tipe:</strong> ${item.merek_tipe || '-'}</div>
-                    <div><strong>Nomor SPPB:</strong> ${item.no_sppb || '-'}</div>
-                    <div><strong>Pelabuhan Tujuan:</strong> ${item.pelabuhan_tujuan || '-'}</div>
+                    <div><strong>Nama Pemohon:</strong> ${escapeHtml(item.nama_pemohon || '-')}</div>
+                    <div><strong>Nomor Polisi:</strong> ${escapeHtml(item.nopol || '-')}</div>
+                    <div><strong>Merek / Tipe:</strong> ${escapeHtml(item.merek_tipe || '-')}</div>
+                    <div><strong>Nomor SPPB:</strong> ${escapeHtml(item.no_sppb || '-')}</div>
+                    <div><strong>Pelabuhan Tujuan:</strong> ${escapeHtml(item.pelabuhan_tujuan || '-')}</div>
                 </div>
                 <div style="font-size:0.76rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:8px 10px; margin-top:10px;">
                     ⚠️ Cocokkan data di atas dengan fisik kendaraan &amp; dokumen SPPB sebelum konfirmasi keberangkatan.
@@ -8733,8 +8733,8 @@
                         Verifikasi berkas pemohon telah lengkap. Sistem akan otomatis merekam surat masuk ke Nadine Kemenkeu dan meneruskannya ke Seksi Fasilitas.
                     </div>
                     <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; padding:10px; margin-bottom:12px; font-size:0.76rem;">
-                        <div><strong>Pengirim Eksternal:</strong> ${item.nama_pemohon}</div>
-                        <div style="margin-top:3px;"><strong>Perihal:</strong> Permohonan Pengeluaran Sementara Kendaraan Bermotor (${item.nopol})</div>
+                        <div><strong>Pengirim Eksternal:</strong> ${escapeHtml(item.nama_pemohon)}</div>
+                        <div style="margin-top:3px;"><strong>Perihal:</strong> Permohonan Pengeluaran Sementara Kendaraan Bermotor (${escapeHtml(item.nopol)})</div>
                         <div style="margin-top:3px;"><strong>Tujuan Nadine:</strong> Kepala Seksi Pelayanan Kepabeanan dan Cukai / Fasilitas</div>
                     </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiNadine('${item.id}')" style="background:#005FAC; padding:10px 14px; font-size:0.84rem;">
