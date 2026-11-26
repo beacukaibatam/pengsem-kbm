@@ -3493,7 +3493,7 @@
                         <span style="font-size:0.62rem; font-weight:800; background:#FDE68A; color:#78350F; padding:2px 7px; border-radius:10px;">PERURI / POS INDONESIA</span>
                     </div>
                     <p style="font-size:0.72rem; color:#78350F; margin:2px 0 0 0; line-height:1.35;">
-                        Pada tahap akhir, unduh draf PDF Surat Permohonan &amp; Surat Pernyataan, bubuhkan <strong>e-meterai asli Rp 10.000</strong> melalui distributor resmi (PERURI / Pos Indonesia / e-meterai.co.id), lalu unggah kembali dokumen bermeterai asli tersebut sebelum mengirim permohonan.
+                        Pada tahap akhir, unduh draf PDF Surat Permohonan &amp; Surat Pernyataan, bubuhkan <strong>e-meterai asli Rp 10.000</strong> melalui distributor resmi (PERURI / Pos Indonesia / e-meterai.co.id), lalu unggah kembali dokumen bermeterai asli tersebut sebelum mengirim permohonan. <strong>Prinsip Paperless:</strong> Seluruh berkas awal cukup diunggah secara digital (tanpa fotokopi fisik); berkas asli (KTP, NPWP, BPKB/Surat Leasing, STNK, dan Surat Jalan Polda) cukup dibawa saat hadir Pemeriksaan Fisik setelah menerima SPF.
                     </p>
                 </div>
             </div>
@@ -8604,14 +8604,17 @@
                 // dibutuhkan untuk memvalidasi kesesuaian fisik barang terhadap seluruh
                 // riwayat dokumennya (jaminan, SKEP, dst), bukan hanya tahap pemeriksaannya.
                 roleFiltered = allPermohonan;
-            } else if (role === 'frontdesk' || role === 'loket') {
-                // Frontdesk / Loket: Fokus berkas baru & rekam Nadine
+            } else if (role === 'frontdesk') {
+                // Frontdesk: Fokus berkas baru & rekam Nadine
                 roleFiltered = allPermohonan.filter(p => p.status === 'FRONTDESK_NADINE' || p.status === 'BERKAS_LENGKAP');
+            } else if (role === 'loket') {
+                // Petugas Loket: Berkas awal & antrean Verifikasi 3 Bundel (LOKET_VERIFIKASI) pasca Jaminan terverifikasi
+                roleFiltered = allPermohonan.filter(p => p.status === 'LOKET_VERIFIKASI' || p.status === 'FRONTDESK_NADINE' || p.status === 'BERKAS_LENGKAP');
             } else if (role === 'fasilitas') {
                 // Seksi Fasilitas: Fokus penelitian berkas & penerbitan SKEP / Naskah S
                 roleFiltered = allPermohonan.filter(p => p.status === 'VERIFIKASI_FASILITAS');
             } else if (role === 'jaminan') {
-                // Seksi Perbendaharaan: Fokus penerbitan kode billing Simponi PPN 11% & dokumen surat pemohon
+                // Petugas Jaminan: Unggah Billing dari portal eksternal & verifikasi bukti bayar pemohon
                 roleFiltered = allPermohonan.filter(p => p.status === 'LOKET_JAMINAN');
             } else if (role === 'gate') {
                 // Gate Pelabuhan: Fokus validasi gate out keberangkatan Roro Batam
@@ -8646,7 +8649,10 @@
                 } else if (p.status === 'VERIFIKASI_FASILITAS') {
                     badgeHtml = '<span style="background:#EFF6FF; color:#005FAC; border:1px solid #BFDBFE; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg> 2. Penerbitan Persetujuan (SKEP)</span>';
                 } else if (p.status === 'LOKET_JAMINAN') {
-                    badgeHtml = '<span style="background:#F5F3FF; color:#7C3AED; border:1px solid #DDD6FE; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg> 3. Penyerahan Jaminan PPN</span>';
+                    const jamSub = p.jaminan_status === 'MENUNGGU_VERIFIKASI_JAMINAN' ? ' (Cek Bukti Bayar)' : (p.jaminan_status === 'MENUNGGU_BAYAR_PEMOHON' ? ' (Menunggu Bayar)' : (p.jaminan_status === 'DITOLAK_UNGGAH_ULANG' ? ' (Unggah Ulang)' : ''));
+                    badgeHtml = '<span style="background:#F5F3FF; color:#7C3AED; border:1px solid #DDD6FE; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg> 3. Tahap Jaminan' + jamSub + '</span>';
+                } else if (p.status === 'LOKET_VERIFIKASI') {
+                    badgeHtml = '<span style="background:#FFFBEB; color:#B45309; border:1px solid #FCD34D; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">4. Verifikasi Loket (3 Bundel)</span>';
                 } else if (p.status === 'PPFTZ_CEK_FISIK') {
                     badgeHtml = '<span style="background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> 4. PPFTZ &amp; Cek Fisik Lapangan</span>';
                 } else if (p.status === 'PEMERIKSA_DOKUMEN') {
@@ -8715,14 +8721,15 @@
             if (document.getElementById('dNoPpftz')) document.getElementById('dNoPpftz').innerText = item.no_ppftz || '-';
             if (document.getElementById('dNoSppb')) document.getElementById('dNoSppb').innerText = item.no_sppb || '-';
 
-            // Render Stepper Pelacak Alur
+            // Render Stepper Pelacak Alur (7 Tahap Operasional Digital Bea Cukai Batam)
             const stagesOrder = [
-                { id: 'FRONTDESK_NADINE', num: '1', title: 'Unggah Permohonan Ke Nadine', desc: 'Perekaman naskah dinas surat masuk Nadine' },
-                { id: 'VERIFIKASI_FASILITAS', num: '2', title: 'Verifikasi Seksi Fasilitas', desc: 'Penelitian berkas & penerbitan SKEP/Naskah S' },
-                { id: 'LOKET_JAMINAN', num: '3', title: 'Loket Jaminan (Perbendaharaan)', desc: 'Penerbitan billing Simponi & surat pemohon (KEP)' },
-                { id: 'PPFTZ_CEK_FISIK', num: '4', title: 'PPFTZ & Cek Fisik Lapangan', desc: 'Pemeriksaan fisik kendaraan & rekam LHP foto' },
-                { id: 'PEMERIKSA_DOKUMEN', num: '5', title: 'Pemeriksa Dokumen (PFPD)', desc: 'Penelitian hasil LHP fisik & penetapan SPPB' },
-                { id: 'SPPB_GATE_OUT', num: '6', title: 'SPPB & Gate Pelabuhan', desc: 'Validasi fisik keberangkatan di gate pelabuhan' }
+                { id: 'FRONTDESK_NADINE', num: '1', title: 'Unggah Permohonan Ke Nadine', desc: 'Perekaman naskah dinas surat masuk Nadine (paperless)' },
+                { id: 'VERIFIKASI_FASILITAS', num: '2', title: 'Verifikasi Seksi Fasilitas', desc: 'Penelitian berkas digital & penerbitan SKEP' },
+                { id: 'LOKET_JAMINAN', num: '3', title: 'Tahap Jaminan (2 Arah)', desc: 'Unggah Billing Jaminan → Bayar & Unggah Bukti → Verifikasi' },
+                { id: 'LOKET_VERIFIKASI', num: '4', title: 'Verifikasi Loket (3 Bundel)', desc: 'Cek Permohonan, SKEP & Jaminan → Terbit PPFTZ, SPF & IP' },
+                { id: 'PPFTZ_CEK_FISIK', num: '5', title: 'Pemeriksaan Fisik Barang', desc: 'Verifikasi 5 berkas asli, foto lapangan, BAP & LHP' },
+                { id: 'PEMERIKSA_DOKUMEN', num: '6', title: 'Pemeriksa Dokumen (PFPD)', desc: 'Penelitian LHP & BAP → Penerbitan SPPB (+QR)' },
+                { id: 'SPPB_GATE_OUT', num: '7', title: 'SPPB & Gate Pelabuhan', desc: 'Validasi QR SPPB keberangkatan di gate pelabuhan' }
             ];
 
             const currentIdx = stagesOrder.findIndex(s => s.id === item.status);
@@ -8768,10 +8775,44 @@
         // berkas (bukan berdasarkan wewenang aksi tahap), supaya adminutama & petugas
         // pemeriksa barang/dokumen (yang akses semua tahap) tetap bisa mencetak ulang
         // dokumen dari tahap manapun untuk keperluan validasi kesesuaian.
+        function downloadDataUrlFile(dataUrl, filename) {
+            if (!dataUrl) { alert('Berkas belum tersedia.'); return; }
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename || 'dokumen';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function previewPermohonanFile(id, fieldName, fallbackName) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item || !item[fieldName]) {
+                alert('Berkas tidak ditemukan pada permohonan ini.');
+                return;
+            }
+            downloadDataUrlFile(item[fieldName], fallbackName || (id + '_' + fieldName));
+        }
+
         function buildDokumenCetakHtml(item) {
             const buttons = [];
+            if (item.dokumen_bermeterai) {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="previewPermohonanFile('${item.id}', 'dokumen_bermeterai', '${escapeHtml(item.dokumen_bermeterai_nama || 'Dokumen_Bermeterai.pdf')}')">📥 Permohonan Bermeterai</button>`);
+            }
+            if (item.billing_file_data_url) {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px; border-color:#7C3AED; color:#6D28D9;" onclick="previewPermohonanFile('${item.id}', 'billing_file_data_url', '${escapeHtml(item.billing_file_name || 'Billing_Jaminan.pdf')}')">📥 Billing Jaminan</button>`);
+            }
+            if (item.bukti_bayar_data_url) {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px; border-color:#059669; color:#047857;" onclick="previewPermohonanFile('${item.id}', 'bukti_bayar_data_url', '${escapeHtml(item.bukti_bayar_name || 'Bukti_Bayar_Jaminan.pdf')}')">📥 Bukti Bayar</button>`);
+            }
             if (item.no_ppftz) {
-                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="generatePPFTZ01PDF('${item.id}')">🖨️ PPFTZ-01</button>`);
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="generatePPFTZ01PDF('${item.id}')">🖨️ PPFTZ-01 / Proforma 03</button>`);
+            }
+            if (item.no_spf) {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px; border-color:#0284C7; color:#0369A1;" onclick="generateSPFPDF('${item.id}')">🖨️ SPF (Pemberitahuan Cek Fisik)</button>`);
+            }
+            if (item.no_ip && currentAuthSession && currentAuthSession.role !== 'pemohon') {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px; border-color:#B45309; color:#92400E;" onclick="generateIPPDF('${item.id}')">🖨️ IP (Instruksi Pemeriksaan)</button>`);
             }
             if (item.lhp_data) {
                 buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="generateLHPPDF('${item.id}')">🖨️ LHP</button>`);
@@ -8783,10 +8824,80 @@
             if (buttons.length === 0) return '';
             return `
                 <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:10px 12px; margin-bottom:12px;">
-                    <div style="font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:6px;">📄 Dokumen Resmi Tersedia untuk Dicetak:</div>
+                    <div style="font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:6px;">📄 Dokumen Resmi Tersedia untuk Diunduh / Dicetak:</div>
                     <div style="display:flex; flex-wrap:wrap; gap:6px;">${buttons.join('')}</div>
                 </div>
             `;
+        }
+
+        function generateSPFPDF(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item || !window.jspdf) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            _kopSuratPdf(doc);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SURAT PEMBERITAHUAN PEMERIKSAAN FISIK (SPF)', 105, 44, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            let y = 54;
+            const row = (label, val) => { doc.text(label, 20, y); doc.text(': ' + (val || '-'), 78, y); y += 7; };
+            row('Nomor SPF', item.no_spf);
+            row('Tanggal Terbit', item.tgl_spf);
+            row('Nomor PPFTZ-01', item.no_ppftz);
+            row('Proforma PPFTZ-03', item.no_proforma_ppftz03);
+            row('Nama Pemohon', item.nama_pemohon);
+            row('Nomor Polisi / Kendaraan', `${item.nopol || '-'} (${item.merek_tipe || '-'})`);
+            row('Pejabat Pemeriksa Barang', item.pemeriksa_barang_nama || 'Pejabat Pemeriksa Barang');
+            y += 4;
+            doc.setFont('helvetica', 'bold');
+            doc.text('KEWAJIBAN PEMOHON SAAT PEMERIKSAAN FISIK:', 20, y); y += 7;
+            doc.setFont('helvetica', 'normal');
+            const items = [
+                '1. KTP Asli Pemohon',
+                '2. NPWP Asli',
+                '3. BPKB Asli / Surat Keterangan Asli dari Leasing',
+                '4. STNK Asli',
+                '5. Surat Jalan Asli dari Polda'
+            ];
+            items.forEach(line => { doc.text(line, 24, y); y += 6; });
+            y += 6;
+            doc.setFontSize(8);
+            const note = doc.splitTextToSize('Pemohon wajib menghadirkan unit kendaraan dan seluruh berkas asli tersebut di atas kepada Pejabat Pemeriksa Barang KPU Bea dan Cukai Tipe B Batam untuk pencocokan fisik dan penerbitan LHP & BAP.', 170);
+            doc.text(note, 20, y);
+            const spfFile = `07b_SPF_${item.nopol || item.id}.pdf`;
+            archiveGeneratedPdfToServer(item.id, '07b_SPF', spfFile, doc);
+            doc.save(spfFile);
+        }
+
+        function generateIPPDF(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item || !window.jspdf) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            _kopSuratPdf(doc);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('INSTRUKSI PEMERIKSAAN (IP)', 105, 44, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            let y = 54;
+            const row = (label, val) => { doc.text(label, 20, y); doc.text(': ' + (val || '-'), 78, y); y += 7; };
+            row('Nomor IP', item.no_ip);
+            row('Tanggal Terbit', item.tgl_ip);
+            row('Dasar PPFTZ-01', item.no_ppftz);
+            row('Proforma PPFTZ-03', item.no_proforma_ppftz03);
+            row('Pemeriksa Barang Ditunjuk', `${item.pemeriksa_barang_nama || '-'} (NIP: ${item.pemeriksa_barang_nip || '-'})`);
+            row('Pemeriksa Dokumen (PFPD)', `${item.pemeriksa_dokumen_nama || '-'} (NIP: ${item.pemeriksa_dokumen_nip || '-'})`);
+            row('Objek Pemeriksaan', `1 unit KBM ${item.merek_tipe || '-'} • Plat ${item.nopol || '-'} a.n. ${item.nama_pemohon || '-'}`);
+            y += 6;
+            doc.setFontSize(8);
+            const txt = doc.splitTextToSize('Diinstruksikan kepada Pejabat Pemeriksa Barang tersebut di atas untuk melaksanakan pemeriksaan fisik kendaraan, mencocokkan 5 berkas asli (KTP, NPWP, BPKB/Leasing, STNK, Surat Jalan Polda), mengambil dokumentasi foto lapangan, serta merekam BAP & LHP.', 170);
+            doc.text(txt, 20, y);
+            const ipFile = `07c_IP_${item.nopol || item.id}.pdf`;
+            archiveGeneratedPdfToServer(item.id, '07c_IP', ipFile, doc);
+            doc.save(ipFile);
         }
 
         function _kopSuratPdf(doc) {
@@ -9022,16 +9133,73 @@
             doc.save(sppbFile);
         }
 
-        // Render Panel Aksi Berdasarkan Wewenang Role Petugas
+        // Render Panel Aksi Berdasarkan Wewenang Role Petugas & Portal Pemohon
         function renderDrawerRbacActionPanel(item) {
             const actionSec = document.getElementById('sectionPegawaiStatusAction');
             if (!actionSec) return;
 
             const role = currentAuthSession ? currentAuthSession.role : 'pemohon';
             
-            // 1. Jika Pemohon: Sembunyikan panel aksi petugas sepenuhnya
+            // 1. TAMPILAN KHUSUS PEMOHON (Unduh Dokumen, Jaminan 2-Arah: Unduh Billing & Unggah Bukti Bayar, Pengingat SPF)
             if (role === 'pemohon') {
-                actionSec.style.display = 'none';
+                let pemohonHtml = buildDokumenCetakHtml(item);
+
+                // Jika di tahap LOKET_JAMINAN dan Petugas Jaminan sudah mengunggah Billing
+                if (item.status === 'LOKET_JAMINAN' && item.billing_file_data_url) {
+                    const jStatus = item.jaminan_status || 'MENUNGGU_BAYAR_PEMOHON';
+                    const tolakBanner = (jStatus === 'DITOLAK_UNGGAH_ULANG' && item.jaminan_alasan_tolak)
+                        ? `<div style="background:#FEF2F2; border:1.5px solid #EF4444; color:#991B1B; padding:10px 12px; border-radius:8px; margin-bottom:10px; font-size:0.76rem;"><strong>⚠️ Bukti Bayar Ditolak Petugas Jaminan:</strong><br>${escapeHtml(item.jaminan_alasan_tolak)}<br>Silakan unggah ulang bukti bayar yang benar di bawah ini.</div>`
+                        : '';
+                    const waitBanner = (jStatus === 'MENUNGGU_VERIFIKASI_JAMINAN')
+                        ? `<div style="background:#FFFBEB; border:1.5px solid #F59E0B; color:#92400E; padding:10px 12px; border-radius:8px; margin-bottom:10px; font-size:0.76rem;"><strong>⏳ Menunggu Verifikasi Petugas Jaminan</strong><br>Bukti bayar Anda (<em>${escapeHtml(item.bukti_bayar_name || 'bukti_bayar')}</em>) telah diterima. Petugas Jaminan sedang memverifikasi pembayaran Anda.</div>`
+                        : '';
+                    pemohonHtml += `
+                        <div style="background:#F5F3FF; border:1.5px solid #C4B5FD; border-radius:10px; padding:14px; margin-top:8px;">
+                            <div style="font-size:0.84rem; font-weight:800; color:#5B21B6; margin-bottom:6px;">💳 Tahap Jaminan: Unduh Billing &amp; Unggah Bukti Bayar</div>
+                            <div style="font-size:0.75rem; color:#4C1D95; margin-bottom:10px; line-height:1.45;">
+                                ${item.kode_billing ? `Kode Billing: <strong>${escapeHtml(item.kode_billing)}</strong>` : 'Billing Jaminan sudah tersedia.'}
+                                ${item.nilai_jaminan ? ` • Nominal: <strong>Rp ${Number(item.nilai_jaminan).toLocaleString('id-ID')}</strong>` : ''}
+                            </div>
+                            ${tolakBanner}
+                            ${waitBanner}
+                            <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; margin-bottom:12px; border-color:#7C3AED; color:#6D28D9; font-weight:800;" onclick="previewPermohonanFile('${item.id}', 'billing_file_data_url', '${escapeHtml(item.billing_file_name || 'Billing_Jaminan.pdf')}')">
+                                📥 Lihat / Unduh Billing Jaminan
+                            </button>
+                            <div style="background:#FFFFFF; border:1px solid #DDD6FE; border-radius:8px; padding:10px;">
+                                <label style="font-size:0.74rem; font-weight:800; color:#1E293B; display:block; margin-bottom:6px;">Unggah Bukti Bayar Billing (PDF / Foto JPG/PNG):</label>
+                                <input type="file" id="pemohonBuktiBayarFile" accept="image/*,application/pdf,.pdf" style="width:100%; font-size:0.76rem; margin-bottom:8px;">
+                                <input type="text" id="pemohonBuktiBayarNote" placeholder="Catatan pembayaran (opsional, misal: Tgl bayar / Bank)" style="width:100%; padding:7px 10px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.76rem; box-sizing:border-box; margin-bottom:8px;">
+                                <button type="button" class="landing-btn-submit" id="btnPemohonKirimBukti" onclick="eksekusiPemohonUnggahBuktiBayar('${item.id}')" style="background:#7C3AED; padding:9px 12px; font-size:0.80rem;">
+                                    ✓ Kirim Bukti Bayar ke Petugas Jaminan
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.status === 'LOKET_JAMINAN') {
+                    pemohonHtml += `
+                        <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:12px; font-size:0.76rem; color:#475569;">
+                            ⏳ <strong>Tahap Jaminan:</strong> Menunggu Petugas Jaminan mengunggah Billing Jaminan ke portal. Anda akan mendapat notifikasi WhatsApp segera setelah billing tersedia.
+                        </div>
+                    `;
+                }
+
+                // Jika SPF sudah terbit (tahap Pemeriksaan Fisik)
+                if (item.no_spf && item.status === 'PPFTZ_CEK_FISIK') {
+                    pemohonHtml += `
+                        <div style="background:#EFF6FF; border:1.5px solid #60A5FA; border-radius:10px; padding:12px 14px; margin-top:10px; font-size:0.76rem; color:#1E3A8A; line-height:1.5;">
+                            <strong>📌 Pengingat Pemeriksaan Fisik (SPF: ${escapeHtml(item.no_spf)}):</strong><br>
+                            Silakan hadir membawa kendaraan beserta <strong>5 Berkas Asli</strong>:<br>
+                            1. KTP Asli • 2. NPWP Asli • 3. BPKB Asli / Surat Keterangan Asli dari Leasing • 4. STNK Asli • 5. Surat Jalan Asli dari Polda.
+                        </div>
+                    `;
+                }
+
+                if (pemohonHtml.trim()) {
+                    actionSec.style.display = 'block';
+                    actionSec.innerHTML = pemohonHtml;
+                } else {
+                    actionSec.style.display = 'none';
+                }
                 return;
             }
 
@@ -9057,7 +9225,7 @@
                             <span>🔒 Anda Login Sebagai: <u>${userRoleDef.badge}</u></span>
                         </div>
                         <div style="font-size:0.75rem; color:#78350F; margin-top:6px; line-height:1.4;">
-                            Tahapan berkas ini (<strong>${item.status}</strong>) merupakan wewenang dari <strong>${stageMapping.name}</strong>. Anda tidak dapat melakukan perubahan atau eksekusi aksi pada tahapan ini.
+                            Tahapan berkas ini (<strong>${escapeHtml(item.status)}</strong>) merupakan wewenang dari <strong>${stageMapping.name}</strong>. Anda tidak dapat melakukan perubahan atau eksekusi aksi pada tahapan ini.
                         </div>
                     </div>
                 `;
@@ -9069,15 +9237,14 @@
             let formFieldsHtml = buildDokumenCetakHtml(item);
 
             if (item.status === 'FRONTDESK_NADINE' || item.status === 'BERKAS_LENGKAP') {
-                // Role: frontdesk, loket, adminutama
-                formFieldsHtml = `
+                formFieldsHtml += `
                     <div class="dash-drawer-section-title" style="color:var(--primary);"><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Tugas Frontdesk: Perekaman Naskah Masuk Nadine</div>
                     <div style="font-size:0.78rem; color:#475569; margin-bottom:10px;">
-                        Verifikasi berkas pemohon telah lengkap. Sistem akan otomatis merekam surat masuk ke Nadine Kemenkeu dan meneruskannya ke Seksi Fasilitas.
+                        Verifikasi berkas digital pemohon telah lengkap (paperless). Sistem akan merekam surat masuk ke Nadine Kemenkeu dan meneruskannya ke Seksi Fasilitas.
                     </div>
                     <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; padding:10px; margin-bottom:12px; font-size:0.76rem;">
-                        <div><strong>Pengirim Eksternal:</strong> ${item.nama_pemohon}</div>
-                        <div style="margin-top:3px;"><strong>Perihal:</strong> Permohonan Pengeluaran Sementara Kendaraan Bermotor (${item.nopol})</div>
+                        <div><strong>Pengirim Eksternal:</strong> ${escapeHtml(item.nama_pemohon)}</div>
+                        <div style="margin-top:3px;"><strong>Perihal:</strong> Permohonan Pengeluaran Sementara Kendaraan Bermotor (${escapeHtml(item.nopol)})</div>
                         <div style="margin-top:3px;"><strong>Tujuan Nadine:</strong> Kepala Seksi Pelayanan Kepabeanan dan Cukai / Fasilitas</div>
                     </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiNadine('${item.id}')" style="background:#005FAC; padding:10px 14px; font-size:0.84rem;">
@@ -9085,56 +9252,146 @@
                     </button>
                 `;
             } else if (item.status === 'VERIFIKASI_FASILITAS') {
-                // Role: fasilitas, adminutama
-                formFieldsHtml = `
+                formFieldsHtml += `
                     <div class="dash-drawer-section-title" style="color:var(--primary);"><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Tugas Seksi Fasilitas: Penerbitan Persetujuan SKEP</div>
                     <div style="font-size:0.78rem; color:#475569; margin-bottom:10px;">
-                        Naskah dinas persetujuan dari Nadine dan Nomor KEP Persetujuan otomatis tergenerate untuk diteruskan ke Loket Jaminan.
+                        Terbitkan Persetujuan SKEP dan teruskan ke Tahap Jaminan (Petugas Jaminan).
                     </div>
                     <div style="margin-bottom:8px;">
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Naskah Dinas Nadine (Surat Keluar S):</label>
                         <input type="text" id="actionFasilitasNoS" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; color:#64748B; box-sizing:border-box;">
                     </div>
                     <div style="margin-bottom:8px;">
-                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nomor KEP Persetujuan Pengeluaran KBM:</label>
+                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nomor SKEP Persetujuan Pengeluaran KBM:</label>
                         <input type="text" id="actionFasilitasNoKep" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; color:#64748B; box-sizing:border-box;">
                     </div>
-                    <div style="font-size:0.68rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:6px 8px; margin-bottom:12px;">
-                        ⚠️ Nomor simulasi lokal — belum terhubung ke register resmi CEISA/Nadine Kemenkeu.
-                    </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiFasilitas('${item.id}')" style="background:#005FAC; padding:10px 14px; font-size:0.84rem;">
-                        ✓ Terbitkan SKEP &amp; Teruskan ke Loket Jaminan ➔
+                        ✓ Terbitkan SKEP &amp; Teruskan ke Tahap Jaminan ➔
                     </button>
                 `;
             } else if (item.status === 'LOKET_JAMINAN') {
-                // Role: jaminan, adminutama
-                formFieldsHtml = `
-                    <div class="dash-drawer-section-title" style="color:var(--primary);"><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg> Tugas Seksi Jaminan: Penerbitan Billing Simponi &amp; Dokumen Permohonan</div>
-                    <div style="font-size:0.78rem; color:#475569; margin-bottom:10px;">
-                        Terbitkan kode billing Simponi jaminan PPN 11% dan generate surat permohonan baru pemohon berlampirkan KEP Persetujuan.
+                // TAHAP JAMINAN 2-ARAH (PETUGAS JAMINAN ↔ PEMOHON)
+                const jStatus = item.jaminan_status || 'BELUM_UNGGAH_BILLING';
+                const statusBadge = jStatus === 'MENUNGGU_VERIFIKASI_JAMINAN'
+                    ? '<span style="background:#DCFCE7; color:#166534; padding:2px 8px; border-radius:10px; font-weight:800;">✓ Pemohon Sudah Unggah Bukti Bayar — Siap Diverifikasi</span>'
+                    : (jStatus === 'MENUNGGU_BAYAR_PEMOHON'
+                        ? '<span style="background:#EFF6FF; color:#1D4ED8; padding:2px 8px; border-radius:10px; font-weight:800;">⏳ Billing Terunggah — Menunggu Pembayaran Pemohon</span>'
+                        : (jStatus === 'DITOLAK_UNGGAH_ULANG'
+                            ? '<span style="background:#FEF2F2; color:#991B1B; padding:2px 8px; border-radius:10px; font-weight:800;">⚠️ Ditolak — Menunggu Pemohon Unggah Ulang</span>'
+                            : '<span style="background:#F1F5F9; color:#475569; padding:2px 8px; border-radius:10px; font-weight:800;">1. Silakan Unggah File Billing Jaminan</span>'));
+
+                formFieldsHtml += `
+                    <div class="dash-drawer-section-title" style="color:#6D28D9;">💳 Tugas Petugas Jaminan (2 Arah: Unggah Billing &amp; Verifikasi Bayar)</div>
+                    <div style="font-size:0.74rem; margin-bottom:10px;">${statusBadge}</div>
+
+                    <!-- Bagian A: Unggah File Billing dari Portal Eksternal -->
+                    <div style="background:#FFFFFF; border:1.5px solid #DDD6FE; border-radius:8px; padding:12px; margin-bottom:12px;">
+                        <div style="font-size:0.78rem; font-weight:800; color:#5B21B6; margin-bottom:6px;">A. Unggah File Billing Jaminan (dari Portal Jaminan Eksternal)</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                            <div>
+                                <label style="font-size:0.70rem; font-weight:700; color:#334155;">Kode / No. Billing (opsional):</label>
+                                <input type="text" id="actionJaminanKodeBilling" value="${escapeHtml(item.kode_billing || '')}" placeholder="Contoh: 82026xxxx" style="width:100%; padding:7px 8px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.78rem; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.70rem; font-weight:700; color:#334155;">Nominal Jaminan Rp (opsional):</label>
+                                <input type="number" id="actionJaminanNilai" value="${item.nilai_jaminan || ''}" placeholder="Contoh: 8470000" style="width:100%; padding:7px 8px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.78rem; box-sizing:border-box;">
+                            </div>
+                        </div>
+                        <label style="font-size:0.70rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">File Billing Jaminan (PDF / JPG / PNG) *:</label>
+                        <input type="file" id="actionJaminanBillingFile" accept="application/pdf,.pdf,image/*" style="width:100%; font-size:0.74rem; margin-bottom:8px;">
+                        <button type="button" class="landing-btn-submit" onclick="eksekusiAksiJaminanUnggahBilling('${item.id}')" style="background:#7C3AED; padding:9px 12px; font-size:0.80rem;">
+                            📤 ${item.billing_file_data_url ? 'Perbarui' : 'Unggah'} Billing &amp; Kirim Notif WA ke Pemohon
+                        </button>
                     </div>
-                    <div style="margin-bottom:8px;">
-                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nilai Jaminan PPN 11% (isi manual = 11% × NJKB kendaraan):</label>
-                        <input type="number" id="actionJaminanNilai" placeholder="Contoh: 8470000" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.82rem; font-weight:800; box-sizing:border-box; color:#0F172A;">
+
+                    <!-- Bagian B: Verifikasi Bukti Bayar Pemohon -->
+                    <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:8px; padding:12px;">
+                        <div style="font-size:0.78rem; font-weight:800; color:#0F172A; margin-bottom:6px;">B. Verifikasi Bukti Bayar Pemohon</div>
+                        ${item.bukti_bayar_data_url ? `
+                            <div style="margin-bottom:8px; font-size:0.74rem; color:#047857;">
+                                ✓ Berkas bukti bayar: <strong>${escapeHtml(item.bukti_bayar_name || 'Bukti_Bayar')}</strong> (${escapeHtml(item.tgl_bukti_bayar || '-')})
+                                ${item.catatan_bukti_bayar ? `<br>Catatan pemohon: <em>${escapeHtml(item.catatan_bukti_bayar)}</em>` : ''}
+                            </div>
+                            <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; margin-bottom:10px; border-color:#059669; color:#047857;" onclick="previewPermohonanFile('${item.id}', 'bukti_bayar_data_url', '${escapeHtml(item.bukti_bayar_name || 'Bukti_Bayar_Jaminan.pdf')}')">
+                                👁️ Lihat / Unduh Bukti Bayar Pemohon
+                            </button>
+                        ` : `<div style="font-size:0.74rem; color:#64748B; margin-bottom:10px;">Belum ada bukti bayar yang diunggah pemohon.</div>`}
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:0.70rem; font-weight:700; color:#334155;">Nomor BPJ (opsional saat verifikasi sesuai):</label>
+                            <input type="text" id="actionJaminanNoBpj" value="${escapeHtml(item.no_bpj || '')}" placeholder="Contoh: BPJ-001/KPU.02/2026" style="width:100%; padding:7px 8px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.78rem; box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:0.70rem; font-weight:700; color:#334155;">Catatan Verifikasi / Alasan Penolakan (wajib diisi jika menolak):</label>
+                            <textarea id="actionJaminanCatatan" rows="2" placeholder="Isi catatan verifikasi atau alasan minta unggah ulang bukti bayar..." style="width:100%; padding:7px 8px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.76rem; box-sizing:border-box;"></textarea>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <button type="button" class="landing-btn-submit" onclick="eksekusiAksiJaminanVerifikasi('${item.id}', 'TERIMA')" style="background:#059669; padding:9px 10px; font-size:0.78rem;">
+                                ✓ Verifikasi Jaminan Sesuai ➔ Loket
+                            </button>
+                            <button type="button" class="landing-btn-submit" onclick="eksekusiAksiJaminanVerifikasi('${item.id}', 'TOLAK')" style="background:#DC2626; padding:9px 10px; font-size:0.78rem;">
+                                ✗ Tolak / Minta Unggah Ulang
+                            </button>
+                        </div>
                     </div>
-                    <div style="margin-bottom:8px;">
-                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Kode Billing Simponi (MPN G3):</label>
-                        <input type="text" id="actionJaminanBilling" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.82rem; font-weight:700; color:#64748B; box-sizing:border-box;">
+                `;
+            } else if (item.status === 'LOKET_VERIFIKASI') {
+                // TAHAP PETUGAS LOKET: VERIFIKASI 3 BUNDEL & OTOMATISASI 4 OUTPUT ATOMIK
+                formFieldsHtml += `
+                    <div class="dash-drawer-section-title" style="color:#B45309;">📋 Tugas Petugas Loket: Verifikasi 3 Bundel &amp; Approval 4 Output Otomatis</div>
+                    <div style="font-size:0.76rem; color:#475569; margin-bottom:10px; line-height:1.45;">
+                        Verifikasi kelengkapan 3 bundel di bawah ini. Saat klik <strong>Approve</strong>, sistem otomatis menerbitkan sekaligus:
+                        <strong>(1) PPFTZ-01 &amp; Proforma PPFTZ-03</strong>, <strong>(2) Penunjukan Pemeriksa Dokumen</strong>, <strong>(3) SPF + Notif WA Pemohon</strong>, dan <strong>(4) IP Penunjukan Pemeriksa Barang</strong>.
                     </div>
-                    <div style="font-size:0.68rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:6px 8px; margin-bottom:10px;">
-                        ⚠️ Nilai jaminan &amp; kode billing simulasi lokal — belum terhubung ke NJKB Bapenda &amp; Simponi MPN G3 resmi. Periksa manual nilai jaminan sebelum menerbitkan.
+                    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+                        <label style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:8px; padding:10px; display:flex; align-items:flex-start; gap:8px; cursor:pointer; font-size:0.76rem;">
+                            <input type="checkbox" id="chkLoketBundel1" style="margin-top:2px; width:16px; height:16px; accent-color:#059669;">
+                            <div style="flex:1;">
+                                <strong>1. Bundel Surat Permohonan &amp; Seluruh Lampirannya</strong><br>
+                                <span style="color:#64748B; font-size:0.71rem;">KTP, NPWP, BPKB/Leasing, STNK 2 lembar, 6 foto kendaraan, dokumen bermeterai asli (${(item.archived_files || []).length} berkas terarsip).</span>
+                                ${item.indikasi_cbu ? `<div style="color:#DC2626; font-weight:800; font-size:0.71rem; margin-top:2px;">⚠️ Catatan Sistem: Indikasi Awal CBU (${escapeHtml(item.cbu_detail || '-')})</div>` : ''}
+                            </div>
+                        </label>
+                        <label style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:8px; padding:10px; display:flex; align-items:flex-start; gap:8px; cursor:pointer; font-size:0.76rem;">
+                            <input type="checkbox" id="chkLoketBundel2" style="margin-top:2px; width:16px; height:16px; accent-color:#059669;">
+                            <div style="flex:1;">
+                                <strong>2. Surat Persetujuan (SKEP) dari Seksi Fasilitas</strong><br>
+                                <span style="color:#64748B; font-size:0.71rem;">No. SKEP: <strong>${escapeHtml(item.no_skep || item.no_kep || '-')}</strong> • Naskah S: ${escapeHtml(item.no_surat_s || '-')}</span>
+                            </div>
+                        </label>
+                        <label style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:8px; padding:10px; display:flex; align-items:flex-start; gap:8px; cursor:pointer; font-size:0.76rem;">
+                            <input type="checkbox" id="chkLoketBundel3" style="margin-top:2px; width:16px; height:16px; accent-color:#059669;">
+                            <div style="flex:1;">
+                                <strong>3. Dokumen &amp; Verifikasi Jaminan</strong><br>
+                                <span style="color:#64748B; font-size:0.71rem;">Status: <strong style="color:#059669;">${escapeHtml(item.jaminan_status || 'TERVERIFIKASI')}</strong> • No. BPJ: ${escapeHtml(item.no_bpj || '-')} • Billing: ${escapeHtml(item.kode_billing || '-')}</span>
+                            </div>
+                        </label>
                     </div>
-                    <button type="button" class="landing-btn-submit" onclick="eksekusiAksiJaminan('${item.id}')" style="background:#7C3AED; padding:10px 14px; font-size:0.84rem;">
-                        ✓ Terbitkan Billing &amp; Teruskan ke Pemeriksaan Fisik ➔
+                    <button type="button" class="landing-btn-submit" onclick="eksekusiAksiLoketApprove('${item.id}')" style="background:#005FAC; padding:11px 14px; font-size:0.84rem;">
+                        ✓ Approve Loket &amp; Terbitkan 4 Output Otomatis (PPFTZ, PFPD, SPF, IP) ➔
                     </button>
                 `;
             } else if (item.status === 'PPFTZ_CEK_FISIK') {
-                // Role: pemeriksabarang, adminutama
-                formFieldsHtml = `
-                    <div class="dash-drawer-section-title" style="color:var(--primary);"><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Tugas Pemeriksa Barang: Rekam LHP Pemeriksaan Fisik Hanggar</div>
-                    <div style="font-size:0.78rem; color:#475569; margin-bottom:10px;">
-                        Lakukan pemeriksaan fisik kendaraan bermotor di pos hanggar pelabuhan dan unggah 5 kategori foto wajib.
+                // TAHAP PEMERIKSA BARANG: CHECKLIST 5 BERKAS ASLI, UPLOAD FOTO LAPANGAN, BAP & LHP
+                formFieldsHtml += `
+                    <div class="dash-drawer-section-title" style="color:var(--primary);">🔍 Tugas Pemeriksa Barang: Verifikasi Berkas Asli, Foto Lapangan, BAP &amp; LHP</div>
+                    <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:8px 10px; margin-bottom:10px; font-size:0.72rem; color:#1E3A8A;">
+                        <strong>IP:</strong> ${escapeHtml(item.no_ip || '-')} • <strong>SPF:</strong> ${escapeHtml(item.no_spf || '-')} • <strong>PPFTZ:</strong> ${escapeHtml(item.no_ppftz || '-')}
                     </div>
+
+                    <!-- 1. Checklist Pencocokan 5 Berkas Fisik Asli -->
+                    <div style="background:#FFFBEB; border:1.5px solid #FCD34D; border-radius:8px; padding:10px; margin-bottom:10px;">
+                        <div style="font-size:0.74rem; font-weight:800; color:#92400E; margin-bottom:6px;">1. Checklist Pencocokan 5 Berkas Fisik Asli yang Dibawa Pemohon (Tatap Muka):</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.72rem;">
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chkAsliKtp"> KTP Asli</label>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chkAsliNpwp"> NPWP Asli</label>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chkAsliBpkb"> BPKB / Surat Leasing Asli</label>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chkAsliStnk"> STNK Asli</label>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer; grid-column:span 2;"><input type="checkbox" id="chkAsliPolda"> Surat Jalan Asli dari Polda</label>
+                        </div>
+                        <input type="text" id="actionLhpCatatanBerkasAsli" placeholder="Catatan / keterangan ketidaksesuaian berkas asli (jika ada)..." style="width:100%; margin-top:6px; padding:6px 8px; border:1px solid #F59E0B; border-radius:6px; font-size:0.73rem; box-sizing:border-box;">
+                    </div>
+
+                    <!-- 2. Cek Nomor Rangka & Mesin -->
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
                         <div>
                             <label style="font-size:0.70rem; font-weight:700; color:#334155;">Cek No. Rangka:</label>
@@ -9151,81 +9408,70 @@
                             </select>
                         </div>
                     </div>
-                    <!-- 5 Foto Wajib: petugas WAJIB centang manual tiap kategori (foto diambil di HP masing-masing,
-                         portal ini belum punya upload kamera langsung) sebelum LHP bisa disimpan. -->
-                    <div style="margin-bottom:10px;">
-                        <label style="font-size:0.70rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Centang 5 Foto Pemeriksaan Fisik yang Sudah Diambil:</label>
+
+                    <!-- 3. Unggah Foto Hasil Pemeriksaan Fisik Lapangan (Multi-Foto -> Disk + Google Drive) -->
+                    <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:8px; padding:10px; margin-bottom:10px;">
+                        <label style="font-size:0.72rem; font-weight:800; color:#0F172A; display:block; margin-bottom:4px;">2. Unggah Foto Kendaraan Hasil Pemeriksaan Lapangan (Multi-Foto):</label>
+                        <input type="file" id="actionLhpFieldPhotos" accept="image/*" multiple style="width:100%; font-size:0.73rem; margin-bottom:6px;">
+                        <label style="font-size:0.70rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Checklist 5 Kategori Foto Pemeriksaan Wajib:</label>
                         <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; font-size:0.68rem;">
-                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoSemuaSisi"> 📸 Semua Sisi Mobil</label>
-                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoPemilik"> 📸 Bersama Pemilik</label>
-                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoRangka"> 📸 No. Rangka</label>
-                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoMesin"> 📸 No. Mesin</label>
-                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; grid-column:span 2; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoMuatan"> 📸 Muatan / Barang Bawaan</label>
+                            <label style="background:#F8FAFC; border:1px solid #CBD5E1; padding:5px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoSemuaSisi"> 📸 Semua Sisi</label>
+                            <label style="background:#F8FAFC; border:1px solid #CBD5E1; padding:5px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoPemilik"> 📸 Dgn Pemilik</label>
+                            <label style="background:#F8FAFC; border:1px solid #CBD5E1; padding:5px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoRangka"> 📸 No. Rangka</label>
+                            <label style="background:#F8FAFC; border:1px solid #CBD5E1; padding:5px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoMesin"> 📸 No. Mesin</label>
+                            <label style="background:#F8FAFC; border:1px solid #CBD5E1; padding:5px; border-radius:6px; grid-column:span 2; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoMuatan"> 📸 Muatan / Barang</label>
                         </div>
-                        <div style="font-size:0.66rem; color:#64748B; margin-top:4px;">Centang hanya jika foto benar-benar sudah diambil dan tersimpan di berkas pemeriksaan.</div>
+                    </div>
+
+                    <!-- 4. Pengisian BAP & LHP -->
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.70rem; font-weight:700; color:#334155;">3. Catatan Berita Acara Pemeriksaan (BAP):</label>
+                        <textarea id="actionBapCatatan" rows="2" style="width:100%; padding:6px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.75rem; box-sizing:border-box;">Pemeriksaan fisik kendaraan dilaksanakan bersama pemohon; seluruh 5 berkas asli telah dicocokkan.</textarea>
                     </div>
                     <div style="margin-bottom:10px;">
-                        <label style="font-size:0.70rem; font-weight:700; color:#334155;">Catatan Hasil Pemeriksaan Fisik (LHP):</label>
-                        <textarea id="actionLhpCatatan" rows="2" style="width:100%; padding:6px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.76rem; box-sizing:border-box;">Fisik kendaraan baik, nomor identitas sesuai STNK/BPKB, muatan bebas larangan.</textarea>
+                        <label style="font-size:0.70rem; font-weight:700; color:#334155;">4. Kesimpulan Laporan Hasil Pemeriksaan (LHP):</label>
+                        <textarea id="actionLhpCatatan" rows="2" style="width:100%; padding:6px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.75rem; box-sizing:border-box;">Fisik kendaraan baik, nomor rangka &amp; nomor mesin sesuai dokumen, muatan bebas larangan.</textarea>
                     </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiLhp('${item.id}')" style="background:#059669; padding:10px 14px; font-size:0.84rem;">
-                        ✓ Simpan LHP Fisik &amp; Kirim ke Pemeriksa Dokumen ➔
+                        ✓ Rekam BAP &amp; LHP Fisik ➔ Kirim ke Pemeriksa Dokumen
                     </button>
                 `;
             } else if (item.status === 'PEMERIKSA_DOKUMEN') {
-                // Role: pemeriksadokumen, adminutama
-                formFieldsHtml = `
-                    <div class="dash-drawer-section-title" style="color:var(--primary);"><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Tugas Pemeriksa Dokumen: Penelitian LHP &amp; Terbit SPPB</div>
+                formFieldsHtml += `
+                    <div class="dash-drawer-section-title" style="color:var(--primary);"><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Tugas Pemeriksa Dokumen: Penelitian LHP &amp; BAP ➔ Terbit SPPB</div>
                     <div style="font-size:0.78rem; color:#475569; margin-bottom:10px;">
-                        Teliti kesesuaian dokumen pabean dengan LHP fisik hanggar dan putuskan persetujuan pengeluaran (SPPB).
+                        Teliti kesesuaian dokumen pabean dengan LHP &amp; BAP fisik hanggar dan putuskan persetujuan pengeluaran (SPPB).
                     </div>
                     <div style="background:${(item.lhp_data?.kesesuaian_rangka==='SESUAI' && item.lhp_data?.kesesuaian_mesin==='SESUAI') ? '#F0FDF4' : '#FEF2F2'}; border:1px solid ${(item.lhp_data?.kesesuaian_rangka==='SESUAI' && item.lhp_data?.kesesuaian_mesin==='SESUAI') ? '#86EFAC' : '#FCA5A5'}; border-radius:6px; padding:8px 10px; margin-bottom:10px; font-size:0.74rem; color:${(item.lhp_data?.kesesuaian_rangka==='SESUAI' && item.lhp_data?.kesesuaian_mesin==='SESUAI') ? '#166534' : '#991B1B'};">
-                        ${item.lhp_data ? `${item.lhp_data.kesesuaian_rangka==='SESUAI' ? '✓' : '✗'} No. Rangka: ${item.lhp_data.kesesuaian_rangka} | ${item.lhp_data.kesesuaian_mesin==='SESUAI' ? '✓' : '✗'} No. Mesin: ${item.lhp_data.kesesuaian_mesin}. Pemeriksa: ${item.lhp_data.pemeriksa || '-'}.` : 'Data LHP belum tersedia.'}
+                        ${item.lhp_data ? `${item.lhp_data.kesesuaian_rangka==='SESUAI' ? '✓' : '✗'} No. Rangka: ${item.lhp_data.kesesuaian_rangka} | ${item.lhp_data.kesesuaian_mesin==='SESUAI' ? '✓' : '✗'} No. Mesin: ${item.lhp_data.kesesuaian_mesin}. Pemeriksa: ${escapeHtml(item.lhp_data.pemeriksa || '-')}.` : 'Data LHP belum tersedia.'}
                     </div>
                     <div style="margin-bottom:8px;">
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nomor Dokumen SPPB Pabean:</label>
                         <input type="text" id="actionSppbNomor" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.84rem; font-weight:800; color:#64748B; box-sizing:border-box;">
                     </div>
-                    <div style="font-size:0.68rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:6px 8px; margin-bottom:12px;">
-                        ⚠️ Nomor simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ-01.
-                    </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiSppb('${item.id}')" style="background:#0284C7; padding:10px 14px; font-size:0.84rem;" ${(item.lhp_data?.kesesuaian_rangka!=='SESUAI' || item.lhp_data?.kesesuaian_mesin!=='SESUAI') ? 'disabled title="Tidak bisa terbit SPPB: ada ketidaksesuaian nomor rangka/mesin pada LHP"' : ''}>
-                        ✓ Setujui &amp; Terbitkan Dokumen SPPB Pabean ➔
+                        ✓ Setujui &amp; Terbitkan Dokumen SPPB (+QR Code) ➔
                     </button>
                 `;
             } else if (item.status === 'SPPB_GATE_OUT') {
-                // Role: gate, adminutama
-                formFieldsHtml = `
+                formFieldsHtml += `
                     <div class="dash-drawer-section-title" style="color:var(--primary);"><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg> Tugas Gate Pelabuhan: Validasi Keberangkatan KBM</div>
-                    <div style="font-size:0.78rem; color:#475569; margin-bottom:10px;">
-                        Validasi fisik keberangkatan kendaraan bermotor di gate keluar pelabuhan Roro Telaga Punggur Batam menuju TLDDP.
-                    </div>
-                    <div style="margin-bottom:8px;">
-                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Pos Pengawasan Pelabuhan:</label>
-                        <input type="text" value="Pelabuhan Roro Telaga Punggur Batam" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nama Kapal Roro Keberangkatan:</label>
-                        <input type="text" id="actionGateKapal" value="KMP Senangin (Roro Batam - Sei Selari)" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; box-sizing:border-box;">
-                    </div>
                     <div style="background:#FFFBEB; border:1.5px solid #FCD34D; border-radius:8px; padding:12px; font-size:0.78rem; color:#92400E; line-height:1.5;">
-                        ⚠️ Validasi keberangkatan WAJIB lewat pemindaian QR pada dokumen SPPB fisik kendaraan — tidak bisa dikonfirmasi langsung dari sini. Tutup detail ini lalu klik tombol <strong>"Scan QR SPPB"</strong> di bagian atas dashboard.
+                        ⚠️ Validasi keberangkatan WAJIB lewat pemindaian QR pada dokumen SPPB fisik kendaraan. Tutup detail ini lalu klik tombol <strong>"Scan QR SPPB"</strong> di bagian atas dashboard.
                     </div>
                 `;
             } else if (item.status === 'SELESAI_KELUAR_TLDDP') {
-                formFieldsHtml = `
+                formFieldsHtml += `
                     <div style="background:#ECFDF5; border:1.5px solid #10B981; border-radius:8px; padding:14px; text-align:center;">
                         <div style="font-size:1.1rem; font-weight:800; color:#065F46;">✓ Pengeluaran KBM Selesai</div>
                         <div style="font-size:0.76rem; color:#047857; margin-top:4px;">Kendaraan bermotor telah divalidasi keluar dari Kawasan Bebas Batam menuju Tempat Lain Dalam Daerah Pabean (TLDDP).</div>
                     </div>
                 `;
             } else {
-                formFieldsHtml = `
-                    <div style="font-size:0.80rem; color:#64748B;">Status Permohonan: ${item.status}</div>
-                `;
+                formFieldsHtml += `<div style="font-size:0.80rem; color:#64748B;">Status Permohonan: ${escapeHtml(item.status)}</div>`;
             }
 
-            // Jika ADMIN UTAMA: Sediakan opsi override bebas status
+            // Jika ADMIN UTAMA: Sediakan opsi override terbatas (tetap memblokir tahap sensitif)
             if (role === 'adminutama') {
                 formFieldsHtml += `
                     <div style="margin-top:16px; padding-top:12px; border-top:1.5px dashed #CBD5E1;">
@@ -9233,14 +9479,15 @@
                         <select id="selectNewStatus" style="width:100%; padding:7px; border-radius:6px; border:1.5px solid #DC2626; font-size:0.78rem; font-weight:700; background:#FFF; margin-bottom:8px;">
                             <option value="FRONTDESK_NADINE" ${item.status==='FRONTDESK_NADINE'?'selected':''}>1. Unggah Permohonan Ke Nadine (Frontdesk)</option>
                             <option value="VERIFIKASI_FASILITAS" ${item.status==='VERIFIKASI_FASILITAS'?'selected':''}>2. Verifikasi &amp; Terbit SKEP (Seksi Fasilitas)</option>
-                            <option value="LOKET_JAMINAN" ${item.status==='LOKET_JAMINAN'?'selected':''}>3. Loket Jaminan (Perbendaharaan)</option>
-                            <option value="PPFTZ_CEK_FISIK" ${item.status==='PPFTZ_CEK_FISIK'?'selected':''}>4. PPFTZ &amp; Cek Fisik Lapangan (Pemeriksa Barang)</option>
+                            <option value="LOKET_JAMINAN" ${item.status==='LOKET_JAMINAN'?'selected':''}>3. Tahap Jaminan 2-Arah (Petugas Jaminan)</option>
+                            <option value="LOKET_VERIFIKASI" ${item.status==='LOKET_VERIFIKASI'?'selected':''}>4. Verifikasi 3 Bundel (Petugas Loket)</option>
+                            <option value="PPFTZ_CEK_FISIK" ${item.status==='PPFTZ_CEK_FISIK'?'selected':''}>5. Pemeriksaan Fisik Lapangan (Pemeriksa Barang)</option>
                         </select>
                         <div style="font-size:0.68rem; color:#7C2D12; background:#FFEDD5; border:1px solid #FDBA74; border-radius:6px; padding:6px 8px; margin-bottom:8px;">
-                            🔒 Tahap Pemeriksa Dokumen, SPPB, dan Gate Keluar TIDAK bisa dilompati dari sini — itu hasil keputusan petugas berwenang, harus lewat aksi resminya sendiri.
+                            🔒 Tahap Pemeriksa Dokumen, SPPB, dan Gate Keluar TIDAK bisa dilompati dari sini — harus lewat aksi resmi petugas berwenang.
                         </div>
                         <label style="font-size:0.70rem; font-weight:700; color:#DC2626; display:block; margin-bottom:4px;">Alasan Override (wajib diisi untuk jejak audit):</label>
-                        <textarea id="overrideReason" rows="2" placeholder="Contoh: Koreksi kesalahan input petugas Jaminan, dikonfirmasi via telepon." style="width:100%; padding:7px; border-radius:6px; border:1.5px solid #DC2626; font-size:0.76rem; box-sizing:border-box; margin-bottom:8px;"></textarea>
+                        <textarea id="overrideReason" rows="2" placeholder="Contoh: Koreksi kesalahan input petugas, dikonfirmasi via telepon." style="width:100%; padding:7px; border-radius:6px; border:1.5px solid #DC2626; font-size:0.76rem; box-sizing:border-box; margin-bottom:8px;"></textarea>
                         <button type="button" class="btn-portal-action" onclick="saveStatusUpdate()" style="width:100%; background:#DC2626; color:#FFF; font-size:0.76rem; padding:8px;">
                             Simpan Perubahan Manual (Admin Override)
                         </button>
@@ -9251,51 +9498,116 @@
             actionSec.innerHTML = formFieldsHtml;
         }
 
-        // ================= FUNGSI EKSEKUSI AKSI PABEAN PER ROLE =================
-        async function eksekusiAksiNadine(id) {
-            if (!confirm(`Unggah dan Rekam Permohonan ${id} ke Nadine Kemenkeu?`)) return;
+        function _authJsonHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
             try {
-                const res = await fetch(`${API_BASE_URL}/api/nadine/upload-permohonan`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
+                const tok = localStorage.getItem('kbm_session_token');
+                if (tok) headers['Authorization'] = 'Bearer ' + tok;
+            } catch (e) {}
+            return headers;
+        }
+
+        function _readFileAsDataUrlPromise(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = e => resolve(e.target.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        async function eksekusiAksiNadine(id) {
+            if (!confirm(`Rekam dan unggah naskah masuk Nadine Kemenkeu untuk permohonan ${id}?`)) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/frontdesk/rekam-nadine`, {
+                    method: 'POST', headers: _authJsonHeaders(), body: JSON.stringify({ id })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert(`✓ BERHASIL DIREKAM KE NADINE KEMENKEU!
-
-Nomor Naskah Masuk (NdId): ${data.nd_id}
-Pengirim Eksternal: ${data.pengirim_eksternal}
-
-Status diteruskan ke Seksi Fasilitas.`);
+                    alert(`✓ BERHASIL REKAM NADINE!\n\nNomor Agenda: ${data.no_nadine}\nStatus diteruskan ke Seksi Fasilitas Pabean.`);
                     await loadPermohonanData();
                     openDrawerDetail(id);
                 } else {
                     alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
                 }
-            } catch (e) {
-                alert('Kesalahan jaringan: ' + e.message);
-            }
+            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
         }
 
         async function eksekusiAksiFasilitas(id) {
-            if (!confirm(`Terbitkan Persetujuan SKEP dan Naskah Dinas untuk agenda ${id}? Nomor resmi akan digenerate otomatis oleh sistem.`)) return;
+            if (!confirm(`Terbitkan Naskah Dinas Surat S & SKEP Persetujuan untuk permohonan ${id}?`)) return;
             try {
                 const res = await fetch(`${API_BASE_URL}/api/fasilitas/terbitkan-skep`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
+                    method: 'POST', headers: _authJsonHeaders(), body: JSON.stringify({ id })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert(`✓ PERSETUJUAN SKEP DITERBITKAN (SIMULASI LOKAL)!
+                    alert(`✓ SKEP PERSETUJUAN DITERBITKAN!\n\nNomor SKEP: ${data.no_skep}\nNaskah Dinas S: ${data.no_surat_s}\n\nBerkas diteruskan ke Tahap Jaminan.`);
+                    await loadPermohonanData();
+                    openDrawerDetail(id);
+                } else {
+                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
+                }
+            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+        }
 
-Nomor KEP: ${data.no_kep}
-Nomor Naskah S: ${data.no_s}
+        async function eksekusiAksiJaminanUnggahBilling(id) {
+            const fileInput = document.getElementById('actionJaminanBillingFile');
+            const file = fileInput && fileInput.files && fileInput.files[0];
+            if (!file) {
+                alert('Silakan pilih file Billing Jaminan (PDF/gambar) terlebih dahulu.');
+                return;
+            }
+            const kodeBilling = (document.getElementById('actionJaminanKodeBilling')?.value || '').trim();
+            const nilaiJaminan = parseInt(document.getElementById('actionJaminanNilai')?.value || '0', 10) || 0;
+            try {
+                const dataUrl = await _readFileAsDataUrlPromise(file);
+                const res = await fetch(`${API_BASE_URL}/api/jaminan/unggah-billing`, {
+                    method: 'POST',
+                    headers: _authJsonHeaders(),
+                    body: JSON.stringify({
+                        id,
+                        kode_billing: kodeBilling,
+                        nilai_jaminan: nilaiJaminan,
+                        billing_file_data_url: dataUrl,
+                        billing_file_name: file.name
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'ok') {
+                    alert('✓ Billing Jaminan berhasil diunggah & notifikasi WhatsApp dikirim ke pemohon!');
+                    await loadPermohonanData();
+                    openDrawerDetail(id);
+                } else {
+                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
+                }
+            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+        }
 
-⚠️ Nomor di atas dibuat oleh sistem internal, belum tersambung ke register resmi CEISA/Nadine Kemenkeu.
-
-Status diteruskan ke Seksi Jaminan.`);
+        async function eksekusiPemohonUnggahBuktiBayar(id) {
+            const fileInput = document.getElementById('pemohonBuktiBayarFile');
+            const file = fileInput && fileInput.files && fileInput.files[0];
+            if (!file) {
+                alert('Silakan pilih file Bukti Bayar Billing (PDF/foto) terlebih dahulu.');
+                return;
+            }
+            const note = (document.getElementById('pemohonBuktiBayarNote')?.value || '').trim();
+            const btn = document.getElementById('btnPemohonKirimBukti');
+            if (btn) { btn.disabled = true; btn.innerText = 'Mengunggah Bukti Bayar...'; }
+            try {
+                const dataUrl = await _readFileAsDataUrlPromise(file);
+                const res = await fetch(`${API_BASE_URL}/api/jaminan/unggah-bukti-bayar`, {
+                    method: 'POST',
+                    headers: _authJsonHeaders(),
+                    body: JSON.stringify({
+                        id,
+                        bukti_bayar_data_url: dataUrl,
+                        bukti_bayar_name: file.name,
+                        catatan_pemohon: note
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'ok') {
+                    alert('✓ Bukti Bayar Jaminan berhasil diunggah!\nStatus saat ini: Menunggu Verifikasi Petugas Jaminan.');
                     await loadPermohonanData();
                     openDrawerDetail(id);
                 } else {
@@ -9303,65 +9615,124 @@ Status diteruskan ke Seksi Jaminan.`);
                 }
             } catch (e) {
                 alert('Kesalahan jaringan: ' + e.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = '✓ Kirim Bukti Bayar ke Petugas Jaminan'; }
             }
         }
 
-        async function eksekusiAksiJaminan(id) {
-            const nilaiJaminan = parseInt(document.getElementById('actionJaminanNilai').value, 10);
-            if (!nilaiJaminan || nilaiJaminan <= 0) {
-                alert('Silakan isi Nilai Jaminan PPN 11% terlebih dahulu (hitung manual: 11% × NJKB kendaraan dari Samsat/Bapenda).');
-                document.getElementById('actionJaminanNilai').focus();
+        async function eksekusiAksiJaminanVerifikasi(id, keputusan) {
+            const noBpj = (document.getElementById('actionJaminanNoBpj')?.value || '').trim();
+            const catatan = (document.getElementById('actionJaminanCatatan')?.value || '').trim();
+            if (keputusan === 'TOLAK' && !catatan) {
+                alert('Harap isi Alasan Penolakan / Permintaan Unggah Ulang Bukti Bayar terlebih dahulu.');
+                document.getElementById('actionJaminanCatatan')?.focus();
                 return;
             }
-            if (!confirm(`Terbitkan Kode Billing Simponi dengan Nilai Jaminan Rp ${nilaiJaminan.toLocaleString('id-ID')} untuk permohonan ${id}? Kode billing akan digenerate otomatis oleh sistem.`)) return;
+            const msgConfirm = keputusan === 'TERIMA'
+                ? `Verifikasi jaminan SESUAI untuk ${id} dan teruskan ke Petugas Loket (LOKET_VERIFIKASI)?`
+                : `Tolak bukti bayar ${id} dan minta pemohon mengunggah ulang?`;
+            if (!confirm(msgConfirm)) return;
             try {
-                const res = await fetch(`${API_BASE_URL}/api/jaminan/terbitkan-billing`, {
+                const res = await fetch(`${API_BASE_URL}/api/jaminan/verifikasi-pembayaran`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, nilai_jaminan: nilaiJaminan })
+                    headers: _authJsonHeaders(),
+                    body: JSON.stringify({ id, keputusan, no_bpj: noBpj, catatan })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert(`✓ BILLING JAMINAN DITERBITKAN (SIMULASI LOKAL)!
-
-Kode Billing: ${data.kode_billing}
-Nilai Jaminan: Rp ${(data.nilai_jaminan || nilaiJaminan).toLocaleString('id-ID')}
-Dokumen Permohonan Pemohon Baru Berlampirkan KEP berhasil digenerate.
-
-⚠️ Kode billing simulasi lokal, belum tersambung ke Simponi MPN G3 resmi.
-
-Status diteruskan ke Pemeriksaan Fisik Lapangan.`);
+                    alert('✓ ' + data.message);
                     await loadPermohonanData();
                     openDrawerDetail(id);
                 } else {
                     alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
                 }
-            } catch (e) {
-                alert('Kesalahan jaringan: ' + e.message);
+            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+        }
+
+        async function eksekusiAksiLoketApprove(id) {
+            const c1 = document.getElementById('chkLoketBundel1')?.checked === true;
+            const c2 = document.getElementById('chkLoketBundel2')?.checked === true;
+            const c3 = document.getElementById('chkLoketBundel3')?.checked === true;
+            if (!c1 || !c2 || !c3) {
+                alert('Ketiga checklist verifikasi bundel (Permohonan & Lampiran, SKEP Fasilitas, dan Dokumen Jaminan Terverifikasi) wajib dicentang sebelum Approval.');
+                return;
             }
+            if (!confirm(`Approve berkas ${id} di Petugas Loket?\n\nSistem akan otomatis menerbitkan:\n1. PPFTZ-01 & Proforma PPFTZ-03\n2. Penunjukan Pemeriksa Dokumen\n3. SPF + Notifikasi WA Wajib Bawa 5 Berkas Asli\n4. IP Penunjukan Pemeriksa Barang`)) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/loket/approve`, {
+                    method: 'POST',
+                    headers: _authJsonHeaders(),
+                    body: JSON.stringify({
+                        id,
+                        chk_bundel_permohonan: c1,
+                        chk_bundel_skep: c2,
+                        chk_bundel_jaminan: c3
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'ok') {
+                    alert(`✓ APPROVAL LOKET BERHASIL (4 OUTPUT TERBIT OTOMATIS)!\n\n1. PPFTZ-01: ${data.no_ppftz}\n   Proforma PPFTZ-03: ${data.no_proforma_ppftz03}\n2. SPF: ${data.no_spf} (Notif WA terkirim ke pemohon)\n3. IP: ${data.no_ip}\n4. Status berpindah ke Pemeriksaan Fisik (PPFTZ_CEK_FISIK).`);
+                    await loadPermohonanData();
+                    openDrawerDetail(id);
+                } else {
+                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
+                }
+            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
         }
 
         async function eksekusiAksiLhp(id) {
+            const cekKtp = document.getElementById('chkAsliKtp')?.checked === true;
+            const cekNpwp = document.getElementById('chkAsliNpwp')?.checked === true;
+            const cekBpkb = document.getElementById('chkAsliBpkb')?.checked === true;
+            const cekStnk = document.getElementById('chkAsliStnk')?.checked === true;
+            const cekPolda = document.getElementById('chkAsliPolda')?.checked === true;
+            const catatanAsli = (document.getElementById('actionLhpCatatanBerkasAsli')?.value || '').trim();
+            if (!(cekKtp && cekNpwp && cekBpkb && cekStnk && cekPolda) && !catatanAsli) {
+                alert('Centang seluruh 5 Berkas Fisik Asli (KTP, NPWP, BPKB/Leasing, STNK, Surat Jalan Polda) atau isi catatan ketidaksesuaiannya terlebih dahulu.');
+                return;
+            }
+
             const rangka = document.getElementById('actionLhpRangka').value;
             const mesin = document.getElementById('actionLhpMesin').value;
-            const catatan = document.getElementById('actionLhpCatatan').value;
+            const catatanBap = (document.getElementById('actionBapCatatan')?.value || '').trim();
+            const catatan = (document.getElementById('actionLhpCatatan')?.value || '').trim();
             const fotoIds = ['lhpFotoSemuaSisi', 'lhpFotoPemilik', 'lhpFotoRangka', 'lhpFotoMesin', 'lhpFotoMuatan'];
             const fotoChecked = fotoIds.map(fid => document.getElementById(fid)?.checked === true);
             const fotoCount = fotoChecked.filter(Boolean).length;
             if (fotoCount < fotoIds.length) {
-                alert(`Baru ${fotoCount} dari 5 kategori foto yang dicentang. Centang semua foto yang sudah benar-benar diambil sebelum menyimpan LHP.`);
+                alert(`Baru ${fotoCount} dari 5 kategori foto wajib yang dicentang. Centang semua foto pemeriksaan sebelum menyimpan BAP & LHP.`);
                 return;
             }
-            if (!confirm(`Simpan Laporan Hasil Pemeriksaan (LHP) Fisik untuk agenda ${id}?`)) return;
+            if (!confirm(`Simpan BAP & LHP Pemeriksaan Fisik untuk agenda ${id}?`)) return;
+
+            const fieldFilesInput = document.getElementById('actionLhpFieldPhotos');
+            const fotoLapangan = [];
+            if (fieldFilesInput && fieldFilesInput.files && fieldFilesInput.files.length) {
+                for (const f of Array.from(fieldFilesInput.files).slice(0, 10)) {
+                    try {
+                        const du = await _readFileAsDataUrlPromise(f);
+                        fotoLapangan.push({ filename: f.name, data_url: du });
+                    } catch (e) {}
+                }
+            }
+
             try {
                 const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/rekam-lhp`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: _authJsonHeaders(),
                     body: JSON.stringify({
                         id,
+                        cek_ktp_asli: cekKtp,
+                        cek_npwp_asli: cekNpwp,
+                        cek_bpkb_asli: cekBpkb,
+                        cek_stnk_asli: cekStnk,
+                        cek_surat_jalan_polda: cekPolda,
+                        catatan_berkas_asli: catatanAsli,
                         kesesuaian_rangka: rangka,
                         kesesuaian_mesin: mesin,
+                        catatan_bap: catatanBap,
                         catatan_fisik: catatan,
+                        foto_lapangan: fotoLapangan,
                         foto_semua_sisi: fotoChecked[0],
                         foto_depan_pemilik: fotoChecked[1],
                         foto_no_rangka: fotoChecked[2],
@@ -9371,21 +9742,13 @@ Status diteruskan ke Pemeriksaan Fisik Lapangan.`);
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert(`✓ LHP PEMERIKSAAN FISIK HANGGAR BERHASIL DIREKAM!
-
-Nomor LHP: ${data.no_lhp}
-Rangka: ${rangka} | Mesin: ${mesin}
-5 Kategori Foto Dicentang Lengkap.
-
-Status diteruskan ke Pejabat Pemeriksa Dokumen (PFPD).`);
+                    alert(`✓ BAP & LHP PEMERIKSAAN FISIK BERHASIL DIREKAM!\n\nNomor LHP: ${data.no_lhp}\nNomor BAP: ${data.no_bap || '-'}\nFoto lapangan diarsipkan: ${fotoLapangan.length} file.\n\nStatus diteruskan ke Pejabat Pemeriksa Dokumen (PFPD).`);
                     await loadPermohonanData();
                     openDrawerDetail(id);
                 } else {
                     alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
                 }
-            } catch (e) {
-                alert('Kesalahan jaringan: ' + e.message);
-            }
+            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
         }
 
         async function eksekusiAksiSppb(id) {
@@ -9985,14 +10348,14 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             'loket': {
                 title: 'Petugas Loket Pelayanan',
                 badge: 'Loket Pelayanan',
-                desc: 'Perekaman Naskah Masuk Nadine & Cek Berkas',
+                desc: 'Verifikasi 3 Bundel & Penerbitan Otomatis PPFTZ, SPF & IP',
                 bg: '#FEF3C7', border: '#F59E0B', text: '#B45309',
                 icon: '<svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>'
             },
             'jaminan': {
-                title: 'Seksi Perbendaharaan & Jaminan',
-                badge: 'Loket Jaminan PPN',
-                desc: 'Penerbitan Billing Simponi & Surat Pemohon (KEP)',
+                title: 'Petugas Jaminan',
+                badge: 'Tahap Jaminan',
+                desc: 'Unggah Billing Jaminan & Verifikasi Bukti Bayar Pemohon',
                 bg: '#EDE9FE', border: '#8B5CF6', text: '#6D28D9',
                 icon: '<svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>'
             },
@@ -10031,7 +10394,8 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             'FRONTDESK_NADINE': { roles: ['frontdesk', 'loket', 'adminutama'], name: 'Frontdesk / Loket Pelayanan' },
             'BERKAS_LENGKAP': { roles: ['frontdesk', 'loket', 'adminutama'], name: 'Frontdesk / Loket Pelayanan' },
             'VERIFIKASI_FASILITAS': { roles: ['fasilitas', 'adminutama'], name: 'Seksi Fasilitas Pabean' },
-            'LOKET_JAMINAN': { roles: ['jaminan', 'adminutama'], name: 'Seksi Perbendaharaan & Jaminan' },
+            'LOKET_JAMINAN': { roles: ['jaminan', 'adminutama'], name: 'Petugas Jaminan' },
+            'LOKET_VERIFIKASI': { roles: ['loket', 'adminutama'], name: 'Petugas Loket Pelayanan' },
             'PPFTZ_CEK_FISIK': { roles: ['pemeriksabarang', 'adminutama'], name: 'Pejabat Pemeriksa Barang' },
             'PEMERIKSA_DOKUMEN': { roles: ['pemeriksadokumen', 'adminutama'], name: 'Pejabat Pemeriksa Dokumen' },
             'SPPB_GATE_OUT': { roles: ['gate', 'adminutama'], name: 'Petugas Gate Pelabuhan' },

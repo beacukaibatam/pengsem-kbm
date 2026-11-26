@@ -58,7 +58,6 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
   - Penyimpanan berkas fisik lokal per permohonan (`/var/data/uploads/<ID_NAMA_NOPOL>/`) + **Google Drive Apps Script Bridge** (`gdrive_bridge/Code.gs`) untuk arsip otomatis KTP, NPWP, STNK, BPKB, dokumen pendukung, Surat Permohonan/Pernyataan bermeterai, PPFTZ-01, LHP, BAP, SPPB, dan backup SQLite (`_BACKUP_DATABASE`).
   - Skrip backup force majeure proyek ke Google Drive: `./backup_to_gdrive.sh` → `My Drive/PENGELUARAN_SEMENTARA_KBM_BATAM/BACKUP_WEBSITE/`.
 - **Belum Terhubung Eksternal / Lokal:**
-  - **Google Drive Bridge Env:** Perlu deploy `gdrive_bridge/Code.gs` di `script.google.com` (`ridwanmuham17@gmail.com`) lalu isi `GDRIVE_BRIDGE_URL` & `GDRIVE_BRIDGE_SECRET` di Render Cloud.
   - **SMTP Email:** Belum ada akun SMTP produksi yang dipasang di Render (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`).
   - **CEISA 4.0 DJBC & NADINE Kemenkeu:** Penomoran masih dikelola secara lokal oleh backend.
 
@@ -66,7 +65,8 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
-- **Perbaikan UX, Trackpad Scroll, Auto-Crop+OCR, Validasi Silang KTP/NPWP/BPKB(CBU)/STNK 2 Lembar & 6 Foto Kendaraan** — Perbaiki bug nested scroll container agar trackpad 2-jari mulus di `#/formulir`, buka `readOnly` kolom identitas agar semua editable manual, hapus duplikat `onFileSelected` agar `autoCropDocument` selalu aktif, perbaiki status badge/snippet jujur + tombol `↻ Ganti Berkas`, koreksi banner e-meterai, upgrade Gemini Vision OCR (`gemini-2.5-flash`/`2.0-flash`, deteksi MIME akurat, multi-halaman PDF BPKB), tambah slot STNK 2 lembar + deteksi Indikasi Awal CBU + panel komparasi silang menyeluruh + arsip 6 foto fisik kendaraan (Antigravity, Mac Mini).
+- **Penyelarasan Alur Operasional Digital (Jaminan 2-Arah, Loket 4-Output Atomik, Pemeriksa Barang 5 Berkas Asli & Paperless)** — Implementasi Tahap Jaminan 2-arah (`POST /api/jaminan/unggah-billing`, `/api/jaminan/unggah-bukti-bayar`, `/api/jaminan/verifikasi-pembayaran` → `LOKET_VERIFIKASI`), Tahap Loket (`POST /api/loket/approve`: verifikasi 3 bundel + 4 output atomik PPFTZ-01/Proforma 03, penunjukan PFPD, SPF + notif WA wajib bawa 5 berkas asli, IP penunjukan Pemeriksa Barang + cetak PDF SPF & IP), Tahap Pemeriksa Barang (checklist 5 berkas asli, upload multi-foto lapangan ke disk + Google Drive Bridge, BAP & LHP), serta perapian label paperless (Antigravity, Mac Mini).
+- `414ec9b` — Perbaikan UX, Trackpad Scroll, Auto-Crop+OCR (`gemini-2.5-flash` + `GEMINI_API_KEY` live di Render), Validasi Silang KTP/NPWP/BPKB(CBU)/STNK 2 Lembar & 6 Foto Kendaraan (Antigravity, Mac Mini).
 - `1b70c45` — Tambah `gdrive_bridge/Code.gs` + `README_SETUP.md`, simpan berkas asli pemohon & dokumen pabean ke `/var/data/uploads/` + antrean arsip otomatis Google Drive, serta `backup_to_gdrive.sh` (Antigravity, Mac Mini).
 - `0009783` — Tambah `HANDOFF.md` untuk sinkronisasi multi-agent & multi-Mac (Antigravity, Mac Mini).
 
