@@ -879,6 +879,20 @@ DB_USERS_PATH = os.path.join(DATA_DIR, 'db_users.json')
 DB_OTP_PATH = os.path.join(DATA_DIR, 'db_otp.json')
 AUTH_SESSIONS = {}
 
+# NIP akun "Default Dinas" dari backdoor lama (sudah dihapus dari kode login).
+# Tetap didaftarkan di sini sebagai denylist permanen: meski record ini masih ada
+# di data lama (db_users.json/kbm_batam.db) atau muncul lagi dari seed default,
+# akun ini tidak akan pernah bisa dipakai login karena selalu disaring di sini.
+REVOKED_LEGACY_NIPS = {"199501012020011001"}
+
+def _filter_revoked_accounts(users_data):
+    if isinstance(users_data, dict) and users_data.get('pegawai'):
+        users_data['pegawai'] = [
+            p for p in users_data['pegawai']
+            if str(p.get('nip', '')).strip() not in REVOKED_LEGACY_NIPS
+        ]
+    return users_data
+
 def load_db_users():
     # Ambil data dari SQLite WAL
     try:
@@ -894,27 +908,20 @@ def load_db_users():
                     pegawai.append(u)
                 else:
                     pemohon.append(u)
-            return {"pegawai": pegawai, "pemohon": pemohon}
+            return _filter_revoked_accounts({"pegawai": pegawai, "pemohon": pemohon})
     except Exception as e_sql:
         print('[!] SQLite users query fallback to JSON:', e_sql)
 
     if os.path.exists(DB_USERS_PATH):
         try:
             with open(DB_USERS_PATH, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                return _filter_revoked_accounts(json.load(f))
         except Exception as e:
             print('[!] Error loading db_users:', e)
-    # Default data pegawai internal dinas jika berkas belum ada
+    # Belum ada data pegawai tersimpan — mulai kosong (JANGAN seed akun default
+    # dengan password hardcoded; akun dinas resmi dibuat lewat proses RBAC terpisah).
     default_users = {
-        "pegawai": [
-            {
-                "nip": "199501012020011001",
-                "nama": "Petugas Pelayanan & Fasilitas Pabean",
-                "jabatan": "Pelaksana Pemeriksa / Operator CEISA",
-                "password": "REDACTED_PASSWORD",
-                "role": "pegawai"
-            }
-        ],
+        "pegawai": [],
         "pemohon": []
     }
     save_db_users(default_users)
