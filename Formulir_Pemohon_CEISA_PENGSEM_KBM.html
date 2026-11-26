@@ -1691,6 +1691,40 @@
             #viewAuthLanding .auth-card-box {
                 margin: 10px auto 30px auto !important;
             }
+
+            /* ===== Header & Nav Portal Petugas/Pemohon (dashboard, bukan landing) — ringkas di HP ===== */
+            :root { --header-height: 120px !important; }
+            body:not(.landing-page) { padding-top: 130px !important; }
+            .header-brand-group { gap: 8px !important; }
+            .header-brand-group img { height: 26px !important; }
+            .header-car-icon { display: none !important; }
+            .header-title-main { font-size: 0.92rem !important; }
+            .header-tagline { display: none !important; }
+            #headerUserProfile { gap: 6px !important; }
+            #headerUserNama { font-size: 0.70rem !important; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .header-user-detail { display: none !important; }
+            #headerRoleBadge { font-size: 0.56rem !important; padding: 1px 6px !important; }
+            #btnLogoutPortal { padding: 6px 10px !important; font-size: 0 !important; }
+            #btnLogoutPortal svg { width: 16px !important; height: 16px !important; }
+
+            .portal-nav-container { flex-wrap: wrap !important; padding: 6px 10px !important; gap: 6px !important; }
+            .portal-tabs {
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+                width: 100%;
+            }
+            .portal-tabs::-webkit-scrollbar { display: none !important; }
+            .portal-tab-btn {
+                flex-shrink: 0 !important;
+                white-space: nowrap !important;
+                padding: 9px 12px !important;
+                font-size: 0.74rem !important;
+            }
+            .portal-actions { width: 100%; }
+            .livechat-phone { display: none !important; }
+            #btnLiveChatOperator { width: 100%; justify-content: center; padding: 8px 12px !important; font-size: 0.78rem !important; }
         }
 
     
@@ -2361,7 +2395,7 @@
                 <div style="width: 1.5px; height: 38px; background: rgba(255,255,255,0.25); margin: 0 4px;"></div>
 
                 <!-- 4. Ikon Mobil Tampak Depan dengan Tumpukan Koper/Muatan Mudik di Atas Roof Rack & Plat BP 2026 KBM -->
-                <div style="width: 52px; height: 48px; flex-shrink: 0;">
+                <div class="header-car-icon" style="width: 52px; height: 48px; flex-shrink: 0;">
                     <svg viewBox="0 0 110 100" fill="none" style="width:100%; height:100%;">
                         <!-- Koper Bawah (Emas Kuning) -->
                         <rect x="30" y="8" width="50" height="11" rx="2.5" fill="#FCB813" stroke="#FFFFFF" stroke-width="2.2"/>
@@ -2401,10 +2435,10 @@
 
                 <!-- 5. Judul Portal Kapital Tebal & Subteks Identitas Layanan -->
                 <div style="display:flex; flex-direction:column; justify-content:center;">
-                    <div style="font-size:1.35rem; font-weight:900; color:#FCB813; letter-spacing:0.5px; line-height:1.15; text-transform:uppercase;">
+                    <div class="header-title-main" style="font-size:1.35rem; font-weight:900; color:#FCB813; letter-spacing:0.5px; line-height:1.15; text-transform:uppercase;">
                         PENGSEM KBM BATAM
                     </div>
-                    <div style="font-size:0.72rem; color:#E2E8F0; font-weight:600; line-height:1.25; margin-top:2px;">
+                    <div class="header-tagline" style="font-size:0.72rem; color:#E2E8F0; font-weight:600; line-height:1.25; margin-top:2px;">
                         Pelayanan Pengeluaran Sementara Kendaraan Bermotor dari Kawasan Bebas Batam ke Tempat Lain Dalam Daerah Pabean (TLDDP)
                     </div>
                 </div>
@@ -2414,7 +2448,7 @@
             <div id="headerUserProfile" style="display:flex; align-items:center; gap:14px; flex-shrink:0;">
                 <div id="headerUserInfoBox" style="display:flex; flex-direction:column; text-align:right; align-items:flex-end;">
                     <div id="headerUserNama" style="font-size:0.86rem; font-weight:800; color:#FFFFFF; line-height:1.2;">Memuat profil...</div>
-                    <div id="headerUserDetail" style="font-size:0.72rem; color:#BAE6FD; font-weight:600; line-height:1.2; margin-top:2px;">Sesi Terverifikasi</div>
+                    <div id="headerUserDetail" class="header-user-detail" style="font-size:0.72rem; color:#BAE6FD; font-weight:600; line-height:1.2; margin-top:2px;">Sesi Terverifikasi</div>
                     <span id="headerRoleBadge" style="display:inline-block; font-size:0.66rem; font-weight:800; padding:2px 8px; border-radius:4px; margin-top:3px; text-transform:uppercase; letter-spacing:0.3px;">Petugas</span>
                 </div>
                 <button type="button" id="btnLogoutPortal" onclick="handleLogout()" style="background:#EF4444; color:#FFFFFF; border:none; border-radius:8px; padding:7px 14px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:background 0.2s;" onmouseover="this.style.background='#DC2626'" onmouseout="this.style.background='#EF4444'" title="Keluar dari Portal">
@@ -2974,19 +3008,19 @@
             <div class="portal-tabs" id="portalOfficerTabs">
                 <button type="button" class="portal-tab-btn active" id="tabBtnDashboard" onclick="switchPortalView('dashboard')">
                     <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-                    <span>Tab Monitoring Permohonan KBM</span>
+                    <span>Monitoring Permohonan</span>
                 </button>
                 <button type="button" class="portal-tab-btn" id="tabBtnVerifikasi" onclick="switchPortalView('verifikasi')">
                     <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><polyline points="9 15 11 17 15 13"></polyline></svg>
-                    <span>Tab Verifikasi Berkas &amp; OCR</span>
+                    <span>Verifikasi &amp; OCR</span>
                 </button>
                 <button type="button" class="portal-tab-btn" id="tabBtnNadineSkep" onclick="switchPortalView('nadineSkep')">
                     <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    <span>Tab Agenda Nadine &amp; SKEP</span>
+                    <span>Nadine &amp; SKEP</span>
                 </button>
                 <button type="button" class="portal-tab-btn" id="tabBtnLaporan" onclick="switchPortalView('laporan')">
                     <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                    <span>Tab Laporan Nataru 2026/27</span>
+                    <span>Laporan Nataru</span>
                 </button>
                 <button type="button" class="portal-tab-btn" id="tabBtnFormulir" onclick="switchPortalView('formulir')" style="display:none;">
                     <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
@@ -2999,7 +3033,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    Konsol Live Chat WA (+62 851-4490-1346)
+                    <span>Live Chat WA</span><span class="livechat-phone">&nbsp;(+62 851-4490-1346)</span>
                 </button>
             </div>
         </div>
@@ -3134,37 +3168,37 @@
     <!-- Bilah Pelacak Tahapan Flat 3 Langkah -->
     <div class="stepper-flat-bar" style="background:#FFFFFF; border-bottom:1.5px solid #E2E8F0; padding:10px 24px; position:relative; z-index:90; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
         <div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
-            <!-- Langkah 1: Selesai (Centang Biru Solid) -->
-            <div style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#EFF6FF; border:1.5px solid #BFDBFE;">
-                <div style="width:26px; height:26px; border-radius:50%; background:#005FAC; color:#FFFFFF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <!-- Langkah 1: Data Pemohon (lengkap sejak Registrasi akun) -->
+            <div id="stepBarBox1" style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#EFF6FF; border:1.5px solid #BFDBFE;">
+                <div id="stepBarCircle1" style="width:26px; height:26px; border-radius:50%; background:#005FAC; color:#FFFFFF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
                 <div>
-                    <div style="font-size:0.65rem; font-weight:700; color:#005FAC; text-transform:uppercase;">Tahap 1 • Selesai</div>
-                    <div style="font-size:0.80rem; font-weight:800; color:#0F172A;">1. Data Pemohon</div>
+                    <div id="stepBarLabel1" style="font-size:0.65rem; font-weight:700; color:#005FAC; text-transform:uppercase;">Tahap 1 • Selesai</div>
+                    <div style="font-size:0.80rem; font-weight:800; color:#0F172A;">1. Data Pemohon (Registrasi)</div>
                 </div>
             </div>
 
-            <!-- Langkah 2: Aktif (Unggah Berkas & OCR) -->
-            <div style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#FFFFFF; border:2px solid #005FAC; box-shadow:0 2px 6px rgba(0,95,172,0.12);">
-                <div style="width:26px; height:26px; border-radius:50%; background:#005FAC; color:#FFFFFF; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:900; font-size:0.88rem;">
+            <!-- Langkah 2: Unggah Berkas & OCR — status diperbarui dinamis oleh setStepActive() mengikuti currentPage -->
+            <div id="stepBarBox2" style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#FFFFFF; border:2px solid #005FAC; box-shadow:0 2px 6px rgba(0,95,172,0.12);">
+                <div id="stepBarCircle2" style="width:26px; height:26px; border-radius:50%; background:#005FAC; color:#FFFFFF; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:900; font-size:0.88rem;">
                     2
                 </div>
                 <div>
-                    <div style="font-size:0.65rem; font-weight:800; color:#005FAC; text-transform:uppercase;">Tahap Aktif</div>
+                    <div id="stepBarLabel2" style="font-size:0.65rem; font-weight:800; color:#005FAC; text-transform:uppercase;">Tahap Aktif</div>
                     <div style="font-size:0.80rem; font-weight:800; color:#005FAC;">2. Unggah Berkas &amp; OCR</div>
                 </div>
             </div>
 
-            <!-- Langkah 3: Menunggu (E-Meterai & Penerbitan Dokumen) -->
-            <div style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#F8FAFC; border:1.5px solid #E2E8F0;">
-                <div style="width:26px; height:26px; border-radius:50%; background:#E2E8F0; color:#64748B; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:800; font-size:0.88rem;">
+            <!-- Langkah 3: E-Meterai & Penerbitan Dokumen — status diperbarui dinamis -->
+            <div id="stepBarBox3" style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#F8FAFC; border:1.5px solid #E2E8F0;">
+                <div id="stepBarCircle3" style="width:26px; height:26px; border-radius:50%; background:#E2E8F0; color:#64748B; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:800; font-size:0.88rem;">
                     3
                 </div>
                 <div>
-                    <div style="font-size:0.65rem; font-weight:700; color:#64748B; text-transform:uppercase;">Tahap Selanjutnya</div>
+                    <div id="stepBarLabel3" style="font-size:0.65rem; font-weight:700; color:#64748B; text-transform:uppercase;">Tahap Selanjutnya</div>
                     <div style="font-size:0.80rem; font-weight:700; color:#64748B;">3. E-Meterai &amp; Penerbitan Dokumen</div>
                 </div>
             </div>
@@ -4731,23 +4765,53 @@
 
         function setStepActive(pageNum) {
             currentPage = pageNum;
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 3; i++) {
                 const pageEl = document.getElementById('page-' + i);
-                const navEl = document.getElementById('step-nav-' + i);
-                const circleEl = document.getElementById('circle-' + i);
-
-                pageEl.classList.toggle('active', i === pageNum);
-                navEl.classList.toggle('active', i === pageNum);
-                navEl.classList.toggle('completed', i < pageNum);
-
-                if (i < pageNum) {
-                    circleEl.innerText = '✓';
-                } else {
-                    circleEl.innerText = i;
-                }
+                if (pageEl) pageEl.classList.toggle('active', i === pageNum);
             }
+            // Formulir pemohon cuma punya 3 halaman (page-1..3) yang dipetakan ke Tahap 2 & 3
+            // di bilah stepper (Tahap 1 "Data Pemohon" sudah lengkap sejak Registrasi akun, di luar
+            // wizard ini). Perbarui tampilan Tahap 2 & 3 supaya benar-benar mengikuti progres asli,
+            // bukan status statis yang selalu sama untuk semua pemohon.
+            renderStepBarStatus(2, pageNum === 1 ? 'active' : 'done');
+            renderStepBarStatus(3, pageNum >= 2 ? (pageNum > 2 ? 'done' : 'active') : 'pending');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             syncValues();
+        }
+
+        function renderStepBarStatus(stepNum, state) {
+            const box = document.getElementById('stepBarBox' + stepNum);
+            const circle = document.getElementById('stepBarCircle' + stepNum);
+            const label = document.getElementById('stepBarLabel' + stepNum);
+            if (!box || !circle || !label) return;
+            if (state === 'done') {
+                box.style.background = '#EFF6FF';
+                box.style.border = '1.5px solid #BFDBFE';
+                box.style.boxShadow = 'none';
+                circle.style.background = '#005FAC';
+                circle.style.color = '#FFFFFF';
+                circle.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                label.style.color = '#005FAC';
+                label.innerText = 'Tahap ' + stepNum + ' • Selesai';
+            } else if (state === 'active') {
+                box.style.background = '#FFFFFF';
+                box.style.border = '2px solid #005FAC';
+                box.style.boxShadow = '0 2px 6px rgba(0,95,172,0.12)';
+                circle.style.background = '#005FAC';
+                circle.style.color = '#FFFFFF';
+                circle.innerHTML = stepNum;
+                label.style.color = '#005FAC';
+                label.innerText = 'Tahap Aktif';
+            } else {
+                box.style.background = '#F8FAFC';
+                box.style.border = '1.5px solid #E2E8F0';
+                box.style.boxShadow = 'none';
+                circle.style.background = '#E2E8F0';
+                circle.style.color = '#64748B';
+                circle.innerHTML = stepNum;
+                label.style.color = '#64748B';
+                label.innerText = 'Tahap Selanjutnya';
+            }
         }
 
         // Validasi Berjenjang: Cek apakah step tertentu sudah 100% lengkap
