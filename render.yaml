@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: api-kbm-beacukaibatam
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python3 server.py"
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_PATH
+        value: kbm_batam.db
+      - key: OCR_MAX_WORKERS
+        value: 4
+      - key: CORS_ORIGINS
+        value: "https://beacukaibatam.github.io,http://localhost:8080,http://127.0.0.1:8080"
+      - key: WA_META_PHONE_NUMBER_ID
+        sync: false
+      - key: WA_META_ACCESS_TOKEN
+        sync: false
+      - key: WA_WEBHOOK_VERIFY_TOKEN
+        value: "KBM_BATAM_SECURE_TOKEN_2026"
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: "Bea Cukai Batam <layanan.kbm.batam@gmail.com>"

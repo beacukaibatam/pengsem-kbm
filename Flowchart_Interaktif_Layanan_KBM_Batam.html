@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alur Pelayanan &amp; Pengawasan Pengeluaran Sementara Kendaraan Bermotor (KBM) Batam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --border-color: #E2E8F0;
+            --border-hover: #CBD5E1;
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+            --text-subtle: #94A3B8;
+
+            --primary-navy: #0F172A;
+            --accent-blue: #1D4ED8;
+            --accent-blue-light: #EFF6FF;
+            --accent-emerald: #059669;
+            --accent-amber: #D97706;
+            --accent-purple: #7C3AED;
+            --accent-rose: #E11D48;
+
+            --line-color: #CBD5E1;
+            --card-width: 250px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        header {
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 36px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: -0.02em;
+        }
+
+        .header-title p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-gladi {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #1D4ED8, #2563EB);
+            color: #FFFFFF;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+            transition: all 0.2s ease;
+        }
+        .btn-gladi:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+            background: linear-gradient(135deg, #1E40AF, #1D4ED8);
+        }
+
+        /* Main Workspace */
+        main {
+            flex: 1;
+            padding: 28px 36px;
+            max-width: 1500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .info-ribbon {
+            background: #FFFFFF;
+            border: 1px dashed var(--border-color);
+            border-radius: 14px;
+            padding: 14px 22px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .info-ribbon strong {
+            color: var(--accent-blue);
+        }
+
+        /* Timeline Track Wrapper */
+        .timeline-scroll-wrapper {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 50px 30px;
+            overflow-x: auto;
+            box-shadow: 0 4px 14px -3px rgba(0,0,0,0.04);
+            position: relative;
+            scrollbar-width: thin;
+        }
+
+        .timeline-scroll-wrapper::-webkit-scrollbar {
+            height: 7px;
+        }
+        .timeline-scroll-wrapper::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+
+        .timeline-track {
+            display: flex;
+            position: relative;
+            min-width: 2450px;
+            height: 480px;
+            align-items: center;
+        }
+
+        /* Continuous Horizontal Line */
+        .central-line {
+            position: absolute;
+            left: 50px;
+            right: 50px;
+            top: 50%;
+            height: 4px;
+            background: #E2E8F0;
+            transform: translateY(-50%);
+            z-index: 1;
+            border-radius: 2px;
+        }
+
+        .central-line-gradient {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #1D4ED8, #059669);
+            opacity: 0.35;
+            border-radius: 2px;
+        }
+
+        /* Step Column */
+        .step-column {
+            position: relative;
+            width: 270px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        /* Milestone Dot */
+        .milestone-dot {
+            width: 38px;
+            height: 38px;
+            background: #FFFFFF;
+            border: 3.5px solid var(--line-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            box-shadow: 0 0 0 5px #FFFFFF;
+        }
+
+        .step-column:hover .milestone-dot {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            transform: translateY(-50%) scale(1.15);
+            box-shadow: 0 0 0 6px rgba(29, 78, 216, 0.15);
+        }
+
+        /* Connecting Stem Line */
+        .stem-connector {
+            position: absolute;
+            width: 2px;
+            background: #CBD5E1;
+            z-index: 2;
+            transition: all 0.25s ease;
+        }
+
+        /* Top Box Placement */
+        .step-column.pos-top .step-box {
+            position: absolute;
+            bottom: calc(50% + 36px);
+        }
+        .step-column.pos-top .stem-connector {
+            top: calc(50% - 36px);
+            bottom: 50%;
+            height: 36px;
+        }
+
+        /* Bottom Box Placement */
+        .step-column.pos-bottom .step-box {
+            position: absolute;
+            top: calc(50% + 36px);
+        }
+        .step-column.pos-bottom .stem-connector {
+            top: 50%;
+            height: 36px;
+        }
+
+        .step-column:hover .stem-connector {
+            background: var(--accent-blue);
+            width: 3px;
+        }
+
+        /* Interactive Box */
+        .step-box {
+            width: var(--card-width);
+            background: #FFFFFF;
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: left;
+            box-shadow: 0 3px 8px -1px rgba(0,0,0,0.04);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-column:hover .step-box {
+            border-color: var(--accent-blue);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -3px rgba(29, 78, 216, 0.12);
+        }
+
+        .step-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .step-timeline {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: #F1F5F9;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .step-subject {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: var(--primary-navy);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .step-activity {
+            font-size: 0.78rem;
+            line-height: 1.35;
+            color: var(--text-muted);
+        }
+
+        .step-click-tag {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #F1F5F9;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Modal Popup System */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-dialog {
+            background: #FFFFFF;
+            width: 100%;
+            max-width: 1100px;
+            max-height: 90vh;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: zoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 20px 28px;
+            background: linear-gradient(to right, #F8FAFC, #FFFFFF);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title-group h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .modal-title-group p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .modal-close-btn {
+            background: #F1F5F9;
+            border: 1px solid var(--border-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-close-btn:hover {
+            background: #E2E8F0;
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            padding: 28px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1.15fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .modal-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Detail Blocks inside Modal */
+        .section-card {
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .section-card h3 {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--primary-navy);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .sop-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .sop-list li {
+            font-size: 0.82rem;
+            color: #334155;
+            line-height: 1.45;
+            display: flex;
+            gap: 10px;
+        }
+        .sop-list li span.bullet {
+            color: var(--accent-blue);
+            font-weight: 800;
+        }
+
+        /* Official Document Viewer (Authentic Replication) */
+        .doc-viewer-container {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .doc-tabs-bar {
+            background: #F1F5F9;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .doc-tab-btn {
+            padding: 10px 16px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-right: 1px solid var(--border-color);
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .doc-tab-btn.active {
+            background: #FFFFFF;
+            color: var(--accent-blue);
+            border-bottom: 2px solid var(--accent-blue);
+        }
+
+        .doc-render-area {
+            padding: 24px;
+            background: #FAFAFA;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            max-height: 520px;
+            overflow-y: auto;
+            color: #1E293B;
+        }
+
+        /* Real Formal Letter Styling */
+        .paper-letter {
+            background: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            line-height: 1.4;
+        }
+        .paper-letter h4 {
+            text-align: center;
+            font-size: 1.05rem;
+            text-decoration: underline;
+            margin-bottom: 12px;
+            font-family: 'Times New Roman', serif;
+        }
+        .paper-meta-row {
+            display: flex;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .paper-meta-row .col-label {
+            width: 140px;
+        }
+        .paper-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 0.8rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .paper-table th, .paper-table td {
+            border: 1px solid #000000;
+            padding: 5px 8px;
+            text-align: left;
+        }
+        .paper-table th {
+            background: #E5E7EB;
+            font-weight: 700;
+            text-align: center;
+        }
+        .meterai-box {
+            display: inline-block;
+            border: 1px dashed #6B7280;
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            color: #4B5563;
+            text-align: center;
+            margin-top: 10px;
+            background: #F3F4F6;
+        }
+
+        /* Customs Box Form (PPFTZ) */
+        .customs-form-box {
+            background: #FFFFFF;
+            border: 2px solid #000000;
+            padding: 16px;
+            font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+        }
+        .customs-header {
+            text-align: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .customs-section {
+            border: 1px solid #000000;
+            margin-bottom: 8px;
+            padding: 8px;
+            font-size: 0.72rem;
+        }
+        .customs-section-title {
+            font-weight: 800;
+            background: #E5E7EB;
+            padding: 2px 6px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        /* WhatsApp Simulation Box */
+        .wa-preview-box {
+            background: #EFEAE2;
+            border: 1px solid #D1D7DB;
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .wa-bubble {
+            background: #FFFFFF;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border-top-left-radius: 0;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #111B21;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .wa-bubble-time {
+            font-size: 0.65rem;
+            color: #667781;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 16px 28px;
+            background: #FFFFFF;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Gladi Bersih Full-Screen View / Modal */
+        .gladi-dialog {
+            background: #FFFFFF;
+            width: 100%;
+            max-width: 1200px;
+            max-height: 92vh;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+        }
+
+        .gladi-stepper {
+            display: flex;
+            background: #F1F5F9;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .gladi-step-item {
+            padding: 12px 18px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-color);
+            white-space: nowrap;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .gladi-step-item.active {
+            background: #FFFFFF;
+            color: var(--accent-blue);
+            border-bottom: 3px solid var(--accent-blue);
+        }
+        .gladi-step-item.done {
+            color: var(--accent-emerald);
+        }
+
+        .terminal-box {
+            background: #0F172A;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #38BDF8;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+        .terminal-box .log-success { color: #4ADE80; }
+        .terminal-box .log-warning { color: #FBBF24; }
+        .terminal-box .log-alert   { color: #F87171; }
+
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            background: #FFFFFF;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action.primary {
+            background: var(--accent-blue);
+            color: #FFFFFF;
+            border-color: var(--accent-blue);
+        }
+        .btn-action.primary:hover {
+            background: #1D4ED8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="header-title">
+            <h1>Alur Pelayanan &amp; Pengawasan Pengeluaran Sementara Kendaraan Bermotor (KBM)</h1>
+            <p>KPU Bea dan Cukai Tipe B Batam • Kawasan Bebas Batam ke Tempat Lain Dalam Daerah Pabean (TLDDP)</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-gladi" onclick="openGladiModal()">
+                <span>🎯 Simulasi Gladi Bersih Alur KBM</span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Info Ribbon -->
+        <div class="info-ribbon">
+            <span>📌 <strong>SOP Operasional Pabean Terpadu:</strong> Garis horizontal berikut memuat 9 langkah berurutan dengan kotak selang-seling (atas &amp; bawah). <strong>Klik pada kotak langkah</strong> untuk membuka pop-up rincian subjek, tugas petugas, titik pengawasan, dan replika fisik naskah dinas resmi.</span>
+            <div style="display:flex; gap:8px;">
+                <button class="btn-action" onclick="scrollTrack(-350)">◀ Geser Kiri</button>
+                <button class="btn-action" onclick="scrollTrack(350)">Geser Kanan ▶</button>
+            </div>
+        </div>
+
+        <!-- Horizontal Timeline Track Area -->
+        <div class="timeline-scroll-wrapper" id="timelineTrackScroll">
+            <div class="timeline-track">
+                <!-- Garis Horizontal Tengah -->
+                <div class="central-line">
+                    <div class="central-line-gradient"></div>
+                </div>
+
+                <!-- 9 Kotak Selang-Seling (Odd: Top, Even: Bottom) -->
+                
+                <!-- 1. Pemohon (Top) -->
+                <div class="step-column pos-top" onclick="openStepModal(1)">
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 1</span>
+                            <span class="step-timeline">H-7 s.d H-3</span>
+                        </div>
+                        <div class="step-subject">👤 Pemohon / Kuasa</div>
+                        <div class="step-activity">Pengajuan Surat Permohonan &amp; Surat Pernyataan Komitmen Bermaterai via Nadine (ID 62234248).</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                    <div class="stem-connector"></div>
+                    <div class="milestone-dot">1</div>
+                </div>
+
+                <!-- 2. Loket PFPC I & Intelijen (Bottom) -->
+                <div class="step-column pos-bottom" onclick="openStepModal(2)">
+                    <div class="milestone-dot">2</div>
+                    <div class="stem-connector"></div>
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 2</span>
+                            <span class="step-timeline">H-3 s.d H-2</span>
+                        </div>
+                        <div class="step-subject">👮 Loket PFPC I &amp; Analis</div>
+                        <div class="step-activity">Verifikasi Berkas, Uji Silang Anomali Calo/NIK &amp; Kueri Live API NJKB Bapenda Kepri (PPN 11%).</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                </div>
+
+                <!-- 3. Seksi Fasilitas & KPU (Top) -->
+                <div class="step-column pos-top" onclick="openStepModal(3)">
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 3</span>
+                            <span class="step-timeline">H-2 s.d H-1</span>
+                        </div>
+                        <div class="step-subject">🏢 Seksi Fasilitas &amp; TU</div>
+                        <div class="step-activity">Penerbitan Surat Keputusan Persetujuan (KEP-65/KPU.203/KBM/2026) TTE BSrE &amp; Unduh Role TU.</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                    <div class="stem-connector"></div>
+                    <div class="milestone-dot">3</div>
+                </div>
+
+                <!-- 4. Pemohon & Seksi PK (Bottom) -->
+                <div class="step-column pos-bottom" onclick="openStepModal(4)">
+                    <div class="milestone-dot">4</div>
+                    <div class="stem-connector"></div>
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 4</span>
+                            <span class="step-timeline">H-2 s.d H-1</span>
+                        </div>
+                        <div class="step-subject">💳 Pemohon &amp; Seksi PK</div>
+                        <div class="step-activity">Penyerahan Jaminan Tunai PPN 11% &amp; Penerbitan Bukti Penerimaan Jaminan (BPJ 000070/2026).</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                </div>
+
+                <!-- 5. Pelayanan Pabean (Top) -->
+                <div class="step-column pos-top" onclick="openStepModal(5)">
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 5</span>
+                            <span class="step-timeline">H-1</span>
+                        </div>
+                        <div class="step-subject">💻 Pelayanan Pabean</div>
+                        <div class="step-activity">Penerbitan Pendaftaran PPFTZ-01 Keluar (No. 93) &amp; Proforma PPFTZ-03 Masuk Kembali (No. 97).</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                    <div class="stem-connector"></div>
+                    <div class="milestone-dot">5</div>
+                </div>
+
+                <!-- 6. Pemeriksa Fisik Hanggar (Bottom) -->
+                <div class="step-column pos-bottom" onclick="openStepModal(6)">
+                    <div class="milestone-dot">6</div>
+                    <div class="stem-connector"></div>
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 6</span>
+                            <span class="step-timeline">Hari H (Pagi)</span>
+                        </div>
+                        <div class="step-subject">🔍 Pemeriksa Hanggar Punggur</div>
+                        <div class="step-activity">Pemeriksaan Fisik Terarah Checklist 6 Foto Wajib Stempel GPS/Waktu &amp; Auto-Generate LHP/BAP.</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                </div>
+
+                <!-- 7. PFPD & ASDP Gate (Top) -->
+                <div class="step-column pos-top" onclick="openStepModal(7)">
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 7</span>
+                            <span class="step-timeline">Hari H (Gate Out)</span>
+                        </div>
+                        <div class="step-subject">🚢 PFPD &amp; Pintu ASDP</div>
+                        <div class="step-activity">Penerbitan SPPB Resmi, Validasi Barcode Dermaga ASDP, &amp; Pemuatan KBM ke Kapal RORO.</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                    <div class="stem-connector"></div>
+                    <div class="milestone-dot">7</div>
+                </div>
+
+                <!-- 8. Pengawasan & EWS (Bottom) -->
+                <div class="step-column pos-bottom" onclick="openStepModal(8)">
+                    <div class="milestone-dot">8</div>
+                    <div class="stem-connector"></div>
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 8</span>
+                            <span class="step-timeline">Hari 1 s.d 45</span>
+                        </div>
+                        <div class="step-subject">📡 Seksi Fasilitas &amp; P2</div>
+                        <div class="step-activity">Pemantauan Masa Tinggal di TLDDP via Dashboard EWS &amp; Bot Otomasi Pengingat WhatsApp (H-15/H-7).</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                </div>
+
+                <!-- 9. Kedatangan & Rekonsiliasi (Top) -->
+                <div class="step-column pos-top" onclick="openStepModal(9)">
+                    <div class="step-box">
+                        <div class="step-box-header">
+                            <span class="step-label">Langkah 9</span>
+                            <span class="step-timeline">Hari Kedatangan</span>
+                        </div>
+                        <div class="step-subject">🤝 Hanggar &amp; Seksi PK</div>
+                        <div class="step-activity">Pemasukan Kembali, Pengesahan PPFTZ-03, Rekonsiliasi Digital Tutup, &amp; Pencairan BPJ 100%.</div>
+                        <div class="step-click-tag"><span>Buka Pop-up Detail</span> <span>➔</span></div>
+                    </div>
+                    <div class="stem-connector"></div>
+                    <div class="milestone-dot">9</div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Popup Detail Langkah -->
+    <div class="modal-overlay" id="stepModalOverlay" onclick="closeStepModal(event)">
+        <div class="modal-dialog" onclick="event.stopPropagation()">
+            <!-- Header Modal -->
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2 id="modalStepTitle">Langkah 1: Pengajuan Surat Permohonan &amp; Pernyataan Komitmen</h2>
+                    <p id="modalStepDesc">Pemohon mengajukan berkas resmi pabean dan komitmen jaminan pengeluaran sementara.</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeStepModalDirect()">✕</button>
+            </div>
+
+            <!-- Body Modal -->
+            <div class="modal-body">
+                <!-- Kolom Kiri: SOP Teknis & Titik Pengawasan -->
+                <div>
+                    <div class="section-card">
+                        <h3>📋 SOP &amp; Tindakan Teknis Petugas / Pihak</h3>
+                        <ul class="sop-list" id="modalSopList">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+
+                    <div class="section-card" style="background:#FFFBEB; border-color:#FDE68A;">
+                        <h3 style="color:#B45309;">🛡️ Titik Pengawasan &amp; Mitigasi Risiko Pabean</h3>
+                        <ul class="sop-list" id="modalPengawasanList">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+
+                    <!-- WhatsApp Preview Box -->
+                    <div class="wa-preview-box">
+                        <div style="font-size:0.75rem; font-weight:800; color:#075E54; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                            <span>💬 NOTIFIKASI OTOMATIS WHATSAPP PEMOHON</span>
+                        </div>
+                        <div class="wa-bubble" id="modalWaContent">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Visualisasi Dokumen Asli -->
+                <div>
+                    <div class="doc-viewer-container">
+                        <div class="doc-tabs-bar" id="modalDocTabs">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div class="doc-render-area" id="modalDocRender">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="modal-footer">
+                <button class="btn-action" id="modalBtnPrev" onclick="navigateModalStep(-1)">◀ Langkah Sebelumnya</button>
+                <span style="font-size:0.85rem; font-weight:700; color:var(--text-muted);" id="modalStepIndicator">Langkah 1 dari 9</span>
+                <button class="btn-action primary" id="modalBtnNext" onclick="navigateModalStep(1)">Langkah Berikutnya ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Simulasi Gladi Bersih Alur KBM -->
+    <div class="modal-overlay" id="gladiModalOverlay" onclick="closeGladiModal(event)">
+        <div class="gladi-dialog" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h2 style="font-size:1.25rem; font-weight:800; color:var(--text-dark);">🎯 Simulasi Gladi Bersih: End-to-End Layanan KBM Batam</h2>
+                    <p style="font-size:0.82rem; color:var(--text-muted);">Simulasi interaktif roleplay kasus nyata pemohon Mora Trisna Dewi (Honda HR-V BP 1517 HH)</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeGladiModalDirect()">✕</button>
+            </div>
+
+            <!-- Stepper Bar -->
+            <div class="gladi-stepper" id="gladiStepper">
+                <!-- Populated by JS -->
+            </div>
+
+            <div style="padding:24px; overflow-y:auto; flex:1; display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+                <!-- Kolom Kiri: Status Gladi & Tombol Aksi -->
+                <div style="display:flex; flex-direction:column; gap:16px;">
+                    <div class="section-card" style="margin-bottom:0;">
+                        <h3 id="gladiCurrentTitle">Tahap 1: Pengajuan Nadine</h3>
+                        <p style="font-size:0.82rem; color:#475569; margin-bottom:14px;" id="gladiCurrentDesc">Pemohon mengunggah berkas via formulir permohonan online.</p>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-action primary" id="btnGladiAction" onclick="runGladiAction()">Eksekusi Aksi Tahap Ini</button>
+                            <button class="btn-action" onclick="resetGladi()">Reset Simulasi</button>
+                        </div>
+                    </div>
+
+                    <!-- Live WhatsApp Pop-up -->
+                    <div class="wa-preview-box">
+                        <div style="font-size:0.75rem; font-weight:800; color:#075E54; margin-bottom:8px;">
+                            📱 SIMULASI LAYAR SMARTPHONE PEMOHON
+                        </div>
+                        <div class="wa-bubble" id="gladiWaScreen">
+                            Menunggu inisiasi langkah...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Live Terminal & Handshake Log -->
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div style="font-size:0.8rem; font-weight:800; color:var(--primary-navy); display:flex; justify-content:space-between;">
+                        <span>🖥️ CEISA 4.0 &amp; NADINE SYSTEM LOG CONSOLE</span>
+                        <span style="color:#059669;">● LIVE CONNECTED</span>
+                    </div>
+                    <div class="terminal-box" id="gladiTerminal">
+                        <div>[SYSTEM] Inisiasi sesi simulasi Gladi Bersih Layanan KBM Batam.</div>
+                        <div>[SYSTEM] Menunggu perintah aksi pengguna...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-action" onclick="prevGladiStep()">◀ Mundur</button>
+                <span style="font-size:0.85rem; font-weight:700; color:var(--text-muted);" id="gladiStepCounter">Tahap 1 dari 9</span>
+                <button class="btn-action primary" onclick="nextGladiStep()">Lanjut Tahap Berikutnya ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data 9 Langkah Super Spesifik & Berkas Otentik Replikasi Nyata
+        const STEPS = [
+            {
+                step: 1,
+                title: "Langkah 1: Pengajuan Surat Permohonan & Surat Pernyataan Komitmen Bermaterai",
+                desc: "Pemohon (an. Mora Trisna Dewi) mengajukan permohonan tertulis beserta berkas digital persyaratan melalui portal pabean yang tercatat di Nadine (ID 62234248).",
+                timeline: "H-7 s.d H-3",
+                subjek: "Pemohon (Perorangan / Kuasa)",
+                sop: [
+                    "<strong>Pengisian Formulir Permohonan:</strong> Pemohon mengisi identitas lengkap, nomor HP aktif, alamat tinggal, rincian kendaraan (BP 1517 HH, Rangka MHRRU1860LJ806228, Mesin L15Z61245404), kota tujuan (Payakumbuh), pelabuhan muat (Telaga Punggur), dan pelabuhan bongkar (Buton).",
+                    "<strong>Penandatanganan Surat Pernyataan Bermaterai:</strong> Menandatangani komitmen bersedia menyerahkan jaminan tunai/bank senilai PPN 11%, menjamin KBM kembali dalam 45 hari, dan bersedia jaminan dicairkan jika terlambat/overstay.",
+                    "<strong>Unggah Dokumen Legalitas:</strong> Mengunggah KTP pemohon, NPWP, STNK resmi Samsat Kepri, bukti kepemilikan/surat leasing BPKB, dan SIM pengemudi.",
+                    "<strong>Unggah 6 Sisi Foto Fisik Kendaraan:</strong> Foto tampak depan, belakang, sisi kanan, kiri, nomor rangka, dan nomor mesin.",
+                    "<strong>Perekaman Naskah Nadine:</strong> Berkas otomatis direkam sebagai Surat Masuk Nadine Kemenkeu dengan ID: <strong>62234248</strong>."
+                ],
+                pengawasan: [
+                    "<strong>Legalitas Pemohon:</strong> Kecocokan nama pada KTP, STNK, dan surat permohonan.",
+                    "<strong>Status Pelabuhan Muat & Masuk Wajib Sama:</strong> Wajib bertolak dari dan kembali melalui Pelabuhan Telaga Punggur Batam.",
+                    "<strong>Integritas Fisik Berkas:</strong> Memastikan meterai Rp 10.000 asli dan ditandatangani basah/elektronik pemohon."
+                ],
+                wa: "Halo Ibu Mora Trisna Dewi, permohonan Pengeluaran Sementara Kendaraan Bermotor (Honda HR-V BP 1517 HH) Anda telah kami terima di Nadine BC Batam dengan ID Naskah: *62234248*. Petugas Seksi Fasilitas PFPC I sedang memverifikasi berkas Anda. Pantau status berkas Anda secara berkala.<div class='wa-bubble-time'>10:00 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "Surat Permohonan (Replika ID 62234248 Hal 1)",
+                        html: `<div class="paper-letter">
+                            <h4>SURAT PERMOHONAN</h4>
+                            <div class="paper-meta-row"><span class="col-label">Perihal</span>: Permohonan Pengeluaran Kendaraan Bermotor</div>
+                            <div class="paper-meta-row"><span class="col-label">Lampiran</span>: 1 (satu) Berkas</div>
+                            <div class="paper-meta-row"><span class="col-label">Kepada</span>: Yth. Kepala Kantor Pelayanan Utama Bea dan Cukai Tipe B Batam</div>
+                            <div class="paper-meta-row"><span class="col-label">&nbsp;</span>&nbsp;&nbsp;Di Tempat</div>
+                            <br>
+                            <p>Dengan hormat,</p>
+                            <p style="text-indent: 24px; text-align: justify; margin: 6px 0;">Sehubungan dengan kegiatan sosial yang akan dilakukan pada Hari Raya Idul Fitri 1447 Hijriah, dengan ini kami menyampaikan bahwa akan melakukan pengeluaran sementara kendaraan bermotor, dengan rincian sebagai berikut:</p>
+                            <div class="paper-meta-row"><span class="col-label">Nama</span>: MORA TRISNA DEWI</div>
+                            <div class="paper-meta-row"><span class="col-label">NIK</span>: 217104070671900X &nbsp;&nbsp;&nbsp;&nbsp; <b>No. HP</b>: 0812-XXXX-XXXX</div>
+                            <div class="paper-meta-row"><span class="col-label">Alamat</span>: Citramas Indah Blok C No. 11, Batam Besar</div>
+                            <div class="paper-meta-row"><span class="col-label">Jenis & Plat Mobil</span>: Mobil Penumpang / <b>BP 1517 HH</b></div>
+                            <div class="paper-meta-row"><span class="col-label">Nomor Rangka</span>: MHRRU1860LJ806228</div>
+                            <div class="paper-meta-row"><span class="col-label">Nomor Mesin</span>: L15Z61245404</div>
+                            <div class="paper-meta-row"><span class="col-label">Kota Tujuan</span>: Payakumbuh, Sumatera Barat</div>
+                            <div class="paper-meta-row"><span class="col-label">Lama Pengeluaran</span>: 1 (Satu) Bulan</div>
+                            <div class="paper-meta-row"><span class="col-label">Pelabuhan Muat*</span>: Telaga Punggur (Batam)</div>
+                            <div class="paper-meta-row"><span class="col-label">Pelabuhan Tujuan</span>: Sei Selari Pakning / Buton (Riau)</div>
+                            <br>
+                            <p>Dan melampirkan dokumen sebagai berikut:</p>
+                            <ol style="margin-left: 20px; font-size: 0.85rem;">
+                                <li>Surat pernyataan komitmen barang kembali ke KPBPB Batam dan pencairan jaminan bermaterai (terlampir);</li>
+                                <li>Foto nomor mesin nomor rangka, kendaraan (tampak depan, belakang, kanan dan kiri);</li>
+                                <li>Fotocopy KTP dan NPWP;</li>
+                                <li>Fotocopy STNK dan SIM;</li>
+                                <li>Fotocopy BPKB/surat keterangan leasing lainnya.</li>
+                            </ol>
+                            <br>
+                            <p>Demikian surat permohonan ini kami perbuat, atas perhatian dan kerjasamanya kami ucapkan terimakasih.</p>
+                            <br>
+                            <div style="text-align: right; margin-right: 40px;">
+                                Batam, 10 Maret 2026<br>
+                                Pemohon,<br><br><br>
+                                <b>( MORA TRISNA DEWI )</b>
+                            </div>
+                            <div style="font-size: 0.7rem; margin-top: 10px; font-style: italic;">*Pelabuhan muat dan Pelabuhan masuk harus sama</div>
+                        </div>`
+                    },
+                    {
+                        title: "Surat Pernyataan (Replika ID 62234248 Hal 2)",
+                        html: `<div class="paper-letter">
+                            <h4>SURAT PERNYATAAN</h4>
+                            <p style="text-align: justify;">Sehubungan dengan surat permohonan pengeluaran kendaraan bermotor, dengan ini saya selaku pemohon yang bertanda tangan di bawah ini:</p>
+                            <br>
+                            <div class="paper-meta-row"><span class="col-label">Nama</span>: MORA TRISNA DEWI</div>
+                            <div class="paper-meta-row"><span class="col-label">NIK</span>: 217104070671900X</div>
+                            <div class="paper-meta-row"><span class="col-label">Alamat</span>: Citramas Indah Blok C No. 11, Batam Besar</div>
+                            <br>
+                            <p>Menyatakan:</p>
+                            <ol style="margin-left: 20px; text-align: justify; font-size: 0.85rem; line-height: 1.5;">
+                                <li>Kendaraan Bermotor dengan nomor polisi <b>BP 1517 HH</b> adalah benar akan dikeluarkan untuk sementara menuju kota Payakumbuh dengan jangka waktu 17 Maret 2026 s.d. 17 April 2026 dan kendaraan tersebut akan dibawa kembali ke Kawasan Perdagangan Bebas dan Pelabuhan Bebas (KPBPB) Batam;</li>
+                                <li>Bersedia menyerahkan jaminan tunai sebesar <b>Rp 7.700.000,- (Tujuh Juta Tujuh Ratus Ribu Rupiah)</b>;</li>
+                                <li>Setuju jika kendaraan tersebut terlambat Kembali atau tidak Kembali lagi ke KPBPB Batam maka terhadap jaminan yang telah diserahkan akan dicairkan untuk pelunasan PPN sehingga kendaraan tidak lagi mendapatkan fasilitas Kawasan bebas;</li>
+                                <li>Tidak akan membawa barang larangan dan pembatasan, jika terdapat hal yang tidak sesuai dengan ketentuan maka bersedia untuk dilakukan penindakan;</li>
+                                <li>Bersedia mengajukan pemberitahuan formalitas kepabeanan dengan PPFTZ-01 dengan melampirkan keputusan pengeluaran sementara, Bukti Penerimaan Jaminan (BPJ), surat jalan kepolisian, dan dokumen pelengkap pabean yang diperlukan;</li>
+                                <li>Dokumen yang diserahkan kepada pihak Bea dan Cukai merupakan dokumen yang sah dan benar.</li>
+                            </ol>
+                            <br>
+                            <p>Demikian surat pernyataan ini kami sampaikan dan atas perhatiannya kami ucapkan terimakasih.</p>
+                            <br>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                <div class="meterai-box">
+                                    MATERAI TEMPEL<br>
+                                    Rp 10.000<br>
+                                    [Tanda Tangan Kena Materai]
+                                </div>
+                                <div style="text-align: right; margin-right: 20px;">
+                                    Batam, 10 Maret 2026<br>
+                                    Yang Menyatakan,<br><br><br>
+                                    <b>( MORA TRISNA DEWI )</b>
+                                </div>
+                            </div>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 2,
+                title: "Langkah 2: Verifikasi Berkas, Uji Silang Anomali Calo/NIK & Hitung Nilai Jaminan NJKB",
+                desc: "Petugas Seksi PFPC I meneliti berkas, menguji silang riwayat database pemohon terhadap anomali calo, dan menarik NJKB via live API Bapenda Kepri untuk menetapkan jaminan.",
+                timeline: "H-3 s.d H-2",
+                subjek: "Petugas Loket PFPC I & Modul Intelijen Fasilitas",
+                sop: [
+                    "<strong>Verifikasi Berkas Masuk di Nadine:</strong> Membuka naskah masuk ID 62234248 pada portal Nadine (Role TU / Role 5).",
+                    "<strong>Uji Silang Profiling Database (Cek Calo):</strong> Mencari NIK pemohon pada rekap data historis Lebaran & Nataru 2023-2026. Memastikan 1 NIK tidak mengajukan lebih dari 1 kendaraan dan plat BP 1517 HH belum pernah didaftarkan atas nama orang lain.",
+                    "<strong>Kueri Live API NJKB Bapenda Kepri:</strong> Mengambil Nilai Jual Kendaraan Bermotor (NJKB) resmi SAMSAT Kepulauan Riau (Model: Honda HR-V 1.5E CVT 2020 ➔ NJKB: Rp 70.000.000).",
+                    "<strong>Penghitungan Besaran Jaminan PPN 11%:</strong> Nilai Jaminan = 11% x Rp 70.000.000 = <strong>Rp 7.700.000,-</strong>.",
+                    "<strong>Penerbitan Lembar Pengantar Jaminan:</strong> Menghasilkan lembar instruksi penyerahan jaminan kepada Seksi Perbendaharaan (Bidang PK)."
+                ],
+                pengawasan: [
+                    "<strong>Deteksi Calo / Makelar:</strong> Waspada terhadap NIK sama yang mengajukan kendaraan berbeda-beda di setiap musim mudik.",
+                    "<strong>Deteksi Peminjaman KTP:</strong> Kendaraan yang sama tapi pemohonnya berganti-ganti setiap musim.",
+                    "<strong>Ketepatan DPP NJKB:</strong> Memastikan NJKB yang digunakan adalah tipe transmisi dan tahun pembuatan yang sesuai STNK (bukan tipe terbawah)."
+                ],
+                wa: "Ibu Mora Trisna Dewi, berkas permohonan Anda telah diverifikasi oleh Petugas Seksi Fasilitas PFPC I. Nilai Jaminan PPN yang wajib diserahkan adalah *Rp 7.700.000* (NJKB Resmi Bapenda: Rp 70.000.000). Silakan melakukan penyetoran jaminan ke Seksi Perbendaharaan KPU BC Batam.<div class='wa-bubble-time'>11:15 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "Form Input Master & Perhitungan (Excel Sheet 'form')",
+                        html: `<div class="paper-letter">
+                            <h4 style="font-family:'Plus Jakarta Sans',sans-serif; text-decoration:none;">FORMULIR INPUT MASTER PENGELUARAN SEMENTARA KBM</h4>
+                            <table class="paper-table">
+                                <tr><th colspan="4" style="background:#1E293B; color:#FFFFFF;">I. DATA SUBJEK PEMOHON</th></tr>
+                                <tr><td width="25%"><b>Nama Pengirim / Pemohon</b></td><td width="35%">MORA TRISNA DEWI</td><td width="20%"><b>No. HP</b></td><td width="20%">0812-XXXX-XXXX</td></tr>
+                                <tr><td><b>NIK / NPWP</b></td><td>217104070671900X</td><td><b>Alamat</b></td><td>Citramas Indah Blok C No 11 Batam</td></tr>
+                                <tr><th colspan="4" style="background:#1E293B; color:#FFFFFF;">II. DATA OBJEK KENDARAAN (SAMSAT KEPRI)</th></tr>
+                                <tr><td><b>Merek & Tipe</b></td><td>HONDA HR-V RU1 1.5E PLUS CVT CKD</td><td><b>Tahun / Warna</b></td><td>2020 / Hijau Olive Metalik</td></tr>
+                                <tr><td><b>Nomor Polisi</b></td><td><b>BP 1517 HH</b></td><td><b>Pos Tarif (HS)</b></td><td>8703.22.90</td></tr>
+                                <tr><td><b>Nomor Rangka</b></td><td>MHRRU1860LJ806228</td><td><b>Nomor Mesin</b></td><td>L15Z61245404</td></tr>
+                                <tr><th colspan="4" style="background:#1E293B; color:#FFFFFF;">III. PERHITUNGAN PENETAPAN JAMINAN PABEAN</th></tr>
+                                <tr><td><b>NJKB Bapenda Kepri</b></td><td>Rp 70.000.000,-</td><td><b>Dasar Hukum</b></td><td>Pergub Kepri Pajak Daerah</td></tr>
+                                <tr><td><b>Tarif PPN Fasilitas</b></td><td>11% (Tidak Dipungut ke TLDDP)</td><td><b>Bentuk Jaminan</b></td><td>Tunai / Bank Garansi</td></tr>
+                                <tr><td style="background:#FEF3C7;"><b>TOTAL JAMINAN WAJIB</b></td><td colspan="3" style="background:#FEF3C7; font-weight:800; font-size:1rem; color:#B45309;">Rp 7.700.000,- (Tujuh Juta Tujuh Ratus Ribu Rupiah)</td></tr>
+                            </table>
+                        </div>`
+                    },
+                    {
+                        title: "Log Mesin Uji Silang & Anti-Calo",
+                        html: `<div style="background:#0F172A; color:#38BDF8; padding:16px; border-radius:10px; font-size:0.75rem; line-height:1.6;">
+                            [QUERY] SELECT * FROM KBM_HISTORICAL WHERE NIK='217104070671900X';<br>
+                            ➔ Result: 0 Record (Belum pernah mengajukan pengsem Lebaran/Nataru 2023-2025).<br>
+                            [QUERY] SELECT * FROM KBM_HISTORICAL WHERE NO_POLISI='BP 1517 HH';<br>
+                            ➔ Result: 0 Record (Mobil belum pernah dikeluarkan sementara).<br>
+                            [LIVE API BAPENDA KEPRI] GET /api/njkb?nopol=BP1517HH<br>
+                            ➔ Status: 200 OK | NJKB: Rp 70.000.000 | PKB Status: LUNAS AKTIF.<br>
+                            <span style="color:#4ADE80;">[KESIMPULAN ANALIS PFPC I] INDEKS RISIKO: RENDAH (CLEAR / NON-CALO). LANJUT KE PROSES SKEP.</span>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 3,
+                title: "Langkah 3: Penerbitan Surat Keputusan Persetujuan (KEP) & Unduh via Role TU",
+                desc: "Seksi Fasilitas PFPC I menyusun konsep KEP, memaraf berjenjang, penandatanganan elektronik Kepala Kantor (BSrE), dan pengunduhan berkas PDF resmi melalui Role TU (roleid=1).",
+                timeline: "H-2 s.d H-1",
+                subjek: "Seksi Fasilitas PFPC I & Kepala Kantor Bea Cukai Batam",
+                sop: [
+                    "<strong>Penyusunan Konsep Naskah Dinas:</strong> Konseptor menyusun draft KEP izin pengeluaran sementara pada Nadine mengacu template standar.",
+                    "<strong>Alur Persetujuan & Paraf Berjenjang:</strong> Draf diparaf berturut-turut oleh Pelaksana ➔ Kasubsi ➔ Kepala Seksi Fasilitas ➔ Kepala Bidang PFPC I.",
+                    "<strong>Penandatanganan Elektronik (TTE):</strong> Kepala KPU BC Batam menandatangani KEP dengan sertifikat digital resmi Badan Siber dan Sandi Negara (BSrE).",
+                    "<strong>Penomoran Otomatis KEP:</strong> Terbit nomor resmi <strong>KEP-65/KPU.203/KBM/2026</strong> tertanggal 10 Maret 2026.",
+                    "<strong>Pengunduhan Berkas Resmi:</strong> Berkas PDF KEP diunduh secara otomatis melalui hak akses <strong>Role TU (roleid=1)</strong>."
+                ],
+                pengawasan: [
+                    "<strong>Diktum Ketiga (Jatuh Tempo):</strong> Batas waktu pengeluaran wajib secara eksplisit dicantumkan paling lama 45 hari (24 April 2026).",
+                    "<strong>Diktum Keempat (Klausul Klaim Jaminan):</strong> Menyatakan jika sampai jatuh tempo tidak kembali, jaminan tunai langsung dicairkan menjadi penerimaan PPN kas negara.",
+                    "<strong>Integritas Dokumen Nadine:</strong> Dokumen sah ber-QR Code BSrE yang dapat diverifikasi keasliannya."
+                ],
+                wa: "Kabar Baik! Surat Keputusan Persetujuan Kepala KPU BC Batam telah terbit dengan nomor *KEP-65/KPU.203/KBM/2026*. Masa berlaku izin s.d *24 April 2026*. Silakan selesaikan pembayaran jaminan di Seksi PK untuk penerbitan BPJ.<div class='wa-bubble-time'>14:30 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "Keputusan Resmi (KEP-65/KPU.203/KBM/2026)",
+                        html: `<div class="paper-letter">
+                            <div style="text-align:center; font-family:'Plus Jakarta Sans',sans-serif; margin-bottom:12px;">
+                                <div style="font-size:0.9rem; font-weight:700;">KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</div>
+                                <div style="font-size:0.85rem; font-weight:700;">DIREKTORAT JENDERAL BEA DAN CUKAI</div>
+                                <div style="font-size:0.8rem;">KANTOR PELAYANAN UTAMA BEA DAN CUKAI TIPE B BATAM</div>
+                            </div>
+                            <h4 style="text-decoration:none;">KEPUTUSAN KEPALA KANTOR PELAYANAN UTAMA BEA DAN CUKAI TIPE B BATAM<br>
+                            NOMOR : KEP-65/KPU.203/KBM/2026</h4>
+                            <p style="text-align:center; font-weight:bold; font-size:0.85rem; margin-bottom:12px;">TENTANG<br>
+                            PERSETUJUAN PENGELUARAN SEMENTARA KENDARAAN BERMOTOR DARI KAWASAN BEBAS BATAM KE TEMPAT LAIN DALAM DAERAH PABEAN (TLDDP)</p>
+                            <p style="text-align:justify; font-size:0.85rem; text-indent:24px;">MEMBACA : Surat permohonan an. MORA TRISNA DEWI tanggal 10 Maret 2026 hal Permohonan Pengeluaran Sementara Kendaraan Bermotor;</p>
+                            <p style="text-align:center; font-weight:bold; font-size:0.85rem; margin:8px 0;">MEMUTUSKAN:</p>
+                            <p style="text-align:justify; font-size:0.85rem;"><b>MENETAPKAN :</b></p>
+                            <table style="width:100%; font-size:0.85rem; line-height:1.5;">
+                                <tr><td width="15%" valign="top"><b>KESATU</b></td><td width="3%" valign="top">:</td><td style="text-align:justify;">Memberikan persetujuan pengeluaran sementara 1 (satu) unit kendaraan bermotor roda empat merek HONDA HR-V RU1 1.5E PLUS CVT CKD, Nomor Polisi <b>BP 1517 HH</b>, No Rangka MHRRU1860LJ806228, No Mesin L15Z61245404 kepada MORA TRISNA DEWI.</td></tr>
+                                <tr><td valign="top"><b>KEDUA</b></td><td valign="top">:</td><td style="text-align:justify;">Terhadap pengeluaran sementara sebagaimana dimaksud Diktum KESATU diberikan fasilitas PPN Tidak Dipungut dengan kewajiban menyerahkan jaminan tunai/bank senilai Rp 7.700.000,- (Tujuh Juta Tujuh Ratus Ribu Rupiah).</td></tr>
+                                <tr><td valign="top"><b>KETIGA</b></td><td valign="top">:</td><td style="text-align:justify;">Jangka waktu pengeluaran sementara diberikan paling lama sampai dengan tanggal <b>24 April 2026</b>.</td></tr>
+                                <tr><td valign="top"><b>KEEMPAT</b></td><td valign="top">:</td><td style="text-align:justify;">Apabila sampai dengan batas waktu Diktum KETIGA kendaraan tidak dimasukkan kembali ke KPBPB Batam, maka jaminan sebagaimana Diktum KEDUA dicairkan dan disetorkan ke Kas Negara untuk pelunasan PPN yang terutang.</td></tr>
+                            </table>
+                            <br>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                                <div style="font-size:0.75rem; border:1px solid #CBD5E1; padding:8px; border-radius:6px;">
+                                    Ditandatangani secara elektronik BSrE<br>
+                                    ID Naskah: 62234248 | Role TU: 1
+                                </div>
+                                <div style="text-align:right;">
+                                    Ditetapkan di Batam pada tanggal 10 Maret 2026<br>
+                                    <b>KEPALA KANTOR PELAYANAN UTAMA</b><br><br><br>
+                                    [Tanda Tangan Elektronik Sah]
+                                </div>
+                            </div>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 4,
+                title: "Langkah 4: Penyerahan Jaminan Tunai & Penerbitan Bukti Penerimaan Jaminan (BPJ)",
+                desc: "Pemohon menyetorkan uang jaminan tunai ke rekening penampungan KPU BC Batam dan Seksi Perbendaharaan (Bidang PK) menerbitkan Bukti Penerimaan Jaminan (BPJ) bernomor seri resmi.",
+                timeline: "H-2 s.d H-1",
+                subjek: "Pemohon & Seksi Perbendaharaan (Bidang PK)",
+                sop: [
+                    "<strong>Penerimaan Setoran Jaminan Tunai:</strong> Petugas Seksi PK menerima bukti setoran tunai sebesar Rp 7.700.000,- ke Rekening Kas Penampungan KPU BC Batam.",
+                    "<strong>Perekaman pada CEISA 4.0 Perbendaharaan:</strong> Mencatat nomor SKEP (KEP-65/2026), nama pemohon, NIK, nopol BP 1517 HH, dan jumlah nominal jaminan.",
+                    "<strong>Penerbitan Fisik Dokumen BPJ:</strong> Menerbitkan lembar Bukti Penerimaan Jaminan bernomor seri <strong>000070/BPJ/KPU.2/2026</strong> tertanggal 11 Maret 2026.",
+                    "<strong>Pengurusan Surat Jalan Kepolisian (Polda Kepri):</strong> Pemohon membawa lembar SKEP dan BPJ ke Ditlantas Polda Kepri untuk menerbitkan Surat Jalan (SK/574/III/2026)."
+                ],
+                pengawasan: [
+                    "<strong>Kesesuaian Nominal 100%:</strong> Angka nominal pada BPJ wajib persis Rp 7.700.000,- sama dengan yang tercantum pada KEP.",
+                    "<strong>Validitas Rekening Penampung:</strong> Memastikan transfer masuk ke Virtual Account resmi kas negara/kantor.",
+                    "<strong>Status Kunci di Sistem:</strong> Flag status jaminan di database sentral pabean berubah menjadi 'GUARANTEE ACTIVE'."
+                ],
+                wa: "Jaminan PPN Anda sebesar Rp 7.700.000 telah diterima sah oleh Seksi Perbendaharaan KPU BC Batam. Nomor BPJ resmi: *000070/BPJ/KPU.2/2026*. Dokumen PPFTZ-01 Anda siap dicetak untuk pemeriksaan di Pelabuhan RORO Telaga Punggur.<div class='wa-bubble-time'>16:00 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "Bukti Penerimaan Jaminan (BPJ 000070/BPJ/KPU.2/2026)",
+                        html: `<div class="paper-letter">
+                            <div style="text-align:center; margin-bottom:10px;">
+                                <div style="font-size:0.9rem; font-weight:bold;">KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</div>
+                                <div style="font-size:0.85rem; font-weight:bold;">DIREKTORAT JENDERAL BEA DAN CUKAI</div>
+                                <div style="font-size:0.8rem;">KPU BEA DAN CUKAI TIPE B BATAM - SEKSI PERBENDAHARAAN</div>
+                            </div>
+                            <h4 style="text-decoration:none;">BUKTI PENERIMAAN JAMINAN (BPJ)<br>
+                            Nomor : 000070/BPJ/KPU.2/2026</h4>
+                            <table class="paper-table">
+                                <tr><td width="30%"><b>Telah Diterima Dari</b></td><td>MORA TRISNA DEWI (NIK: 217104070671900X)</td></tr>
+                                <tr><td><b>Bentuk Jaminan</b></td><td>TUNAI (Kas Penampungan Bea Cukai Batam)</td></tr>
+                                <tr><td><b>Jumlah Jaminan</b></td><td style="font-weight:800; font-size:1rem; color:#1D4ED8;">Rp 7.700.000,-</td></tr>
+                                <tr><td><b>Terbilang</b></td><td>Tujuh Juta Tujuh Ratus Ribu Rupiah</td></tr>
+                                <tr><td><b>Dasar Penerbitan</b></td><td>Keputusan Kepala Kantor Nomor: KEP-65/KPU.203/KBM/2026</td></tr>
+                                <tr><td><b>Peruntukan Jaminan</b></td><td>Pengeluaran Sementara KBM Honda HR-V No. Polisi BP 1517 HH</td></tr>
+                                <tr><td><b>Jatuh Tempo Jaminan</b></td><td><b>24 April 2026</b></td></tr>
+                            </table>
+                            <br>
+                            <div style="text-align:right;">
+                                Batam, 11 Maret 2026<br>
+                                Pejabat Seksi Perbendaharaan,<br><br><br>
+                                <b>( BENDAHARA PENERIMAAN )</b><br>
+                                NIP. 1985XXXXXXXXXXXXXX
+                            </div>
+                        </div>`
+                    },
+                    {
+                        title: "Surat Jalan Kepolisian (SK/574/III/2026)",
+                        html: `<div class="paper-letter">
+                            <div style="text-align:center; font-family:'Times New Roman',serif;">
+                                <div style="font-weight:bold;">KEPOLISIAN DAERAH KEPULAUAN RIAU</div>
+                                <div style="font-weight:bold;">DIREKTORAT LALU LINTAS</div>
+                            </div>
+                            <h4 style="margin-top:10px;">SURAT KETERANGAN JALAN SEMENTARA<br>
+                            Nomor : SK/574/III/2026</h4>
+                            <p style="text-align:justify; font-size:0.85rem;">Diberikan izin jalan kepada kendaraan bermotor berplat Batam (Kawasan Bebas) untuk melintas ke TLDDP:</p>
+                            <div class="paper-meta-row"><span class="col-label">Nama Pemilik</span>: MORA TRISNA DEWI</div>
+                            <div class="paper-meta-row"><span class="col-label">No. Polisi</span>: <b>BP 1517 HH</b></div>
+                            <div class="paper-meta-row"><span class="col-label">Merek / Tipe</span>: HONDA HR-V RU1 1.5E PLUS CVT CKD</div>
+                            <div class="paper-meta-row"><span class="col-label">Rute Perjalanan</span>: Batam ➔ Telaga Punggur ➔ Buton/Pakning ➔ Payakumbuh</div>
+                            <div class="paper-meta-row"><span class="col-label">Masa Berlaku</span>: 11 Maret 2026 s.d. 24 April 2026</div>
+                            <br>
+                            <div style="text-align:right;">
+                                Dikeluarkan di Batam, 11 Maret 2026<br>
+                                an. DIREKTUR LALU LINTAS POLDA KEPRI
+                            </div>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 5,
+                title: "Langkah 5: Penerbitan Nomor PPFTZ-01 Keluar & Proforma PPFTZ-03 Masuk Kembali",
+                desc: "Sistem CEISA pabean menerbitkan dokumen pemberitahuan pabean pengeluaran resmi (PPFTZ-01 Nomor 93) dan menyiapkan proforma dokumen masuk kembali (PPFTZ-03 Nomor 97).",
+                timeline: "H-1",
+                subjek: "Petugas Pelayanan Pabean & Sistem CEISA 4.0",
+                sop: [
+                    "<strong>Perekaman Header PPFTZ-01:</strong> Memasukkan data kantor (040300 - KPU Batam), jenis pengeluaran sementara, sarana pengangkut RORO KMP. Karya Bersama.",
+                    "<strong>Penerbitan Nomor Registrasi PPFTZ-01:</strong> Diberi nomor pendaftaran resmi <strong>000093/KBM/2026</strong> tertanggal 11 Maret 2026.",
+                    "<strong>Penerbitan Proforma PPFTZ-03:</strong> Menyiapkan draf dokumen pemasukan kembali dengan nomor pendaftaran <strong>000097/KBM/2026</strong> agar siap divalidasi saat KBM kembali.",
+                    "<strong>Pencetakan QR Gate Pass:</strong> Mengenerate lembar pengeluaran ber-QR code untuk dipindai oleh pemeriksa hanggar di pelabuhan RORO."
+                ],
+                pengawasan: [
+                    "<strong>Kesesuaian Pos Tarif:</strong> HS Code 8703.22.90, berat bersih 1.250 kg, CIF Rp 70.000.000.",
+                    "<strong>Klausul Relasi Dokumen:</strong> Kolom dokumen pelengkap pabean mencantumkan KEP-65 dan BPJ-000070.",
+                    "<strong>Kesiapan Data ASDP:</strong> Manifes muatan kapal terkoneksi dengan manifes ASDP Indonesia Ferry."
+                ],
+                wa: "Dokumen pabean PPFTZ-01 (No: *93*) dan proforma PPFTZ-03 (No: *97*) telah terbit. Silakan membawa kendaraan ke Pelabuhan RORO Telaga Punggur pada Hari H untuk dilakukan pemeriksaan fisik terarah.<div class='wa-bubble-time'>17:15 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "PPFTZ-01 Pengeluaran Sementara (Nomor: 93)",
+                        html: `<div class="customs-form-box">
+                            <div class="customs-header">
+                                <div style="font-weight:800; font-size:0.95rem;">PEMBERITAHUAN PABEAN FREE TRADE ZONE (PPFTZ-01)</div>
+                                <div style="font-size:0.75rem;">PENGELUARAN BARANG DARI KAWASAN BEBAS BATAM KE TEMPAT LAIN DALAM DAERAH PABEAN</div>
+                                <div style="font-weight:700; font-size:0.85rem; margin-top:4px;">Nomor Pendaftaran: 000093/KBM/2026 &nbsp;&nbsp;&nbsp; Tanggal: 11 Maret 2026</div>
+                            </div>
+                            <div class="customs-section">
+                                <div class="customs-section-title">A. KANTOR PABEAN &amp; DOKUMEN ASAL</div>
+                                Kantor Pabean: KPU BEA DAN CUKAI TIPE B BATAM (040300) | Jenis: PENGELUARAN SEMENTARA DENGAN JAMINAN<br>
+                                Dasar Izin : <b>KEP-65/KPU.203/KBM/2026</b> &nbsp;&nbsp;|&nbsp;&nbsp; Jaminan: <b>BPJ-000070/BPJ/KPU.2/2026</b>
+                            </div>
+                            <div class="customs-section">
+                                <div class="customs-section-title">B. DATA PENGIRIM / PENERIMA</div>
+                                Pengirim / Pemohon : MORA TRISNA DEWI (NIK: 217104070671900X)<br>
+                                Alamat             : Citramas Indah Blok C No 11, Batam Besar<br>
+                                Penerima di TLDDP  : MORA TRISNA DEWI (Payakumbuh, Sumatera Barat)
+                            </div>
+                            <div class="customs-section">
+                                <div class="customs-section-title">C. PENGANGKUTAN &amp; PELABUHAN</div>
+                                Sarana Pengangkut  : KMP. KARYA BERSAMA (Ferry RORO)<br>
+                                Pelabuhan Muat     : TELAGA PUNGGUR, BATAM &nbsp;&nbsp;|&nbsp;&nbsp; Pelabuhan Tujuan: SEI SELARI PAKNING / BUTON
+                            </div>
+                            <div class="customs-section">
+                                <div class="customs-section-title">D. DATA BARANG KENDARAAN BERMOTOR</div>
+                                <table class="paper-table" style="margin:4px 0;">
+                                    <tr><th>No</th><th>Pos Tarif / HS</th><th>Uraian Spesifikasi KBM</th><th>No. Rangka / Mesin</th><th>Jumlah / Berat</th><th>Nilai Pabean CIF</th></tr>
+                                    <tr><td>1</td><td>8703.22.90</td><td>1 Unit HONDA HR-V RU1 1.5E PLUS CVT CKD (BP 1517 HH)</td><td>Rangka: MHRRU1860LJ806228<br>Mesin: L15Z61245404</td><td>1 Unit<br>1.250 Kg</td><td>Rp 70.000.000,-</td></tr>
+                                </table>
+                                Catatan: Jaminan Tunai PPN 11% Sebesar Rp 7.700.000,- telah disetor pada BPJ 000070.
+                            </div>
+                        </div>`
+                    },
+                    {
+                        title: "Proforma PPFTZ-03 Pemasukan Kembali (Nomor: 97)",
+                        html: `<div class="customs-form-box">
+                            <div class="customs-header">
+                                <div style="font-weight:800; font-size:0.95rem;">PEMBERITAHUAN PABEAN FREE TRADE ZONE (PPFTZ-03)</div>
+                                <div style="font-size:0.75rem;">PEMASUKAN KEMBALI BARANG DARI TLDDP KE KAWASAN BEBAS BATAM</div>
+                                <div style="font-weight:700; font-size:0.85rem; margin-top:4px;">Nomor Pendaftaran: 000097/KBM/2026 (PROFORMA REKONSILIASI)</div>
+                            </div>
+                            <div class="customs-section">
+                                Dokumen Referensi: PPFTZ-01 Nomor 000093/KBM/2026 | KEP-65/KPU.203/KBM/2026<br>
+                                Status: Siap digunakan untuk pemeriksaan dan pengesahan saat KBM tiba kembali di Pelabuhan Telaga Punggur Batam.
+                            </div>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 6,
+                title: "Langkah 6: Pemeriksaan Fisik Terarah Checklist 6 Foto Wajib & Auto-Generate LHP/BAP",
+                desc: "Pemeriksa fisik Hanggar Telaga Punggur memeriksa kesesuaian fisik kendaraan berpandukan 6 slot foto wajib ber-watermark otomatis GPS/Waktu dan auto-generate PDF LHP & BAP.",
+                timeline: "Hari H (Pagi)",
+                subjek: "Pemeriksa Fisik Hanggar Pabean Telaga Punggur",
+                sop: [
+                    "<strong>Scan QR Gate Pass:</strong> Pemeriksa memindai barcode PPFTZ-01 pada tablet dinas hanggar.",
+                    "<strong>Pelaksanaan 6 Foto Wajib Terarah:</strong><br>" +
+                    "• Slot 1: Foto tampak depan bersama pemilik/pemohon memegang kartu identitas asli.<br>" +
+                    "• Slot 2 & 3: Foto tampak samping kanan dan samping kiri kendaraan.<br>" +
+                    "• Slot 4: Foto tampak belakang memperlihatkan plat polisi BP 1517 HH dengan jelas.<br>" +
+                    "• Slot 5: Foto makro nomor rangka (MHRRU1860LJ806228) yang digosok & difoto jernih.<br>" +
+                    "• Slot 6: Foto makro nomor mesin (L15Z61245404).",
+                    "<strong>Stempel Otomatis Watermark:</strong> Aplikasi kamera menyematkan koordinat GPS pelabuhan (Lat 1°09m40.91s U, Long 104°00m13.18s T) dan timestamp detik anti-manipulasi.",
+                    "<strong>Auto-Generate PDF LHP & BAP:</strong> Sistem langsung mengompilasi Laporan Hasil Pemeriksaan (LHP) dan Berita Acara Pemeriksaan (BAP) 1-tap."
+                ],
+                pengawasan: [
+                    "<strong>Ketepatan Nomor Rangka:</strong> Memastikan tidak ada ketokan palsu atau las ulang pada nomor rangka.",
+                    "<strong>Pencegahan Barang Lartas:</strong> Memeriksa isi bagasi agar tidak disisipi barang lartas, rokok ilegal, atau miras bebas cukai.",
+                    "<strong>Kehadiran Pemilik Asli:</strong> Memastikan pemilik yang didampingi sama dengan foto KTP."
+                ],
+                wa: "Pemeriksaan fisik kendaraan Anda di Hanggar Telaga Punggur telah SELESAI dan dinyatakan SESUAI oleh Petugas Pemeriksa. Dokumen LHP dan BAP digital telah terbit.<div class='wa-bubble-time'>09:45 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "Laporan Hasil Pemeriksaan (LHP Fisik Hanggar)",
+                        html: `<div class="paper-letter">
+                            <div style="text-align:center;">
+                                <div style="font-weight:bold; font-size:0.9rem;">KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</div>
+                                <div style="font-weight:bold; font-size:0.85rem;">DIREKTORAT JENDERAL BEA DAN CUKAI</div>
+                                <div style="font-size:0.8rem;">KPU BEA DAN CUKAI TIPE B BATAM - HANGGAR TELAGA PUNGGUR</div>
+                            </div>
+                            <h4 style="text-decoration:none; margin:10px 0;">LAPORAN HASIL PEMERIKSAAN FISIK (LHP)<br>
+                            Nomor IP: IP-000093/KBM/2026</h4>
+                            <table class="paper-table">
+                                <tr><td width="30%"><b>Nomor & Tgl PPFTZ</b></td><td>000093/KBM/2026 Tanggal 11 Maret 2026</td></tr>
+                                <tr><td><b>Pemohon / Penerima</b></td><td>MORA TRISNA DEWI (NIK: 217104070671900X)</td></tr>
+                                <tr><td><b>Hari, Tanggal, Jam</b></td><td>Kamis, 12 Maret 2026 pukul 09:15 s.d 09:35 WIB</td></tr>
+                                <tr><td><b>Lokasi Pemeriksaan</b></td><td>Jalur RORO Telaga Punggur (1°9'40.9198"N, 104°0'13.1873"E)</td></tr>
+                            </table>
+                            <p style="font-weight:bold; margin-top:8px;">HASIL PEMERIKSAAN KENDARAAN:</p>
+                            <table class="paper-table">
+                                <tr><th>No</th><th>Parameter Fisik</th><th>Data Dokumen</th><th>Hasil Kedapatan Fisik</th><th>Kesesuaian</th></tr>
+                                <tr><td>1</td><td>Merek & Tipe</td><td>HONDA HR-V 1.5E CVT</td><td>HONDA HR-V 1.5E CVT</td><td>SESUAI</td></tr>
+                                <tr><td>2</td><td>Plat Nomor</td><td>BP 1517 HH</td><td>BP 1517 HH</td><td>SESUAI</td></tr>
+                                <tr><td>3</td><td>Nomor Rangka</td><td>MHRRU1860LJ806228</td><td>MHRRU1860LJ806228</td><td>SESUAI</td></tr>
+                                <tr><td>4</td><td>Nomor Mesin</td><td>L15Z61245404</td><td>L15Z61245404</td><td>SESUAI</td></tr>
+                                <tr><td>5</td><td>Muatan Tambahan</td><td>Nihil Lartas</td><td>Koper pakaian pribadi pemudik</td><td>SESUAI</td></tr>
+                            </table>
+                            <p style="font-size:0.8rem; margin-top:6px;"><b>KESIMPULAN:</b> Seluruh item kendaraan bermotor kedapatan SESUAI dengan PPFTZ-01. Disarankan untuk diterbitkan SPPB.</p>
+                            <br>
+                            <div style="text-align:right;">
+                                Telaga Punggur, 12 Maret 2026<br>
+                                <b>Pejabat Pemeriksa Fisik Hanggar</b><br><br><br>
+                                <b>( TIM PEMERIKSA PUNGGUR )</b>
+                            </div>
+                        </div>`
+                    },
+                    {
+                        title: "Lembar 6 Foto Terarah Ber-GPS & Waktu",
+                        html: `<div style="background:#F1F5F9; border:1px solid #CBD5E1; padding:16px; border-radius:10px;">
+                            <div style="font-weight:800; font-size:0.85rem; margin-bottom:12px; color:#1E293B;">BUKTI DOKUMENTASI FISIK HANGGAR TELAGA PUNGGUR (STAMPEL GEO-TAGGING):</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                                <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:10px; border-radius:6px; font-size:0.75rem;">
+                                    <b>[SLOT 1] Foto Depan + Pemilik Barang</b><br>
+                                    Terlihat Ibu Mora Trisna Dewi berdiri di depan KBM BP 1517 HH memegang KTP.<br>
+                                    <span style="color:#059669;">GPS: 1°9'40.91"N, 104°0'13.18"E | 12-03-2026 09:20:12 WIB</span>
+                                </div>
+                                <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:10px; border-radius:6px; font-size:0.75rem;">
+                                    <b>[SLOT 2 & 3] Tampak Samping Kanan & Kiri</b><br>
+                                    Bodi kendaraan mulus, warna hijau olive metalik, tidak ada rombakan.<br>
+                                    <span style="color:#059669;">GPS: 1°9'40.91"N, 104°0'13.18"E | 12-03-2026 09:22:04 WIB</span>
+                                </div>
+                                <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:10px; border-radius:6px; font-size:0.75rem;">
+                                    <b>[SLOT 4] Foto Tampak Belakang</b><br>
+                                    Nomor plat BP 1517 HH dan emblem Honda HR-V terbaca tajam.<br>
+                                    <span style="color:#059669;">GPS: 1°9'40.91"N, 104°0'13.18"E | 12-03-2026 09:24:40 WIB</span>
+                                </div>
+                                <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:10px; border-radius:6px; font-size:0.75rem;">
+                                    <b>[SLOT 5 & 6] Makro No. Rangka & Mesin</b><br>
+                                    Nomor rangka MHRRU1860LJ806228 utuh pabrikan tanpa bekas las/ketok.<br>
+                                    <span style="color:#059669;">GPS: 1°9'40.91"N, 104°0'13.18"E | 12-03-2026 09:28:15 WIB</span>
+                                </div>
+                            </div>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 7,
+                title: "Langkah 7: Penerbitan SPPB & Pemuatan ke Kapal RORO Menuju TLDDP",
+                desc: "Pejabat PFPD menyetujui LHP, menerbitkan Surat Persetujuan Pengeluaran Barang (SPPB), barrier gate ASDP dibuka, dan kendaraan resmi naik ke kapal ferry.",
+                timeline: "Hari H (Gate Out)",
+                subjek: "Pejabat PFPD & Petugas Pintu Dermaga ASDP Telaga Punggur",
+                sop: [
+                    "<strong>Penelitian LHP oleh PFPD:</strong> Pejabat Pemeriksa Dokumen meneliti LHP, BAP, dan keabsahan 6 foto di sistem.",
+                    "<strong>Penerbitan SPPB Digital:</strong> Menandatangani SPPB digital bernomor <strong>SPPB-000093/KBM/2026</strong>.",
+                    "<strong>Validasi Barcode di Pintu ASDP:</strong> Petugas gerbang dermaga memindai barcode SPPB untuk membuka portal muat roro.",
+                    "<strong>Pemuatan ke KMP. Karya Bersama:</strong> Kendaraan diarahkan masuk ke dek kapal RORO menuju Pelabuhan Sei Selari Pakning / Buton.",
+                    "<strong>Pemicuan Countdown Timer EWS:</strong> Jam gate-out dicatat sebagai titik awal hitung mundur masa tinggal 45 hari di TLDDP."
+                ],
+                pengawasan: [
+                    "<strong>Kesesuaian Tiket Kapal:</strong> Manifest penyeberangan KMP. Karya Bersama memuat nopol BP 1517 HH.",
+                    "<strong>Anti Switch Unit:</strong> Memastikan kendaraan yang menaiki rampdoor kapal adalah mobil yang sama di LHP.",
+                    "<strong>Integrasi Jam Berangkat:</strong> Status manifes terupdate 'DEPARTED' di sistem logistik ASDP."
+                ],
+                wa: "Surat Persetujuan Pengeluaran Barang (*SPPB*) telah terbit! Kendaraan Anda telah diizinkan naik ke kapal RORO menuju Pelabuhan Buton/Pakning. Selamat jalan dan selamat berkumpul bersama keluarga. Jangka waktu izin berlaku s.d 24 April 2026.<div class='wa-bubble-time'>10:30 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "Surat Persetujuan Pengeluaran Barang (SPPB Resmi)",
+                        html: `<div class="paper-letter">
+                            <div style="text-align:center;">
+                                <div style="font-weight:bold; font-size:0.9rem;">KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</div>
+                                <div style="font-weight:bold; font-size:0.85rem;">DIREKTORAT JENDERAL BEA DAN CUKAI</div>
+                                <div style="font-size:0.8rem;">KPU BEA DAN CUKAI TIPE B BATAM</div>
+                            </div>
+                            <h4 style="text-decoration:none; margin:10px 0;">SURAT PERSETUJUAN PENGELUARAN BARANG (SPPB)<br>
+                            Nomor : SPPB-000093/KBM/2026</h4>
+                            <p style="font-size:0.85rem;">Berdasarkan Pemberitahuan Pabean PPFTZ-01 Nomor Pendaftaran 000093 Tanggal 11 Maret 2026:</p>
+                            <table class="paper-table">
+                                <tr><td width="30%"><b>Nama Pemohon</b></td><td>MORA TRISNA DEWI (NIK: 217104070671900X)</td></tr>
+                                <tr><td><b>Uraian Kendaraan</b></td><td>HONDA HR-V RU1 1.5E PLUS CVT CKD (BP 1517 HH)</td></tr>
+                                <tr><td><b>Sarana Pengangkut</b></td><td>KMP. KARYA BERSAMA (Ferry RORO)</td></tr>
+                                <tr><td><b>Pelabuhan Muat</b></td><td>TELAGA PUNGGUR, BATAM</td></tr>
+                                <tr><td><b>Pelabuhan Tujuan</b></td><td>SEI SELARI PAKNING / BUTON (RIAU)</td></tr>
+                            </table>
+                            <p style="font-weight:bold; font-size:0.85rem; margin-top:8px;">DIBERIKAN PERSETUJUAN KELUAR SEMENTARA DARI KAWASAN BEBAS BATAM MENUJU TLDDP.</p>
+                            <div style="border:1px dashed #000000; padding:8px; font-size:0.75rem; margin:8px 0; background:#FFFBEB;">
+                                <b>PERINGATAN RESMI KEPABEANAN:</b><br>
+                                1. Kendaraan bermotor wajib dimasukkan kembali ke KPBPB Batam paling lambat tanggal <b>24 April 2026</b>.<br>
+                                2. Saat pemasukan kembali, wajib melapor ke Pos Hanggar Bea Cukai Telaga Punggur dengan membawa lembar PPFTZ-03 dan SPPB ini.
+                            </div>
+                            <br>
+                            <div style="text-align:right;">
+                                Batam, 12 Maret 2026<br>
+                                <b>Pejabat Pemeriksa Dokumen (PFPD)</b><br><br><br>
+                                [Ditandatangani secara Elektronik]
+                            </div>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 8,
+                title: "Langkah 8: Pemantauan Masa Tinggal di TLDDP & Notifikasi EWS",
+                desc: "Sistem Early Warning System (EWS) memantau batas waktu 45 hari di luar Batam, mendeteksi potensi overstay, dan mengirimkan notifikasi pengingat terjadwal ke WhatsApp pemohon.",
+                timeline: "Hari 1 s.d 45",
+                subjek: "Unit Pengawasan (Bidang PK & Seksi Fasilitas PFPC I)",
+                sop: [
+                    "<strong>Pelacakan Hari Tinggal (Aging SKEP):</strong> Sistem otomatis menghitung sisa waktu: H-15 (Hari ke-30), H-7 (Hari ke-38), H-3 (Hari ke-42), dan Hari H jatuh tempo (24 April 2026).",
+                    "<strong>Pengiriman Pesan WhatsApp Terjadwal:</strong> Bot otomatis mengirimkan pengingat masa berlaku izin dan panduan kepulangan.",
+                    "<strong>Pencatatan Permohonan Perpanjangan Resmi:</strong> Jika terjadi keadaan kahar/bencana, pemohon dapat mengajukan perpanjangan izin sebelum jatuh tempo.",
+                    "<strong>Peringatan Default Jaminan:</strong> Apabila hingga tanggal 24 April 2026 KBM belum kembali tanpa alasan sah, sistem menandai KBM 'OVERSTAY' dan menginstruksikan Seksi PK mencairkan jaminan."
+                ],
+                pengawasan: [
+                    "<strong>Pencegahan Jual Beli Ilegal:</strong> Mencegah KBM fasilitas bebas Batam diperjualbelikan secara ilegal di wilayah TLDDP.",
+                    "<strong>Pencabutan Fasilitas Kawasan Bebas:</strong> KBM yang tidak kembali otomatis dicabut fasilitas bebas pajaknya dan diblokir regident kepolisian.",
+                    "<strong>Eksistensi Fisik di Wilayah Tujuan:</strong> Pengecekan acak oleh unit P2 terhadap kendaraan yang dilaporkan bermasalah."
+                ],
+                wa: "Peringatan Sistem Bea Cukai Batam: Sisa jangka waktu pengeluaran sementara kendaraan Anda tinggal *7 Hari Lagi* (Jatuh tempo: 24 April 2026). Segera lakukan penyeberangan kembali menuju Pelabuhan Telaga Punggur Batam agar uang jaminan Anda Rp 7.700.000 dapat dicairkan kembali 100%.<div class='wa-bubble-time'>09:00 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "Log Pemantauan EWS & Aging SKEP (Excel)",
+                        html: `<div class="paper-letter">
+                            <h4 style="text-decoration:none;">DASHBOARD PEMANTAUAN AGING SKEP PENGELUARAN SEMENTARA</h4>
+                            <table class="paper-table">
+                                <tr><th>No. Polisi</th><th>Nama Pemohon</th><th>No. SKEP</th><th>Tgl Keluar</th><th>Jatuh Tempo</th><th>Sisa Waktu</th><th>Status EWS</th></tr>
+                                <tr style="background:#ECFDF5;"><td><b>BP 1517 HH</b></td><td>MORA TRISNA DEWI</td><td>KEP-65/2026</td><td>12-03-2026</td><td>24-04-2026</td><td>+14 Hari</td><td>HIJAU (Aman)</td></tr>
+                                <tr style="background:#FFFBEB;"><td>BP 1878 QI</td><td>KORRI SITUMORANG</td><td>KEP-248/2025</td><td>08-12-2025</td><td>22-01-2026</td><td>+3 Hari</td><td>KUNING (Reminder Terkirim)</td></tr>
+                                <tr style="background:#FEF2F2;"><td>BP 1928 RO</td><td>MARULI SITUMORANG</td><td>KEP-46/2023</td><td>15-12-2023</td><td>29-01-2024</td><td>-120 Hari</td><td>MERAH (Jaminan Dicairkan)</td></tr>
+                            </table>
+                            <div style="font-size:0.75rem; color:#475569; margin-top:10px;">
+                                Catatan Sistem: Pemohon an. Mora Trisna Dewi mengonfirmasi rencana kembali ke Batam menggunakan tiket KMP. Karya Bersama pada tanggal 21 April 2026 (3 hari sebelum jatuh tempo).
+                            </div>
+                        </div>`
+                    }
+                ]
+            },
+            {
+                step: 9,
+                title: "Langkah 9: Pemasukan Kembali ke Batam, Pengesahan PPFTZ-03 & Pencairan Jaminan BPJ",
+                desc: "Kendaraan tiba kembali di Pelabuhan Telaga Punggur, diperiksa fisik singkat oleh hanggar, PPFTZ-03 disahkan, rekonsiliasi digital ditutup, dan jaminan tunai Rp 7.700.000 dicairkan penuh.",
+                timeline: "Hari Kedatangan Kembali",
+                subjek: "Petugas Hanggar Kedatangan & Seksi Perbendaharaan (Bidang PK)",
+                sop: [
+                    "<strong>Pemeriksaan Fisik Kedatangan:</strong> Petugas hanggar mencocokkan plat nomor BP 1517 HH dan nomor rangka MHRRU1860LJ806228 di pintu kedatangan RORO Punggur.",
+                    "<strong>Pengesahan Lembar PPFTZ-03:</strong> Menandatangani dan membubuhkan stempel dinas pada dokumen PPFTZ-03 Nomor 000097/KBM/2026.",
+                    "<strong>Penerbitan BAP Kedatangan Kembali:</strong> Membuat Berita Acara Penyelesaian Pengeluaran Sementara Tepat Waktu.",
+                    "<strong>Digital Handshake Rekonsiliasi:</strong> Sistem CEISA otomatis menutup status izin dan mengirim notifikasi pelepasan jaminan ke Seksi PK.",
+                    "<strong>Pencairan Jaminan 100%:</strong> Seksi Perbendaharaan mengembalikan uang jaminan tunai Rp 7.700.000,- penuh tanpa potongan ke rekening pemohon (SLA maksimal 2 hari kerja)."
+                ],
+                pengawasan: [
+                    "<strong>Kesesuaian Identitas Unit:</strong> Memastikan mobil yang kembali adalah unit asli Honda HR-V bersangkutan.",
+                    "<strong>Pemeriksaan Ketepatan Waktu:</strong> Kedatangan tanggal 21 April 2026 adalah tepat waktu (sebelum jatuh tempo 24 April 2026).",
+                    "<strong>Pencairan Hak Pemohon:</strong> Menjamin transparansi dan kecepatan pengembalian uang jaminan pemohon."
+                ],
+                wa: "Selamat datang kembali di Batam! Pemeriksaan fisik kedatangan KBM BP 1517 HH telah SELESAI dan TEPAT WAKTU. Dokumen PPFTZ-03 telah disahkan. Uang jaminan tunai Anda sebesar *Rp 7.700.000* siap diambil di Seksi PK / telah ditransfer kembali 100%. Terima kasih telah mematuhi aturan kepabeanan.<div class='wa-bubble-time'>15:20 WIB • Otomatis</div>",
+                docs: [
+                    {
+                        title: "PPFTZ-03 Pemasukan Disahkan (Nomor: 97)",
+                        html: `<div class="customs-form-box">
+                            <div class="customs-header">
+                                <div style="font-weight:800; font-size:0.95rem;">PEMBERITAHUAN PABEAN FREE TRADE ZONE (PPFTZ-03)</div>
+                                <div style="font-size:0.75rem;">PEMASUKAN KEMBALI BARANG DARI TLDDP KE KAWASAN BEBAS BATAM</div>
+                                <div style="font-weight:700; font-size:0.85rem; margin-top:4px;">Nomor Pendaftaran: 000097/KBM/2026 &nbsp;&nbsp;&nbsp; Tanggal Pengesahan: 21 April 2026</div>
+                            </div>
+                            <div class="customs-section">
+                                <b>PENGESAHAN PEJABAT PABEAN HANGGAR TELAGA PUNGGUR:</b><br>
+                                Telah diperiksa fisik dan diizinkan masuk kembali ke Kawasan Bebas Batam:<br>
+                                • Kendaraan Bermotor : HONDA HR-V RU1 1.5E PLUS CVT CKD<br>
+                                • Nomor Polisi       : <b>BP 1517 HH</b><br>
+                                • Nomor Rangka       : MHRRU1860LJ806228 (Identik & Sesuai)<br>
+                                • Tanggal Masuk      : <b>21 April 2026</b> (TEPAT WAKTU sebelum 24 April 2026)<br>
+                                • Kesimpulan         : Rekonsiliasi Pengeluaran Sementara SELESAI LENGKAP.
+                            </div>
+                            <div class="customs-section" style="background:#ECFDF5; border-color:#059669;">
+                                <b>INSTRUKSI PENCAIRAN JAMINAN KEPADA SEKSI PERBENDAHARAAN (PK):</b><br>
+                                Terhadap Jaminan Tunai pada Bukti Penerimaan Jaminan (BPJ) Nomor: <b>000070/BPJ/KPU.2/2026</b> tanggal 11 Maret 2026 sebesar <b>Rp 7.700.000,-</b> DAPAT DIKEMBALIKAN KEPADA PEMOHON.
+                            </div>
+                        </div>`
+                    },
+                    {
+                        title: "Surat Perintah Pengembalian Jaminan (SPP-J)",
+                        html: `<div class="paper-letter">
+                            <div style="text-align:center;">
+                                <div style="font-weight:bold; font-size:0.9rem;">KEMENTERIAN KEUANGAN REPUBLIK INDONESIA</div>
+                                <div style="font-weight:bold; font-size:0.85rem;">DIREKTORAT JENDERAL BEA DAN CUKAI</div>
+                                <div style="font-size:0.8rem;">KPU BEA DAN CUKAI TIPE B BATAM - SEKSI PERBENDAHARAAN</div>
+                            </div>
+                            <h4 style="text-decoration:none; margin:10px 0;">SURAT PERINTAH PENGEMBALIAN JAMINAN (SPP-J)<br>
+                            Nomor : SPPJ-000070/BPJ/KPU.2/2026</h4>
+                            <p style="font-size:0.85rem;">Memperhatikan pengesahan PPFTZ-03 Nomor 000097 tanggal 21 April 2026:</p>
+                            <table class="paper-table">
+                                <tr><td width="30%"><b>Nama Pemohon</b></td><td>MORA TRISNA DEWI (NIK: 217104070671900X)</td></tr>
+                                <tr><td><b>Nomor BPJ</b></td><td>000070/BPJ/KPU.2/2026 Tanggal 11 Maret 2026</td></tr>
+                                <tr><td><b>Nilai Pengembalian</b></td><td style="font-weight:800; color:#059669; font-size:1rem;">Rp 7.700.000,- (100% UTUH)</td></tr>
+                                <tr><td><b>Metode Pengembalian</b></td><td>Transfer Rekening Pemohon / Penyerahan Kasir</td></tr>
+                                <tr><td><b>Status Berkas</b></td><td><b>REKONSILIASI SELESAI &amp; STATUS TUTUP</b></td></tr>
+                            </table>
+                            <br>
+                            <div style="text-align:right;">
+                                Batam, 22 April 2026<br>
+                                <b>Kepala Seksi Perbendaharaan</b><br><br><br>
+                                <b>( PEJABAT SEKSI PK )</b>
+                            </div>
+                        </div>`
+                    }
+                ]
+            }
+        ];
+
+        let currentActiveStep = 1;
+
+        // Modal Functions
+        function openStepModal(stepNum) {
+            currentActiveStep = stepNum;
+            const data = STEPS.find(s => s.step === stepNum);
+            if (!data) return;
+
+            document.getElementById('modalStepTitle').innerText = data.title;
+            document.getElementById('modalStepDesc').innerText = data.desc;
+            document.getElementById('modalStepIndicator').innerText = "Langkah " + stepNum + " dari 9";
+
+            // SOP List
+            const sopList = document.getElementById('modalSopList');
+            sopList.innerHTML = '';
+            data.sop.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = '<span class="bullet">•</span> <div>' + item + '</div>';
+                sopList.appendChild(li);
+            });
+
+            // Pengawasan List
+            const pengList = document.getElementById('modalPengawasanList');
+            pengList.innerHTML = '';
+            data.pengawasan.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = '<span style="color:#D97706; font-weight:800;">✓</span> <div>' + item + '</div>';
+                pengList.appendChild(li);
+            });
+
+            // WhatsApp Content
+            document.getElementById('modalWaContent').innerHTML = data.wa;
+
+            // Docs Rendering
+            const tabsBar = document.getElementById('modalDocTabs');
+            const renderArea = document.getElementById('modalDocRender');
+            tabsBar.innerHTML = '';
+
+            data.docs.forEach((doc, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'doc-tab-btn ' + (idx === 0 ? 'active' : '');
+                btn.innerText = '📄 ' + doc.title;
+                btn.onclick = () => {
+                    document.querySelectorAll('.doc-tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderArea.innerHTML = doc.html;
+                };
+                tabsBar.appendChild(btn);
+            });
+            renderArea.innerHTML = data.docs[0].html;
+
+            // Buttons
+            document.getElementById('modalBtnPrev').disabled = (stepNum === 1);
+            document.getElementById('modalBtnNext').disabled = (stepNum === 9);
+
+            document.getElementById('stepModalOverlay').style.display = 'flex';
+        }
+
+        function closeStepModal(e) {
+            if (e.target.id === 'stepModalOverlay') {
+                document.getElementById('stepModalOverlay').style.display = 'none';
+            }
+        }
+        function closeStepModalDirect() {
+            document.getElementById('stepModalOverlay').style.display = 'none';
+        }
+
+        function navigateModalStep(delta) {
+            const next = currentActiveStep + delta;
+            if (next >= 1 && next <= 9) {
+                openStepModal(next);
+            }
+        }
+
+        function scrollTrack(offset) {
+            document.getElementById('timelineTrackScroll').scrollBy({ left: offset, behavior: 'smooth' });
+        }
+
+        // --- Simulasi Gladi Bersih System ---
+        let gladiStep = 1;
+        const GLADI_STEPS_META = [
+            "1. Pengajuan Nadine",
+            "2. Verifikasi NJKB",
+            "3. Terbit KEP",
+            "4. Setor BPJ",
+            "5. Daftar PPFTZ-01",
+            "6. Periksa Fisik Punggur",
+            "7. Gate-Out SPPB",
+            "8. EWS Monitoring",
+            "9. Kembali & Cair BPJ"
+        ];
+
+        function openGladiModal() {
+            renderGladiStepper();
+            loadGladiStep(gladiStep);
+            document.getElementById('gladiModalOverlay').style.display = 'flex';
+        }
+
+        function closeGladiModal(e) {
+            if (e.target.id === 'gladiModalOverlay') {
+                document.getElementById('gladiModalOverlay').style.display = 'none';
+            }
+        }
+        function closeGladiModalDirect() {
+            document.getElementById('gladiModalOverlay').style.display = 'none';
+        }
+
+        function renderGladiStepper() {
+            const container = document.getElementById('gladiStepper');
+            container.innerHTML = '';
+            GLADI_STEPS_META.forEach((title, idx) => {
+                const sNum = idx + 1;
+                const div = document.createElement('div');
+                div.className = 'gladi-step-item ' + (sNum === gladiStep ? 'active' : '') + (sNum < gladiStep ? ' done' : '');
+                div.innerHTML = (sNum < gladiStep ? '✓ ' : '') + title;
+                div.onclick = () => loadGladiStep(sNum);
+                container.appendChild(div);
+            });
+        }
+
+        function loadGladiStep(num) {
+            gladiStep = num;
+            renderGladiStepper();
+            const stepData = STEPS[num - 1];
+            document.getElementById('gladiCurrentTitle').innerText = "Tahap " + num + ": " + stepData.title;
+            document.getElementById('gladiCurrentDesc').innerText = stepData.desc;
+            document.getElementById('gladiStepCounter').innerText = "Tahap " + num + " dari 9";
+            document.getElementById('gladiWaScreen').innerHTML = stepData.wa;
+        }
+
+        function logGladi(msg, type="info") {
+            const term = document.getElementById('gladiTerminal');
+            const d = new Date().toLocaleTimeString('id-ID');
+            const line = document.createElement('div');
+            if (type === 'success') line.className = 'log-success';
+            else if (type === 'warning') line.className = 'log-warning';
+            else if (type === 'alert') line.className = 'log-alert';
+            line.innerHTML = `[${d}] ` + msg;
+            term.appendChild(line);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function runGladiAction() {
+            const stepData = STEPS[gladiStep - 1];
+            if (gladiStep === 1) {
+                logGladi("Mora Trisna Dewi mengunggah berkas permohonan & pernyataan meterai Rp 10.000.", "info");
+                logGladi("Sistem Nadine merekam surat masuk eksternal dengan ID: 62234248.", "success");
+            } else if (gladiStep === 2) {
+                logGladi("Petugas PFPC I memeriksa NIK 217104070671900X pada rekap data historis KBM.", "info");
+                logGladi("Kueri live Bapenda Kepri NJKB BP 1517 HH: Rp 70.000.000,-", "info");
+                logGladi("Perhitungan Jaminan PPN 11%: Rp 7.700.000,- (Clear non-calo).", "success");
+            } else if (gladiStep === 3) {
+                logGladi("Konsep KEP diparaf Kasubsi & Kasi Fasilitas.", "info");
+                logGladi("Kepala KPU BC Batam menandatangani secara elektronik (BSrE).", "info");
+                logGladi("Terbit KEP-65/KPU.203/KBM/2026! Berkas PDF resmi diunduh via Role TU (roleid=1).", "success");
+            } else if (gladiStep === 4) {
+                logGladi("Pemohon menyetorkan jaminan tunai Rp 7.700.000 ke kas penampungan KPU BC Batam.", "info");
+                logGladi("Seksi Perbendaharaan menerbitkan Bukti Penerimaan Jaminan: 000070/BPJ/KPU.2/2026.", "success");
+                logGladi("Ditlantas Polda Kepri menerbitkan Surat Jalan SK/574/III/2026.", "info");
+            } else if (gladiStep === 5) {
+                logGladi("Pelayanan pabean CEISA menerbitkan PPFTZ-01 Nomor Pendaftaran: 000093/KBM/2026.", "success");
+                logGladi("Proforma PPFTZ-03 Nomor 000097 dibuat otomatis untuk persiapan rekonsiliasi.", "info");
+            } else if (gladiStep === 6) {
+                logGladi("Pemeriksa hanggar Telaga Punggur memindai QR code pemohon.", "info");
+                logGladi("Mengambil 6 sisi foto wajib berstempel GPS pelabuhan & timestamp detik.", "info");
+                logGladi("No Rangka MHRRU1860LJ806228 kedapatan SESUAI. LHP & BAP berhasil di-generate!", "success");
+            } else if (gladiStep === 7) {
+                logGladi("Pejabat PFPD menyetujui LHP dan menerbitkan SPPB-000093/KBM/2026.", "success");
+                logGladi("Gate ASDP terbuka, KBM BP 1517 HH masuk ke dek KMP. Karya Bersama.", "info");
+                logGladi("Countdown EWS 45 hari resmi AKTIF dimulai.", "warning");
+            } else if (gladiStep === 8) {
+                logGladi("EWS memantau posisi KBM di wilayah Payakumbuh, Sumatera Barat.", "info");
+                logGladi("Hari ke-38: Pengingat otomatis terkirim ke WhatsApp pemohon (Sisa 7 Hari).", "warning");
+                logGladi("Pemohon merespons konfirmasi tiket kembali RORO tanggal 21 April 2026.", "success");
+            } else if (gladiStep === 9) {
+                logGladi("KBM tiba kembali di Pelabuhan Telaga Punggur Batam pada 21 April 2026 (Tepat Waktu).", "success");
+                logGladi("Petugas hanggar mengesahkan PPFTZ-03 Nomor 000097/KBM/2026.", "info");
+                logGladi("Seksi Perbendaharaan mencairkan jaminan tunai Rp 7.700.000,- kembali 100% ke pemohon!", "success");
+                logGladi("ALUR PELAYANAN & PENGAWASAN SELESAI SEMPURNA TANPA ANOMALI.", "success");
+            }
+        }
+
+        function nextGladiStep() {
+            if (gladiStep < 9) loadGladiStep(gladiStep + 1);
+        }
+        function prevGladiStep() {
+            if (gladiStep > 1) loadGladiStep(gladiStep - 1);
+        }
+        function resetGladi() {
+            loadGladiStep(1);
+            document.getElementById('gladiTerminal').innerHTML = '<div>[SYSTEM] Simulasi di-reset ke Tahap 1.</div>';
+        }
+    </script>
+</body>
+</html>

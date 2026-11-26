@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Transformasi Pengeluaran Sementara KBM Batam - Executive Pastel Workflow Presentation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+
+@page {
+    size: 1920px 1080px;
+    margin: 0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #FFFFFF;
+    color: #1E293B;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.slide {
+    width: 1920px;
+    height: 1080px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #FFFFFF;
+}
+
+.slide:last-child {
+    page-break-after: avoid;
+}
+
+/* Background soft pastel ambient glows */
+.glow-pastel-blue {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(224, 242, 254, 0.6) 0%, rgba(255, 255, 255, 0) 70%);
+    top: -250px;
+    right: -250px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.glow-pastel-emerald {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(209, 250, 229, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
+    bottom: -200px;
+    left: -200px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.glow-pastel-purple {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(243, 232, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
+    bottom: -200px;
+    right: -200px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Header standard */
+.slide-header {
+    position: relative;
+    z-index: 2;
+}
+
+.badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1D4ED8;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.slide-title {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    color: #0F172A;
+}
+
+.slide-title span {
+    color: #2563EB;
+    background: linear-gradient(135deg, #2563EB 0%, #0284C7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.slide-subtitle {
+    font-size: 18px;
+    color: #475569;
+    margin-top: 6px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Body / Main Content */
+.slide-body {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 22px 0;
+}
+
+/* Footer standard */
+.slide-footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #E2E8F0;
+    padding-top: 18px;
+    font-size: 14px;
+    color: #64748B;
+    font-weight: 500;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-dot {
+    width: 6px;
+    height: 6px;
+    background: #3B82F6;
+    border-radius: 50%;
+}
+
+.footer-page {
+    font-family: 'Space Grotesk', monospace;
+    font-weight: 700;
+    color: #1E293B;
+    background: #F1F5F9;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+/* GRID & CARDS */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* PASTEL CARD VARIANTS */
+.card-pastel-blue {
+    background: linear-gradient(145deg, #F8FAFC 0%, #EFF6FF 100%);
+    border: 1px solid #BFDBFE;
+}
+
+.card-pastel-rose {
+    background: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 100%);
+    border: 1px solid #FECDD3;
+}
+
+.card-pastel-emerald {
+    background: linear-gradient(145deg, #F0FDF4 0%, #DCFCE7 100%);
+    border: 1px solid #BBF7D0;
+}
+
+.card-pastel-amber {
+    background: linear-gradient(145deg, #FEFCE8 0%, #FEF3C7 100%);
+    border: 1px solid #FDE68A;
+}
+
+.card-pastel-purple {
+    background: linear-gradient(145deg, #FAF5FF 0%, #F3E8FF 100%);
+    border: 1px solid #E9D5FF;
+}
+
+/* BIG METRICS */
+.metric-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 58px;
+    font-weight: 700;
+    line-height: 1;
+    color: #0F172A;
+    margin-bottom: 8px;
+}
+
+.metric-value.blue { color: #1D4ED8; }
+.metric-value.emerald { color: #047857; }
+.metric-value.amber { color: #B45309; }
+.metric-value.rose { color: #BE123C; }
+
+.metric-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1E293B;
+    line-height: 1.4;
+}
+
+.metric-sub {
+    font-size: 13px;
+    color: #64748B;
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+/* COVER SPECIAL */
+.cover-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    max-width: 1400px;
+}
+
+.cover-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1D4ED8;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    width: fit-content;
+}
+
+.cover-title {
+    font-size: 60px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: #0F172A;
+    margin-bottom: 22px;
+}
+
+.cover-title span {
+    background: linear-gradient(135deg, #2563EB 0%, #0284C7 50%, #7C3AED 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.cover-desc {
+    font-size: 22px;
+    color: #475569;
+    line-height: 1.6;
+    max-width: 1150px;
+    margin-bottom: 40px;
+}
+
+.cover-meta {
+    display: flex;
+    gap: 40px;
+    padding-top: 32px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.meta-item-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748B;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.meta-item-value {
+    font-size: 17px;
+    color: #0F172A;
+    font-weight: 700;
+}
+
+/* SWIMLANE WORKFLOW STYLING */
+.swimlane-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.swimlane-row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+}
+
+.swimlane-header {
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid #E2E8F0;
+}
+
+.swimlane-header.role-pemohon { background: #EFF6FF; border-left: 5px solid #2563EB; }
+.swimlane-header.role-loket { background: #FAF5FF; border-left: 5px solid #9333EA; }
+.swimlane-header.role-dermaga { background: #FEF3C7; border-left: 5px solid #D97706; }
+.swimlane-header.role-rekon { background: #ECFDF5; border-left: 5px solid #059669; }
+
+.swimlane-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 12px 20px;
+    gap: 16px;
+    align-items: center;
+    background: #FCFDFE;
+}
+
+.wf-node {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 70px;
+}
+
+.wf-node.highlight-blue { border-color: #93C5FD; background: #F0F7FF; }
+.wf-node.highlight-purple { border-color: #D8B4FE; background: #FAF5FF; }
+.wf-node.highlight-amber { border-color: #FDE68A; background: #FFFBEB; }
+.wf-node.highlight-emerald { border-color: #86EFAC; background: #F0FDF4; }
+.wf-node.highlight-rose { border-color: #FECDD3; background: #FFF1F2; }
+
+.wf-node-num {
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748B;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.wf-node-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.3;
+}
+
+.wf-node-sub {
+    font-size: 11px;
+    color: #64748B;
+    margin-top: 2px;
+}
+
+/* BEFORE AFTER TABLE */
+.comp-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+}
+
+.comp-table tr {
+    background: #FFFFFF;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.comp-table td {
+    padding: 18px 26px;
+    font-size: 16px;
+    color: #1E293B;
+}
+
+.comp-table td:first-child {
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
+    font-weight: 700;
+    color: #0F172A;
+    width: 25%;
+    background: #F8FAFC;
+    border-left: 5px solid #3B82F6;
+    border-top: 1px solid #E2E8F0;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.comp-table td:nth-child(2) {
+    color: #BE123C;
+    width: 37%;
+    background: #FFF1F2;
+    border-top: 1px solid #FECDD3;
+    border-bottom: 1px solid #FECDD3;
+    font-weight: 500;
+}
+
+.comp-table td:last-child {
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
+    color: #047857;
+    font-weight: 600;
+    width: 38%;
+    background: #F0FDF4;
+    border-right: 5px solid #10B981;
+    border-top: 1px solid #BBF7D0;
+    border-bottom: 1px solid #BBF7D0;
+}
+
+.comp-header th {
+    padding: 8px 26px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    text-align: left;
+    color: #64748B;
+}
+
+.comp-header th:nth-child(2) { color: #BE123C; }
+.comp-header th:last-child { color: #047857; }
+
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: COVER EKSEKUTIF -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="cover-layout">
+        <div class="cover-tag">Modernisasi &amp; Otomasi Pelayanan Pabean</div>
+        <h1 class="cover-title">
+            Transformasi Tata Laksana<br>
+            <span>Pengeluaran Sementara KBM</span> Batam
+        </h1>
+        <p class="cover-desc">
+            Visualisasi alur kerja komprehensif (End-to-End Workflow) dalam pelayanan mudik kendaraan masyarakat: Dari pendaftaran satu pintu, otomasi dokumen pabean, hingga digital handshake rekonsiliasi jaminan.
+        </p>
+        <div class="cover-meta">
+            <div>
+                <div class="meta-item-title">Unit Pemilik Proses</div>
+                <div class="meta-item-value">KPU Bea dan Cukai Tipe B Batam</div>
+            </div>
+            <div>
+                <div class="meta-item-title">Bidang Pelaksana</div>
+                <div class="meta-item-value">Bidang PFPC I &amp; Bidang PK</div>
+            </div>
+            <div>
+                <div class="meta-item-title">Regulasi Acuan</div>
+                <div class="meta-item-value">Instruksi Kerja IK 001/KPUB.02/2025</div>
+            </div>
+            <div>
+                <div class="meta-item-title">Basis Data Analisis</div>
+                <div class="meta-item-value">386 Kendaraan (Audit 7 Musim 2023–2026)</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>KPU Bea dan Cukai Tipe B Batam</span>
+            <span class="footer-dot"></span>
+            <span>Blueprint Transformasi Layanan KBM</span>
+        </div>
+        <div class="footer-page">01 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 2: DIAGNOSTIK BEBAN OPERASIONAL -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Diagnostik Beban Operasional</div>
+        <h2 class="slide-title">Lonjakan Ekstrem Musim Mudik: <span>386 KBM Terkonsentrasi</span></h2>
+        <div class="slide-subtitle">Pelayanan KBM adalah lonjakan musiman berisiko tinggi yang terkonsentrasi pada rentang 14 hari sebelum hari raya.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-4" style="margin-bottom: 20px;">
+            <div class="card card-pastel-blue">
+                <div>
+                    <div class="metric-value blue">75 <span style="font-size:26px;">Unit</span></div>
+                    <div class="metric-label">Lebaran 2023</div>
+                </div>
+                <div class="metric-sub">Penerbitan PPFTZ Manual</div>
+            </div>
+            <div class="card card-pastel-blue">
+                <div>
+                    <div class="metric-value blue">79 <span style="font-size:26px;">Unit</span></div>
+                    <div class="metric-label">Lebaran 2024</div>
+                </div>
+                <div class="metric-sub">Peningkatan +5.3% YoY</div>
+            </div>
+            <div class="card card-pastel-amber" style="border: 2px solid #F59E0B;">
+                <div>
+                    <div class="metric-value amber">89 <span style="font-size:26px;">Unit</span></div>
+                    <div class="metric-label">Lebaran 2025 (Puncak)</div>
+                </div>
+                <div class="metric-sub">Pemberlakuan IK 001/2025</div>
+            </div>
+            <div class="card card-pastel-blue">
+                <div>
+                    <div class="metric-value blue">68 <span style="font-size:26px;">Unit</span></div>
+                    <div class="metric-label">Lebaran 2026</div>
+                </div>
+                <div class="metric-sub">Konsistensi Volume Mudik</div>
+            </div>
+        </div>
+        <div class="card card-pastel-amber" style="padding: 24px 32px; border-left: 6px solid #F59E0B;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="font-size: 19px; color: #78350F; font-weight: 800; margin-bottom: 6px;">Fakta Kunci Audit Idul Fitri 2025:</h4>
+                    <p style="font-size: 15px; color: #92400E; line-height: 1.5;">
+                        Seluruh pemohon adalah <strong>Orang Pribadi (Masyarakat Pemudik)</strong> yang tidak memiliki akun modul pabean CEISA. Akibatnya, 100% beban pembuatan fisik dokumen PPFTZ-01 dan PPFTZ-03 jatuh secara manual ke pundak petugas loket frontdesk.
+                    </p>
+                </div>
+                <div style="text-align: right; min-width: 180px; padding-left: 30px;">
+                    <div style="font-size: 36px; font-weight: 800; color: #B45309; font-family: 'Space Grotesk';">14 HARI</div>
+                    <div style="font-size: 12px; color: #92400E; font-weight: 700; text-transform: uppercase;">Window Lonjakan Puncak</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Sumber Data: Rekap Historis KBM 2023–2026</span>
+            <span class="footer-dot"></span>
+            <span>Seksi Fasilitas PFPC I</span>
+        </div>
+        <div class="footer-page">02 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 3: BUKTI EXCEL MANUAL (THE SMOKING GUN) -->
+<div class="slide">
+    <div class="glow-pastel-purple"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #FFF1F2; border-color: #FECDD3; color: #BE123C;">Akar Masalah Operasional</div>
+        <h2 class="slide-title">Bukan CEISA, Tapi <span>Spreadsheet Excel Manual</span></h2>
+        <div class="slide-subtitle">Bukti autentik: Petugas loket mengetik ulang data setiap mobil ke dalam file Excel 7-sheet untuk mencetak lembar pabean resmi.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-2">
+            <div class="card card-pastel-rose">
+                <div>
+                    <div style="display: inline-block; padding: 5px 12px; background: rgba(255, 255, 255, 0.85); border-radius: 8px; color: #BE123C; font-size: 12px; font-weight: 800; margin-bottom: 14px; border: 1px solid #FECDD3;">
+                        REALITA DI MEJA LOKET PELAYANAN
+                    </div>
+                    <h3 style="font-size: 24px; font-weight: 800; color: #881337; margin-bottom: 12px;">Input Ulang Satu Per Satu di Tab 'form'</h3>
+                    <p style="font-size: 15px; color: #9F1239; line-height: 1.5; margin-bottom: 16px;">
+                        Petugas loket menyalin data fisik STNK, KTP, dan surat permohonan ke dalam spreadsheet Excel (terdokumentasi pada file resmi <em>A.N Samsul</em> &amp; <em>A.N Dwi Fitriantoro</em>).
+                    </p>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; color: #9F1239; font-size: 14px; font-weight: 600;">
+                        <li>⚠️ <strong>Rawan salah ketik</strong> Nomor Rangka / Nomor Mesin KBM</li>
+                        <li>⚠️ <strong>Risiko salah hitung</strong> tarif jaminan PPN 11% dari NJKB</li>
+                        <li>⚠️ <strong>Waktu pengerjaan:</strong> 25–30 menit per pemohon</li>
+                    </ul>
+                </div>
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #FECDD3;">
+                    <div style="font-size: 13px; color: #BE123C; font-weight: 700;">STATUS: SANGAT RAPUH &amp; TIDAK SCALABLE</div>
+                </div>
+            </div>
+
+            <div class="card card-pastel-blue">
+                <div>
+                    <div style="display: inline-block; padding: 5px 12px; background: rgba(255, 255, 255, 0.85); border-radius: 8px; color: #1D4ED8; font-size: 12px; font-weight: 800; margin-bottom: 14px; border: 1px solid #BFDBFE;">
+                        7 SHEET FORMULIR MANUAL YANG DIHASILKAN
+                    </div>
+                    <h3 style="font-size: 24px; font-weight: 800; color: #1E3A8A; margin-bottom: 12px;">Rantai Lembar Cetak Pabean</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+                        <div style="background: #FFFFFF; padding: 10px 14px; border-radius: 10px; border: 1px solid #BFDBFE; font-size: 13px; font-weight: 700; color: #1E293B;">1. Tab 'form' (Master)</div>
+                        <div style="background: #FFFFFF; padding: 10px 14px; border-radius: 10px; border: 1px solid #BFDBFE; font-size: 13px; font-weight: 700; color: #2563EB;">2. Lembar 'IP' (Periksa)</div>
+                        <div style="background: #FFFFFF; padding: 10px 14px; border-radius: 10px; border: 1px solid #BFDBFE; font-size: 13px; font-weight: 700; color: #2563EB;">3. Lembar 'PPFTZ-03'</div>
+                        <div style="background: #FFFFFF; padding: 10px 14px; border-radius: 10px; border: 1px solid #BFDBFE; font-size: 13px; font-weight: 700; color: #2563EB;">4. Lembar 'SPPB'</div>
+                        <div style="background: #FFFFFF; padding: 10px 14px; border-radius: 10px; border: 1px solid #BFDBFE; font-size: 13px; font-weight: 700; color: #475569;">5. Lanjutan Barang</div>
+                        <div style="background: #FFFFFF; padding: 10px 14px; border-radius: 10px; border: 1px solid #BFDBFE; font-size: 13px; font-weight: 700; color: #475569;">6. Packing List</div>
+                    </div>
+                    <div style="background: #FFFFFF; padding: 12px 18px; border-radius: 12px; font-size: 13px; color: #1E3A8A; border: 1px solid #BFDBFE;">
+                        📄 <strong>Total Cetak:</strong> 600+ lembar fisik per musim mudik tanpa repositori terintegrasi.
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #BFDBFE;">
+                    <div style="font-size: 13px; color: #1D4ED8; font-weight: 700;">SOLUSI: Auto-Generate 1-Klik Berbasis Database</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Bukti Berkas: 1. PPFTZ PEMASUKAN KEMBALI A.N DWI FITRIANTORO.xlsx</span>
+            <span class="footer-dot"></span>
+            <span>Folder EXCEL PPFTZ</span>
+        </div>
+        <div class="footer-page">03 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 4: VISUALISASI WORKFLOW EKSISTING (AS-IS: 14 DISPOSISI) -->
+<div class="slide">
+    <div class="glow-pastel-rose"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #FFF1F2; border-color: #FECDD3; color: #BE123C;">Visualisasi Alur Lama (As-Is)</div>
+        <h2 class="slide-title">Alur Rekonsiliasi Eksisting: <span>Rantai 14 Disposisi Manual</span></h2>
+        <div class="slide-subtitle">Birokrasi berbelit antar 4 unit yang menyebabkan SLA pengembalian jaminan molor hingga 14 hari kerja.</div>
+    </div>
+    <div class="slide-body">
+        <div class="card card-pastel-rose" style="padding: 24px 30px; margin-bottom: 20px;">
+            <div style="font-size: 13px; font-weight: 800; color: #BE123C; text-transform: uppercase; margin-bottom: 14px;">14 LANGKAH DISPOSISI FISIK BERANTAI:</div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 12px;">
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 1</div>
+                    <div class="wf-node-title">Lapor Dermaga</div>
+                    <div class="wf-node-sub">Pemohon lapor fisik</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 2</div>
+                    <div class="wf-node-title">BAP Manual</div>
+                    <div class="wf-node-sub">Pemeriksa P2 ketik BAP</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 3</div>
+                    <div class="wf-node-title">Kirim Berkas</div>
+                    <div class="wf-node-sub">Kurir fisik ke Kantor</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 4</div>
+                    <div class="wf-node-title">Agenda Surat</div>
+                    <div class="wf-node-sub">Register loket umum</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 5</div>
+                    <div class="wf-node-title">Disposisi Kabid</div>
+                    <div class="wf-node-sub">Turun ke Kasi Pelayanan</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 6</div>
+                    <div class="wf-node-title">Disposisi Kasi</div>
+                    <div class="wf-node-sub">Pelaksana periksa berkas</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 7</div>
+                    <div class="wf-node-title">Nota Dinas 1</div>
+                    <div class="wf-node-sub">Kirim ke Seksi PK</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 8</div>
+                    <div class="wf-node-title">Disposisi Kasi PK</div>
+                    <div class="wf-node-sub">Cek BPJ CEISA 4.0</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 9</div>
+                    <div class="wf-node-title">Nota Dinas 2</div>
+                    <div class="wf-node-sub">Konfirmasi ke Fasilitas</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 10</div>
+                    <div class="wf-node-title">Cek SKEP Asal</div>
+                    <div class="wf-node-sub">Fasilitas cocokkan kuota</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 11</div>
+                    <div class="wf-node-title">Nota Dinas 3</div>
+                    <div class="wf-node-sub">Jawaban balik ke PK</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 12</div>
+                    <div class="wf-node-title">Draft Persetujuan</div>
+                    <div class="wf-node-sub">PK susun surat lepas</div>
+                </div>
+                <div class="wf-node highlight-rose">
+                    <div class="wf-node-num">Langkah 13</div>
+                    <div class="wf-node-title">Nota Bendahara</div>
+                    <div class="wf-node-sub">Perintah transfer jaminan</div>
+                </div>
+                <div class="wf-node highlight-rose" style="border: 2px solid #E11D48;">
+                    <div class="wf-node-num">Langkah 14</div>
+                    <div class="wf-node-title">Jaminan Lepas</div>
+                    <div class="wf-node-sub">Uang kembali (14 Hari)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card card-pastel-rose" style="padding: 18px 24px;">
+                <div style="font-size: 15px; font-weight: 800; color: #881337;">❌ Masalah Utama Alur Lama:</div>
+                <div style="font-size: 14px; color: #9F1239; margin-top: 4px;">
+                    Berkas fisik harus berpindah 4 kali antar-gedung. Kehilangan atau penumpukan berkas di meja staf sering terjadi.
+                </div>
+            </div>
+            <div class="card card-pastel-rose" style="padding: 18px 24px;">
+                <div style="font-size: 15px; font-weight: 800; color: #881337;">⚠️ Realita SLA di Lapangan:</div>
+                <div style="font-size: 14px; color: #9F1239; margin-top: 4px;">
+                    Regulasi IK membatasi maksimal 6 hari kerja, namun 14 disposisi ini membuat realisasi rata-rata <strong>7 s.d. 14 hari kerja</strong>.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Diagnostik Birokrasi</span>
+            <span class="footer-dot"></span>
+            <span>IK 001/KPUB.02/2025 Poin 10.b &amp; 10.c</span>
+        </div>
+        <div class="footer-page">04 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 5: VISUALISASI WORKFLOW BARU (TO-BE SWIMLANE) -->
+<div class="slide">
+    <div class="glow-pastel-emerald"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #ECFDF5; border-color: #A7F3D0; color: #047857;">Visualisasi Alur Baru (To-Be)</div>
+        <h2 class="slide-title">Alur Kerja Terpadu SiKBM: <span>End-to-End Swimlane</span></h2>
+        <div class="slide-subtitle">Integrasi alur kerja tanpa kertas dari pengajuan mandiri pemohon hingga pelepasan jaminan otomatis.</div>
+    </div>
+    <div class="slide-body">
+        <div class="swimlane-container">
+            <!-- LANE 1: PEMOHON -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-pemohon">
+                    <div style="font-size: 11px; font-weight: 800; color: #1D4ED8; text-transform: uppercase;">LANE 1</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">PEMOHON (WARGA)</div>
+                    <div style="font-size: 11px; color: #64748B;">Portal Mandiri Web &amp; HP</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">Step 1.1</div>
+                        <div class="wf-node-title">Input Plat &amp; No Rangka</div>
+                        <div class="wf-node-sub">Single entry tanpa login</div>
+                    </div>
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">Step 1.2</div>
+                        <div class="wf-node-title">Auto-Hitung Jaminan</div>
+                        <div class="wf-node-sub">11% x NJKB resmi Samsat</div>
+                    </div>
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">Step 1.3</div>
+                        <div class="wf-node-title">Setor Jaminan / Bank</div>
+                        <div class="wf-node-sub">Upload bukti setor digital</div>
+                    </div>
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">Step 1.4</div>
+                        <div class="wf-node-title">Terima QR SKEP &amp; WA</div>
+                        <div class="wf-node-sub">Siap berangkat ke pelabuhan</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LANE 2: BACK-OFFICE & NADINE -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-loket">
+                    <div style="font-size: 11px; font-weight: 800; color: #7E22CE; text-transform: uppercase;">LANE 2</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">BACK-OFFICE &amp; LOKET</div>
+                    <div style="font-size: 11px; color: #64748B;">Seksi Fasilitas &amp; Seksi PK</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">Step 2.1</div>
+                        <div class="wf-node-title">Validasi Samsat API</div>
+                        <div class="wf-node-sub">Cek Non-CBU otomatis</div>
+                    </div>
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">Step 2.2</div>
+                        <div class="wf-node-title">Rekam BPJ CEISA</div>
+                        <div class="wf-node-sub">Seksi PK terbitkan nomor</div>
+                    </div>
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">Step 2.3</div>
+                        <div class="wf-node-title">Auto Draft Nadine</div>
+                        <div class="wf-node-sub">Surat S &amp; KEP bernomor resmi</div>
+                    </div>
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">Step 2.4</div>
+                        <div class="wf-node-title">1-Click PPFTZ-01</div>
+                        <div class="wf-node-sub">Cetak otomatis tanpa Excel</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LANE 3: LAPANGAN DERMAGA -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-dermaga">
+                    <div style="font-size: 11px; font-weight: 800; color: #B45309; text-transform: uppercase;">LANE 3</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">DERMAGA PELABUHAN</div>
+                    <div style="font-size: 11px; color: #64748B;">Telaga Punggur / Batu Ampar</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">Step 3.1</div>
+                        <div class="wf-node-title">Scan QR di Gerbang</div>
+                        <div class="wf-node-sub">Tablet lapangan pemeriksa</div>
+                    </div>
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">Step 3.2</div>
+                        <div class="wf-node-title">Cek Fisik &amp; Gesek</div>
+                        <div class="wf-node-sub">Foto rangka sinkron cloud</div>
+                    </div>
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">Step 3.3</div>
+                        <div class="wf-node-title">SPPB Real-Time</div>
+                        <div class="wf-node-sub">Terbit &lt; 1 jam di dermaga</div>
+                    </div>
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">Step 3.4</div>
+                        <div class="wf-node-title">KBM Berlayar Roro</div>
+                        <div class="wf-node-sub">Menuju pelabuhan tujuan</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LANE 4: KEPULANGAN & REKONSILIASI -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-rekon">
+                    <div style="font-size: 11px; font-weight: 800; color: #047857; text-transform: uppercase;">LANE 4</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">REKONSILIASI KEPULANGAN</div>
+                    <div style="font-size: 11px; color: #64748B;">Pemasukan Kembali ke Batam</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-emerald">
+                        <div class="wf-node-num">Step 4.1</div>
+                        <div class="wf-node-title">KBM Tiba di Batam</div>
+                        <div class="wf-node-sub">Pemeriksa scan QR mobil</div>
+                    </div>
+                    <div class="wf-node highlight-emerald">
+                        <div class="wf-node-num">Step 4.2</div>
+                        <div class="wf-node-title">DIGITAL HANDSHAKE</div>
+                        <div class="wf-node-sub">Auto-match data PPFTZ</div>
+                    </div>
+                    <div class="wf-node highlight-emerald">
+                        <div class="wf-node-num">Step 4.3</div>
+                        <div class="wf-node-title">Auto Notifikasi PK</div>
+                        <div class="wf-node-sub">Dashboard lepas jaminan</div>
+                    </div>
+                    <div class="wf-node highlight-emerald" style="border: 2px solid #059669;">
+                        <div class="wf-node-num">Step 4.4</div>
+                        <div class="wf-node-title">Jaminan Cair (&lt; 2 HK)</div>
+                        <div class="wf-node-sub">Pelepasan bank/tunai instan</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Arsitektur Alur Kerja</span>
+            <span class="footer-dot"></span>
+            <span>SiKBM End-to-End Swimlane Workflow</span>
+        </div>
+        <div class="footer-page">05 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 6: DETAIL TEROBOSAN DIGITAL HANDSHAKE -->
+<div class="slide">
+    <div class="glow-pastel-emerald"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #ECFDF5; border-color: #A7F3D0; color: #047857;">Mekanisme Rekonsiliasi Otomatis</div>
+        <h2 class="slide-title">Mekanisme <span>Digital Handshake</span> (< 2 Hari Kerja)</h2>
+        <div class="slide-subtitle">Transformasi pemotongan birokrasi dari 14 disposisi manual menjadi 3 langkah validasi digital terpadu.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-2" style="margin-bottom: 20px;">
+            <div class="card card-pastel-rose">
+                <div style="font-size: 13px; font-weight: 800; color: #BE123C; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">PARADIGMA LAMA (14 DISPOSISI MANUAL)</div>
+                <h3 style="font-size: 24px; font-weight: 800; color: #881337; margin-bottom: 12px;">Birokrasi Kertas Parsial</h3>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #9F1239;">
+                    <li>❌ Berkas fisik diantar kurir antar-gedung (Dermaga ➔ Kantor Pelayanan)</li>
+                    <li>❌ Verifikasi manual fisik mobil dengan salinan kertas SKEP</li>
+                    <li>❌ Seksi PK harus mengirim nota dinas manual konfirmasi ke Seksi Fasilitas</li>
+                    <li>❌ Rekonsiliasi menunggu disposisi berantai pejabat eselon V &amp; IV</li>
+                    <li>❌ Realisasi Pengembalian Jaminan: <strong>7 hingga 14 Hari Kerja</strong></li>
+                </ul>
+            </div>
+
+            <div class="card card-pastel-emerald">
+                <div style="font-size: 13px; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">PARADIGMA BARU (DIGITAL HANDSHAKE)</div>
+                <h3 style="font-size: 24px; font-weight: 800; color: #064E3B; margin-bottom: 12px;">Validasi Sistem Terintegrasi</h3>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #065F46;">
+                    <li>✅ Petugas dermaga scan QR kepulangan &amp; upload foto fisik via Tablet</li>
+                    <li>✅ Sistem otomatis mencocokkan nomor rangka/mesin dengan basis data SKEP</li>
+                    <li>✅ Status berkas langsung ter-update <em>"KBM Telah Masuk Kembali"</em> secara real-time</li>
+                    <li>✅ Notifikasi pelepasan jaminan terkirim langsung ke dashboard Seksi PK</li>
+                    <li>✅ Realisasi Pengembalian Jaminan: <strong>Maksimal 2 Hari Kerja</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card card-pastel-emerald" style="padding: 20px 32px; border: 2px solid #10B981;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #10B981; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #FFFFFF; font-weight: bold;">✓</div>
+                    <div>
+                        <div style="font-size: 17px; font-weight: 800; color: #064E3B;">Pelepasan Jaminan Instan &amp; Akuntabel</div>
+                        <div style="font-size: 13px; color: #065F46;">Pelepasan garansi bank atau transfer balik jaminan tunai langsung tereksekusi tanpa birokrasi manual.</div>
+                    </div>
+                </div>
+                <div style="font-size: 24px; font-weight: 800; color: #047857; font-family: 'Space Grotesk';">PANGKAS 85% WAKTU</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Inovasi Tata Laksana</span>
+            <span class="footer-dot"></span>
+            <span>Digital Handshake Architecture</span>
+        </div>
+        <div class="footer-page">06 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 7: OTOMASI DOKUMEN PABEAN 1-KLIK -->
+<div class="slide">
+    <div class="glow-pastel-lavender"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Otomasi Frontdesk</div>
+        <h2 class="slide-title">Otomasi Dokumen Pabean: <span>Eliminasi Ketik Excel</span></h2>
+        <div class="slide-subtitle">Transformasi pengetikan manual lembar PPFTZ menjadi pipeline otomasi terpadu dalam hitungan detik.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-2">
+            <div class="card card-pastel-rose" style="border-left: 6px solid #E11D48;">
+                <div style="font-size: 13px; font-weight: 800; color: #BE123C; text-transform: uppercase; margin-bottom: 8px;">PROSES EKSISTING (MANUAL EXCEL)</div>
+                <h4 style="font-size: 20px; font-weight: 800; color: #881337; margin-bottom: 14px;">Ketik Tangan 1 per 1 (30 Menit/Mobil)</h4>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #9F1239;">
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #FECDD3;">1. Petugas buka file template Excel kosong</div>
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #FECDD3;">2. Ketik manual NIK, Nama, Alamat, No Polisi, No Rangka</div>
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #FECDD3;">3. Cetak tab IP, PPFTZ-03, SPPB, Packing List, SP IBUK</div>
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #FECDD3;">4. Berkas disimpan terpisah tanpa nomor registrasi tersistem</div>
+                </div>
+            </div>
+
+            <div class="card card-pastel-emerald" style="border-left: 6px solid #059669;">
+                <div style="font-size: 13px; font-weight: 800; color: #047857; text-transform: uppercase; margin-bottom: 8px;">PROSES BARU (OTOMASI SIKBM)</div>
+                <h4 style="font-size: 20px; font-weight: 800; color: #064E3B; margin-bottom: 14px;">1-Click Generation (&lt; 2 Menit/Mobil)</h4>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #065F46;">
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #A7F3D0;">1. Data pemohon &amp; KBM divalidasi langsung via API Samsat</div>
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #A7F3D0;">2. Generator memetakan data langsung ke template resmi pabean</div>
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #A7F3D0;">3. Cetak PDF siap pakai dengan barcode registrasi instan</div>
+                    <div style="padding: 10px 14px; background: #FFFFFF; border-radius: 8px; border: 1px solid #A7F3D0;">4. Sinkronisasi otomatis ke CEISA 4.0 (BPJ) &amp; Bot Nadine</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; background: #EFF6FF; padding: 16px; border-radius: 14px; border: 1px solid #BFDBFE;">
+            <span style="font-size: 17px; color: #1E3A8A; font-weight: 700;">
+                ⚡ Efisiensi Waktu Loket: <strong style="color: #047857;">93% Lebih Cepat</strong> • Mencegah antrean fisik pemudik di kantor Bea Cukai Batam.
+            </span>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Otomasi Dokumen</span>
+            <span class="footer-dot"></span>
+            <span>Implementasi IK 001/KPUB.02/2025 Poin 10.a.n</span>
+        </div>
+        <div class="footer-page">07 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 8: EARLY WARNING SYSTEM (EWS) 45 HARI KALENDER -->
+<div class="slide">
+    <div class="glow-pastel-amber"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #FEF3C7; border-color: #FDE68A; color: #B45309;">Manajemen Risiko &amp; Keuangan Negara</div>
+        <h2 class="slide-title">Early Warning System (EWS): <span>Jatuh Tempo 45 Hari</span></h2>
+        <div class="slide-subtitle">Mengamankan potensi penerimaan negara sesuai klausul mutlak IK 001/KPUB.02/2025 Poin 10.c.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-4" style="margin-bottom: 20px;">
+            <div class="card card-pastel-emerald">
+                <div>
+                    <div style="font-size: 28px; margin-bottom: 6px;">🟢</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #047857;">ZONA AMAN</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #064E3B; margin: 4px 0;">&gt; 15 Hari</div>
+                    <div style="font-size: 12px; color: #065F46;">Masa izin KBM di luar kawasan bebas masih panjang.</div>
+                </div>
+            </div>
+
+            <div class="card card-pastel-amber">
+                <div>
+                    <div style="font-size: 28px; margin-bottom: 6px;">🟡</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #B45309;">EARLY ALERT</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #78350F; margin: 4px 0;">H-10 &amp; H-7</div>
+                    <div style="font-size: 12px; color: #92400E;">Notifikasi ramah via WhatsApp Gateway ke pemudik.</div>
+                </div>
+            </div>
+
+            <div class="card card-pastel-rose">
+                <div>
+                    <div style="font-size: 28px; margin-bottom: 6px;">🔴</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #BE123C;">CRITICAL ALERT</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #881337; margin: 4px 0;">H-3 Hari</div>
+                    <div style="font-size: 12px; color: #9F1239;">Peringatan keras risiko pencairan jaminan ke Kas Negara.</div>
+                </div>
+            </div>
+
+            <div class="card" style="background: #FFF1F2; border: 2px solid #E11D48;">
+                <div>
+                    <div style="font-size: 28px; margin-bottom: 6px;">⚫</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #9F1239;">JATUH TEMPO</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #881337; margin: 4px 0;">H+1 Hari</div>
+                    <div style="font-size: 12px; color: #BE123C;">Auto-generate draf klaim pencairan ke KPPN Batam.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-pastel-blue" style="padding: 22px 32px; border-left: 6px solid #2563EB;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="font-size: 17px; color: #1E3A8A; font-weight: 800; margin-bottom: 4px;">Kepatuhan Penuh Terhadap Regulasi Poin 10.c:</h4>
+                    <p style="font-size: 14px; color: #334155;">
+                        Batas waktu maksimal KBM berada di luar Batam adalah <strong>45 hari kalender</strong> sejak tanggal SPPB PPFTZ-01. Sistem memastikan hak keuangan negara terlindungi 100% tanpa celah keterlambatan penagihan.
+                    </p>
+                </div>
+                <div style="font-family: 'Space Grotesk'; font-size: 22px; font-weight: 800; color: #1D4ED8; white-space: nowrap; margin-left: 20px;">
+                    100% ZERO LEAKAGE
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Manajemen Risiko Pabean</span>
+            <span class="footer-dot"></span>
+            <span>IK 001/KPUB.02/2025 Poin 10.c</span>
+        </div>
+        <div class="footer-page">08 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 9: PERBANDINGAN SEBELUM VS SESUDAH -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Evaluasi Komparatif</div>
+        <h2 class="slide-title">Sebelum vs Sesudah: <span>Transformasi Radikal</span></h2>
+        <div class="slide-subtitle">Matriks perubahan fundamental dalam pelayanan Pengeluaran Sementara KBM di KPU BC Batam.</div>
+    </div>
+    <div class="slide-body">
+        <table class="comp-table">
+            <thead>
+                <tr class="comp-header">
+                    <th>Indikator Pelayanan</th>
+                    <th>Sebelum (As-Is / Audit 2025)</th>
+                    <th>Sesudah (To-Be / Ekosistem SiKBM)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Kanal Pengajuan</td>
+                    <td>11 Subfolder G-Drive Terfragmentasi</td>
+                    <td>1 Portal Mandiri SiKBM (Web &amp; Mobile)</td>
+                </tr>
+                <tr>
+                    <td>Validasi Dokumen</td>
+                    <td>Manual &amp; Sering Lolos Mobil CBU</td>
+                    <td>Otomatisasi API Samsat &amp; Bapenda</td>
+                </tr>
+                <tr>
+                    <td>Penerbitan PPFTZ</td>
+                    <td>Ketik Manual Spreadsheet Excel (30 Menit)</td>
+                    <td>Auto-Generate 1-Klik (&lt; 2 Menit)</td>
+                </tr>
+                <tr>
+                    <td>Alur Rekonsiliasi</td>
+                    <td>14 Disposisi Kertas Antar-Bidang</td>
+                    <td>Digital Handshake Terintegrasi (0 Disposisi)</td>
+                </tr>
+                <tr>
+                    <td>SLA Pengembalian Jaminan</td>
+                    <td>7 hingga 14 Hari Kerja</td>
+                    <td>Maksimal 2 Hari Kerja (Sesuai SLA IK)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Matriks Kinerja Layanan</span>
+            <span class="footer-dot"></span>
+            <span>Standar Pelayanan Publik Kemenkeu</span>
+        </div>
+        <div class="footer-page">09 / 10</div>
+    </div>
+</div>
+
+<!-- SLIDE 10: RENCANA AKSI NYATA (ROADMAP) -->
+<div class="slide">
+    <div class="glow-pastel-emerald"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #ECFDF5; border-color: #A7F3D0; color: #047857;">Rencana Implementasi</div>
+        <h2 class="slide-title">Rencana Aksi Cepat: <span>Siap Menghadapi Musim Mudik</span></h2>
+        <div class="slide-subtitle">Milestone taktis implementasi sistem SiKBM terpadu untuk pelayanan masyarakat yang cepat dan akuntabel.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-3" style="margin-bottom: 20px;">
+            <div class="card card-pastel-blue">
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #1D4ED8; text-transform: uppercase; margin-bottom: 8px;">TAHAP 1 • BULAN 1–2</div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #1E3A8A; margin-bottom: 10px;">Fondasi &amp; Otomasi Formulir</h3>
+                    <p style="font-size: 14px; color: #1E293B; line-height: 1.5;">
+                        • Standarisasi database relasional SiKBM<br>
+                        • Generator draf PPFTZ-01 &amp; PPFTZ-03<br>
+                        • Hentikan pengetikan manual via template Excel
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #1D4ED8; font-weight: 700;">TARGET: Petugas Bebas Excel</div>
+            </div>
+
+            <div class="card card-pastel-purple" style="border: 2px solid #A855F7;">
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #7E22CE; text-transform: uppercase; margin-bottom: 8px;">TAHAP 2 • BULAN 3–4</div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #581C87; margin-bottom: 10px;">Integrasi Nadine &amp; Dermaga</h3>
+                    <p style="font-size: 14px; color: #1E293B; line-height: 1.5;">
+                        • Middleware Bot Nadine (Surat S &amp; KEP)<br>
+                        • Aplikasi Mobile Scanner di Telaga Punggur<br>
+                        • Implementasi modul Digital Handshake rekonsiliasi
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #7E22CE; font-weight: 700;">TARGET: Pangkas 14 Disposisi</div>
+            </div>
+
+            <div class="card card-pastel-emerald">
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #047857; text-transform: uppercase; margin-bottom: 8px;">TAHAP 3 • BULAN 5–6</div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #064E3B; margin-bottom: 10px;">Uji Lapangan &amp; Go-Live</h3>
+                    <p style="font-size: 14px; color: #1E293B; line-height: 1.5;">
+                        • Simulasi pemeriksaan fisik lapangan dermaga<br>
+                        • Sosialisasi kepada calon pemudik kendaraan<br>
+                        • Operasionalisasi penuh SiKBM Batam
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #047857; font-weight: 700;">TARGET: Siap Layanan Mudik</div>
+            </div>
+        </div>
+
+        <div class="card card-pastel-blue" style="padding: 20px 32px; border: 2px solid #3B82F6; text-align: center;">
+            <h4 style="font-size: 20px; color: #1E3A8A; font-weight: 800; margin-bottom: 4px;">
+                "Menghadirkan Pelayanan Mudik yang Cepat, Berintegritas, dan Menjaga Keuangan Negara"
+            </h4>
+            <p style="font-size: 14px; color: #475569;">
+                Komitmen Modernisasi Layanan Pabean KPU Bea dan Cukai Tipe B Batam Menuju Wilayah Bebas dari Korupsi dan Birokrasi Bersih Melayani.
+            </p>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Rencana Aksi &amp; Penutup</span>
+            <span class="footer-dot"></span>
+            <span>KPU Bea dan Cukai Tipe B Batam</span>
+        </div>
+        <div class="footer-page">10 / 10</div>
+    </div>
+</div>
+
+</body>
+</html>

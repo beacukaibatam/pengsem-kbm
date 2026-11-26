@@ -1,0 +1,50 @@
+# Environment & secrets
+.env
+.env.*
+*.env
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+
+# Database temporary files
+*.db-shm
+*.db-wal
+
+# Large binary test documents and data
+BERKAS UJI COBA/
+DATA CONTOH PERMOHONAN/
+EXCEL PPFTZ dan Dok Lain Manual/
+FOTO_PPFTZ_KENDARAAN_IDUL_FITRI_2025/
+simulasi/
+workspace_claude/
+workspace_macair/
+.agents/
+
+# Temporary and scratch
+scratch/
+mockup_*
+sample_*
+
+# Test screenshots and scripts
+screenshot_*.png
+test_*.py
+test_*.txt
+aligned_cards_verified.png
+current_cards_alignment.png
+desktop_initial.png
+mobile_initial.png
+wa_profile_concept_*.png
+wa_profile_preview_*.png
+
+# Presentation & PDF drafts
+*.pdf
+*.pptx
+*.JPG

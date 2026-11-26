@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring Pengeluaran Sementara KBM | KPU Bea dan Cukai Tipe B Batam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bc-navy-dark: #002B50;
+            --bc-navy: #00447C;
+            --bc-navy-light: #0A589C;
+            --bc-gold: #F59E0B;
+            --bc-gold-hover: #D97706;
+            --bg-canvas: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            
+            --status-yellow-bg: #FEF3C7;
+            --status-yellow-text: #92400E;
+            --status-blue-bg: #DBEAFE;
+            --status-blue-text: #1E40AF;
+            --status-orange-bg: #FFEDD5;
+            --status-orange-text: #9A3412;
+            --status-purple-bg: #F3E8FF;
+            --status-purple-text: #6B21A8;
+            --status-green-bg: #DCFCE7;
+            --status-green-text: #166534;
+            --status-red-bg: #FEE2E2;
+            --status-red-text: #991B1B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* TOP NAVIGATION BAR */
+        .navbar {
+            background: linear-gradient(135deg, var(--bc-navy-dark) 0%, var(--bc-navy) 100%);
+            color: #FFFFFF;
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0, 43, 80, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 3px solid var(--bc-gold);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .navbar-brand img {
+            height: 44px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .navbar-title h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+        }
+
+        .navbar-title p {
+            font-size: 0.75rem;
+            color: #93C5FD;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-nav {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-nav-primary {
+            background: var(--bc-gold);
+            color: #1E293B;
+        }
+        .btn-nav-primary:hover {
+            background: var(--bc-gold-hover);
+            color: #FFFFFF;
+        }
+
+        .btn-nav-outline {
+            background: rgba(255, 255, 255, 0.12);
+            color: #FFFFFF;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        .btn-nav-outline:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        .server-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34D399;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10B981;
+            box-shadow: 0 0 8px #10B981;
+            animation: pulseDot 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* MAIN CONTENT LAYOUT */
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 24px auto;
+            padding: 0 24px;
+            flex: 1;
+        }
+
+        /* KPI STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-info h3 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-info .stat-number {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.1;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        /* FILTER & SEARCH TOOLBAR */
+        .toolbar-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 0.80rem;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            background: #F8FAFC;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            background: #E2E8F0;
+            color: var(--text-main);
+        }
+        .tab-btn.active {
+            background: var(--bc-navy);
+            color: #FFFFFF;
+            border-color: var(--bc-navy);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            position: relative;
+            min-width: 320px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 9px 14px 9px 36px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border-color);
+            font-size: 0.82rem;
+            font-family: inherit;
+            background: #F8FAFC;
+            transition: all 0.2s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--bc-navy);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(0, 68, 124, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 11px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* DATA TABLE CARD */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        .table-header-title {
+            padding: 16px 20px;
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-header-title h2 {
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: var(--bc-navy-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.82rem;
+        }
+
+        thead {
+            background: #F8FAFC;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        th {
+            padding: 12px 16px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-size: 0.72rem;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.15s;
+        }
+        tbody tr:hover {
+            background: #F8FAFC;
+        }
+
+        td {
+            padding: 14px 16px;
+            vertical-align: middle;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .badge-status.MENUNGGU_VERIFIKASI_DOKUMEN {
+            background: var(--status-yellow-bg);
+            color: var(--status-yellow-text);
+        }
+        .badge-status.DOKUMEN_LENGKAP {
+            background: var(--status-blue-bg);
+            color: var(--status-blue-text);
+        }
+        .badge-status.MENUNGGU_CEK_FISIK {
+            background: var(--status-orange-bg);
+            color: var(--status-orange-text);
+        }
+        .badge-status.PENETAPAN_JAMINAN_PPN {
+            background: var(--status-purple-bg);
+            color: var(--status-purple-text);
+        }
+        .badge-status.DISETUJUI {
+            background: var(--status-green-bg);
+            color: var(--status-green-text);
+        }
+        .badge-status.DITOLAK {
+            background: var(--status-red-bg);
+            color: var(--status-red-text);
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-action-primary {
+            background: var(--bc-navy);
+            color: #FFFFFF;
+        }
+        .btn-action-primary:hover {
+            background: var(--bc-navy-dark);
+        }
+
+        .pill-source {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #E2E8F0;
+            color: #475569;
+        }
+        .pill-source.wa {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        /* MODAL DRAWER DETAIL PETUGAS */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: flex-end;
+        }
+
+        .drawer-card {
+            width: 100%;
+            max-width: 580px;
+            background: #FFFFFF;
+            height: 100%;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .drawer-header {
+            padding: 18px 24px;
+            background: var(--bc-navy-dark);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--bc-gold);
+        }
+
+        .drawer-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .drawer-footer {
+            padding: 16px 24px;
+            background: #F8FAFC;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .drawer-section {
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .drawer-section-title {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: var(--bc-navy);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.80rem;
+        }
+
+        .data-item label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.70rem;
+            margin-bottom: 2px;
+        }
+
+        .data-item div {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* SIMULATOR MODAL */
+        .sim-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(5px);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .sim-phone {
+            width: 100%;
+            max-width: 420px;
+            height: 720px;
+            max-height: 90vh;
+            background: #FFFFFF;
+            border-radius: 28px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 8px solid #1E293B;
+        }
+
+        .sim-header {
+            background: #075E54;
+            color: #FFFFFF;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sim-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            padding: 2px;
+        }
+
+        .sim-body {
+            flex: 1;
+            background: #EFEAE2 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png') repeat;
+            padding: 14px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-bubble {
+            max-width: 82%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .chat-bot {
+            align-self: flex-start;
+            background: #FFFFFF;
+            color: #111827;
+            border-top-left-radius: 2px;
+        }
+
+        .chat-user {
+            align-self: flex-end;
+            background: #D9FDD3;
+            color: #111827;
+            border-top-right-radius: 2px;
+        }
+
+        .chat-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .chat-btn {
+            background: #FFFFFF;
+            border: 1px solid #10B981;
+            color: #059669;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.80rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .chat-btn:hover {
+            background: #10B981;
+            color: #FFFFFF;
+        }
+
+        .sim-footer {
+            padding: 10px 14px;
+            background: #F0F2F5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sim-input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: none;
+            font-size: 0.82rem;
+            background: #FFFFFF;
+        }
+        .sim-input:focus {
+            outline: none;
+        }
+
+        .sim-send-btn {
+            background: #00A884;
+            color: #FFFFFF;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <header class="navbar">
+        <div class="navbar-brand">
+            <div style="font-size: 1.8rem;">⚓</div>
+            <div class="navbar-title">
+                <h1>DASHBOARD MONITORING PENGELUARAN SEMENTARA KBM (PENGSEM)</h1>
+                <p>Seksi Fasilitas Pabean dan Cukai &bull; Bidang PFPC I &bull; KPU Bea dan Cukai Tipe B Batam</p>
+            </div>
+        </div>
+        <div class="navbar-actions">
+            <div class="server-status-pill">
+                <span class="status-dot"></span>
+                <span>Server AI Pabean Aktif</span>
+            </div>
+            <button type="button" class="btn-nav" onclick="openLiveChatModal()" style="background:#059669; color:#FFFFFF; border:none; display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer;">
+                💬 Konsol Live Chat WA (+62 851-4490-1346)
+            </button>
+            <a href="index.html" class="btn-nav btn-nav-primary" target="_blank">
+                ✍️ Buka Formulir Pemohon
+            </a>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="container">
+        
+        <!-- KPI METRICS SUMMARY -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Total Permohonan</h3>
+                    <div class="stat-number" id="kpiTotal">0</div>
+                </div>
+                <div class="stat-icon" style="background:#EFF6FF; color:#1D4ED8;">📋</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Verifikasi Dokumen</h3>
+                    <div class="stat-number" id="kpiVerifikasi" style="color:#D97706;">0</div>
+                </div>
+                <div class="stat-icon" style="background:#FEF3C7; color:#D97706;">🔍</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Cek Fisik Lapangan</h3>
+                    <div class="stat-number" id="kpiCekFisik" style="color:#EA580C;">0</div>
+                </div>
+                <div class="stat-icon" style="background:#FFEDD5; color:#EA580C;">🚗</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Jaminan PPN 11%</h3>
+                    <div class="stat-number" id="kpiJaminan" style="color:#7C3AED;">0</div>
+                </div>
+                <div class="stat-icon" style="background:#F3E8FF; color:#7C3AED;">💳</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Disetujui (Selesai)</h3>
+                    <div class="stat-number" id="kpiSelesai" style="color:#16A34A;">0</div>
+                </div>
+                <div class="stat-icon" style="background:#DCFCE7; color:#16A34A;">✅</div>
+            </div>
+        </section>
+
+        <!-- TOOLBAR: FILTER & SEARCH -->
+        <section class="toolbar-card">
+            <div class="filter-tabs">
+                <button class="tab-btn active" onclick="filterByStatus('SEMUA', this)">Semua Permohonan</button>
+                <button class="tab-btn" onclick="filterByStatus('MENUNGGU_VERIFIKASI_DOKUMEN', this)">🟡 Verifikasi Berkas</button>
+                <button class="tab-btn" onclick="filterByStatus('MENUNGGU_CEK_FISIK', this)">🟠 Cek Fisik Lapangan</button>
+                <button class="tab-btn" onclick="filterByStatus('PENETAPAN_JAMINAN_PPN', this)">🟣 Penetapan Jaminan</button>
+                <button class="tab-btn" onclick="filterByStatus('DISETUJUI', this)">🟢 Disetujui</button>
+            </div>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Cari Nama, Nopol BP, NIK, atau Agenda..." oninput="handleSearch()">
+            </div>
+        </section>
+
+        <!-- DATA TABLE -->
+        <section class="table-card">
+            <div class="table-header-title">
+                <h2>📑 Daftar Antrean Permohonan Masuk (Real-Time)</h2>
+                <button class="btn-nav btn-nav-outline" style="color:#0F172A; border-color:#CBD5E1;" onclick="loadPermohonanData()">
+                    🔄 Muat Ulang Data
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No. Agenda / Waktu</th>
+                            <th>Nama Pemohon (KTP)</th>
+                            <th>No. WhatsApp Kontak</th>
+                            <th>Kendaraan (Nopol BP)</th>
+                            <th>Rute Pelabuhan</th>
+                            <th>Status Permohonan</th>
+                            <th>Aksi Petugas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="permohonanTableBody">
+                        <!-- Data rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- DRAWER DETAIL VERIFIKASI PETUGAS -->
+    <div class="drawer-overlay" id="drawerDetail" onclick="closeDrawer(event)">
+        <div class="drawer-card" onclick="event.stopPropagation()">
+            <div class="drawer-header">
+                <div>
+                    <h2 id="drawerTitle" style="font-size:1.05rem; font-weight:800;">Detail Permohonan</h2>
+                    <div id="drawerSubtitle" style="font-size:0.75rem; color:#FEF08A; font-weight:700;">No. Agenda: -</div>
+                </div>
+                <button type="button" onclick="closeDrawerDirect()" style="background:none; border:none; color:#FFFFFF; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="drawer-body">
+                
+                <!-- Section Data Pemohon -->
+                <div class="drawer-section">
+                    <div class="drawer-section-title">👤 Data Pemohon &amp; Kontak WhatsApp</div>
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <label>Nama Lengkap (KTP)</label>
+                            <div id="dNama">-</div>
+                        </div>
+                        <div class="data-item">
+                            <label>NIK (16 Digit)</label>
+                            <div class="mono" id="dNik">-</div>
+                        </div>
+                        <div class="data-item">
+                            <label>Nomor NPWP</label>
+                            <div class="mono" id="dNpwp">-</div>
+                        </div>
+                        <div class="data-item">
+                            <label>No. WA Pemohon (KTP)</label>
+                            <div class="mono" id="dWaPemohon">-</div>
+                        </div>
+                        <div class="data-item" style="grid-column: span 2;">
+                            <label>No. WA Pengirim / Submitter Bot</label>
+                            <div id="dWaPengirim">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Kendaraan & Rute -->
+                <div class="drawer-section">
+                    <div class="drawer-section-title">🚗 Data Kendaraan &amp; Rute Perjalanan</div>
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <label>Nomor Polisi (BP)</label>
+                            <div class="mono" style="color:var(--bc-navy); font-size:1rem;" id="dNopol">-</div>
+                        </div>
+                        <div class="data-item">
+                            <label>Merek / Tipe</label>
+                            <div id="dMerek">-</div>
+                        </div>
+                        <div class="data-item">
+                            <label>Tahun &amp; Warna</label>
+                            <div id="dTahunWarna">-</div>
+                        </div>
+                        <div class="data-item">
+                            <label>Nomor Rangka</label>
+                            <div class="mono" style="font-size:0.75rem;" id="dNoRangka">-</div>
+                        </div>
+                        <div class="data-item" style="grid-column: span 2;">
+                            <label>Status Hubungan Kepemilikan (IK 001/KPUB.02/2025)</label>
+                            <div id="dStatusKepemilikan" style="font-weight:700; color:var(--bc-navy);">-</div>
+                        </div>
+                        <div class="data-item" style="grid-column: span 2;">
+                            <label>Pelabuhan Tujuan &amp; Keperluan</label>
+                            <div id="dTujuanKeperluan">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Dokumen Terlampir -->
+                <div class="drawer-section">
+                    <div class="drawer-section-title">📂 Dokumen Terlampir (AI Vision Verified)</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; padding:8px 12px; border-radius:6px; border:1px solid #E2E8F0;">
+                            <div><strong>🪪 KTP Asli Berwarna</strong></div>
+                            <span class="pill-source wa">✓ Terverifikasi AI</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; padding:8px 12px; border-radius:6px; border:1px solid #E2E8F0;">
+                            <div><strong>💳 Kartu NPWP Asli</strong></div>
+                            <span class="pill-source wa">✓ Cocok dengan KTP</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; padding:8px 12px; border-radius:6px; border:1px solid #E2E8F0;">
+                            <div><strong>📄 Dokumen STNK &amp; BPKB / Leasing</strong></div>
+                            <span class="pill-source">Tersedia</span>
+                        </div>
+                        <div id="rowDokumenPendukung" style="display:none; justify-content:space-between; align-items:center; background:#EFF6FF; padding:8px 12px; border-radius:6px; border:1px solid #BFDBFE;">
+                            <div><strong id="lblDokumenPendukung">📑 Dokumen Pembuktian Hubungan</strong></div>
+                            <span class="pill-source wa" id="badgeDokumenPendukung">✓ Terlampir</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Update Status oleh Pegawai -->
+                <div class="drawer-section" style="background:#EFF6FF; border-color:#BFDBFE;">
+                    <div class="drawer-section-title" style="color:#1D4ED8;">⚙️ Aksi &amp; Pembaruan Status Pegawai</div>
+                    <label style="font-size:0.75rem; font-weight:700; color:#1E3A8A; display:block; margin-bottom:6px;">Ubah Status Permohonan:</label>
+                    <select id="selectNewStatus" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #93C5FD; font-size:0.85rem; font-weight:700; background:#FFFFFF; margin-bottom:12px;">
+                        <option value="MENUNGGU_VERIFIKASI_DOKUMEN">🟡 Menunggu Verifikasi Dokumen</option>
+                        <option value="DOKUMEN_LENGKAP">🔵 Dokumen Lengkap</option>
+                        <option value="MENUNGGU_CEK_FISIK">🟠 Menunggu Cek Fisik Lapangan</option>
+                        <option value="PENETAPAN_JAMINAN_PPN">🟣 Penetapan Jaminan PPN 11%</option>
+                        <option value="DISETUJUI">🟢 Disetujui (Terbitkan Persetujuan)</option>
+                        <option value="DITOLAK">🔴 Ditolak / Dokumen Tidak Lengkap</option>
+                    </select>
+
+                    <label style="font-size:0.75rem; font-weight:700; color:#1E3A8A; display:block; margin-bottom:6px;">Catatan untuk Pemohon (Dikirimkan Otomatis via WA):</label>
+                    <textarea id="txtCatatanPetugas" rows="3" style="width:100%; padding:8px; border-radius:8px; border:1px solid #93C5FD; font-size:0.80rem; font-family:inherit;" placeholder="Contoh: Berkas telah lengkap. Silakan hadir di Pos Bea Cukai Pelabuhan Telaga Punggur untuk pemeriksaan fisik kendaraan..."></textarea>
+                </div>
+
+            </div>
+            <div class="drawer-footer">
+                <button type="button" class="btn-action" style="background:#E2E8F0; color:#334155;" onclick="closeDrawerDirect()">Batal</button>
+                <button type="button" class="btn-action" style="background:#059669; color:#FFFFFF; border:none;" onclick="openChatFromDrawer()">💬 Chat WA Pemohon</button>
+                <button type="button" class="btn-action btn-action-primary" onclick="saveStatusUpdate()">💾 Simpan &amp; Notifikasi Pemohon</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KONSOL LIVE CHAT OPERATOR WHATSAPP OFFICIAL META (+62 851-4490-1346) -->
+    <div class="sim-overlay" id="liveChatModal" style="display:none; align-items:center; justify-content:center; background:rgba(15,23,42,0.7); z-index:9999;">
+        <div style="width:940px; max-width:96vw; height:640px; max-height:92vh; background:#FFFFFF; border-radius:12px; display:flex; flex-direction:column; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4); overflow:hidden; border:1px solid #CBD5E1;">
+            <!-- Modal Header -->
+            <div style="background:#0F172A; color:#FFFFFF; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #059669;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="font-size:1.6rem;">⚓</div>
+                    <div>
+                        <div style="font-weight:700; font-size:1.0rem; display:flex; align-items:center; gap:8px;">
+                            Konsol Operator WhatsApp Dinas (+62 851-4490-1346)
+                            <span style="background:#059669; color:#FFFFFF; font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:12px;">● CONNECTED (Official Meta API)</span>
+                        </div>
+                        <div style="font-size:0.75rem; color:#94A3B8;">KPU Bea dan Cukai Tipe B Batam &bull; Seksi Fasilitas Pabean dan Cukai (Bidang PFPC I)</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeLiveChatModal()" style="background:none; border:none; color:#FFFFFF; font-size:1.6rem; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+
+            <!-- Modal Content: Two-column layout -->
+            <div style="display:flex; flex:1; overflow:hidden;">
+                <!-- Left Sidebar: Contact List -->
+                <div style="width:320px; border-right:1px solid #E2E8F0; display:flex; flex-direction:column; background:#F8FAFC;">
+                    <div style="padding:12px; border-bottom:1px solid #E2E8F0;">
+                        <input type="text" id="searchContactInput" placeholder="Cari nama atau nomor HP..." oninput="filterContactList()" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #CBD5E1; font-size:0.80rem; box-sizing:border-box;">
+                    </div>
+                    <div id="conversationListContainer" style="flex:1; overflow-y:auto; padding:6px;">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Right Pane: Active Chat Window -->
+                <div style="flex:1; display:flex; flex-direction:column; background:#F1F5F9;">
+                    <!-- Chat Top Bar -->
+                    <div style="background:#FFFFFF; padding:12px 18px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.92rem; color:#0F172A;" id="activeChatName">Pilih kontak untuk mulai obrolan</div>
+                            <div style="font-size:0.75rem; color:#64748B;" id="activeChatPhone">Nomor WhatsApp Pengirim</div>
+                        </div>
+                        <div id="activeChatBadge" style="font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:20px; background:#E2E8F0; color:#475569;">Belum Memilih</div>
+                    </div>
+
+                    <!-- Chat Messages Body -->
+                    <div id="operatorChatBody" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px;">
+                        <div style="margin:auto; text-align:center; color:#94A3B8; font-size:0.85rem;">
+                            Silakan klik kontak di sisi kiri untuk melihat dan membalas obrolan pemohon.
+                        </div>
+                    </div>
+
+                    <!-- Quick Reply Chips -->
+                    <div style="background:#FFFFFF; border-top:1px solid #E2E8F0; padding:8px 14px; display:flex; gap:6px; overflow-x:auto; white-space:nowrap;">
+                        <button type="button" onclick="insertQuickReply('Berkas STNK/BPKB Anda buram, mohon foto ulang bagian yang jelas.')" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:14px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">📷 Berkas Buram</button>
+                        <button type="button" onclick="insertQuickReply('Silakan hadir membawa fisik kendaraan ke Pos Bea Cukai Pelabuhan Telaga Punggur untuk pemeriksaan fisik.')" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:14px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">🚗 Cek Fisik Punggur</button>
+                        <button type="button" onclick="insertQuickReply('Penetapan Jaminan PPN 11% sebesar Rp 6.380.000 telah terbit. Silakan lakukan penyetoran jaminan.')" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:14px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">💰 Jaminan PPN Rp 6.380.000</button>
+                        <button type="button" onclick="insertQuickReply('Izin Pengeluaran Sementara Kendaraan Bermotor Anda telah Disetujui (SPPB Terbit).')" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:14px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">✅ Izin Disetujui</button>
+                    </div>
+
+                    <!-- Operator Typing & Send Box -->
+                    <div style="background:#FFFFFF; padding:12px 14px; border-top:1px solid #E2E8F0; display:flex; gap:10px; align-items:center;">
+                        <input type="text" id="txtOperatorMessage" placeholder="Ketik pesan manual dari Petugas Bea Cukai..." onkeydown="if(event.key==='Enter') sendOperatorMessage()" style="flex:1; padding:10px 14px; border-radius:8px; border:1.5px solid #CBD5E1; font-size:0.85rem; font-family:inherit; outline:none;">
+                        <button type="button" id="btnSendOperator" onclick="sendOperatorMessage()" style="background:#059669; color:#FFFFFF; border:none; padding:10px 18px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            <span>Kirim WA</span>
+                            <span>➤</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT CLIENT LOGIC -->
+    <script>
+        let allPermohonan = [];
+        let currentFilter = 'SEMUA';
+        let selectedPermohonanId = null;
+
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPermohonanData();
+        });
+
+        async function loadPermohonanData() {
+            try {
+                const res = await fetch('/api/permohonan');
+                if (res.ok) {
+                    allPermohonan = await res.json();
+                } else {
+                    console.warn('Gagal memuat API, fallback data lokal');
+                }
+            } catch (e) {
+                console.warn('Fetch error:', e);
+            }
+            renderTable();
+            updateKpis();
+        }
+
+        function updateKpis() {
+            document.getElementById('kpiTotal').innerText = allPermohonan.length;
+            document.getElementById('kpiVerifikasi').innerText = allPermohonan.filter(p => p.status === 'MENUNGGU_VERIFIKASI_DOKUMEN').length;
+            document.getElementById('kpiCekFisik').innerText = allPermohonan.filter(p => p.status === 'MENUNGGU_CEK_FISIK' || p.status === 'DOKUMEN_LENGKAP').length;
+            document.getElementById('kpiJaminan').innerText = allPermohonan.filter(p => p.status === 'PENETAPAN_JAMINAN_PPN').length;
+            document.getElementById('kpiSelesai').innerText = allPermohonan.filter(p => p.status === 'DISETUJUI').length;
+        }
+
+        function filterByStatus(status, btn) {
+            currentFilter = status;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderTable();
+        }
+
+        function handleSearch() {
+            renderTable();
+        }
+
+        function renderTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const tbody = document.getElementById('permohonanTableBody');
+            
+            let filtered = allPermohonan.filter(p => {
+                const matchStatus = (currentFilter === 'SEMUA') || (p.status === currentFilter);
+                const matchQuery = !query || 
+                    (p.nama_pemohon && p.nama_pemohon.toLowerCase().includes(query)) ||
+                    (p.nopol && p.nopol.toLowerCase().includes(query)) ||
+                    (p.id && p.id.toLowerCase().includes(query)) ||
+                    (p.nik && p.nik.includes(query));
+                return matchStatus && matchQuery;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:36px; color:var(--text-muted);">
+                            Tidak ada permohonan yang sesuai dengan filter pencarian.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => {
+                const statusLabels = {
+                    'MENUNGGU_VERIFIKASI_DOKUMEN': '🟡 Verifikasi Dokumen',
+                    'DOKUMEN_LENGKAP': '🔵 Dokumen Lengkap',
+                    'MENUNGGU_CEK_FISIK': '🟠 Menunggu Cek Fisik',
+                    'PENETAPAN_JAMINAN_PPN': '🟣 Jaminan PPN 11%',
+                    'DISETUJUI': '🟢 Disetujui',
+                    'DITOLAK': '🔴 Ditolak'
+                };
+                const statusText = statusLabels[p.status] || p.status;
+                
+                let waDisplay = `<div><strong>${p.no_wa_pemohon || '-'}</strong></div>`;
+                if (p.nomor_berbeda) {
+                    waDisplay += `<div style="font-size:0.70rem; color:#EA580C; font-weight:700;">(Pengirim Bot: ${p.no_wa_pengirim})</div>`;
+                }
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="mono" style="color:var(--bc-navy); font-weight:800;">${p.id}</div>
+                            <div style="font-size:0.72rem; color:var(--text-muted);">${p.tanggal_pengajuan || '-'}</div>
+                            <span class="pill-source ${p.sumber === 'WHATSAPP_BOT' ? 'wa' : ''}">
+                                ${p.sumber === 'WHATSAPP_BOT' ? '💬 WhatsApp Bot' : '🌐 Web CEISA'}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-weight:800; font-size:0.88rem;">${p.nama_pemohon || '-'}</div>
+                            <div class="mono" style="font-size:0.74rem; color:var(--text-muted);">NIK: ${p.nik || '-'}</div>
+                        </td>
+                        <td>${waDisplay}</td>
+                        <td>
+                            <div class="mono" style="font-size:0.92rem; color:var(--bc-navy); font-weight:800;">${p.nopol || '-'}</div>
+                            <div style="font-size:0.72rem; color:var(--text-muted);">${p.merek_tipe || '-'}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:700;">${p.pelabuhan_tujuan || '-'}</div>
+                            <div style="font-size:0.70rem; color:var(--text-muted);">Kembali: ${p.tanggal_kembali || '-'}</div>
+                        </td>
+                        <td>
+                            <span class="badge-status ${p.status}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-action btn-action-primary" onclick="openDrawerDetail('${p.id}')">
+                                🔍 Review Berkas
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ================= DRAWER DETAIL PETUGAS =================
+        function openDrawerDetail(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item) return;
+            selectedPermohonanId = id;
+
+            document.getElementById('drawerTitle').innerText = 'Review Permohonan • ' + item.nama_pemohon;
+            document.getElementById('drawerSubtitle').innerText = 'No. Agenda: ' + item.id + ' | Masuk: ' + (item.tanggal_pengajuan || '-');
+            
+            document.getElementById('dNama').innerText = item.nama_pemohon || '-';
+            document.getElementById('dNik').innerText = item.nik || '-';
+            document.getElementById('dNpwp').innerText = item.npwp || '-';
+            document.getElementById('dWaPemohon').innerText = item.no_wa_pemohon || '-';
+            
+            if (item.nomor_berbeda) {
+                document.getElementById('dWaPengirim').innerHTML = `<span style="color:#EA580C; font-weight:700;">${item.no_wa_pengirim} (Berbeda dengan pemohon - Submitter)</span>`;
+            } else {
+                document.getElementById('dWaPengirim').innerText = item.no_wa_pengirim + ' (Sama dengan pemohon)';
+            }
+
+            document.getElementById('dNopol').innerText = item.nopol || '-';
+            document.getElementById('dMerek').innerText = item.merek_tipe || '-';
+            document.getElementById('dTahunWarna').innerText = item.tahun_warna || '-';
+            document.getElementById('dNoRangka').innerText = item.no_rangka || '-';
+            document.getElementById('dTujuanKeperluan').innerText = (item.pelabuhan_tujuan || '-') + ' • ' + (item.keperluan || '-');
+
+            const statusMap = {
+                'milik_sendiri': '🟢 Milik Pribadi (Prinsip 1 Nama)',
+                'keluarga': '💍 Hubungan Keluarga (Buku Nikah / KK Dilampirkan)',
+                'jual_beli': '📝 Beli Belum Balik Nama (Kwitansi Bermeterai Dilampirkan)',
+                'sewa': '🏢 Mobil Sewa / Rental (Surat Perjanjian Sewa Dilampirkan)',
+                'kuasa': '📑 Dikuasakan (Surat Kuasa Khusus Dilampirkan)'
+            };
+            const st = item.status_kepemilikan || 'milik_sendiri';
+            document.getElementById('dStatusKepemilikan').innerText = statusMap[st] || '🟢 Milik Pribadi (Prinsip 1 Nama)';
+
+            const rowPendukung = document.getElementById('rowDokumenPendukung');
+            if (rowPendukung) {
+                if (st !== 'milik_sendiri') {
+                    rowPendukung.style.display = 'flex';
+                    document.getElementById('lblDokumenPendukung').innerText = statusMap[st];
+                } else {
+                    rowPendukung.style.display = 'none';
+                }
+            }
+
+            document.getElementById('selectNewStatus').value = item.status;
+            document.getElementById('txtCatatanPetugas').value = '';
+
+            document.getElementById('drawerDetail').style.display = 'flex';
+        }
+
+        function closeDrawerDirect() {
+            document.getElementById('drawerDetail').style.display = 'none';
+        }
+
+        function closeDrawer(e) {
+            if (e.target.id === 'drawerDetail') {
+                closeDrawerDirect();
+            }
+        }
+
+        async function saveStatusUpdate() {
+            if (!selectedPermohonanId) return;
+            const newStatus = document.getElementById('selectNewStatus').value;
+            const catatan = document.getElementById('txtCatatanPetugas').value;
+
+            const item = allPermohonan.find(p => p.id === selectedPermohonanId);
+            if (item) {
+                item.status = newStatus;
+                try {
+                    await fetch('/api/permohonan/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: selectedPermohonanId, status: newStatus, catatan })
+                    });
+                } catch (e) {
+                    console.log('Update local state');
+                }
+            }
+
+            closeDrawerDirect();
+            renderTable();
+            updateKpis();
+            alert(`✓ Status Permohonan ${selectedPermohonanId} berhasil diperbarui menjadi ${newStatus}! Notifikasi WhatsApp telah diteruskan ke nomor ${item ? item.no_wa_pemohon : ''}.`);
+        }
+
+                // ================= KONSOL OPERATOR LIVE CHAT WHATSAPP RESMI (+62 851-4490-1346) =================
+        let allConversations = {};
+        let activeChatPhone = null;
+        let chatPollingInterval = null;
+
+        function openLiveChatModal(targetPhone = null) {
+            const modal = document.getElementById('liveChatModal');
+            if (modal) modal.style.display = 'flex';
+            loadLiveChatConversations(targetPhone);
+            
+            // Polling percakapan setiap 3 detik
+            if (chatPollingInterval) clearInterval(chatPollingInterval);
+            chatPollingInterval = setInterval(() => {
+                if (document.getElementById('liveChatModal').style.display === 'flex') {
+                    loadLiveChatConversations(activeChatPhone, true);
+                }
+            }, 3000);
+        }
+
+        function closeLiveChatModal() {
+            const modal = document.getElementById('liveChatModal');
+            if (modal) modal.style.display = 'none';
+            if (chatPollingInterval) {
+                clearInterval(chatPollingInterval);
+                chatPollingInterval = null;
+            }
+        }
+
+        function openChatFromDrawer() {
+            if (!selectedPermohonanId) return;
+            const item = allPermohonan.find(p => p.id === selectedPermohonanId);
+            if (!item) return;
+            const phone = item.no_wa_pengirim || item.no_wa_pemohon || '';
+            openLiveChatModal(phone);
+        }
+
+        async function loadLiveChatConversations(selectPhone = null, isSilent = false) {
+            try {
+                const res = await fetch('/api/wa/conversations');
+                if (res.ok) {
+                    allConversations = await res.json();
+                    renderConversationList();
+                    if (selectPhone) {
+                        selectConversation(selectPhone);
+                    } else if (!activeChatPhone && Object.keys(allConversations).length > 0) {
+                        selectConversation(Object.keys(allConversations)[0]);
+                    } else if (activeChatPhone && isSilent) {
+                        renderActiveChatMessages();
+                    }
+                }
+            } catch (e) {
+                console.warn('Gagal memuat obrolan WA:', e);
+            }
+        }
+
+        function renderConversationList() {
+            const container = document.getElementById('conversationListContainer');
+            if (!container) return;
+            const search = (document.getElementById('searchContactInput')?.value || '').toLowerCase();
+            
+            container.innerHTML = '';
+            const phones = Object.keys(allConversations);
+            
+            if (phones.length === 0) {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:#94A3B8; font-size:0.80rem;">Belum ada percakapan masuk</div>';
+                return;
+            }
+
+            phones.forEach(phone => {
+                const conv = allConversations[phone];
+                const nama = conv.nama || ('Pemohon (' + phone + ')');
+                const lastMsg = conv.messages && conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : { text: '-', timestamp: '' };
+                
+                if (search && !nama.toLowerCase().includes(search) && !phone.includes(search)) {
+                    return;
+                }
+
+                const isActive = (activeChatPhone === phone);
+                const itemDiv = document.createElement('div');
+                itemDiv.style.cssText = 'padding:10px 12px; margin-bottom:4px; border-radius:8px; cursor:pointer; transition:all 0.15s; background:' + (isActive ? '#E2E8F0' : '#FFFFFF') + '; border:1px solid ' + (isActive ? '#94A3B8' : '#E2E8F0') + '; display:flex; gap:10px; align-items:center;';
+                itemDiv.onclick = () => selectConversation(phone);
+                
+                const prefix = lastMsg.sender === 'officer' ? '👮‍♂️ Anda: ' : (lastMsg.sender === 'bot' ? '🤖 Bot: ' : '');
+                const timeStr = lastMsg.timestamp ? lastMsg.timestamp.slice(11, 16) : '';
+                
+                itemDiv.innerHTML = 
+                    '<div style="width:38px; height:38px; border-radius:50%; background:#059669; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem; flex-shrink:0;">' +
+                        nama.charAt(0).toUpperCase() +
+                    '</div>' +
+                    '<div style="flex:1; overflow:hidden;">' +
+                        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">' +
+                            '<span style="font-weight:700; font-size:0.82rem; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + nama + '</span>' +
+                            '<span style="font-size:0.65rem; color:#64748B;">' + timeStr + '</span>' +
+                        '</div>' +
+                        '<div style="font-size:0.72rem; color:#64748B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
+                            prefix + lastMsg.text +
+                        '</div>' +
+                    '</div>';
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function filterContactList() {
+            renderConversationList();
+        }
+
+        function selectConversation(phone) {
+            let cleanPhone = phone.replace('+', '').replace('-', '').replace(/\s/g, '');
+            if (cleanPhone.startsWith('08')) cleanPhone = '628' + cleanPhone.slice(2);
+            activeChatPhone = cleanPhone;
+            
+            // Update Top Bar
+            const conv = allConversations[activeChatPhone] || { nama: 'Pemohon (' + activeChatPhone + ')', nomor: activeChatPhone, messages: [] };
+            document.getElementById('activeChatName').innerText = conv.nama || 'Pemohon WhatsApp';
+            document.getElementById('activeChatPhone').innerText = 'Nomor WhatsApp: +' + activeChatPhone;
+            
+            const badge = document.getElementById('activeChatBadge');
+            badge.innerText = '● Terhubung Langsung';
+            badge.style.background = '#DCFCE7';
+            badge.style.color = '#15803D';
+
+            renderConversationList();
+            renderActiveChatMessages();
+        }
+
+        function renderActiveChatMessages() {
+            const body = document.getElementById('operatorChatBody');
+            if (!body || !activeChatPhone) return;
+            const conv = allConversations[activeChatPhone];
+            if (!conv || !conv.messages || conv.messages.length === 0) {
+                body.innerHTML = '<div style="margin:auto; text-align:center; color:#94A3B8; font-size:0.85rem;">Belum ada riwayat pesan untuk kontak ini.<br>Ketik pesan di bawah untuk memulai chat resmi via WhatsApp.</div>';
+                return;
+            }
+
+            body.innerHTML = '';
+            conv.messages.forEach(msg => {
+                const isOfficer = (msg.sender === 'officer');
+                const isBot = (msg.sender === 'bot');
+                const isUser = (msg.sender === 'user');
+
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; flex-direction:column; align-items:' + (isUser ? 'flex-start' : 'flex-end') + '; margin-bottom:8px;';
+
+                const senderLabel = isOfficer ? '👮‍♂️ Petugas Bea Cukai' : (isBot ? '🤖 Bot Otomatis' : '👤 Pemohon');
+                const bg = isOfficer ? '#DCFCE7' : (isBot ? '#E0F2FE' : '#FFFFFF');
+                const border = isOfficer ? '#86EFAC' : (isBot ? '#BAE6FD' : '#CBD5E1');
+
+                row.innerHTML = 
+                    '<span style="font-size:0.65rem; color:#64748B; margin-bottom:2px; font-weight:600;">' + senderLabel + ' &bull; ' + (msg.timestamp || '') + '</span>' +
+                    '<div style="max-width:75%; padding:10px 14px; border-radius:' + (isUser ? '4px 14px 14px 14px' : '14px 4px 14px 14px') + '; background:' + bg + '; border:1px solid ' + border + '; color:#0F172A; font-size:0.82rem; line-height:1.45; word-break:break-word; box-shadow:0 1px 2px rgba(0,0,0,0.05);">' +
+                        msg.text.replace(/\n/g, '<br>') +
+                    '</div>';
+                body.appendChild(row);
+            });
+
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function insertQuickReply(text) {
+            const input = document.getElementById('txtOperatorMessage');
+            if (input) {
+                input.value = text;
+                input.focus();
+            }
+        }
+
+        async function sendOperatorMessage() {
+            if (!activeChatPhone) {
+                alert('Silakan pilih kontak pemohon terlebih dahulu di sisi kiri.');
+                return;
+            }
+            const input = document.getElementById('txtOperatorMessage');
+            const text = (input?.value || '').trim();
+            if (!text) return;
+
+            const btn = document.getElementById('btnSendOperator');
+            if (btn) btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/wa/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: activeChatPhone,
+                        text: text,
+                        officer_name: 'Petugas Bea Cukai Batam'
+                    })
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    input.value = '';
+                    await loadLiveChatConversations(activeChatPhone, true);
+                } else {
+                    alert('Gagal mengirim WhatsApp: ' + (result.message || 'Error'));
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan koneksi server: ' + e.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+
+        </script>
+</body>
+</html>

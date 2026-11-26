@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Blueprint Arsitektur & Flowchart End-to-End Layanan KBM Batam</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+
+@page {
+    size: 1920px 1080px;
+    margin: 0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #FFFFFF;
+    color: #1E293B;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.slide {
+    width: 1920px;
+    height: 1080px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+    padding: 55px 75px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #FFFFFF;
+}
+
+.slide:last-child {
+    page-break-after: avoid;
+}
+
+/* Ambient Pastel Glows */
+.glow-pastel-blue {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(224, 242, 254, 0.6) 0%, rgba(255, 255, 255, 0) 70%);
+    top: -250px;
+    right: -250px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.glow-pastel-emerald {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(209, 250, 229, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
+    bottom: -200px;
+    left: -200px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.glow-pastel-purple {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(243, 232, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
+    bottom: -200px;
+    right: -200px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Header */
+.slide-header {
+    position: relative;
+    z-index: 2;
+}
+
+.badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1D4ED8;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.slide-title {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    color: #0F172A;
+}
+
+.slide-title span {
+    color: #2563EB;
+    background: linear-gradient(135deg, #2563EB 0%, #0284C7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.slide-subtitle {
+    font-size: 17px;
+    color: #475569;
+    margin-top: 6px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Body */
+.slide-body {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 18px 0;
+}
+
+/* Footer */
+.slide-footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #E2E8F0;
+    padding-top: 16px;
+    font-size: 13px;
+    color: #64748B;
+    font-weight: 500;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-dot {
+    width: 6px;
+    height: 6px;
+    background: #3B82F6;
+    border-radius: 50%;
+}
+
+.footer-page {
+    font-family: 'Space Grotesk', monospace;
+    font-weight: 700;
+    color: #1E293B;
+    background: #F1F5F9;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+/* CARDS & GRIDS */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Pastel Card Backgrounds */
+.card-pastel-blue { background: #F8FAFC; border: 1px solid #BFDBFE; }
+.card-pastel-rose { background: #FFF1F2; border: 1px solid #FECDD3; }
+.card-pastel-emerald { background: #F0FDF4; border: 1px solid #BBF7D0; }
+.card-pastel-amber { background: #FEFCE8; border: 1px solid #FDE68A; }
+.card-pastel-purple { background: #FAF5FF; border: 1px solid #E9D5FF; }
+
+/* SWIMLANE STYLING */
+.swimlane-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.swimlane-row {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+}
+
+.swimlane-header {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid #E2E8F0;
+}
+
+.swimlane-header.role-pemohon { background: #EFF6FF; border-left: 5px solid #2563EB; }
+.swimlane-header.role-pelayanan { background: #FAF5FF; border-left: 5px solid #9333EA; }
+.swimlane-header.role-pengawasan { background: #FEF3C7; border-left: 5px solid #D97706; }
+.swimlane-header.role-perben { background: #ECFDF5; border-left: 5px solid #059669; }
+
+.swimlane-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 12px 18px;
+    gap: 14px;
+    align-items: center;
+    background: #FCFDFE;
+}
+
+.wf-node {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 64px;
+}
+
+.wf-node.highlight-blue { border-color: #93C5FD; background: #F0F7FF; }
+.wf-node.highlight-purple { border-color: #D8B4FE; background: #FAF5FF; }
+.wf-node.highlight-amber { border-color: #FDE68A; background: #FFFBEB; }
+.wf-node.highlight-emerald { border-color: #86EFAC; background: #F0FDF4; }
+.wf-node.highlight-rose { border-color: #FECDD3; background: #FFF1F2; }
+
+.wf-node-num {
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748B;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.wf-node-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.3;
+}
+
+.wf-node-sub {
+    font-size: 11px;
+    color: #64748B;
+    margin-top: 2px;
+}
+
+/* MATRIX TABLE */
+.matrix-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.matrix-table tr {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.matrix-table td {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: #1E293B;
+}
+
+.matrix-table td:first-child {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    font-weight: 700;
+    color: #0F172A;
+    width: 22%;
+    background: #F8FAFC;
+    border-left: 5px solid #3B82F6;
+    border-top: 1px solid #E2E8F0;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.matrix-table td:nth-child(2) {
+    width: 38%;
+    background: #EFF6FF;
+    border-top: 1px solid #BFDBFE;
+    border-bottom: 1px solid #BFDBFE;
+}
+
+.matrix-table td:last-child {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    width: 40%;
+    background: #FEF3C7;
+    border-right: 5px solid #F59E0B;
+    border-top: 1px solid #FDE68A;
+    border-bottom: 1px solid #FDE68A;
+}
+
+.matrix-header th {
+    padding: 8px 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    text-align: left;
+    color: #64748B;
+}
+
+/* COVER SPECIAL */
+.cover-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    max-width: 1400px;
+}
+
+.cover-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1D4ED8;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    width: fit-content;
+}
+
+.cover-title {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: #0F172A;
+    margin-bottom: 20px;
+}
+
+.cover-title span {
+    background: linear-gradient(135deg, #2563EB 0%, #0284C7 50%, #7C3AED 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.cover-desc {
+    font-size: 21px;
+    color: #475569;
+    line-height: 1.6;
+    max-width: 1200px;
+    margin-bottom: 36px;
+}
+
+.cover-meta {
+    display: flex;
+    gap: 36px;
+    padding-top: 28px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.meta-item-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748B;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.meta-item-value {
+    font-size: 16px;
+    color: #0F172A;
+    font-weight: 700;
+}
+
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: COVER BLUEPRINT LENGKAP -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="glow-pastel-purple"></div>
+    <div class="cover-layout">
+        <div class="cover-tag">Dokumen Master Arsitektur &amp; Tata Laksana</div>
+        <h1 class="cover-title">
+            Blueprint End-to-End Layanan<br>
+            <span>Pengeluaran Sementara KBM</span> Batam ke TLDDP
+        </h1>
+        <p class="cover-desc">
+            Panduan arsitektur komprehensif: Alur multi-aktor (Pemohon/Kuasa, Pelayanan, Pengawasan, &amp; Perbendaharaan), integrasi live NJKB Bapenda Kepri, matriks 6 titik pengawasan fisik/berkas, serta rancang bangun full-stack platform SiKBM terpadu.
+        </p>
+        <div class="cover-meta">
+            <div>
+                <div class="meta-item-title">Otoritas Pelaksana</div>
+                <div class="meta-item-value">KPU Bea dan Cukai Tipe B Batam</div>
+            </div>
+            <div>
+                <div class="meta-item-title">Kolaborasi Bidang</div>
+                <div class="meta-item-value">Bidang PFPC I, Bidang P2, &amp; Bidang PK</div>
+            </div>
+            <div>
+                <div class="meta-item-title">Dasar Hukum Operasional</div>
+                <div class="meta-item-value">Instruksi Kerja IK 001/KPUB.02/2025</div>
+            </div>
+            <div>
+                <div class="meta-item-title">Fokus Arsitektur</div>
+                <div class="meta-item-value">Multi-Aktor, Titik Kontrol, &amp; Full-Stack</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>KPU Bea dan Cukai Tipe B Batam</span>
+            <span class="footer-dot"></span>
+            <span>Master Blueprint SiKBM Batam</span>
+        </div>
+        <div class="footer-page">01 / 08</div>
+    </div>
+</div>
+
+<!-- SLIDE 2: FLOW CHART MASTER END-TO-END SWIMLANE (4 AKTOR) -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Master Flowchart End-to-End</div>
+        <h2 class="slide-title">Diagram Alur Lintas Aktor: <span>Swimlane Terpadu</span></h2>
+        <div class="slide-subtitle">Alur pelayanan utuh dari pendaftaran pemohon, validasi pelayanan loket, pengawasan dermaga pelabuhan, hingga rekonsiliasi jaminan.</div>
+    </div>
+    <div class="slide-body">
+        <div class="swimlane-container">
+            <!-- LANE 1: PEMOHON / KUASA -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-pemohon">
+                    <div style="font-size: 11px; font-weight: 800; color: #1D4ED8; text-transform: uppercase;">AKTOR 1</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">PEMOHON / KUASA</div>
+                    <div style="font-size: 11px; color: #64748B;">Masyarakat Pemudik (Web/HP)</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">1.1 Pengajuan</div>
+                        <div class="wf-node-title">Input Plat &amp; STNK</div>
+                        <div class="wf-node-sub">+ Surat Kuasa jika dikuasakan</div>
+                    </div>
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">1.2 Jaminan</div>
+                        <div class="wf-node-title">Auto PPN 11% NJKB</div>
+                        <div class="wf-node-sub">Setor Tunai / Garansi Bank</div>
+                    </div>
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">1.3 Tiket Digital</div>
+                        <div class="wf-node-title">Terima QR Pass</div>
+                        <div class="wf-node-sub">Notifikasi WA Gateway</div>
+                    </div>
+                    <div class="wf-node highlight-blue">
+                        <div class="wf-node-num">1.4 Pelabuhan</div>
+                        <div class="wf-node-title">Check-in Dermaga</div>
+                        <div class="wf-node-sub">Siap periksa fisik &amp; berlayar</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LANE 2: PELAYANAN (PFPC I) -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-pelayanan">
+                    <div style="font-size: 11px; font-weight: 800; color: #7E22CE; text-transform: uppercase;">AKTOR 2</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">PELAYANAN (PFPC I)</div>
+                    <div style="font-size: 11px; color: #64748B;">Seksi Fasilitas &amp; Loket Frontdesk</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">2.1 Validasi</div>
+                        <div class="wf-node-title">Cek Non-CBU Samsat</div>
+                        <div class="wf-node-sub">Auto API Bapenda Kepri</div>
+                    </div>
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">2.2 Bot Nadine</div>
+                        <div class="wf-node-title">Terbit SKEP &amp; KEP</div>
+                        <div class="wf-node-sub">Single Dossier tersemat</div>
+                    </div>
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">2.3 Otomasi PPFTZ</div>
+                        <div class="wf-node-title">1-Click Draf PPFTZ-01</div>
+                        <div class="wf-node-sub">Eliminasi ketik Excel manual</div>
+                    </div>
+                    <div class="wf-node highlight-purple">
+                        <div class="wf-node-num">2.4 Distribusi</div>
+                        <div class="wf-node-title">Kirim Data Dermaga</div>
+                        <div class="wf-node-sub">Sinkronisasi ke tablet lapangan</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LANE 3: PENGAWASAN (P2 & DERMAGA) -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-pengawasan">
+                    <div style="font-size: 11px; font-weight: 800; color: #B45309; text-transform: uppercase;">AKTOR 3</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">PENGAWASAN (P2/DERMAGA)</div>
+                    <div style="font-size: 11px; color: #64748B;">Pelabuhan Punggur / Batu Ampar</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">3.1 Pindai QR</div>
+                        <div class="wf-node-title">Scan QR di Gate Roro</div>
+                        <div class="wf-node-sub">Pencocokan data seketika</div>
+                    </div>
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">3.2 Cek Fisik</div>
+                        <div class="wf-node-title">Gesek Rangka &amp; Mesin</div>
+                        <div class="wf-node-sub">Foto 4 sudut + muatan mobil</div>
+                    </div>
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">3.3 LHP Digital</div>
+                        <div class="wf-node-title">Terbit SPPB &lt; 1 Jam</div>
+                        <div class="wf-node-sub">BAP digital otomatis tersimpan</div>
+                    </div>
+                    <div class="wf-node highlight-amber">
+                        <div class="wf-node-num">3.4 Embarkasi</div>
+                        <div class="wf-node-title">Pemuatan ke Kapal</div>
+                        <div class="wf-node-sub">Mobil berlayar ke TLDDP</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LANE 4: PERBENDAHARAAN (PK) -->
+            <div class="swimlane-row">
+                <div class="swimlane-header role-perben">
+                    <div style="font-size: 11px; font-weight: 800; color: #047857; text-transform: uppercase;">AKTOR 4</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0F172A;">PERBENDAHARAAN (PK)</div>
+                    <div style="font-size: 11px; color: #64748B;">Seksi Penerimaan &amp; Pengembalian</div>
+                </div>
+                <div class="swimlane-steps">
+                    <div class="wf-node highlight-emerald">
+                        <div class="wf-node-num">4.1 BPJ CEISA</div>
+                        <div class="wf-node-title">Perekaman BPJ</div>
+                        <div class="wf-node-sub">Validasi setoran jaminan kas</div>
+                    </div>
+                    <div class="wf-node highlight-emerald">
+                        <div class="wf-node-num">4.2 Monitoring</div>
+                        <div class="wf-node-title">Radar EWS 45 Hari</div>
+                        <div class="wf-node-sub">Pantau KBM selama di TLDDP</div>
+                    </div>
+                    <div class="wf-node highlight-emerald">
+                        <div class="wf-node-num">4.3 Handshake</div>
+                        <div class="wf-node-title">Digital Handshake</div>
+                        <div class="wf-node-sub">Validasi kepulangan otomatis</div>
+                    </div>
+                    <div class="wf-node highlight-emerald" style="border: 2px solid #059669;">
+                        <div class="wf-node-num">4.4 Pelepasan</div>
+                        <div class="wf-node-title">Lepas Jaminan &lt; 2 HK</div>
+                        <div class="wf-node-sub">Transfer kas / lepas garansi bank</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Alur Lintas Unit</span>
+            <span class="footer-dot"></span>
+            <span>IK 001/KPUB.02/2025 Poin 10.a s.d. 10.c</span>
+        </div>
+        <div class="footer-page">02 / 08</div>
+    </div>
+</div>
+
+<!-- SLIDE 3: DETAIL ALUR PEMOHON VS KUASA PEMOHON -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Perspektif Pengguna Jasa</div>
+        <h2 class="slide-title">Alur Pengajuan: <span>Pemilik Langsung vs Kuasa Pemohon</span></h2>
+        <div class="slide-subtitle">Dukungan tata laksana bagi masyarakat pemudik yang mengurus sendiri maupun yang mewakilkan pengurusan dokumen.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-2">
+            <!-- JALUR PEMILIK LANGSUNG -->
+            <div class="card card-pastel-blue">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 12px; font-weight: 800; color: #1D4ED8; text-transform: uppercase;">JALUR A • MANDIRI</span>
+                        <span style="font-size: 12px; background: #DBEAFE; color: #1E40AF; padding: 4px 10px; border-radius: 12px; font-weight: 700;">Pemilik Sesuai STNK</span>
+                    </div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #1E3A8A; margin-bottom: 14px;">Pengajuan Oleh Pemilik Kendaraan</h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: #1E293B;">
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #BFDBFE;">
+                            <strong>1. Berkas Utama:</strong> KTP Pemilik Asli + STNK KBM (Nama pada KTP dan STNK wajib identik).
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #BFDBFE;">
+                            <strong>2. Single Entry Form:</strong> Cukup input Plat Batam (BP) &amp; Nomor Rangka di Portal SiKBM.
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #BFDBFE;">
+                            <strong>3. Verifikasi Otomatis:</strong> Sistem mencocokkan data pemilik dengan database Samsat Bapenda Kepri.
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #BFDBFE;">
+                            <strong>4. Surat Pernyataan:</strong> Auto-generate surat pernyataan komitmen kembali 45 hari dengan e-Meterai QR.
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #BFDBFE; font-size: 13px; color: #1D4ED8; font-weight: 700;">
+                    ✓ Tingkat Risiko: Rendah (Kepemilikan Sah &amp; Langsung)
+                </div>
+            </div>
+
+            <!-- JALUR KUASA PEMOHON -->
+            <div class="card card-pastel-purple">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 12px; font-weight: 800; color: #7E22CE; text-transform: uppercase;">JALUR B • PERWAKILAN</span>
+                        <span style="font-size: 12px; background: #F3E8FF; color: #6B21A8; padding: 4px 10px; border-radius: 12px; font-weight: 700;">Dikuasakan / Perwakilan</span>
+                    </div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #581C87; margin-bottom: 14px;">Pengajuan Melalui Surat Kuasa</h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: #1E293B;">
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #E9D5FF;">
+                            <strong>1. Berkas Wajib Kuasa:</strong> Surat Kuasa Asli bermeterai Rp 10.000 + KTP Penerima Kuasa + KTP Pemilik STNK.
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #E9D5FF;">
+                            <strong>2. Validasi NIK Ganda:</strong> Sistem memvalidasi NIK pemilik STNK dan NIK pemegang kuasa yang membawa mobil.
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #E9D5FF;">
+                            <strong>3. Tanggung Jawab Renteng:</strong> Surat Kuasa menegaskan tanggung jawab kepulangan KBM dalam 45 hari kalender.
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px; border-radius: 10px; border: 1px solid #E9D5FF;">
+                            <strong>4. Gate Authentication:</strong> Penerima kuasa wajib menunjukkan KTP asli fisik saat scanning di dermaga pelabuhan.
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #E9D5FF; font-size: 13px; color: #7E22CE; font-weight: 700;">
+                    ⚠️ Tingkat Risiko: Menengah (Wajib Verifikasi Surat Kuasa Fisik di Dermaga)
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px; padding: 16px 24px; background: #F8FAFC; border: 1px solid #CBD5E1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; color: #334155;">
+                    💡 <strong>Prinsip Layanan Publik:</strong> Baik pemilik langsung maupun kuasa pemohon <strong>TIDAK PERLU AKUN PPJK / MODUL CEISA</strong>. Seluruh antarmuka diakses bebas via browser HP/Web.
+                </span>
+                <span style="font-size: 13px; font-weight: 800; color: #2563EB; font-family: 'Space Grotesk';">100% INKLUSIF</span>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Tata Laksana Pemohon</span>
+            <span class="footer-dot"></span>
+            <span>IK 001/KPUB.02/2025 Poin 10.a.1</span>
+        </div>
+        <div class="footer-page">03 / 08</div>
+    </div>
+</div>
+
+<!-- SLIDE 4: SISI BEA CUKAI: PELAYANAN VS PENGAWASAN -->
+<div class="slide">
+    <div class="glow-pastel-emerald"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Sisi Internal Bea Cukai</div>
+        <h2 class="slide-title">Sinergi Internal: <span>Pelayanan (PFPC I) vs Pengawasan (P2)</span></h2>
+        <div class="slide-subtitle">Pemisahan peran yang tegas dan harmonis antara administrasi dokumen di kantor dan pengawasan fisik di dermaga pelabuhan.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-2">
+            <!-- SISI PELAYANAN -->
+            <div class="card card-pastel-purple">
+                <div>
+                    <div style="display: inline-block; padding: 5px 12px; background: #F3E8FF; border-radius: 8px; color: #7E22CE; font-size: 12px; font-weight: 800; margin-bottom: 12px;">
+                        BIDANG PELAYANAN (PFPC I &amp; LOKET)
+                    </div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #581C87; margin-bottom: 12px;">Administrasi &amp; Otomasi Dokumen Pabean</h3>
+                    
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: #1E293B;">
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #E9D5FF;">
+                            📂 <strong>Single-Dossier Compiler:</strong> Menggabungkan KTP, STNK, bukti jaminan, dan surat permohonan menjadi 1 file PDF ringkas.
+                        </li>
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #E9D5FF;">
+                            🤖 <strong>Bot Nadine Automation:</strong> Menginjeksi metadata permohonan ke sistem Nadine Kemenkeu untuk penerbitan SKEP resmi (Surat S) &amp; Nota Pengantar.
+                        </li>
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #E9D5FF;">
+                            ⚡ <strong>1-Click Generator PPFTZ-01:</strong> Menghapus pengetikan manual template Excel 7-sheet; mencetak dokumen pabean resmi bernomor urut loket.
+                        </li>
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #E9D5FF;">
+                            🏦 <strong>Koordinasi Seksi PK:</strong> Memastikan Bukti Penerimaan Jaminan (BPJ) terverifikasi sebelum SKEP disahkan.
+                        </li>
+                    </ul>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #7E22CE; font-weight: 700;">
+                    Target Kinerja: Penerbitan SKEP &amp; PPFTZ &lt; 24 Jam (SLA Regulasi: 2 Hari Kerja)
+                </div>
+            </div>
+
+            <!-- SISI PENGAWASAN -->
+            <div class="card card-pastel-amber">
+                <div>
+                    <div style="display: inline-block; padding: 5px 12px; background: #FEF3C7; border-radius: 8px; color: #B45309; font-size: 12px; font-weight: 800; margin-bottom: 12px;">
+                        BIDANG PENGAWASAN (P2 &amp; DERMAGA PELABUHAN)
+                    </div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #78350F; margin-bottom: 12px;">Pemeriksaan Fisik Dermaga &amp; Gate Control</h3>
+                    
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: #1E293B;">
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #FDE68A;">
+                            📱 <strong>Mobile Tablet Scanner:</strong> Memindai QR Code SKEP / Tiket Boarding pemohon langsung di gerbang antrean Roro.
+                        </li>
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #FDE68A;">
+                            🔍 <strong>Pemeriksaan Fisik Rangka &amp; Mesin:</strong> Menggesek nomor rangka dan mesin untuk dicocokkan 100% dengan data SKEP.
+                        </li>
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #FDE68A;">
+                            📸 <strong>Evidence Geotagged Cloud:</strong> Mengunggah 4 foto fisik kendaraan (tampak depan, belakang, plat nomor, &amp; hasil gesekan) via tablet.
+                        </li>
+                        <li style="background: #FFFFFF; padding: 10px 14px; border-radius: 8px; border: 1px solid #FDE68A;">
+                            🚦 <strong>Penerbitan SPPB Real-Time:</strong> Pejabat pemeriksa menyetujui keberangkatan dan menerbitkan SPPB di dermaga dalam &lt; 1 jam.
+                        </li>
+                    </ul>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #B45309; font-weight: 700;">
+                    Target Kinerja: Waktu Periksa Dermaga &lt; 1 Jam (SLA Regulasi: 8 Jam Kerja)
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Sinergi Layanan &amp; Pengawasan</span>
+            <span class="footer-dot"></span>
+            <span>IK 001/KPUB.02/2025 Poin 10.a.g s.d. 10.a.o</span>
+        </div>
+        <div class="footer-page">04 / 08</div>
+    </div>
+</div>
+
+<!-- SLIDE 5: TEKNIS PENGEMASAN LAYANAN (SERVICE PACKAGING) -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Teknis Pengemasan Layanan</div>
+        <h2 class="slide-title">Service Packaging: <span>Modern, Praktis, &amp; Nol Friksi</span></h2>
+        <div class="slide-subtitle">Mengemas proses birokrasi pabean yang rumit menjadi 4 instrumen layanan digital siap pakai bagi masyarakat.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-4">
+            <!-- PACKAGING 1 -->
+            <div class="card card-pastel-blue">
+                <div>
+                    <div style="font-size: 34px; margin-bottom: 8px;">📱</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #1D4ED8; text-transform: uppercase;">INSTRUMEN 1</div>
+                    <h3 style="font-size: 18px; font-weight: 800; color: #1E3A8A; margin: 6px 0 10px 0;">Portal Mandiri PWA (Web &amp; Mobile)</h3>
+                    <p style="font-size: 13px; color: #334155; line-height: 1.5;">
+                        • Responsif di layar HP &amp; laptop.<br>
+                        • Akses kamera native untuk foto STNK.<br>
+                        • Tanpa instalasi PlayStore/AppStore.<br>
+                        • Validasi Non-CBU otomatis.
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: #1D4ED8; font-weight: 700;">Frontend Pengguna Jasa</div>
+            </div>
+
+            <!-- PACKAGING 2 -->
+            <div class="card card-pastel-purple">
+                <div>
+                    <div style="font-size: 34px; margin-bottom: 8px;">📁</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #7E22CE; text-transform: uppercase;">INSTRUMEN 2</div>
+                    <h3 style="font-size: 18px; font-weight: 800; color: #581C87; margin: 6px 0 10px 0;">Single-Dossier Compiler</h3>
+                    <p style="font-size: 13px; color: #334155; line-height: 1.5;">
+                        • Mengeliminasi 11 folder terpisah.<br>
+                        • Kompilasi berkas jadi 1 PDF terstruktur.<br>
+                        • Dilengkapi daftar isi digital &amp; metadata.<br>
+                        • Tersemat di DataDukung Nadine.
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: #7E22CE; font-weight: 700;">Standarisasi Berkas Internal</div>
+            </div>
+
+            <!-- PACKAGING 3 -->
+            <div class="card card-pastel-emerald">
+                <div>
+                    <div style="font-size: 34px; margin-bottom: 8px;">💬</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #047857; text-transform: uppercase;">INSTRUMEN 3</div>
+                    <h3 style="font-size: 18px; font-weight: 800; color: #064E3B; margin: 6px 0 10px 0;">WhatsApp Gateway Real-Time</h3>
+                    <p style="font-size: 13px; color: #334155; line-height: 1.5;">
+                        • Notifikasi otomatis kode billing jaminan.<br>
+                        • Tautan download QR SKEP langsung.<br>
+                        • Pengingat otomatis H-10, H-7, &amp; H-3.<br>
+                        • Pemohon tak perlu cek manual.
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: #047857; font-weight: 700;">Komunikasi Proaktif Pemudik</div>
+            </div>
+
+            <!-- PACKAGING 4 -->
+            <div class="card card-pastel-amber">
+                <div>
+                    <div style="font-size: 34px; margin-bottom: 8px;">🎟️</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #B45309; text-transform: uppercase;">INSTRUMEN 4</div>
+                    <h3 style="font-size: 18px; font-weight: 800; color: #78350F; margin: 6px 0 10px 0;">QR Digital Boarding Pass</h3>
+                    <p style="font-size: 13px; color: #334155; line-height: 1.5;">
+                        • Satu QR memuat data mobil &amp; SKEP.<br>
+                        • Dipindai petugas dermaga &lt; 2 detik.<br>
+                        • Otomatis memicu terbit SPPB.<br>
+                        • Kunci rekonsiliasi kepulangan.
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: #B45309; font-weight: 700;">Paspor Pabean KBM Mudik</div>
+            </div>
+        </div>
+
+        <div class="card card-pastel-blue" style="margin-top: 16px; padding: 18px 28px; border-left: 6px solid #2563EB;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="font-size: 16px; font-weight: 800; color: #1E3A8A; margin-bottom: 3px;">Kemudahan Bagi Masyarakat Awam:</h4>
+                    <p style="font-size: 14px; color: #334155;">
+                        Pemudik cukup berinteraksi dengan 1 formulir HP dan menerima info via WhatsApp resmi. Seluruh integrasi kompleks dengan Bapenda Kepri, Nadine, dan CEISA berjalan otomatis di latar belakang.
+                    </p>
+                </div>
+                <div style="font-size: 20px; font-weight: 800; color: #1D4ED8; font-family: 'Space Grotesk';">ZERO COMPLEXITY</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Inovasi Pengemasan Layanan</span>
+            <span class="footer-dot"></span>
+            <span>Standar Kepuasan Pengguna Jasa</span>
+        </div>
+        <div class="footer-page">05 / 08</div>
+    </div>
+</div>
+
+<!-- SLIDE 6: MATRIKS TITIK PENGAWASAN BERKAS & FISIK -->
+<div class="slide">
+    <div class="glow-pastel-rose"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #FFF1F2; border-color: #FECDD3; color: #BE123C;">Manajemen Risiko &amp; Integritas</div>
+        <h2 class="slide-title">Matriks Pengawasan: <span>Titik Kritis Berkas vs Fisik</span></h2>
+        <div class="slide-subtitle">Pemetaan komprehensif 6 titik pemeriksaan untuk memastikan nol kebocoran penerimaan negara dan mencegah mobil CBU ilegal keluar.</div>
+    </div>
+    <div class="slide-body">
+        <table class="matrix-table">
+            <thead>
+                <tr class="matrix-header">
+                    <th>Tahapan Layanan</th>
+                    <th>Titik Pengawasan Dokumen / Berkas</th>
+                    <th>Titik Pengawasan Fisik / Lapangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1. Prapendaftaran (Intake)</td>
+                    <td>
+                        • Validasi status <strong>Non-CBU</strong> via API NJKB Bapenda Kepri.<br>
+                        • Validasi STNK aktif &amp; kesesuaian KTP Pemilik / Surat Kuasa.<br>
+                        • Uji keabsahan e-Meterai pada Surat Pernyataan 45 hari.
+                    </td>
+                    <td>
+                        <em>(Pemeriksaan Mandiri oleh Pemohon)</em><br>
+                        • Pemohon wajib mengunggah foto fisik mobil 4 sudut.<br>
+                        • Foto fisik nomor rangka di ruang mesin.
+                    </td>
+                </tr>
+                <tr>
+                    <td>2. Penerbitan Izin (Frontdesk)</td>
+                    <td>
+                        • Validasi nilai jaminan: <strong>$11\% 	imes 	ext{NJKB}$</strong> resmi Bapenda.<br>
+                        • Cek perekaman BPJ di sistem CEISA 4.0 oleh Seksi PK.<br>
+                        • Validasi nomor SKEP &amp; KEP resmi dari Bot Nadine.
+                    </td>
+                    <td>
+                        <em>(Verifikasi Intelijen Profiling)</em><br>
+                        • Pengecekan riwayat pelanggaran pabean pemohon di CEISA.<br>
+                        • Rekomendasi atensi pengawasan fisik jika masuk daftar profiling P2.
+                    </td>
+                </tr>
+                <tr>
+                    <td>3. Dermaga Pengeluaran (Outbound)</td>
+                    <td>
+                        • Pencocokan QR Code SKEP pada tablet pemeriksa.<br>
+                        • Verifikasi tiket kapal Roro sesuai tanggal keberangkatan.<br>
+                        • Penerbitan SPPB PPFTZ-01 resmi.
+                    </td>
+                    <td>
+                        • <strong>Gesek fisik nomor rangka &amp; nomor mesin</strong> di dermaga.<br>
+                        • Pencocokan warna mobil &amp; nomor polisi fisik (Plat BP).<br>
+                        • Pemeriksaan isi bagasi (mencegah penyelundupan barang eks-FTZ).
+                    </td>
+                </tr>
+                <tr>
+                    <td>4. Masa Izin di TLDDP (In Transit)</td>
+                    <td>
+                        • <strong>Radar EWS 45 Hari Kalender:</strong><br>
+                        &nbsp;&nbsp;🟢 &gt; 15 Hari &nbsp;|&nbsp; 🟡 H-7 (WA Alert) &nbsp;|&nbsp; 🔴 H-3 &nbsp;|&nbsp; ⚫ H+1 Klaim KPPN.<br>
+                        • Monitoring audit kepatuhan oleh Seksi Perbendaharaan (PK).
+                    </td>
+                    <td>
+                        • Pengawasan koordinasi intelijen lintas kantor Bea Cukai di TLDDP.<br>
+                        • Penindakan jika KBM diperjualbelikan di luar Batam sebelum lunas PPN.
+                    </td>
+                </tr>
+                <tr>
+                    <td>5. Dermaga Pemasukan (Inbound)</td>
+                    <td>
+                        • Pindai QR Pass kepulangan di Pelabuhan Telaga Punggur.<br>
+                        • Sistem memvalidasi tanggal masuk: <strong>$\le 45$ hari kalender</strong>.<br>
+                        • Auto-generate proforma PPFTZ-03 &amp; draft LHP digital.
+                    </td>
+                    <td>
+                        • <strong>Pemeriksaan fisik ulang rangka &amp; mesin</strong> di dermaga kedatangan.<br>
+                        • Uji identitas kendaraan 100% identik dengan foto saat keberangkatan.<br>
+                        • Pemeriksaan keutuhan fisik mobil dan barang bawaan.
+                    </td>
+                </tr>
+                <tr>
+                    <td>6. Rekonsiliasi &amp; Pelepasan</td>
+                    <td>
+                        • <strong>Digital Handshake:</strong> Auto-match data PPFTZ-01 &amp; PPFTZ-03.<br>
+                        • Notifikasi otomatis ke dashboard Seksi PK untuk pelepasan jaminan.<br>
+                        • SLA pelepasan kas / garansi bank: <strong>Maksimal 2 Hari Kerja</strong>.
+                    </td>
+                    <td>
+                        • Berkas LHP &amp; foto fisik kedatangan tersimpan permanen di cloud.<br>
+                        • Status KBM di sistem berubah menjadi: <em>"Telah Masuk Kembali Resmi"</em>.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Matriks Kontrol Risiko</span>
+            <span class="footer-dot"></span>
+            <span>IK 001/KPUB.02/2025 Poin 10.b &amp; 10.c</span>
+        </div>
+        <div class="footer-page">06 / 08</div>
+    </div>
+</div>
+
+<!-- SLIDE 7: FULL STACK PEMBUAT PLATFORM (ARSITEKTUR TEKNOLOGI) -->
+<div class="slide">
+    <div class="glow-pastel-purple"></div>
+    <div class="slide-header">
+        <div class="badge-tag">Rancang Bangun Teknologi</div>
+        <h2 class="slide-title">Full-Stack Architecture: <span>Komponen Pembangun Platform</span></h2>
+        <div class="slide-subtitle">Arsitektur teknologi modern, aman, cepat dideploy, dan terintegrasi penuh dengan ekosistem digital Kemenkeu &amp; Pemda.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-3" style="margin-bottom: 18px;">
+            <!-- TIER 1: FRONTEND -->
+            <div class="card card-pastel-blue">
+                <div>
+                    <div style="font-size: 12px; font-weight: 800; color: #1D4ED8; text-transform: uppercase; margin-bottom: 6px;">LAYER 1 • CLIENT &amp; UI</div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #1E3A8A; margin-bottom: 10px;">Frontend Framework</h3>
+                    <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                        • <strong>PWA React / Vanilla Tailwind:</strong> Ringan, responsif di HP/Tablet/PC.<br>
+                        • <strong>HTML5 Camera Stream:</strong> Tangkap foto STNK &amp; fisik mobil.<br>
+                        • <strong>ZXing / HTML5-QRCode:</strong> Scanner QR berkecepatan tinggi di dermaga.<br>
+                        • <strong>Hosting:</strong> Cloudflare Pages / Vercel (SSL HTTPS gratis, siap 15 menit).
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: #1D4ED8; font-weight: 700;">Akses Publik Bebas Blokir</div>
+            </div>
+
+            <!-- TIER 2: MIDDLEWARE & SCRAPER -->
+            <div class="card card-pastel-purple">
+                <div>
+                    <div style="font-size: 12px; font-weight: 800; color: #7E22CE; text-transform: uppercase; margin-bottom: 6px;">LAYER 2 • INTEGRATION ENGINE</div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #581C87; margin-bottom: 10px;">API Gateway &amp; Adapter</h3>
+                    <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                        • <strong>Python FastAPI / GAS:</strong> Menjalankan logika pabean.<br>
+                        • <strong>Bapenda NJKB Client:</strong> Auto-scraping NJKB &amp; deteksi CBU.<br>
+                        • <strong>Single Dossier Compiler:</strong> PyMuPDF / PDFLib generator.<br>
+                        • <strong>Bot Nadine Adapter:</strong> Injeksi payload Surat S &amp; KEP.<br>
+                        • <strong>WhatsApp Engine:</strong> Gateway notifikasi H-7 &amp; billing.
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: #7E22CE; font-weight: 700;">Otomasi Tanpa Ketik Manual</div>
+            </div>
+
+            <!-- TIER 3: DATA & GOVERNMENT BACKEND -->
+            <div class="card card-pastel-emerald">
+                <div>
+                    <div style="font-size: 12px; font-weight: 800; color: #047857; text-transform: uppercase; margin-bottom: 6px;">LAYER 3 • STORAGE &amp; CORE</div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #064E3B; margin-bottom: 10px;">Storage &amp; Back-End Core</h3>
+                    <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                        • <strong>Google Drive / OneDrive Private:</strong> Repositori dossier terenkripsi.<br>
+                        • <strong>Google Sheets / PostgreSQL:</strong> Database relasional SiKBM.<br>
+                        • <strong>CEISA 4.0 Backend:</strong> Perekaman Bukti Penerimaan Jaminan (BPJ).<br>
+                        • <strong>Satu Kemenkeu (Nadine):</strong> Legalitas penomoran naskah dinas.<br>
+                        • <strong>Cloudflare Tunnel:</strong> Outbound SSL tunnel aman tanpa buka port kantor.
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: #047857; font-weight: 700;">Privasi Data &amp; Legalitas Pabean</div>
+            </div>
+        </div>
+
+        <!-- KEAMANAN DATA ZERO TRUST -->
+        <div class="card card-pastel-emerald" style="padding: 16px 24px; border: 2px solid #10B981;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="font-size: 16px; font-weight: 800; color: #064E3B; margin-bottom: 2px;">Jaminan Keamanan &amp; Privasi Data (UU PDP No. 27/2022):</h4>
+                    <p style="font-size: 13px; color: #065F46;">
+                        Google Drive diset <strong>100% PRIVATE</strong> hanya untuk akun dinas Bea Cukai. Pemohon luar berinteraksi melalui API Gateway tertutup (One-Way Verification: Plat BP + 5 digit terakhir No. Rangka). Tidak ada kebocoran data antar-pemohon.
+                    </p>
+                </div>
+                <div style="font-size: 18px; font-weight: 800; color: #047857; font-family: 'Space Grotesk'; white-space: nowrap; margin-left: 20px;">
+                    ZERO LEAKAGE ARCHITECTURE
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Spesifikasi Arsitektur Sistem</span>
+            <span class="footer-dot"></span>
+            <span>Platform SiKBM Terpadu</span>
+        </div>
+        <div class="footer-page">07 / 08</div>
+    </div>
+</div>
+
+<!-- SLIDE 8: SUMMARY & KESIMPULAN STRATEGIS -->
+<div class="slide">
+    <div class="glow-pastel-blue"></div>
+    <div class="slide-header">
+        <div class="badge-tag" style="background: #ECFDF5; border-color: #A7F3D0; color: #047857;">Kesimpulan &amp; Rekomendasi</div>
+        <h2 class="slide-title">Ringkasan Transformasi: <span>Layanan KBM Batam Modern</span></h2>
+        <div class="slide-subtitle">Peta jalan mewujudkan pelayanan mudik yang cepat, tertib administrasi, akuntabel, dan menjaga integritas penerimaan negara.</div>
+    </div>
+    <div class="slide-body">
+        <div class="grid-3" style="margin-bottom: 20px;">
+            <div class="card card-pastel-blue">
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #1D4ED8; text-transform: uppercase; margin-bottom: 6px;">MANFAAT MASYARAKAT</div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #1E3A8A; margin-bottom: 10px;">Mudah, Cepat, &amp; Transparan</h3>
+                    <p style="font-size: 14px; color: #334155; line-height: 1.5;">
+                        • Daftar dari mana saja via HP tanpa calo.<br>
+                        • NJKB &amp; jaminan terhitung otomatis transparan.<br>
+                        • Status terpantau live via WhatsApp.<br>
+                        • Pengembalian jaminan tepat waktu &lt; 2 hari kerja.
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #1D4ED8; font-weight: 700;">Zero Friction Public Service</div>
+            </div>
+
+            <div class="card card-pastel-purple">
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #7E22CE; text-transform: uppercase; margin-bottom: 6px;">MANFAAT PETUGAS LOKET</div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #581C87; margin-bottom: 10px;">Bebas Ketik Excel Manual</h3>
+                    <p style="font-size: 14px; color: #334155; line-height: 1.5;">
+                        • Beban ketik 7 sheet Excel hilang 100%.<br>
+                        • Waktu proses turun dari 30 menit ➔ &lt; 2 menit.<br>
+                        • Berkas Single Dossier rapi dalam 1 folder.<br>
+                        • Draf KEP Nadine otomatis terisi nomor resmi.
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #7E22CE; font-weight: 700;">Efisiensi Waktu Loket 93%</div>
+            </div>
+
+            <div class="card card-pastel-emerald">
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #047857; text-transform: uppercase; margin-bottom: 6px;">MANFAAT PENGAWASAN &amp; KAS</div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #064E3B; margin-bottom: 10px;">Integritas Keuangan Negara</h3>
+                    <p style="font-size: 14px; color: #334155; line-height: 1.5;">
+                        • Mobil CBU dilarang keluar otomatis via sistem.<br>
+                        • Bukti gesekan &amp; foto fisik tersimpan di cloud.<br>
+                        • Radar EWS 45 hari cegah penagihan kedaluwarsa.<br>
+                        • Rekonsiliasi digital hilangkan 14 disposisi fisik.
+                    </p>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #047857; font-weight: 700;">100% Zero Leakage Pabean</div>
+            </div>
+        </div>
+
+        <div class="card card-pastel-blue" style="padding: 22px 32px; border: 2px solid #3B82F6; text-align: center;">
+            <h4 style="font-size: 22px; color: #1E3A8A; font-weight: 800; margin-bottom: 6px;">
+                "Transformasi Layanan KBM Batam: Solusi Nyata Berbasis Integritas dan Teknologi Terpadu"
+            </h4>
+            <p style="font-size: 15px; color: #475569;">
+                KPU Bea dan Cukai Tipe B Batam — Melayani dengan Hati, Mengawasi dengan Presisi, Menjaga Kedaulatan Fiskal Negara.
+            </p>
+        </div>
+    </div>
+    <div class="slide-footer">
+        <div class="footer-left">
+            <span>Rekomendasi Eksekutif</span>
+            <span class="footer-dot"></span>
+            <span>KPU Bea dan Cukai Tipe B Batam</span>
+        </div>
+        <div class="footer-page">08 / 08</div>
+    </div>
+</div>
+
+</body>
+</html>

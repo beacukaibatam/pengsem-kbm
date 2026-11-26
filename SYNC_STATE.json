@@ -1,0 +1,49 @@
+{
+  "project": "Pengeluaran Sementara Kendaraan Bermotor (KBM) Batam",
+  "office": "KPU Bea dan Cukai Tipe B Batam",
+  "active_regulation": "IK 001/KPUB.02/2025 (14 Maret 2025)",
+  "last_updated": "2026-11-23T22:30:00+07:00",
+  "updated_by": "Claude (Mac Air)",
+  "sync_channel": "Google Drive CloudStorage",
+  "master_folder_path": "~/Library/CloudStorage/GoogleDrive-ridwanmuham17@gmail.com/My Drive/PENGELUARAN_SEMENTARA_KBM_BATAM/",
+  "key_findings": {
+    "applicant_type": "Orang Pribadi (Masyarakat Mudik, Non-PPJK)",
+    "ppftz_creator": "Petugas Loket/Frontdesk Bea Cukai (Manual per IK Poin 10.a.n)",
+    "ceisa_role": "Perekaman BPJ oleh Seksi PK (IK Poin 10.a.l.1)",
+    "max_duration_days": 45,
+    "reconciliation_pain_point": "14 langkah disposisi berantai dipercepat menjadi digital handshake",
+    "excel_smoking_gun": "Petugas loket mengetik manual spreadsheet Excel 7-sheet (form, IP, PPFTZ-03, SPPB, Packing List, SP IBUK) per kendaraan",
+    "seasonal_surge_volume": "Total 386 KBM (Audit 7 Musim 2023-2026: Lebaran 2023=75, Lebaran 2024=79, Lebaran 2025=89, Lebaran 2026=68, Nataru=12-36)",
+    "bapenda_njkb_integration": "BERHASIL: Client integrasi Bapenda Kepri (https://bapenda.kepriprov.go.id/info-njkb) via workspace_macair/bapenda_njkb_client.py 100% cocok dengan data riil (Ayla 2013 = NJKB 70jt -> PPN 7.7jt)",
+    "internal_anomaly_engine": "Fitur pencatatan status pemohon tidak berangkat, telat, pembatalan, serta auto-crosscheck anomali calo (NIK sama ganti mobil per musim) vs peminjaman KTP (mobil sama ganti pemohon)",
+    "guided_camera_inspection": "Aplikasi lapangan mewajibkan 6 foto terarah ber-watermark GPS/timestamp (termasuk foto depan bersama pemilik) & 1-tap generate LHP/BAP PDF otomatis untuk kemudahan PFPD/PFPC I",
+    "whatsapp_gateway": "Notifikasi otomatis multi-tahap (registrasi, SKEP, gate-out, EWS H-15/H-7/H-3, pencairan jaminan)"
+  },
+  "deliverables": [
+    "workspace_claude/schema_sikbm.sql",
+    "workspace_claude/README_SCHEMA.md",
+    "Flowchart_Interaktif_Layanan_KBM_Batam.html",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam_Blueprint_Lengkap.pdf",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam_Blueprint_Lengkap.pptx",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam_Blueprint_Lengkap.html",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam_Executive.pdf",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam_Executive.pptx",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam_Executive.html",
+    "workspace_macair/bapenda_njkb_client.py",
+    "EXCEL PPFTZ dan Dok Lain Manual/",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam.pptx",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam.pdf",
+    "Solusi_Komprehensif_Pengeluaran_Sementara_KBM_Batam_Mobile_Portrait.pdf",
+    "IK_001_KPUB02_2025_Pengeluaran_Sementara_KBM.pdf",
+    "BRIEFING_SESI_BARU_PENGSEM_KBM.md",
+    "COLLABORATION_LOG.md",
+    "FOTO_PPFTZ_KENDARAAN_IDUL_FITRI_2025/"
+  ],
+  "next_recommended_tasks": [
+    "Perancangan modul Otomasi Pembuatan Draf PPFTZ-01 & Proforma PPFTZ-03 untuk Petugas Loket (mengeliminasi Excel manual) -- bisa langsung pakai workspace_claude/schema_sikbm.sql sebagai sumber field",
+    "Seed data ke schema_sikbm.sql dari 2 contoh Excel riil (Dwi Fitriantoro, Samsul) untuk uji skema",
+    "Script Bot Nadine Generator untuk Surat S, KEP Resmi, & Nota Pengantar",
+    "Prototipe Antarmuka Web/Mobile SiKBM",
+    "Konfirmasi threshold warna radar EWS (lihat isu terbuka di workspace_claude/README_SCHEMA.md) agar selaras dengan Flowchart_Interaktif_Layanan_KBM_Batam.html"
+  ]
+}
