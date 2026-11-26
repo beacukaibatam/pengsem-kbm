@@ -427,6 +427,8 @@
             justify-content: center;
             box-sizing: border-box;
             transition: border-color 0.2s, background-color 0.2s;
+            contain: layout paint style;
+            transform: translateZ(0);
         }
 
         .preview-box img {
@@ -3369,7 +3371,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img id="imgKtpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgKtpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR KTP -->
                     <div id="snippetKtp" class="ocr-snippet-box">Menunggu berkas KTP diunggah...</div>
@@ -3419,7 +3421,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img id="imgNpwpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgNpwpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR NPWP -->
                     <div id="snippetNpwp" class="ocr-snippet-box">Menunggu berkas NPWP diunggah...</div>
@@ -3473,7 +3475,7 @@
                                 <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 1</span>
                                 <span style="font-size:0.62rem; color:#94A3B8;">STNK</span>
                             </div>
-                            <img id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
+                            <img decoding="async" id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
                         <div class="preview-box" id="previewStnk2Box" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0;">
                             <div class="laser-line" id="laserStnk2" style="display:none;">
@@ -3485,7 +3487,7 @@
                                 <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 2</span>
                                 <span style="font-size:0.62rem; color:#94A3B8;">TBPKP/Pajak</span>
                             </div>
-                            <img id="imgStnk2Preview" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
+                            <img decoding="async" id="imgStnk2Preview" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
                     </div>
                     <!-- Cuplikan Data Hasil OCR STNK -->
@@ -3544,7 +3546,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img id="imgOwnershipPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgOwnershipPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR BPKB -->
                     <div id="snippetOwnership" class="ocr-snippet-box">Menunggu berkas BPKB diunggah...</div>
@@ -3564,7 +3566,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div class="preview-box" id="previewOwnership2Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                                 <span id="phOwnership2" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 2</span>
-                                <img id="imgOwnership2Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                <img decoding="async" id="imgOwnership2Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
                             <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership2Input').click()">Unggah Hal. 2</button>
                             <input type="file" id="fileOwnership2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_2')">
@@ -3572,7 +3574,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div class="preview-box" id="previewOwnership3Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                                 <span id="phOwnership3" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 3</span>
-                                <img id="imgOwnership3Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                <img decoding="async" id="imgOwnership3Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
                             <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership3Input').click()">Unggah Hal. 3</button>
                             <input type="file" id="fileOwnership3Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_3')">
@@ -3773,7 +3775,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">1. Foto/Scan Buku Nikah / Kartu Keluarga (Wajib Berwarna)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Membuktikan hubungan perkawinan / keluarga yang sah.</div>
                             <div class="preview-box" id="previewBukuNikahBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
+                                <img decoding="async" id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('bukuNikah')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Buku Nikah / KK</button>
                             <input type="file" id="fileBukuNikahInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'bukuNikah')">
@@ -3783,7 +3785,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Asli (Suami / Istri)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">KTP pemilik kendaraan yang namanya tertera di STNK.</div>
                             <div class="preview-box" id="previewKtpPasanganBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
+                                <img decoding="async" id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPasangan')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Pasangan</button>
                             <input type="file" id="fileKtpPasanganInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPasangan')">
@@ -3813,7 +3815,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">1. Kwitansi / Surat Perjanjian Jual Beli (Bermeterai)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Menyatakan pengalihan hak kepemilikan kendaraan secara sah.</div>
                             <div class="preview-box" id="previewKwitansiBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img id="imgKwitansiPreview" src="" alt="Pratinjau Kwitansi">
+                                <img decoding="async" id="imgKwitansiPreview" src="" alt="Pratinjau Kwitansi">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('kwitansi')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Kwitansi Jual Beli</button>
                             <input type="file" id="fileKwitansiInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'kwitansi')">
@@ -3823,7 +3825,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Lama / Penjual</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Fotokopi / scan KTP penjual sesuai nama pada STNK/BPKB.</div>
                             <div class="preview-box" id="previewKtpPenjualBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img id="imgKtpPenjualPreview" src="" alt="Pratinjau KTP Penjual">
+                                <img decoding="async" id="imgKtpPenjualPreview" src="" alt="Pratinjau KTP Penjual">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPenjual')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Penjual</button>
                             <input type="file" id="fileKtpPenjualInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPenjual')">
@@ -3853,7 +3855,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">1. Surat Perjanjian Sewa / Rekomendasi Resmi Rental (Bermeterai)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Surat izin dari pemilik/perusahaan rental untuk membawa mobil keluar Batam.</div>
                             <div class="preview-box" id="previewSuratSewaBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img id="imgSuratSewaPreview" src="" alt="Pratinjau Surat Sewa">
+                                <img decoding="async" id="imgSuratSewaPreview" src="" alt="Pratinjau Surat Sewa">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratSewa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Sewa</button>
                             <input type="file" id="fileSuratSewaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratSewa')">
@@ -3863,7 +3865,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">2. KTP Pemilik / Penanggung Jawab Rental</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Identitas pemilik tertera pada STNK / penanggung jawab rental.</div>
                             <div class="preview-box" id="previewKtpRentalBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img id="imgKtpRentalPreview" src="" alt="Pratinjau KTP Rental">
+                                <img decoding="async" id="imgKtpRentalPreview" src="" alt="Pratinjau KTP Rental">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpRental')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Rental</button>
                             <input type="file" id="fileKtpRentalInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpRental')">
@@ -3891,7 +3893,7 @@
                         <div style="font-size:0.75rem; font-weight:700; color:#334155; margin-bottom:4px;">Surat Kuasa Khusus Bermeterai Rp 10.000</div>
                         <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">* Sesuai ketentuan IK, NPWP yang dilampirkan pemohon wajib NPWP Pemberi Kuasa.</div>
                         <div class="preview-box" id="previewSuratKuasaBox" style="display:none; height:100px; margin-bottom:6px;">
-                            <img id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
+                            <img decoding="async" id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
                         </div>
                         <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratKuasa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Kuasa</button>
                         <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratKuasa')">
@@ -5326,7 +5328,7 @@
             wrap.innerHTML = `
                 <div class="preview-box" id="previewLeasing${idx}Box" style="flex:1; height:46px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                     <span style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Lembar ${idx + 1}</span>
-                    <img id="imgLeasing${idx}Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                    <img decoding="async" id="imgLeasing${idx}Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                 </div>
                 <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; white-space:nowrap;" onclick="document.getElementById('fileLeasing${idx}Input').click()">Unggah</button>
                 <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; color:#B91C1C;" onclick="removeLeasingExtraPage(${idx})" title="Hapus lembar ini">✕</button>
