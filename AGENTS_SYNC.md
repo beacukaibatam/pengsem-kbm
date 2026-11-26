@@ -113,8 +113,9 @@
 | 2026-11-26 09:05 | Antigravity | `database.py`, `server.py` | Migrasi database JSON ke SQLite WAL terindeks, ThreadPoolExecutor, healthcheck `/api/health`, anti-OOM image resize max 1600px, & graceful fallback OTP Meta WA ke SMTP TLS. | Verified Local (200 OK) |
 | 2026-11-26 09:15 | Antigravity | `index.html`, `Formulir_...html` | Penerapan dynamic `API_BASE_URL` dan Hash-Routing SPA (`#/masuk`, `#/registrasi`, `#/dashboard`, `#/formulir`) dengan auto-restore sesi. | Verified Playwright (0-Diff) |
 | 2026-11-26 09:20 | Antigravity | `requirements.txt`, `render.yaml` | Pembuatan paket blueprint cloud deployment Render 24/7 dan panduan UptimeRobot & GitHub Pages. | Production Ready |
-| 2026-11-26 09:22 | Antigravity | GitHub Repo & Pages | Inisialisasi repo publik `mridwansyah/pengsem-kbm`, pengamanan secret push-protection, dan rilis GitHub Pages live di `https://mridwansyah.github.io/pengsem-kbm/`. | Deployed Live (HTTP 200) |
+| 2026-11-26 09:22 | Antigravity | GitHub Repo & Pages | Inisialisasi repo publik `beacukaibatam/pengsem-kbm`, pengamanan secret push-protection, dan rilis GitHub Pages live di `https://beacukaibatam.github.io/pengsem-kbm/`. | Deployed Live (HTTP 200) |
 | 2026-11-26 09:30 | Antigravity | `server.py`, `kbm_batam.db`, `db_users.json` | Penambahan user sisi pemohon: username `pemohon`, sandi `123456`, verifikasi login & perutean formulir. | Verified Local & Tunnel (200 OK) |
+| 2026-11-26 09:32 | Antigravity | Akun GitHub & Remote | Migrasi nama akun GitHub resmi ke `beacukaibatam`. URL resmi aktif di `https://beacukaibatam.github.io/pengsem-kbm/`. | Verified Live (HTTP 200 OK) |
 
 ---
 

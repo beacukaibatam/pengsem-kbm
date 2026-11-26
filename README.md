@@ -7,12 +7,12 @@ Portal layanan terpadu resmi kepabeanan untuk pengajuan, verifikasi OCR, pemanta
 
 ## 🌐 Akses Publik & Tautan Halaman
 
-- **Portal Publik (GitHub Pages)**: [https://mridwansyah.github.io/pengsem-kbm/](https://mridwansyah.github.io/pengsem-kbm/)
-- **Halaman Masuk**: `https://mridwansyah.github.io/pengsem-kbm/#/masuk`
-- **Halaman Registrasi**: `https://mridwansyah.github.io/pengsem-kbm/#/registrasi`
-- **Halaman Lupa Sandi**: `https://mridwansyah.github.io/pengsem-kbm/#/forgot`
-- **Formulir Permohonan Pemohon**: `https://mridwansyah.github.io/pengsem-kbm/#/formulir`
-- **Dashboard Petugas Pabean**: `https://mridwansyah.github.io/pengsem-kbm/#/dashboard`
+- **Portal Publik (GitHub Pages)**: [https://beacukaibatam.github.io/pengsem-kbm/](https://beacukaibatam.github.io/pengsem-kbm/)
+- **Halaman Masuk**: `https://beacukaibatam.github.io/pengsem-kbm/#/masuk`
+- **Halaman Registrasi**: `https://beacukaibatam.github.io/pengsem-kbm/#/registrasi`
+- **Halaman Lupa Sandi**: `https://beacukaibatam.github.io/pengsem-kbm/#/forgot`
+- **Formulir Permohonan Pemohon**: `https://beacukaibatam.github.io/pengsem-kbm/#/formulir`
+- **Dashboard Petugas Pabean**: `https://beacukaibatam.github.io/pengsem-kbm/#/dashboard`
 
 ---
 
