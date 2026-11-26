@@ -116,6 +116,7 @@
 | 2026-11-26 09:22 | Antigravity | GitHub Repo & Pages | Inisialisasi repo publik `beacukaibatam/pengsem-kbm`, pengamanan secret push-protection, dan rilis GitHub Pages live di `https://beacukaibatam.github.io/pengsem-kbm/`. | Deployed Live (HTTP 200) |
 | 2026-11-26 09:30 | Antigravity | `server.py`, `kbm_batam.db`, `db_users.json` | Penambahan user sisi pemohon: username `pemohon`, sandi `123456`, verifikasi login & perutean formulir. | Verified Local & Tunnel (200 OK) |
 | 2026-11-26 09:32 | Antigravity | Akun GitHub & Remote | Migrasi nama akun GitHub resmi ke `beacukaibatam`. URL resmi aktif di `https://beacukaibatam.github.io/pengsem-kbm/`. | Verified Live (HTTP 200 OK) |
+| 2026-11-26 09:34 | Antigravity | Tunnel & Kode Frontend | Penghentian total proses tunnel Cloudflare (PID 18154). Tunnel `trycloudflare.com` dinonaktifkan (530). | Deactivated / Cleaned |
 
 ---
 
