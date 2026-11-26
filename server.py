@@ -890,6 +890,11 @@ PEGAWAI_ROLES = {
     'pemeriksabarang', 'pemeriksadokumen', 'gate'
 }
 FULL_VISIBILITY_ROLES = {'adminutama', 'pemeriksabarang', 'pemeriksadokumen'}
+# Admin Override TIDAK BOLEH dipakai untuk memfabrikasi hasil keputusan sensitif
+# (hasil rekam LHP, keputusan Pemeriksa Dokumen, penerbitan SPPB, realisasi SPPB) —
+# tahap-tahap ini wajib dikerjakan lewat endpoint aksi petugas yang sebenarnya,
+# bukan dilompati manual oleh admin, sesuai batasan yang diminta eksplisit.
+ADMIN_OVERRIDE_BLOCKED_STATUSES = {'PEMERIKSA_DOKUMEN', 'SPPB_GATE_OUT', 'SELESAI_KELUAR_TLDDP'}
 STAGE_VISIBILITY_BY_ROLE = {
     'frontdesk': ('FRONTDESK_NADINE', 'BERKAS_LENGKAP'),
     'loket': ('FRONTDESK_NADINE', 'BERKAS_LENGKAP'),
@@ -1288,6 +1293,14 @@ def _generate_qr_data_url(payload_text):
         return None
 
 
+def _log_officer_action(sess, action, target_id='', detail=''):
+    """Catat aksi petugas ke activity_log supaya admin utama bisa memantau &
+    mendeteksi anomali, tanpa pernah mengganggu alur aksi utamanya sendiri."""
+    user = sess.get('user', {}) if sess else {}
+    actor = user.get('nama') or user.get('username') or user.get('nip') or '-'
+    database.log_activity(actor, sess.get('role') if sess else '-', action, detail=detail, target_id=target_id)
+
+
 def _notify_pemohon_wa(permohonan_item, message):
     """Kirim notifikasi WA ke pemohon di background thread tiap transisi tahap
     permohonan — kegagalan kirim WA TIDAK boleh menggagalkan transisi status itu
@@ -1636,6 +1649,38 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_json_response([])
             return
 
+        # Admin Utama: daftar seluruh akun petugas & pemohon (tanpa password) untuk
+        # panel kelola akun.
+        if path == '/api/admin/users':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'adminutama':
+                self._send_json_error(403, 'Akses Ditolak: Hanya Admin Utama yang berwenang melihat daftar akun.')
+                return
+            users = load_db_users()
+            pegawai = [_strip_password(p) for p in users.get('pegawai', [])]
+            pemohon = [_strip_password(p) for p in users.get('pemohon', [])]
+            self._send_json_response({'status': 'ok', 'pegawai': pegawai, 'pemohon': pemohon})
+            return
+
+        # Admin Utama: log aktivitas pemohon & petugas untuk deteksi anomali.
+        if path == '/api/admin/activity-log':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'adminutama':
+                self._send_json_error(403, 'Akses Ditolak: Hanya Admin Utama yang berwenang melihat log aktivitas.')
+                return
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            limit = query_params.get('limit', ['200'])[0]
+            role_filter = query_params.get('role', [''])[0] or None
+            action_filter = query_params.get('action', [''])[0] or None
+            search = query_params.get('q', [''])[0] or None
+            try:
+                limit = min(int(limit), 1000)
+            except (TypeError, ValueError):
+                limit = 200
+            logs = database.get_activity_log(limit=limit, role_filter=role_filter, action_filter=action_filter, search=search)
+            self._send_json_response({'status': 'ok', 'logs': logs})
+            return
+
         if self.path in ('/', '/index.html', '/Formulir_Pemohon_CEISA_PENGSEM_KBM.html'):
             self.path = '/index.html'
         elif self.path in ('/flowchart', '/diagram'):
@@ -1725,6 +1770,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             break
 
                 if not matched_user:
+                    database.log_activity(user_input, 'UNKNOWN', 'LOGIN_FAILED', detail='User/kata sandi salah')
                     self._send_json_error(401, "User atau Kata Sandi salah! Pastikan akun telah terdaftar.")
                     return
 
@@ -1736,6 +1782,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "created_at": time.time(),
                     "expires_at": time.time() + 86400
                 }
+                database.log_activity(matched_user.get('username') or matched_user.get('nip') or user_input, matched_role, 'LOGIN_SUCCESS')
 
                 self._send_json_response({
                     "status": "ok",
@@ -2006,6 +2053,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "created_at": time.time(),
                     "expires_at": time.time() + 86400
                 }
+                database.log_activity(public_user.get('username') or public_user.get('phone') or '-', 'pemohon', 'REGISTRASI_PEMOHON', detail=f"Nama: {public_user.get('nama','-')}")
 
                 self._send_json_response({
                     "status": "ok",
@@ -2388,6 +2436,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     new_record["dokumen_bermeterai"] = dokumen_bermeterai
                 db.insert(0, new_record)
                 save_db_permohonan(db)
+                database.log_activity(new_record.get('no_wa_pemohon', '-'), 'pemohon', 'PERMOHONAN_DIKIRIM', detail=f"Nopol {new_record.get('nopol','-')}, sumber {sumber}", target_id=new_id)
                 resp = json.dumps({"status": "success", "data": new_record}).encode('utf-8')
                 self.send_response(200)
             except Exception as e:
@@ -2418,6 +2467,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if not override_reason:
                     self._send_json_error(400, "Alasan override wajib diisi untuk jejak audit.")
                     return
+                if new_status in ADMIN_OVERRIDE_BLOCKED_STATUSES:
+                    self._send_json_error(400, "Akses Ditolak: Admin Utama tidak dapat melompat status langsung ke tahap hasil pemeriksaan/SPPB. Tahap ini wajib dikerjakan oleh Pemeriksa Dokumen/Gate yang berwenang melalui aksi resminya sendiri.")
+                    return
 
                 db = load_db_permohonan()
                 found = False
@@ -2430,6 +2482,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         break
                 if found:
                     save_db_permohonan(db)
+                    _log_officer_action(sess, 'ADMIN_OVERRIDE', pid, f"-> {new_status}: {override_reason}")
                     resp = json.dumps({'status': 'success', 'message': f'Status {pid} berhasil diubah ke {new_status}'}).encode('utf-8')
                     self.send_response(200)
                 else:
@@ -2443,6 +2496,112 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Length', str(len(resp)))
             self.end_headers()
             self.wfile.write(resp)
+            return
+
+        # ================= ADMIN UTAMA: MANAJEMEN AKUN & LOG AKTIVITAS =================
+        # Admin Utama mengelola username/password petugas & pemohon dari sini. TIDAK
+        # menyentuh data hasil keputusan sensitif (lhp_data/no_sppb/dst.) — itu
+        # dibatasi lewat ADMIN_OVERRIDE_BLOCKED_STATUSES di endpoint lain.
+        if self.path == '/api/admin/users/create-pegawai':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'adminutama':
+                self._send_json_error(403, 'Akses Ditolak: Hanya Admin Utama yang berwenang membuat akun petugas.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                username = str(body.get('username', '')).strip().lower()
+                password = str(body.get('password', '')).strip()
+                nama = str(body.get('nama', '')).strip()
+                nip = str(body.get('nip', '')).strip()
+                jabatan = str(body.get('jabatan', '')).strip()
+                role = str(body.get('role', '')).strip()
+
+                if not username or not password or not nama or not role:
+                    self._send_json_error(400, 'Username, kata sandi, nama, dan role wajib diisi.')
+                    return
+                if len(password) < 6:
+                    self._send_json_error(400, 'Kata sandi minimal 6 karakter.')
+                    return
+                if role not in PEGAWAI_ROLES:
+                    self._send_json_error(400, f'Role tidak dikenal: {role}.')
+                    return
+
+                users = load_db_users()
+                pegawai_list = users.get('pegawai', [])
+                if any(str(p.get('username', '')).strip().lower() == username for p in pegawai_list):
+                    self._send_json_error(400, f'Username "{username}" sudah dipakai akun lain.')
+                    return
+                if nip and any(str(p.get('nip', '')).strip() == nip for p in pegawai_list):
+                    self._send_json_error(400, f'NIP "{nip}" sudah dipakai akun lain.')
+                    return
+
+                now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                new_pegawai = {
+                    'username': username,
+                    'password': password,
+                    'nama': nama,
+                    'nip': nip,
+                    'nik': '',
+                    'phone': '',
+                    'email': '',
+                    'jabatan': jabatan,
+                    'role': role,
+                    'is_officer': 0,
+                    'created_at': now_str,
+                    'updated_at': now_str
+                }
+                pegawai_list.append(new_pegawai)
+                users['pegawai'] = pegawai_list
+                save_db_users(users)
+                _log_officer_action(sess, 'ADMIN_CREATE_AKUN', target_id=username, detail=f"Role {role}, nama {nama}")
+
+                self._send_json_response({'status': 'ok', 'message': f'Akun petugas "{username}" ({role}) berhasil dibuat.'})
+            except Exception as e:
+                self._send_json_error(500, f'Gagal membuat akun petugas: {str(e)}')
+            return
+
+        if self.path == '/api/admin/users/reset-password':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'adminutama':
+                self._send_json_error(403, 'Akses Ditolak: Hanya Admin Utama yang berwenang mereset kata sandi akun.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                username = str(body.get('username', '')).strip()
+                account_type = body.get('account_type')
+                new_password = str(body.get('new_password', '')).strip()
+
+                if not username or account_type not in ('pegawai', 'pemohon') or not new_password:
+                    self._send_json_error(400, 'Username, jenis akun (pegawai/pemohon), dan kata sandi baru wajib diisi.')
+                    return
+                if len(new_password) < 6:
+                    self._send_json_error(400, 'Kata sandi minimal 6 karakter.')
+                    return
+
+                users = load_db_users()
+                target_list = users.get(account_type, [])
+                found = None
+                for u in target_list:
+                    if str(u.get('username', '')).strip().lower() == username.strip().lower() or str(u.get('id', '')).strip().lower() == username.strip().lower():
+                        found = u
+                        break
+                if not found:
+                    self._send_json_error(404, f'Akun {account_type} "{username}" tidak ditemukan.')
+                    return
+
+                found['password'] = new_password
+                found['updated_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                users[account_type] = target_list
+                save_db_users(users)
+                _log_officer_action(sess, 'ADMIN_RESET_PASSWORD', target_id=username, detail=f"Jenis akun: {account_type}")
+
+                self._send_json_response({'status': 'ok', 'message': f'Kata sandi akun "{username}" berhasil direset.'})
+            except Exception as e:
+                self._send_json_error(500, f'Gagal mereset kata sandi: {str(e)}')
             return
 
         # Webhook Handler WhatsApp Cloud API Meta (Pesan Masuk, Klik Tombol, Gambar)
@@ -2721,6 +2880,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'petugas_frontdesk': sess.get('user', {}).get('nama', 'Petugas Frontdesk')
                 }
                 save_db_permohonan(db)
+                _log_officer_action(sess, 'NADINE_UPLOAD', pid, target_item.get('catatan_petugas', ''))
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
@@ -2768,6 +2928,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['tgl_skep'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 target_item['catatan_petugas'] = f"Naskah dinas keluar Surat Persetujuan ({no_surat_s}) dan KEP ({no_skep}) diterbitkan Seksi Fasilitas. Berkas dilanjutkan ke Loket Jaminan."
                 save_db_permohonan(db)
+                _log_officer_action(sess, 'SKEP_TERBIT', pid, f"KEP {no_skep}, Surat {no_surat_s}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
@@ -2830,6 +2991,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['tgl_ppftz'] = datetime.datetime.now().strftime('%Y-%m-%d')
                 target_item['catatan_petugas'] = f"Kode Billing Jaminan ({kode_billing}) terbit sebesar Rp {nilai_jaminan:,}. Surat permohonan berlampiran KEP ter-generate (PPFTZ {no_ppftz}). Silakan lanjut pemeriksaan fisik barang."
                 save_db_permohonan(db)
+                _log_officer_action(sess, 'BILLING_TERBIT', pid, f"Billing {kode_billing}, Rp {nilai_jaminan:,}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
@@ -2897,6 +3059,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 kondisi_mesin_txt = 'sesuai' if kesesuaian_mesin == 'SESUAI' else 'TIDAK SESUAI'
                 target_item['catatan_petugas'] = f"Pemeriksaan fisik selesai ({no_lhp}). Nomor rangka {kondisi_rangka_txt}, nomor mesin {kondisi_mesin_txt}. 5 kategori foto fisik lengkap. Berkas diteruskan ke Pemeriksa Dokumen untuk terbit SPPB."
                 save_db_permohonan(db)
+                _log_officer_action(sess, 'LHP_REKAM', pid, f"LHP {no_lhp}: rangka {kesesuaian_rangka}, mesin {kesesuaian_mesin}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
@@ -2951,6 +3114,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     target_item['sppb_qr_data_url'] = qr_data_url
                 target_item['catatan_petugas'] = f"Hasil LHP fisik disetujui. Dokumen SPPB ({no_sppb}) resmi diterbitkan. Kendaraan diizinkan meluncur ke Gate Pelabuhan."
                 save_db_permohonan(db)
+                _log_officer_action(sess, 'SPPB_TERBIT', pid, f"SPPB {no_sppb}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
@@ -3033,6 +3197,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['gate_petugas'] = sess.get('user', {}).get('nama', 'Petugas Gate Pelabuhan')
                 target_item['catatan_petugas'] = f"Kendaraan divalidasi Gate Out Pelabuhan pada {ts_gate}. KBM resmi keluar dari Kawasan Bebas Batam menuju TLDDP."
                 save_db_permohonan(db)
+                _log_officer_action(sess, 'GATE_VALIDASI', pid, f"Gate out {ts_gate}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"

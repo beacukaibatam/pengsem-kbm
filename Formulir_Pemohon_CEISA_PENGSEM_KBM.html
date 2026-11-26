@@ -3141,6 +3141,10 @@
                         <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><line x1="14" y1="14" x2="21" y2="14"></line><line x1="14" y1="21" x2="21" y2="21"></line><line x1="17.5" y1="14" x2="17.5" y2="21"></line></svg>
                         <span>Scan QR SPPB</span>
                     </button>
+                    <button class="btn-portal-action" id="btnAdminPanel" onclick="openAdminPanel()" style="background:#DC2626; color:#FFFFFF; border:none; display:none; align-items:center; gap:6px;">
+                        <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"></circle><path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path></svg>
+                        <span>Kelola Akun &amp; Log</span>
+                    </button>
                     <button class="btn-portal-action" onclick="loadPermohonanData()">
                     <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg> Muat Ulang Data
                 </button>
@@ -4225,6 +4229,95 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeGateQrResultModal()">Batal</button>
                 <button type="button" class="btn btn-primary" id="btnKonfirmasiGateOut" style="background:#059669;" onclick="konfirmasiGateOutFromQr()">✓ Konfirmasi Kendaraan Keluar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ADMIN UTAMA: KELOLA AKUN & LOG AKTIVITAS -->
+    <div class="modal-overlay" id="adminPanelModal" style="display:none;">
+        <div class="modal-card" style="max-width:780px; width:95%;">
+            <div class="modal-header" style="background:#DC2626;">
+                <h3>⚙️ Kelola Akun &amp; Log Aktivitas (Admin Utama)</h3>
+                <button type="button" style="background:none; border:none; color:#FFFFFF; font-size:1.2rem; cursor:pointer;" onclick="closeAdminPanel()">✕</button>
+            </div>
+            <div style="display:flex; gap:0; border-bottom:1.5px solid #E2E8F0; padding:0 16px; background:#F8FAFC;">
+                <button type="button" id="tabAdminAkun" class="dash-tab-btn active" onclick="switchAdminPanelTab('akun')" style="border-radius:8px 8px 0 0; padding:10px 16px; font-weight:700; font-size:0.82rem;">👤 Kelola Akun</button>
+                <button type="button" id="tabAdminLog" class="dash-tab-btn" onclick="switchAdminPanelTab('log')" style="border-radius:8px 8px 0 0; padding:10px 16px; font-weight:700; font-size:0.82rem;">📋 Log Aktivitas</button>
+            </div>
+            <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+                <!-- TAB: KELOLA AKUN -->
+                <div id="viewAdminAkun">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="margin:0; font-size:0.88rem; color:#1E293B;">Akun Petugas</h4>
+                        <button type="button" class="btn btn-primary" style="font-size:0.76rem; padding:6px 12px;" onclick="openCreatePegawaiForm()">+ Buat Akun Petugas</button>
+                    </div>
+                    <div id="formCreatePegawai" style="display:none; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:8px; padding:12px; margin-bottom:12px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                            <input type="text" id="newPegawaiUsername" placeholder="Username" class="form-input" style="font-size:0.78rem; padding:7px 10px;">
+                            <input type="text" id="newPegawaiPassword" placeholder="Kata Sandi (min. 6 karakter)" class="form-input" style="font-size:0.78rem; padding:7px 10px;">
+                            <input type="text" id="newPegawaiNama" placeholder="Nama Lengkap" class="form-input" style="font-size:0.78rem; padding:7px 10px;">
+                            <input type="text" id="newPegawaiNip" placeholder="NIP (opsional)" class="form-input" style="font-size:0.78rem; padding:7px 10px;">
+                            <input type="text" id="newPegawaiJabatan" placeholder="Jabatan" class="form-input" style="font-size:0.78rem; padding:7px 10px;">
+                            <select id="newPegawaiRole" class="form-input" style="font-size:0.78rem; padding:7px 10px;">
+                                <option value="frontdesk">Frontdesk</option>
+                                <option value="loket">Loket Pelayanan</option>
+                                <option value="jaminan">Seksi Jaminan</option>
+                                <option value="fasilitas">Seksi Fasilitas</option>
+                                <option value="pemeriksabarang">Pemeriksa Barang</option>
+                                <option value="pemeriksadokumen">Pemeriksa Dokumen</option>
+                                <option value="gate">Gate Pelabuhan</option>
+                                <option value="adminutama">Admin Utama</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn btn-primary" style="font-size:0.76rem;" onclick="submitCreatePegawai()">Simpan Akun</button>
+                            <button type="button" class="btn btn-secondary" style="font-size:0.76rem;" onclick="document.getElementById('formCreatePegawai').style.display='none'">Batal</button>
+                        </div>
+                    </div>
+                    <div id="listAdminPegawai" style="font-size:0.80rem;">Memuat...</div>
+
+                    <h4 style="margin:18px 0 10px; font-size:0.88rem; color:#1E293B;">Akun Pemohon</h4>
+                    <div id="listAdminPemohon" style="font-size:0.80rem;">Memuat...</div>
+                </div>
+
+                <!-- TAB: LOG AKTIVITAS -->
+                <div id="viewAdminLog" style="display:none;">
+                    <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                        <input type="text" id="adminLogSearch" placeholder="Cari username / detail / ID..." class="form-input" style="font-size:0.78rem; padding:7px 10px; flex:1; min-width:180px;" oninput="loadAdminActivityLog()">
+                        <button type="button" class="btn btn-secondary" style="font-size:0.76rem;" onclick="loadAdminActivityLog()">🔄 Muat Ulang</button>
+                    </div>
+                    <div class="dash-table-wrap">
+                        <table class="dash-table" style="font-size:0.76rem;">
+                            <thead>
+                                <tr><th>Waktu</th><th>Pelaku</th><th>Peran</th><th>Aksi</th><th>Detail</th><th>ID Terkait</th></tr>
+                            </thead>
+                            <tbody id="adminLogTableBody">
+                                <tr><td colspan="6" style="text-align:center; padding:16px;">Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAdminPanel()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RESET KATA SANDI AKUN -->
+    <div class="modal-overlay" id="resetPasswordModal" style="display:none;">
+        <div class="modal-card" style="max-width:420px;">
+            <div class="modal-header">
+                <h3>🔑 Reset Kata Sandi</h3>
+                <button type="button" style="background:none; border:none; color:#FFFFFF; font-size:1.2rem; cursor:pointer;" onclick="closeResetPasswordModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size:0.80rem; color:#475569; margin-bottom:10px;">Akun: <strong id="resetPasswordTargetLabel">-</strong></div>
+                <input type="text" id="resetPasswordNewValue" placeholder="Kata sandi baru (min. 6 karakter)" class="form-input" style="width:100%; box-sizing:border-box; font-size:0.84rem; padding:9px 10px;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeResetPasswordModal()">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="confirmResetPassword()">Reset Kata Sandi</button>
             </div>
         </div>
     </div>
@@ -7231,6 +7324,187 @@
             }
         }
 
+        // ================= ADMIN UTAMA: KELOLA AKUN & LOG AKTIVITAS =================
+        function _authHeaders() {
+            let tok = '';
+            try { tok = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+            const headers = { 'Content-Type': 'application/json' };
+            if (tok) headers['Authorization'] = 'Bearer ' + tok;
+            return headers;
+        }
+
+        function openAdminPanel() {
+            document.getElementById('adminPanelModal').style.display = 'flex';
+            switchAdminPanelTab('akun');
+            loadAdminUsers();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('adminPanelModal').style.display = 'none';
+        }
+
+        function switchAdminPanelTab(tab) {
+            const viewAkun = document.getElementById('viewAdminAkun');
+            const viewLog = document.getElementById('viewAdminLog');
+            const tabAkun = document.getElementById('tabAdminAkun');
+            const tabLog = document.getElementById('tabAdminLog');
+            if (tab === 'akun') {
+                viewAkun.style.display = 'block';
+                viewLog.style.display = 'none';
+                tabAkun.classList.add('active');
+                tabLog.classList.remove('active');
+            } else {
+                viewAkun.style.display = 'none';
+                viewLog.style.display = 'block';
+                tabAkun.classList.remove('active');
+                tabLog.classList.add('active');
+                loadAdminActivityLog();
+            }
+        }
+
+        async function loadAdminUsers() {
+            const pegawaiEl = document.getElementById('listAdminPegawai');
+            const pemohonEl = document.getElementById('listAdminPemohon');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/users`, { headers: _authHeaders() });
+                const data = await res.json();
+                if (!res.ok) {
+                    pegawaiEl.innerHTML = `<div style="color:#DC2626;">${data.message || 'Gagal memuat akun.'}</div>`;
+                    return;
+                }
+                const roleBadge = (role) => {
+                    const def = ROLE_DEFINITIONS[role];
+                    return def ? def.badge : role;
+                };
+                pegawaiEl.innerHTML = (data.pegawai || []).map(p => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:6px; padding:8px 10px; margin-bottom:6px;">
+                        <div>
+                            <strong>${p.nama || p.username}</strong> <span style="color:#64748B;">(${p.username})</span><br>
+                            <span style="font-size:0.72rem; color:#475569;">${roleBadge(p.role)} ${p.nip ? '• NIP ' + p.nip : ''}</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:5px 10px;" onclick="openResetPasswordModal('${p.username}', 'pegawai', '${(p.nama || p.username).replace(/'/g, "")}')">🔑 Reset Sandi</button>
+                    </div>
+                `).join('') || '<div style="color:#64748B;">Belum ada akun petugas.</div>';
+
+                pemohonEl.innerHTML = (data.pemohon || []).map(p => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:6px; padding:8px 10px; margin-bottom:6px;">
+                        <div>
+                            <strong>${p.nama || p.username || p.id}</strong><br>
+                            <span style="font-size:0.72rem; color:#475569;">${p.phone || '-'} ${p.nik ? '• NIK ' + p.nik : ''}</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:5px 10px;" onclick="openResetPasswordModal('${p.username || p.id}', 'pemohon', '${(p.nama || p.username || p.id).replace(/'/g, "")}')">🔑 Reset Sandi</button>
+                    </div>
+                `).join('') || '<div style="color:#64748B;">Belum ada akun pemohon.</div>';
+            } catch (e) {
+                pegawaiEl.innerHTML = '<div style="color:#DC2626;">Gagal menghubungi server.</div>';
+            }
+        }
+
+        function openCreatePegawaiForm() {
+            const form = document.getElementById('formCreatePegawai');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function submitCreatePegawai() {
+            const username = document.getElementById('newPegawaiUsername').value.trim();
+            const password = document.getElementById('newPegawaiPassword').value.trim();
+            const nama = document.getElementById('newPegawaiNama').value.trim();
+            const nip = document.getElementById('newPegawaiNip').value.trim();
+            const jabatan = document.getElementById('newPegawaiJabatan').value.trim();
+            const role = document.getElementById('newPegawaiRole').value;
+
+            if (!username || !password || !nama) {
+                alert('⛔ Username, kata sandi, dan nama wajib diisi.');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/users/create-pegawai`, {
+                    method: 'POST',
+                    headers: _authHeaders(),
+                    body: JSON.stringify({ username, password, nama, nip, jabatan, role })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert('⛔ ' + (data.message || 'Gagal membuat akun.'));
+                    return;
+                }
+                alert('✓ ' + data.message);
+                document.getElementById('formCreatePegawai').style.display = 'none';
+                ['newPegawaiUsername','newPegawaiPassword','newPegawaiNama','newPegawaiNip','newPegawaiJabatan'].forEach(id => document.getElementById(id).value = '');
+                loadAdminUsers();
+            } catch (e) {
+                alert('⛔ Gagal menghubungi server.');
+            }
+        }
+
+        let resetPasswordTarget = null;
+        function openResetPasswordModal(username, accountType, labelName) {
+            resetPasswordTarget = { username, accountType };
+            document.getElementById('resetPasswordTargetLabel').innerText = `${labelName} (${accountType === 'pegawai' ? 'Petugas' : 'Pemohon'})`;
+            document.getElementById('resetPasswordNewValue').value = '';
+            document.getElementById('resetPasswordModal').style.display = 'flex';
+        }
+        function closeResetPasswordModal() {
+            document.getElementById('resetPasswordModal').style.display = 'none';
+            resetPasswordTarget = null;
+        }
+        async function confirmResetPassword() {
+            if (!resetPasswordTarget) return;
+            const newPassword = document.getElementById('resetPasswordNewValue').value.trim();
+            if (!newPassword || newPassword.length < 6) {
+                alert('⛔ Kata sandi baru minimal 6 karakter.');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/users/reset-password`, {
+                    method: 'POST',
+                    headers: _authHeaders(),
+                    body: JSON.stringify({ username: resetPasswordTarget.username, account_type: resetPasswordTarget.accountType, new_password: newPassword })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert('⛔ ' + (data.message || 'Gagal mereset kata sandi.'));
+                    return;
+                }
+                alert('✓ ' + data.message);
+                closeResetPasswordModal();
+            } catch (e) {
+                alert('⛔ Gagal menghubungi server.');
+            }
+        }
+
+        async function loadAdminActivityLog() {
+            const tbody = document.getElementById('adminLogTableBody');
+            const q = document.getElementById('adminLogSearch')?.value || '';
+            try {
+                const params = new URLSearchParams({ limit: '200' });
+                if (q) params.set('q', q);
+                const res = await fetch(`${API_BASE_URL}/api/admin/activity-log?${params.toString()}`, { headers: _authHeaders() });
+                const data = await res.json();
+                if (!res.ok) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#DC2626; padding:16px;">${data.message || 'Gagal memuat log.'}</td></tr>`;
+                    return;
+                }
+                const logs = data.logs || [];
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:16px; color:#64748B;">Belum ada aktivitas tercatat.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = logs.map(l => `
+                    <tr>
+                        <td>${l.timestamp || '-'}</td>
+                        <td>${l.actor_username || '-'}</td>
+                        <td>${l.actor_role || '-'}</td>
+                        <td><strong>${l.action || '-'}</strong></td>
+                        <td>${l.detail || '-'}</td>
+                        <td>${l.target_id || '-'}</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#DC2626; padding:16px;">Gagal menghubungi server.</td></tr>';
+            }
+        }
+
         function syncValues() {
             const nama = document.getElementById('pemohon_nama').value.trim();
             const nik = document.getElementById('pemohon_nik').value.trim();
@@ -7953,12 +8227,14 @@
             const kpiGrid = document.querySelector('.dash-kpi-grid');
             const nadineBtn = document.getElementById('btnNadineFrontdeskConfig');
             const gateQrBtn = document.getElementById('btnGateScanQr');
+            const adminPanelBtn = document.getElementById('btnAdminPanel');
 
             if (isPemohon) {
                 if (tableTitle) tableTitle.innerHTML = '<svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Status Berkas Permohonan Saya';
                 if (kpiGrid) kpiGrid.style.display = 'none'; // Sembunyikan metrik dinas dari pemohon
                 if (nadineBtn) nadineBtn.style.display = 'none';
                 if (gateQrBtn) gateQrBtn.style.display = 'none';
+                if (adminPanelBtn) adminPanelBtn.style.display = 'none';
             } else {
                 const rDef = ROLE_DEFINITIONS[role] || { badge: 'Petugas Pabean' };
                 if (tableTitle) {
@@ -7971,6 +8247,7 @@
                 if (kpiGrid) kpiGrid.style.display = 'grid';
                 if (nadineBtn) nadineBtn.style.display = (role === 'adminutama' || role === 'frontdesk' || role === 'loket') ? 'inline-flex' : 'none';
                 if (gateQrBtn) gateQrBtn.style.display = (role === 'adminutama' || role === 'gate') ? 'inline-flex' : 'none';
+                if (adminPanelBtn) adminPanelBtn.style.display = (role === 'adminutama') ? 'inline-flex' : 'none';
             }
 
             const inputEl = document.getElementById('searchInput');
@@ -8601,10 +8878,10 @@
                             <option value="VERIFIKASI_FASILITAS" ${item.status==='VERIFIKASI_FASILITAS'?'selected':''}>2. Verifikasi &amp; Terbit SKEP (Seksi Fasilitas)</option>
                             <option value="LOKET_JAMINAN" ${item.status==='LOKET_JAMINAN'?'selected':''}>3. Loket Jaminan (Perbendaharaan)</option>
                             <option value="PPFTZ_CEK_FISIK" ${item.status==='PPFTZ_CEK_FISIK'?'selected':''}>4. PPFTZ &amp; Cek Fisik Lapangan (Pemeriksa Barang)</option>
-                            <option value="PEMERIKSA_DOKUMEN" ${item.status==='PEMERIKSA_DOKUMEN'?'selected':''}>5. Penetapan SPPB Dokumen (Pemeriksa Dokumen)</option>
-                            <option value="SPPB_GATE_OUT" ${item.status==='SPPB_GATE_OUT'?'selected':''}>6. Validasi Gate Keluar (Gate Pelabuhan)</option>
-                            <option value="SELESAI_KELUAR_TLDDP" ${item.status==='SELESAI_KELUAR_TLDDP'?'selected':''}>7. Selesai Keluar ke TLDDP</option>
                         </select>
+                        <div style="font-size:0.68rem; color:#7C2D12; background:#FFEDD5; border:1px solid #FDBA74; border-radius:6px; padding:6px 8px; margin-bottom:8px;">
+                            🔒 Tahap Pemeriksa Dokumen, SPPB, dan Gate Keluar TIDAK bisa dilompati dari sini — itu hasil keputusan petugas berwenang, harus lewat aksi resminya sendiri.
+                        </div>
                         <label style="font-size:0.70rem; font-weight:700; color:#DC2626; display:block; margin-bottom:4px;">Alasan Override (wajib diisi untuk jejak audit):</label>
                         <textarea id="overrideReason" rows="2" placeholder="Contoh: Koreksi kesalahan input petugas Jaminan, dikonfirmasi via telepon." style="width:100%; padding:7px; border-radius:6px; border:1.5px solid #DC2626; font-size:0.76rem; box-sizing:border-box; margin-bottom:8px;"></textarea>
                         <button type="button" class="btn-portal-action" onclick="saveStatusUpdate()" style="width:100%; background:#DC2626; color:#FFF; font-size:0.76rem; padding:8px;">

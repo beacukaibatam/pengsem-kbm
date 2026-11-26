@@ -138,9 +138,73 @@ def init_db():
     except Exception:
         pass
 
+    # 4. Tabel Log Aktivitas — dipantau admin utama untuk deteksi anomali pada
+    # akun pemohon maupun petugas (login, aksi tahap, override, kelola akun).
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS activity_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        actor_username TEXT,
+        actor_role TEXT,
+        action TEXT NOT NULL,
+        detail TEXT,
+        target_id TEXT
+    );
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON activity_log(timestamp DESC);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_actor ON activity_log(actor_username);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_action ON activity_log(action);')
+
     conn.commit()
     conn.close()
     logger.info("Database SQLite WAL initialized at: %s", DATABASE_PATH)
+
+
+def log_activity(actor_username, actor_role, action, detail='', target_id=''):
+    """Catat satu baris aktivitas untuk dipantau admin utama. Kegagalan mencatat
+    TIDAK BOLEH menggagalkan aksi utama yang sedang berjalan — selalu redam error."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO activity_log (timestamp, actor_username, actor_role, action, detail, target_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            actor_username or '-',
+            actor_role or '-',
+            action,
+            detail or '',
+            target_id or ''
+        ))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error("Error logging activity: %s", e)
+
+
+def get_activity_log(limit=200, role_filter=None, action_filter=None, search=None):
+    """Ambil log aktivitas terbaru, opsional difilter role/aksi/kata kunci pencarian."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT * FROM activity_log WHERE 1=1"
+    params = []
+    if role_filter:
+        query += " AND actor_role = ?"
+        params.append(role_filter)
+    if action_filter:
+        query += " AND action = ?"
+        params.append(action_filter)
+    if search:
+        query += " AND (actor_username LIKE ? OR detail LIKE ? OR target_id LIKE ?)"
+        like = f"%{search}%"
+        params.extend([like, like, like])
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(int(limit))
+    cursor.execute(query, tuple(params))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
 
 def migrate_from_json(users_file='db_users.json', permohonan_file='db_permohonan.json'):
     """Melakukan migrasi data awal dari file JSON ke SQLite bila tabel masih kosong."""
