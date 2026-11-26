@@ -1271,6 +1271,23 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
         return {"status": "error", "message": str(e)}
 
 
+def _generate_qr_data_url(payload_text):
+    """Hasilkan QR code PNG base64 data URL dari teks payload. Kembalikan None
+    kalau library qrcode tidak tersedia — jangan sampai ini menggagalkan
+    penerbitan SPPB itu sendiri."""
+    if not qrcode:
+        return None
+    try:
+        img = qrcode.make(payload_text)
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        encoded = base64.b64encode(buf.getvalue()).decode('utf-8')
+        return f"data:image/png;base64,{encoded}"
+    except Exception as e:
+        print('[!] Error generating QR code:', e)
+        return None
+
+
 def _notify_pemohon_wa(permohonan_item, message):
     """Kirim notifikasi WA ke pemohon di background thread tiap transisi tahap
     permohonan — kegagalan kirim WA TIDAK boleh menggagalkan transisi status itu
@@ -2803,12 +2820,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(400, 'Nilai Jaminan PPN belum diisi. Hitung manual 11% x NJKB kendaraan terlebih dahulu.')
                     return
 
+                no_ppftz = f"{random.randint(10, 99)}/PPFTZ-01/KPU.02/2026"
                 target_item['status'] = 'PPFTZ_CEK_FISIK'
                 target_item['kode_billing'] = kode_billing
                 target_item['nilai_jaminan'] = nilai_jaminan
                 target_item['surat_permohonan_final'] = True
                 target_item['tgl_billing'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                target_item['catatan_petugas'] = f"Kode Billing Jaminan ({kode_billing}) terbit sebesar Rp {nilai_jaminan:,}. Surat permohonan berlampiran KEP ter-generate. Silakan lanjut pemeriksaan fisik barang."
+                target_item['no_ppftz'] = no_ppftz
+                target_item['tgl_ppftz'] = datetime.datetime.now().strftime('%Y-%m-%d')
+                target_item['catatan_petugas'] = f"Kode Billing Jaminan ({kode_billing}) terbit sebesar Rp {nilai_jaminan:,}. Surat permohonan berlampiran KEP ter-generate (PPFTZ {no_ppftz}). Silakan lanjut pemeriksaan fisik barang."
                 save_db_permohonan(db)
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
@@ -2919,9 +2939,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 no_sppb = f"SPPB-0{random.randint(20, 99)}/KPU.02/PPFTZ01/2026"
+                qr_token = uuid.uuid4().hex[:16]
+                qr_payload = json.dumps({"id": pid, "no_sppb": no_sppb, "token": qr_token})
+                qr_data_url = _generate_qr_data_url(qr_payload)
+
                 target_item['status'] = 'SPPB_GATE_OUT'
                 target_item['no_sppb'] = no_sppb
                 target_item['tgl_sppb'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                target_item['sppb_qr_token'] = qr_token
+                if qr_data_url:
+                    target_item['sppb_qr_data_url'] = qr_data_url
                 target_item['catatan_petugas'] = f"Hasil LHP fisik disetujui. Dokumen SPPB ({no_sppb}) resmi diterbitkan. Kendaraan diizinkan meluncur ke Gate Pelabuhan."
                 save_db_permohonan(db)
                 _notify_pemohon_wa(target_item, (
@@ -2944,7 +2971,39 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_json_error(500, f'Gagal menerbitkan SPPB: {str(e)}')
             return
 
-        # 6. Endpoint Gate Out (Validasi Keberangkatan di Gate Pelabuhan)
+        # 6a. Endpoint Gate: Scan QR SPPB untuk menampilkan data kendaraan (read-only,
+        # TIDAK mengubah status — konfirmasi keberangkatan tetap lewat validasi-keluar)
+        if self.path == '/api/gate/scan-qr':
+            token, sess = get_session_from_request(self)
+            if not _is_role_allowed(sess, ['gate']):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Gate Pelabuhan yang berwenang memindai QR SPPB.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                pid = body.get('id')
+                qr_token = str(body.get('token', '')).strip()
+                db = load_db_permohonan()
+                target_item = next((item for item in db if item.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+                if not qr_token or qr_token != target_item.get('sppb_qr_token'):
+                    self._send_json_error(400, 'QR tidak valid atau sudah tidak berlaku untuk permohonan ini.')
+                    return
+                if target_item.get('status') != 'SPPB_GATE_OUT':
+                    self._send_json_error(400, f'Permohonan ini berstatus "{target_item.get("status")}", bukan di tahap Gate Out. Kendaraan mungkin sudah divalidasi keluar sebelumnya atau belum sampai tahap ini.')
+                    return
+
+                self._send_json_response({'status': 'ok', 'permohonan': target_item})
+            except Exception as e:
+                self._send_json_error(500, f'Gagal memindai QR: {str(e)}')
+            return
+
+        # 6b. Endpoint Gate Out (Validasi Keberangkatan di Gate Pelabuhan) — WAJIB
+        # menyertakan token QR hasil scan-qr, supaya petugas tidak bisa memvalidasi
+        # kendaraan hanya dengan mengetik ID tanpa benar-benar memindai dokumen SPPB.
         if self.path == '/api/gate/validasi-keluar':
             token, sess = get_session_from_request(self)
             if not _is_role_allowed(sess, ['gate']):
@@ -2955,10 +3014,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 body = json.loads(post_data.decode('utf-8'))
                 pid = body.get('id')
+                qr_token = str(body.get('token', '')).strip()
                 db = load_db_permohonan()
                 target_item = next((item for item in db if item.get('id') == pid), None)
                 if not target_item:
                     self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+                if target_item.get('status') != 'SPPB_GATE_OUT':
+                    self._send_json_error(400, f'Permohonan ini berstatus "{target_item.get("status")}", bukan di tahap Gate Out.')
+                    return
+                if not qr_token or qr_token != target_item.get('sppb_qr_token'):
+                    self._send_json_error(400, 'Validasi gagal: QR dokumen SPPB belum dipindai atau tidak cocok. Scan QR terlebih dahulu.')
                     return
 
                 ts_gate = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S WIB')

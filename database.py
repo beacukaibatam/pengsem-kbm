@@ -127,6 +127,17 @@ def init_db():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_permohonan_nopol ON permohonan(nopol);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_permohonan_wa ON permohonan(no_wa_pemohon);')
 
+    # Kolom tangkapan untuk field dinamis yang terus bertambah sepanjang alur petugas
+    # (lhp_data, no_skep, no_surat_s, kode_billing, nilai_jaminan, tgl_*, sppb_qr_*, dst.)
+    # — skema tabel ini TIDAK punya kolom untuk masing-masing, jadi dulu field-field itu
+    # SELALU HILANG begitu dibaca lagi dari SQLite (update_permohonan_status diam-diam
+    # membuangnya). ALTER TABLE dibungkus try/except karena SQLite tidak punya
+    # "ADD COLUMN IF NOT EXISTS" dan kolom ini mungkin sudah ada dari start sebelumnya.
+    try:
+        cursor.execute('ALTER TABLE permohonan ADD COLUMN extra_json TEXT')
+    except Exception:
+        pass
+
     conn.commit()
     conn.close()
     logger.info("Database SQLite WAL initialized at: %s", DATABASE_PATH)
@@ -196,13 +207,14 @@ def migrate_from_json(users_file='db_users.json', permohonan_file='db_permohonan
                     pid = p.get('id')
                     if not pid:
                         continue
+                    extra = {k: v for k, v in p.items() if k not in KNOWN_PERMOHONAN_COLUMNS}
                     cursor.execute('''
                         INSERT OR IGNORE INTO permohonan
                         (id, created_at, tanggal_pengajuan, nama_pemohon, nik, npwp, no_wa_pemohon, no_wa_pengirim,
                          nomor_berbeda, nopol, merek_tipe, tahun_warna, no_rangka, no_mesin, pelabuhan_tujuan,
                          keperluan, status, catatan_petugas, no_nadine, no_kep, no_jaminan, no_ppftz, no_sppb,
-                         dokumen_json, pemeriksaan_json, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         dokumen_json, pemeriksaan_json, extra_json, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', (
                         pid,
                         p.get('created_at', now_str),
@@ -229,6 +241,7 @@ def migrate_from_json(users_file='db_users.json', permohonan_file='db_permohonan
                         p.get('no_sppb', ''),
                         json.dumps(p.get('dokumen', {})),
                         json.dumps(p.get('pemeriksaan', {})),
+                        json.dumps(extra),
                         now_str
                     ))
             conn.commit()
@@ -460,6 +473,28 @@ def delete_registration_otp(phone):
 
 # ================= PERMOHONAN MANAGEMENT =================
 
+# Kolom tetap tabel `permohonan` (lihat init_db). Field apa pun di luar daftar ini yang
+# dikirim dari server.py disimpan sebagai JSON gabungan di kolom extra_json, lalu
+# dibongkar kembali di sini supaya hasil baca tetap selengkap data yang ditulis.
+KNOWN_PERMOHONAN_COLUMNS = {
+    'id', 'created_at', 'tanggal_pengajuan', 'nama_pemohon', 'nik', 'npwp', 'no_wa_pemohon',
+    'no_wa_pengirim', 'nomor_berbeda', 'nopol', 'merek_tipe', 'tahun_warna', 'no_rangka',
+    'no_mesin', 'pelabuhan_tujuan', 'keperluan', 'status', 'catatan_petugas', 'no_nadine',
+    'no_kep', 'no_jaminan', 'no_ppftz', 'no_sppb', 'dokumen', 'pemeriksaan',
+    'dokumen_json', 'pemeriksaan_json', 'updated_at', 'extra_json'
+}
+
+def _unpack_extra_json(d):
+    if d.get('extra_json'):
+        try:
+            extra = json.loads(d['extra_json'])
+            if isinstance(extra, dict):
+                for k, v in extra.items():
+                    d[k] = v
+        except Exception:
+            pass
+    return d
+
 def get_all_permohonan():
     """Mengambil semua daftar permohonan terurut dari yang terbaru."""
     conn = get_db_connection()
@@ -477,6 +512,7 @@ def get_all_permohonan():
         if d.get('pemeriksaan_json'):
             try: d['pemeriksaan'] = json.loads(d['pemeriksaan_json'])
             except: d['pemeriksaan'] = {}
+        d = _unpack_extra_json(d)
         result.append(d)
     conn.close()
     return result
@@ -498,6 +534,7 @@ def get_permohonan_by_id(pid):
     if d.get('pemeriksaan_json'):
         try: d['pemeriksaan'] = json.loads(d['pemeriksaan_json'])
         except: d['pemeriksaan'] = {}
+    d = _unpack_extra_json(d)
     return d
 
 def save_new_permohonan(p):
@@ -507,13 +544,15 @@ def save_new_permohonan(p):
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     pid = p.get('id') or f"KBM-{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
+    extra = {k: v for k, v in p.items() if k not in KNOWN_PERMOHONAN_COLUMNS}
+
     cursor.execute('''
         INSERT INTO permohonan
         (id, created_at, tanggal_pengajuan, nama_pemohon, nik, npwp, no_wa_pemohon, no_wa_pengirim,
          nomor_berbeda, nopol, merek_tipe, tahun_warna, no_rangka, no_mesin, pelabuhan_tujuan,
          keperluan, status, catatan_petugas, no_nadine, no_kep, no_jaminan, no_ppftz, no_sppb,
-         dokumen_json, pemeriksaan_json, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         dokumen_json, pemeriksaan_json, extra_json, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         pid,
         p.get('created_at', now_str),
@@ -540,6 +579,7 @@ def save_new_permohonan(p):
         p.get('no_sppb', ''),
         json.dumps(p.get('dokumen', {})),
         json.dumps(p.get('pemeriksaan', {})),
+        json.dumps(extra),
         now_str
     ))
     conn.commit()
@@ -552,6 +592,18 @@ def update_permohonan_status(pid, new_status, catatan='', updates=None):
     cursor = conn.cursor()
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+    # Field apa pun di luar kolom tetap (lhp_data, no_skep, kode_billing, nilai_jaminan,
+    # tgl_*, sppb_qr_*, nadine_meta, dst.) digabung ke extra_json — dibaca dulu lalu
+    # di-merge, supaya nilai lama yang tidak ikut di-update kali ini tidak hilang.
+    cursor.execute("SELECT extra_json FROM permohonan WHERE id = ?", (pid,))
+    row = cursor.fetchone()
+    existing_extra = {}
+    if row and row[0]:
+        try:
+            existing_extra = json.loads(row[0]) or {}
+        except Exception:
+            existing_extra = {}
+
     query = "UPDATE permohonan SET status = ?, updated_at = ?"
     params = [new_status, now_str]
 
@@ -559,6 +611,7 @@ def update_permohonan_status(pid, new_status, catatan='', updates=None):
         query += ", catatan_petugas = ?"
         params.append(catatan)
 
+    extra_changed = False
     if updates:
         for k, v in updates.items():
             if k in ['no_nadine', 'no_kep', 'no_jaminan', 'no_ppftz', 'no_sppb']:
@@ -570,6 +623,13 @@ def update_permohonan_status(pid, new_status, catatan='', updates=None):
             elif k == 'pemeriksaan':
                 query += ", pemeriksaan_json = ?"
                 params.append(json.dumps(v))
+            elif k not in KNOWN_PERMOHONAN_COLUMNS:
+                existing_extra[k] = v
+                extra_changed = True
+
+    if extra_changed:
+        query += ", extra_json = ?"
+        params.append(json.dumps(existing_extra))
 
     query += " WHERE id = ?"
     params.append(pid)

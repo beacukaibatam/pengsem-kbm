@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
     
     <style>
@@ -3136,6 +3137,10 @@
                         <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                         <span>Akun Nadine Frontdesk</span>
                     </button>
+                    <button class="btn-portal-action" id="btnGateScanQr" onclick="openGateQrScanner()" style="background:#059669; color:#FFFFFF; border:none; display:none; align-items:center; gap:6px;">
+                        <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><line x1="14" y1="14" x2="21" y2="14"></line><line x1="14" y1="21" x2="21" y2="21"></line><line x1="17.5" y1="14" x2="17.5" y2="21"></line></svg>
+                        <span>Scan QR SPPB</span>
+                    </button>
                     <button class="btn-portal-action" onclick="loadPermohonanData()">
                     <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg> Muat Ulang Data
                 </button>
@@ -4184,6 +4189,42 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeCamera()">Batal</button>
                 <button type="button" class="btn btn-primary" onclick="capturePhoto()"><svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Jepret &amp; Ekstrak</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SCAN QR SPPB UNTUK PETUGAS GATE PELABUHAN -->
+    <div class="modal-overlay" id="gateQrModal" style="display:none;">
+        <div class="modal-card" style="max-width:480px;">
+            <div class="modal-header">
+                <h3>📷 Scan QR SPPB Kendaraan</h3>
+                <button type="button" style="background:none; border:none; color:#FFFFFF; font-size:1.2rem; cursor:pointer;" onclick="closeGateQrScanner()">✕</button>
+            </div>
+            <div class="modal-body" id="gateQrScanBody" style="text-align:center;">
+                <div style="width:100%; height:300px; background:#000; border-radius:6px; overflow:hidden; position:relative;">
+                    <video id="gateQrVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+                </div>
+                <canvas id="gateQrCanvas" style="display:none;"></canvas>
+                <div style="font-size:0.76rem; color:#64748B; margin-top:10px;">Arahkan kamera ke QR code pada dokumen SPPB kendaraan.</div>
+                <div id="gateQrStatus" style="font-size:0.78rem; color:#B45309; margin-top:6px; min-height:18px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeGateQrScanner()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI DATA KENDARAAN HASIL SCAN QR (GATE) -->
+    <div class="modal-overlay" id="gateQrResultModal" style="display:none;">
+        <div class="modal-card" style="max-width:520px;">
+            <div class="modal-header">
+                <h3>✓ Data Kendaraan Hasil Scan</h3>
+                <button type="button" style="background:none; border:none; color:#FFFFFF; font-size:1.2rem; cursor:pointer;" onclick="closeGateQrResultModal()">✕</button>
+            </div>
+            <div class="modal-body" id="gateQrResultBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeGateQrResultModal()">Batal</button>
+                <button type="button" class="btn btn-primary" id="btnKonfirmasiGateOut" style="background:#059669;" onclick="konfirmasiGateOutFromQr()">✓ Konfirmasi Kendaraan Keluar</button>
             </div>
         </div>
     </div>
@@ -7037,6 +7078,159 @@
             }
         }
 
+        // ================= SCAN QR SPPB UNTUK PETUGAS GATE PELABUHAN =================
+        let gateQrStream = null;
+        let gateQrScanInterval = null;
+        let gateQrScannedItem = null;
+
+        async function openGateQrScanner() {
+            const modal = document.getElementById('gateQrModal');
+            const statusEl = document.getElementById('gateQrStatus');
+            if (statusEl) statusEl.innerText = '';
+            modal.style.display = 'flex';
+
+            const video = document.getElementById('gateQrVideo');
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    gateQrStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                    video.srcObject = gateQrStream;
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        startGateQrScanLoop();
+                    };
+                } else {
+                    if (statusEl) statusEl.innerText = 'Kamera tidak tersedia di perangkat/browser ini.';
+                }
+            } catch (err) {
+                if (statusEl) statusEl.innerText = 'Gagal mengakses kamera: izin ditolak atau tidak tersedia.';
+            }
+        }
+
+        function startGateQrScanLoop() {
+            const video = document.getElementById('gateQrVideo');
+            const canvas = document.getElementById('gateQrCanvas');
+            const ctx = canvas.getContext('2d');
+            if (gateQrScanInterval) clearInterval(gateQrScanInterval);
+            gateQrScanInterval = setInterval(() => {
+                if (!video.videoWidth || typeof jsQR === 'undefined') return;
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                if (code && code.data) {
+                    handleGateQrDecoded(code.data);
+                }
+            }, 350);
+        }
+
+        function closeGateQrScanner() {
+            document.getElementById('gateQrModal').style.display = 'none';
+            if (gateQrScanInterval) { clearInterval(gateQrScanInterval); gateQrScanInterval = null; }
+            if (gateQrStream) {
+                gateQrStream.getTracks().forEach(t => t.stop());
+                gateQrStream = null;
+            }
+        }
+
+        async function handleGateQrDecoded(rawText) {
+            if (gateQrScanInterval) { clearInterval(gateQrScanInterval); gateQrScanInterval = null; }
+            const statusEl = document.getElementById('gateQrStatus');
+            let payload;
+            try {
+                payload = JSON.parse(rawText);
+            } catch (e) {
+                if (statusEl) statusEl.innerText = 'QR tidak dikenali — bukan QR dokumen SPPB sistem ini.';
+                startGateQrScanLoop();
+                return;
+            }
+            if (!payload.id || !payload.token) {
+                if (statusEl) statusEl.innerText = 'QR tidak valid — data tidak lengkap.';
+                startGateQrScanLoop();
+                return;
+            }
+
+            if (statusEl) statusEl.innerText = 'Memverifikasi QR...';
+            try {
+                let tok = '';
+                try { tok = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+                const headers = { 'Content-Type': 'application/json' };
+                if (tok) headers['Authorization'] = 'Bearer ' + tok;
+                const res = await fetch(`${API_BASE_URL}/api/gate/scan-qr`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ id: payload.id, token: payload.token })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    if (statusEl) statusEl.innerText = data.message || 'QR tidak valid.';
+                    startGateQrScanLoop();
+                    return;
+                }
+                gateQrScannedItem = data.permohonan;
+                gateQrScannedItem._qr_token = payload.token;
+                closeGateQrScanner();
+                showGateQrResult(gateQrScannedItem);
+            } catch (e) {
+                if (statusEl) statusEl.innerText = 'Gagal menghubungi server. Coba lagi.';
+                startGateQrScanLoop();
+            }
+        }
+
+        function showGateQrResult(item) {
+            const body = document.getElementById('gateQrResultBody');
+            body.innerHTML = `
+                <div style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:8px; padding:14px; font-size:0.84rem; line-height:1.7;">
+                    <div><strong>Nama Pemohon:</strong> ${item.nama_pemohon || '-'}</div>
+                    <div><strong>Nomor Polisi:</strong> ${item.nopol || '-'}</div>
+                    <div><strong>Merek / Tipe:</strong> ${item.merek_tipe || '-'}</div>
+                    <div><strong>Nomor SPPB:</strong> ${item.no_sppb || '-'}</div>
+                    <div><strong>Pelabuhan Tujuan:</strong> ${item.pelabuhan_tujuan || '-'}</div>
+                </div>
+                <div style="font-size:0.76rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:8px 10px; margin-top:10px;">
+                    ⚠️ Cocokkan data di atas dengan fisik kendaraan &amp; dokumen SPPB sebelum konfirmasi keberangkatan.
+                </div>
+            `;
+            document.getElementById('gateQrResultModal').style.display = 'flex';
+        }
+
+        function closeGateQrResultModal() {
+            document.getElementById('gateQrResultModal').style.display = 'none';
+            gateQrScannedItem = null;
+        }
+
+        async function konfirmasiGateOutFromQr() {
+            if (!gateQrScannedItem) return;
+            const btn = document.getElementById('btnKonfirmasiGateOut');
+            if (btn) { btn.disabled = true; btn.innerText = 'Memproses...'; }
+            try {
+                let tok = '';
+                try { tok = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+                const headers = { 'Content-Type': 'application/json' };
+                if (tok) headers['Authorization'] = 'Bearer ' + tok;
+                const res = await fetch(`${API_BASE_URL}/api/gate/validasi-keluar`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ id: gateQrScannedItem.id, token: gateQrScannedItem._qr_token })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert('⛔ ' + (data.message || 'Gagal memvalidasi kendaraan.'));
+                    if (btn) { btn.disabled = false; btn.innerText = '✓ Konfirmasi Kendaraan Keluar'; }
+                    return;
+                }
+                alert('✓ ' + (data.message || 'Kendaraan resmi berangkat.'));
+                closeGateQrResultModal();
+                loadPermohonanData();
+            } catch (e) {
+                alert('⛔ Gagal menghubungi server.');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = '✓ Konfirmasi Kendaraan Keluar'; }
+            }
+        }
+
         function syncValues() {
             const nama = document.getElementById('pemohon_nama').value.trim();
             const nik = document.getElementById('pemohon_nik').value.trim();
@@ -7082,84 +7276,138 @@
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-            
+
             const nama = document.getElementById('pemohon_nama').value || '-';
             const nik = document.getElementById('pemohon_nik').value || '-';
+            const noHp = document.getElementById('pemohon_telp')?.value || '-';
             const nopol = document.getElementById('kbm_nopol').value || '-';
             const rangka = document.getElementById('kbm_norangka').value || '-';
+            const mesin = document.getElementById('kbm_nomesin')?.value || '-';
             const merek = document.getElementById('kbm_merek').value || '-';
             const alamat = document.getElementById('pemohon_alamat').value || '-';
-            const rute = document.getElementById('rute_tujuan').value || '-';
-            const jaminanTxt = document.getElementById('valJaminanPpn').innerText || 'Rp 7.700.000';
+            const kotaTujuan = document.getElementById('rute_tujuan').value || '-';
+            const tglKeluar = document.getElementById('tgl_keluar')?.value || '-';
+            const tglKembali = document.getElementById('tgl_kembali')?.value || '-';
+            const keperluan = document.getElementById('keperluan')?.value || 'kepentingan pribadi pemohon';
+            const jaminanTxt = document.getElementById('valJaminanPpn').innerText || 'Rp 0';
+            const tglSuratSekarang = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
-            // Hal 1: Surat Permohonan
-            doc.setFontSize(14);
+            // Watermark jujur: dokumen ini DRAFT, belum dibubuhi e-meterai asli — dipakai
+            // di tiap halaman depan, GANTI kotak "Materai 10000" bawaan formulir resmi
+            // (yang hanya sah dipasang setelah pemohon benar-benar membeli e-meterai).
+            function drawDraftWatermark(yPos) {
+                doc.saveGraphicsState();
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(239, 68, 68);
+                try { doc.setGState(new doc.GState({ opacity: 0.3 })); } catch (e) {}
+                doc.text('DRAFT - BELUM BERMETERAI', 105, yPos, { align: 'center', angle: 20 });
+                try { doc.restoreGraphicsState(); } catch (e) {}
+                doc.setTextColor(0, 0, 0);
+            }
+
+            // Hal 1: Surat Permohonan (format resmi mengikuti template KPU Bea Cukai Tipe B Batam)
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
-            doc.text('KEMENTERIAN KEUANGAN REPUBLIK INDONESIA', 105, 20, { align: 'center' });
+            doc.text('SURAT PERMOHONAN', 105, 24, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('KANTOR PELAYANAN UTAMA BEA DAN CUKAI TIPE B BATAM', 105, 26, { align: 'center' });
-            doc.text('SEKSI FASILITAS PABEAN DAN CUKAI - BIDANG PFPC I', 105, 31, { align: 'center' });
-            doc.line(20, 34, 190, 34);
-
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('SURAT PERMOHONAN PENGELUARAN SEMENTARA KBM', 105, 42, { align: 'center' });
-            doc.setFont('helvetica', 'normal');
+            let y = 38;
+            doc.text('Perihal', 20, y); doc.text(': Permohonan Pengeluaran Kendaraan Bermotor', 45, y);
+            y += 12;
+            doc.text('Yth.', 20, y); doc.text('Kepala Kantor Pelayanan Utama', 35, y);
+            y += 6; doc.text('Bea dan Cukai Tipe B Batam', 35, y);
+            y += 6; doc.text('Di Tempat', 20, y);
+            y += 10; doc.text('Dengan Hormat,', 20, y);
+            y += 6;
+            const pembuka = doc.splitTextToSize(`Sehubungan dengan rencana ${keperluan}, dengan ini kami menyampaikan bahwa akan melakukan pengeluaran sementara kendaraan bermotor, dengan rincian sebagai berikut:`, 170);
+            doc.text(pembuka, 20, y);
+            y += pembuka.length * 5.5 + 4;
+            const field = (label, val, x2, label2, val2) => {
+                doc.text(label, 20, y); doc.text(': ' + (val || '-'), 55, y);
+                if (label2) { doc.text(label2, 120, y); doc.text(': ' + (val2 || '-'), 140, y); }
+                y += 7;
+            };
+            field('Nama', nama, 0, '', '');
+            field('NIK', nik, 0, 'No. HP', noHp);
+            field('Alamat', alamat, 0, '', '');
+            field('Jenis & Plat Mobil', `${merek} - ${nopol}`, 0, '', '');
+            field('Nomor Rangka', rangka, 0, '', '');
+            field('Nomor Mesin', mesin, 0, '', '');
+            field('Kota Tujuan', kotaTujuan, 0, '', '');
+            field('Lama Pengeluaran', `${tglKeluar} s.d ${tglKembali}`, 0, '', '');
+            field('Pelabuhan Muat *)', 'Pelabuhan ASDP Telaga Punggur, Batam', 0, '', '');
+            field('Pelabuhan Tujuan', kotaTujuan, 0, '', '');
+            y += 4;
+            doc.text('Dan melampirkan dokumen sebagai berikut:', 20, y); y += 6;
+            const lampiran = [
+                'a. Surat pernyataan komitmen barang kembali ke KPBPB Batam dan pencairan jaminan bermaterai (terlampir);',
+                'b. Foto nomor mesin nomor rangka, kendaraan (tampak depan, belakang, kanan dan kiri);',
+                'c. Fotocopy KTP dan NPWP;',
+                'd. Fotocopy STNK dan SIM;',
+                'e. Fotocopy BPKB/surat keterangan lainnya;'
+            ];
             doc.setFontSize(9);
-            doc.text('Hal: Permohonan Pengeluaran Sementara Kendaraan Bermotor ke TLDDP', 20, 52);
-            doc.text('Yth. Kepala Kantor Pelayanan Utama Bea dan Cukai Tipe B Batam', 20, 58);
-            doc.text('Saya yang bertanda tangan di bawah ini:', 20, 68);
-            doc.text('Nama Lengkap    : ' + nama, 25, 75);
-            doc.text('NIK             : ' + nik, 25, 81);
-            doc.text('Alamat Domisili : ' + alamat, 25, 87);
-            doc.text('Bermaksud mengajukan pengeluaran sementara 1 (satu) unit kendaraan bermotor:', 20, 97);
-            doc.text('Merek / Tipe    : ' + merek, 25, 104);
-            doc.text('Nomor Polisi    : ' + nopol, 25, 110);
-            doc.text('Nomor Rangka    : ' + rangka, 25, 116);
-            doc.text('Pelabuhan Muat  : Pelabuhan ASDP Telaga Punggur, Batam', 25, 122);
-            doc.text('Pelabuhan Tujuan: ' + rute, 25, 128);
-            // Watermark jujur: dokumen ini DRAFT, belum dibubuhi e-meterai asli
-            doc.saveGraphicsState();
-            doc.setFontSize(26);
+            lampiran.forEach(line => {
+                const wrapped = doc.splitTextToSize(line, 165);
+                doc.text(wrapped, 23, y);
+                y += wrapped.length * 5;
+            });
+            y += 4;
+            doc.setFontSize(10);
+            const penutup = doc.splitTextToSize('Demikian surat permohonan ini kami perbuat, atas perhatian dan kerjasamanya kami ucapkan terimakasih.', 170);
+            doc.text(penutup, 20, y);
+            y += penutup.length * 5.5 + 10;
+            doc.text(`Batam, ${tglSuratSekarang}`, 130, y);
+            drawDraftWatermark(y + 25);
+            y += 42;
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(239, 68, 68);
-            try { doc.setGState(new doc.GState({ opacity: 0.35 })); } catch (e) {}
-            doc.text('DRAFT - BELUM BERMETERAI', 105, 170, { align: 'center', angle: 20 });
-            try { doc.restoreGraphicsState(); } catch (e) {}
-            doc.setTextColor(0, 0, 0);
-
-            doc.setFontSize(9);
+            doc.text('( ' + nama + ' )', 130, y);
             doc.setFont('helvetica', 'normal');
-            doc.text('Pemohon,', 140, 152);
-            doc.setFont('helvetica', 'bold');
-            doc.text('( ' + nama + ' )', 140, 184);
+            doc.setFontSize(8);
+            doc.text('*Pelabuhan muat dan Pelabuhan masuk harus sama', 20, 280);
 
-            // Hal 2: Surat Pernyataan
+            // Hal 2: Surat Pernyataan (format resmi mengikuti template KPU Bea Cukai Tipe B Batam)
             doc.addPage();
-            doc.setFontSize(11);
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
-            doc.text('SURAT PERNYATAAN KESANGGUPAN JAMINAN & PEMASUKAN KEMBALI', 105, 25, { align: 'center' });
+            doc.text('SURAT PERNYATAAN', 105, 24, { align: 'center' });
             doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            y = 38;
+            const pembuka2 = doc.splitTextToSize('Sehubungan dengan surat permohonan pengeluaran kendaraan bermotor, dengan ini saya selaku pemohon yang bertanda tangan di bawah ini:', 170);
+            doc.text(pembuka2, 20, y);
+            y += pembuka2.length * 5.5 + 6;
+            field('Nama', nama, 0, '', '');
+            field('NIK', nik, 0, '', '');
+            field('Alamat', alamat, 0, '', '');
+            y += 2;
+            doc.text('menyatakan:', 20, y); y += 7;
+            const pernyataan = [
+                `Kendaraan Bermotor dengan nomor polisi ${nopol} adalah benar akan dikeluarkan untuk sementara menuju kota ${kotaTujuan} dengan jangka waktu ${tglKeluar} s.d ${tglKembali} dan kendaraan tersebut akan dibawa kembali ke Kawasan Perdagangan Bebas dan Pelabuhan Bebas (KPBPB) Batam;`,
+                `Bersedia menyerahkan jaminan tunai sebesar ${jaminanTxt};`,
+                'Setuju jika kendaraan tersebut terlambat kembali atau tidak kembali lagi ke KPBPB Batam maka terhadap jaminan yang telah diserahkan akan dicairkan untuk pelunasan PPN sehingga kendaraan tidak lagi mendapatkan fasilitas Kawasan bebas;',
+                'Tidak akan membawa barang larangan dan pembatasan, jika terdapat hal yang tidak sesuai dengan ketentuan maka bersedia untuk dilakukan penindakan.',
+                'Bersedia mengajukan pemberitahuan formalitas kepabeanan dengan PPFTZ-01 dengan melampirkan keputusan pengeluaran sementara, Bukti Penerimaan Jaminan (BPJ), surat jalan kepolisian, dan dokumen pelengkap pabean yang diperlukan;',
+                'Dokumen yang diserahkan kepada pihak Bea dan Cukai merupakan dokumen yang sah dan benar;'
+            ];
             doc.setFontSize(9);
-            doc.text('Menyatakan sanggup menyerahkan Jaminan PPN 11% (' + jaminanTxt + ') dan wajib memasukkan', 20, 40);
-            doc.text('kembali kendaraan bermotor nomor polisi ' + nopol + ' ke Kawasan Bebas Batam tepat waktu.', 20, 46);
-
-            // Watermark jujur: dokumen ini DRAFT, belum dibubuhi e-meterai asli
-            doc.saveGraphicsState();
-            doc.setFontSize(26);
+            pernyataan.forEach((line, idx) => {
+                const wrapped = doc.splitTextToSize(`${idx + 1}. ${line}`, 165);
+                doc.text(wrapped, 23, y);
+                y += wrapped.length * 5 + 1.5;
+            });
+            y += 4;
+            doc.setFontSize(10);
+            const penutup2 = doc.splitTextToSize('Demikian surat pernyataan ini kami sampaikan dan atas perhatiannya kami ucapkan terimakasih.', 170);
+            doc.text(penutup2, 20, y);
+            y += penutup2.length * 5.5 + 10;
+            doc.text(`Batam, ${tglSuratSekarang}`, 130, y);
+            drawDraftWatermark(y + 25);
+            y += 42;
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(239, 68, 68);
-            try { doc.setGState(new doc.GState({ opacity: 0.35 })); } catch (e) {}
-            doc.text('DRAFT - BELUM BERMETERAI', 105, 100, { align: 'center', angle: 20 });
-            try { doc.restoreGraphicsState(); } catch (e) {}
-            doc.setTextColor(0, 0, 0);
-
-            doc.setFontSize(9);
+            doc.text('( ' + nama + ' )', 130, y);
             doc.setFont('helvetica', 'normal');
-            doc.text('Yang Membuat Pernyataan,', 140, 82);
-            doc.setFont('helvetica', 'bold');
-            doc.text('( ' + nama + ' )', 140, 114);
 
             // Hal 3: KTP
             doc.addPage();
@@ -7258,7 +7506,7 @@
                 nama_pemohon: (document.getElementById('pemohon_nama')?.value || user.nama || 'Pemohon').trim(),
                 nik: (document.getElementById('pemohon_nik')?.value || user.nik || '').trim(),
                 npwp: (document.getElementById('pemohon_npwp')?.value || '-').trim(),
-                no_wa_pemohon: (document.getElementById('pemohon_telepon')?.value || user.phone || '').trim(),
+                no_wa_pemohon: (document.getElementById('pemohon_telp')?.value || user.phone || '').trim(),
                 nopol: (document.getElementById('kbm_nopol')?.value || 'BP - (Menunggu STNK)').trim(),
                 merek_tipe: (document.getElementById('kbm_merek')?.value || 'Kendaraan Bermotor').trim(),
                 pelabuhan_tujuan: (document.getElementById('rute_tujuan')?.value || 'Kuala Tungkal (Jambi)').trim(),
@@ -7704,11 +7952,13 @@
             const tableTitle = document.getElementById('dashTableTitle');
             const kpiGrid = document.querySelector('.dash-kpi-grid');
             const nadineBtn = document.getElementById('btnNadineFrontdeskConfig');
+            const gateQrBtn = document.getElementById('btnGateScanQr');
 
             if (isPemohon) {
                 if (tableTitle) tableTitle.innerHTML = '<svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Status Berkas Permohonan Saya';
                 if (kpiGrid) kpiGrid.style.display = 'none'; // Sembunyikan metrik dinas dari pemohon
                 if (nadineBtn) nadineBtn.style.display = 'none';
+                if (gateQrBtn) gateQrBtn.style.display = 'none';
             } else {
                 const rDef = ROLE_DEFINITIONS[role] || { badge: 'Petugas Pabean' };
                 if (tableTitle) {
@@ -7720,6 +7970,7 @@
                 }
                 if (kpiGrid) kpiGrid.style.display = 'grid';
                 if (nadineBtn) nadineBtn.style.display = (role === 'adminutama' || role === 'frontdesk' || role === 'loket') ? 'inline-flex' : 'none';
+                if (gateQrBtn) gateQrBtn.style.display = (role === 'adminutama' || role === 'gate') ? 'inline-flex' : 'none';
             }
 
             const inputEl = document.getElementById('searchInput');
@@ -7903,6 +8154,240 @@
             document.getElementById('drawerDetail').style.display = 'flex';
         }
 
+        // Tombol cetak dokumen resmi — ditampilkan berdasarkan data yang SUDAH ada pada
+        // berkas (bukan berdasarkan wewenang aksi tahap), supaya adminutama & petugas
+        // pemeriksa barang/dokumen (yang akses semua tahap) tetap bisa mencetak ulang
+        // dokumen dari tahap manapun untuk keperluan validasi kesesuaian.
+        function buildDokumenCetakHtml(item) {
+            const buttons = [];
+            if (item.no_ppftz) {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="generatePPFTZ01PDF('${item.id}')">🖨️ PPFTZ-01</button>`);
+            }
+            if (item.lhp_data) {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="generateLHPPDF('${item.id}')">🖨️ LHP</button>`);
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="generateBAPPDF('${item.id}')">🖨️ BAP</button>`);
+            }
+            if (item.no_sppb) {
+                buttons.push(`<button type="button" class="btn btn-secondary" style="font-size:0.74rem; padding:6px 10px;" onclick="generateSPPBPDF('${item.id}')">🖨️ SPPB${item.sppb_qr_data_url ? ' (+QR)' : ''}</button>`);
+            }
+            if (buttons.length === 0) return '';
+            return `
+                <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+                    <div style="font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:6px;">📄 Dokumen Resmi Tersedia untuk Dicetak:</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">${buttons.join('')}</div>
+                </div>
+            `;
+        }
+
+        function _kopSuratPdf(doc) {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('KEMENTERIAN KEUANGAN REPUBLIK INDONESIA', 105, 18, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text('DIREKTORAT JENDERAL BEA DAN CUKAI', 105, 24, { align: 'center' });
+            doc.text('KANTOR PELAYANAN UTAMA BEA DAN CUKAI TIPE B BATAM', 105, 30, { align: 'center' });
+            doc.setLineWidth(0.6);
+            doc.line(20, 34, 190, 34);
+            doc.setFont('helvetica', 'normal');
+        }
+
+        function generatePPFTZ01PDF(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item || !window.jspdf) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            _kopSuratPdf(doc);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LAPORAN HASIL PEMERIKSAAN', 105, 44, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            let y = 54;
+            const row = (label, val) => { doc.text(`${label}`, 20, y); doc.text(`: ${val || '-'}`, 75, y); y += 7; };
+            row('Nomor Pendaftaran PPFTZ-01', item.no_ppftz || '-');
+            row('Tanggal', item.tgl_ppftz || '-');
+            row('Lokasi', 'Lapangan KPU Bea Cukai Tipe B Batam');
+            row('Jumlah & Jenis Barang Diperiksa', '1 unit kendaraan bermotor');
+            y += 3;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Spesifikasi Kendaraan:', 20, y); y += 7;
+            doc.setFont('helvetica', 'normal');
+            row('Merek / Tipe', item.merek_tipe);
+            row('Nomor Polisi', item.nopol);
+            row('Nomor Rangka', item.no_rangka || item.norangka || '-');
+            row('Nomor Mesin', item.no_mesin || item.nomesin || '-');
+            row('Pemohon', item.nama_pemohon);
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Catatan:', 20, y); y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const catatan = doc.splitTextToSize('Jenis dan jumlah barang yang diperiksa akan dicocokkan terhadap Laporan Hasil Pemeriksaan Fisik (LHP) oleh Pejabat Pemeriksa Barang.', 170);
+            doc.text(catatan, 20, y);
+            y += catatan.length * 5 + 15;
+            doc.setFontSize(9);
+            doc.text('Pejabat Pemeriksa Barang,', 140, y);
+            y += 20;
+            doc.text('( ___________________ )', 140, y);
+            doc.setFontSize(7);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ.', 20, 285);
+            doc.save(`PPFTZ01_${item.nopol || item.id}.pdf`);
+        }
+
+        function generateLHPPDF(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item || !window.jspdf || !item.lhp_data) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            _kopSuratPdf(doc);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LAPORAN HASIL PEMERIKSAAN (LHP)', 105, 44, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            let y = 54;
+            const row = (label, val) => { doc.text(`${label}`, 20, y); doc.text(`: ${val || '-'}`, 75, y); y += 7; };
+            const lhp = item.lhp_data;
+            row('Nomor & Tanggal PPFTZ', `${item.no_ppftz || '-'} tanggal ${item.tgl_ppftz || '-'}`);
+            row('Nomor LHP', lhp.no_lhp);
+            row('Pengusaha / Pemohon', item.nama_pemohon);
+            row('Hari, Tanggal, Jam Pemeriksaan', item.tgl_lhp || '-');
+            row('Lokasi Pemeriksaan', 'Lapangan KPU Bea Cukai Tipe B Batam');
+            y += 3;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Spesifikasi Kendaraan:', 20, y); y += 7;
+            doc.setFont('helvetica', 'normal');
+            row('Merek / Tipe', item.merek_tipe);
+            row('Nomor Polisi', item.nopol);
+            row('Nomor Rangka', item.no_rangka || item.norangka || '-');
+            row('Nomor Mesin', item.no_mesin || item.nomesin || '-');
+            row('Kondisi Fisik', lhp.kondisi_fisik);
+            y += 3;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Hasil Pemeriksaan:', 20, y); y += 7;
+            doc.setFont('helvetica', 'normal');
+            row('Kesesuaian Nomor Rangka', lhp.kesesuaian_rangka === 'SESUAI' ? 'SESUAI dengan dokumen' : 'TIDAK SESUAI dengan dokumen');
+            row('Kesesuaian Nomor Mesin', lhp.kesesuaian_mesin === 'SESUAI' ? 'SESUAI dengan dokumen' : 'TIDAK SESUAI dengan dokumen');
+            row('Dokumentasi Foto', '5 kategori foto wajib (semua sisi, pemilik, no. rangka, no. mesin, muatan) telah direkam');
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Kesimpulan:', 20, y); y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const kesimpulanTxt = (lhp.kesesuaian_rangka === 'SESUAI' && lhp.kesesuaian_mesin === 'SESUAI')
+                ? `Nomor rangka dan nomor mesin kendaraan ${item.nopol} sesuai dengan dokumen (STNK/BPKB). Kendaraan dapat diteruskan ke Pemeriksa Dokumen untuk penetapan SPPB.`
+                : `Ditemukan KETIDAKSESUAIAN pada nomor rangka dan/atau nomor mesin kendaraan ${item.nopol} terhadap dokumen. Direkomendasikan eskalasi lebih lanjut, TIDAK diteruskan untuk penerbitan SPPB.`;
+            const kesimpulan = doc.splitTextToSize(kesimpulanTxt, 170);
+            doc.text(kesimpulan, 20, y);
+            y += kesimpulan.length * 5 + 15;
+            doc.setFontSize(9);
+            doc.text(`Batam, ${item.tgl_lhp || '-'}`, 140, y); y += 6;
+            doc.text('Pejabat Pemeriksa Fisik,', 140, y); y += 20;
+            doc.setFont('helvetica', 'bold');
+            doc.text(`( ${lhp.pemeriksa || '-'} )`, 140, y);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ.', 20, 285);
+            doc.save(`LHP_${item.nopol || item.id}.pdf`);
+        }
+
+        function generateBAPPDF(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item || !window.jspdf || !item.lhp_data) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            _kopSuratPdf(doc);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('BERITA ACARA PEMERIKSAAN FISIK BARANG', 105, 44, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            let y = 54;
+            const row = (label, val) => { doc.text(`${label}`, 20, y); doc.text(`: ${val || '-'}`, 80, y); y += 7; };
+            const lhp = item.lhp_data;
+            row('Nomor & Tanggal PPFTZ', `${item.no_ppftz || '-'} tanggal ${item.tgl_ppftz || '-'}`);
+            row('Pengusaha / Penerima Barang', item.nama_pemohon);
+            row('Lokasi Pemeriksaan', 'Lapangan KPU Bea Cukai Tipe B Batam');
+            row('Tanggal & Waktu Pemeriksaan', item.tgl_lhp || '-');
+            row('Foto', '5 kategori lembar (terlampir)');
+            row('Contoh Barang', 'Tidak ada (kendaraan utuh diperiksa di lokasi)');
+            row('Kendala Pemeriksaan', 'Tidak ada');
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Keterangan:', 20, y); y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const ket = doc.splitTextToSize(`Pemeriksaan fisik dilakukan terhadap 1 (satu) unit kendaraan bermotor ${item.merek_tipe || ''} nomor polisi ${item.nopol || '-'} pada PPFTZ nomor ${item.no_ppftz || '-'}. Kondisi fisik: ${lhp.kondisi_fisik || '-'}. Hasil pemeriksaan selengkapnya dituangkan dalam Laporan Hasil Pemeriksaan Fisik (LHP ${lhp.no_lhp || '-'}).`, 170);
+            doc.text(ket, 20, y);
+            y += ket.length * 5 + 20;
+            doc.setFontSize(9);
+            doc.text('Mengetahui,', 20, y);
+            doc.text(`Batam, ${item.tgl_lhp || '-'}`, 140, y);
+            y += 6;
+            doc.text('Pengusaha / Kuasanya', 20, y);
+            doc.text('Pejabat Pemeriksa Fisik,', 140, y);
+            y += 20;
+            doc.text(`( ${item.nama_pemohon || '-'} )`, 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`( ${lhp.pemeriksa || '-'} )`, 140, y);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ.', 20, 285);
+            doc.save(`BAP_${item.nopol || item.id}.pdf`);
+        }
+
+        function generateSPPBPDF(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item || !window.jspdf || !item.no_sppb) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            _kopSuratPdf(doc);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SURAT PERSETUJUAN PENGELUARAN BARANG (SPPB)', 105, 46, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            let y = 58;
+            const row = (label, val) => { doc.text(`${label}`, 20, y); doc.text(`: ${val || '-'}`, 75, y); y += 7; };
+            row('Nomor SPPB', item.no_sppb);
+            row('Tanggal Terbit', item.tgl_sppb || '-');
+            row('Dasar', `LHP ${item.lhp_data?.no_lhp || '-'}, PPFTZ ${item.no_ppftz || '-'}`);
+            row('Nama Pemohon', item.nama_pemohon);
+            row('Nomor Polisi', item.nopol);
+            row('Merek / Tipe', item.merek_tipe);
+            row('Pelabuhan Tujuan', item.pelabuhan_tujuan);
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Keputusan:', 20, y); y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const dec = doc.splitTextToSize(`Berdasarkan hasil penelitian dokumen dan Laporan Hasil Pemeriksaan Fisik, kendaraan bermotor tersebut di atas DISETUJUI untuk dikeluarkan sementara dari Kawasan Bebas Batam menuju TLDDP. Dokumen ini wajib ditunjukkan ke Petugas Gate Pelabuhan untuk divalidasi (scan QR) sebelum keberangkatan.`, 170);
+            doc.text(dec, 20, y);
+            y += dec.length * 5 + 10;
+
+            if (item.sppb_qr_data_url) {
+                try {
+                    doc.addImage(item.sppb_qr_data_url, 'PNG', 20, y, 35, 35);
+                    doc.setFontSize(7);
+                    doc.text('Scan QR ini di Gate Pelabuhan', 20, y + 39);
+                } catch (e) {}
+            }
+
+            doc.setFontSize(9);
+            doc.text(`Batam, ${item.tgl_sppb || '-'}`, 140, y);
+            y += 6;
+            doc.text('Pejabat Pemeriksa Dokumen (PFPD),', 140, y);
+            y += 25;
+            doc.text('( ___________________ )', 140, y);
+            doc.setFontSize(7);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA/SPPB DJBC.', 20, 285);
+            doc.save(`SPPB_${item.nopol || item.id}.pdf`);
+        }
+
         // Render Panel Aksi Berdasarkan Wewenang Role Petugas
         function renderDrawerRbacActionPanel(item) {
             const actionSec = document.getElementById('sectionPegawaiStatusAction');
@@ -7928,6 +8413,7 @@
             // Jika TIDAK BERHAK atas tahapan ini (dan bukan admin utama)
             if (!isAuthorized) {
                 actionHtml = `
+                    ${buildDokumenCetakHtml(item)}
                     <div class="dash-drawer-section-title" style="color:#B45309;">
                         <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                         Akses Tindakan Dibatasi (RBAC Pabean)
@@ -7946,7 +8432,7 @@
             }
 
             // JIKA PETUGAS BERWENANG: Render Form Aksi Interaktif Sesuai Peran
-            let formFieldsHtml = '';
+            let formFieldsHtml = buildDokumenCetakHtml(item);
 
             if (item.status === 'FRONTDESK_NADINE' || item.status === 'BERKAS_LENGKAP') {
                 // Role: frontdesk, loket, adminutama
@@ -8088,9 +8574,9 @@
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nama Kapal Roro Keberangkatan:</label>
                         <input type="text" id="actionGateKapal" value="KMP Senangin (Roro Batam - Sei Selari)" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; box-sizing:border-box;">
                     </div>
-                    <button type="button" class="landing-btn-submit" onclick="eksekusiAksiGate('${item.id}')" style="background:#059669; padding:10px 14px; font-size:0.84rem;">
-                        ✓ Validasi Pengeluaran Kendaraan (GATE OUT SELESAI) ➔
-                    </button>
+                    <div style="background:#FFFBEB; border:1.5px solid #FCD34D; border-radius:8px; padding:12px; font-size:0.78rem; color:#92400E; line-height:1.5;">
+                        ⚠️ Validasi keberangkatan WAJIB lewat pemindaian QR pada dokumen SPPB fisik kendaraan — tidak bisa dikonfirmasi langsung dari sini. Tutup detail ini lalu klik tombol <strong>"Scan QR SPPB"</strong> di bagian atas dashboard.
+                    </div>
                 `;
             } else if (item.status === 'SELESAI_KELUAR_TLDDP') {
                 formFieldsHtml = `
@@ -8285,32 +8771,6 @@ Nomor SPPB: ${data.no_sppb}
 ⚠️ Nomor simulasi lokal, belum tersambung ke CEISA PPFTZ-01 resmi.
 
 Status diteruskan ke Petugas Gate Pelabuhan.`);
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
-                } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
-                }
-            } catch (e) {
-                alert('Kesalahan jaringan: ' + e.message);
-            }
-        }
-
-        async function eksekusiAksiGate(id) {
-            const kapal = document.getElementById('actionGateKapal').value;
-            if (!confirm(`Validasi Pengeluaran Kendaraan Bermotor untuk agenda ${id} di Gate Pelabuhan?`)) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/gate/validasi-keluar`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, nama_kapal: kapal })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert(`✓ VALIDASI GATE OUT SELESAI!
-
-Kendaraan telah resmi meninggalkan Kawasan Bebas Batam menuju TLDDP via ${data.kapal_roro}.
-
-Pengeluaran KBM Berhasil Dituntaskan.`);
                     await loadPermohonanData();
                     openDrawerDetail(id);
                 } else {
@@ -9066,12 +9526,12 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                     document.getElementById('pemohon_nama').readOnly = true;
                     document.getElementById('pemohon_nama').classList.add('filled');
                 }
-                if (user.phone && document.getElementById('pemohon_telepon')) {
+                if (user.phone && document.getElementById('pemohon_telp')) {
                     let ph = user.phone;
                     if (ph.startsWith('62')) ph = '0' + ph.substring(2);
-                    document.getElementById('pemohon_telepon').value = ph;
-                    document.getElementById('pemohon_telepon').readOnly = true;
-                    document.getElementById('pemohon_telepon').classList.add('filled');
+                    document.getElementById('pemohon_telp').value = ph;
+                    document.getElementById('pemohon_telp').readOnly = true;
+                    document.getElementById('pemohon_telp').classList.add('filled');
                 }
 
                 // Cek apakah pemohon ini sudah pernah mengajukan permohonan
