@@ -1,10 +1,24 @@
 import os
+import shutil
 import sqlite3
 import json
 import logging
 from datetime import datetime, timedelta
 
-DATABASE_PATH = os.environ.get('DATABASE_PATH', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kbm_batam.db'))
+_APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_PATH = os.environ.get('DATABASE_PATH', os.path.join(_APP_DIR, 'kbm_batam.db'))
+
+# Migrasi sekali jalan: salin kbm_batam.db lama dari folder repo ke Persistent Disk
+# (DATABASE_PATH custom) bila disk masih kosong, agar data tidak hilang saat migrasi.
+if os.path.dirname(DATABASE_PATH) != _APP_DIR:
+    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+    _legacy_db = os.path.join(_APP_DIR, 'kbm_batam.db')
+    if os.path.exists(_legacy_db) and not os.path.exists(DATABASE_PATH):
+        try:
+            shutil.copy2(_legacy_db, DATABASE_PATH)
+            print(f"[+] Migrasi database lama -> Persistent Disk: {DATABASE_PATH}")
+        except Exception as e:
+            print("[!] Gagal migrasi kbm_batam.db ke DATABASE_PATH:", e)
 
 logger = logging.getLogger("KBM_DB")
 

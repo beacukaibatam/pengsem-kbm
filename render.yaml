@@ -4,15 +4,21 @@ services:
     runtime: python
     buildCommand: "pip install -r requirements.txt"
     startCommand: "python3 server.py"
-    plan: free
+    plan: starter
     region: singapore
+    disk:
+      name: kbm-data-disk
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: PORT
         value: 10000
       - key: ENVIRONMENT
         value: production
       - key: DATABASE_PATH
-        value: kbm_batam.db
+        value: /var/data/kbm_batam.db
+      - key: DATA_DIR
+        value: /var/data
       - key: OCR_MAX_WORKERS
         value: 4
       - key: CORS_ORIGINS

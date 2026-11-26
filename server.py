@@ -7,6 +7,7 @@ import http.server
 import socketserver
 import os
 import sys
+import shutil
 import json
 import base64
 import io
@@ -849,8 +850,33 @@ class ThreadingHTTPServer(socketserver.ThreadingTCPServer):
 
 
 # ================= DATABASE PENGGUNA, OTP & ROLE-BASED ACCESS =================
-DB_USERS_PATH = os.path.join(os.path.dirname(__file__), 'db_users.json')
-DB_OTP_PATH = os.path.join(os.path.dirname(__file__), 'db_otp.json')
+# DATA_DIR menunjuk ke Persistent Disk di cloud (mis. Render) bila di-set; di lokal
+# default-nya tetap folder proyek ini seperti sebelumnya. Ini mencegah data pengguna
+# (PII) ikut ter-commit ke git karena wajib disimpan di repo demi bertahan antar deploy.
+_APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.environ.get('DATA_DIR', _APP_DIR)
+os.makedirs(DATA_DIR, exist_ok=True)
+
+def _migrate_legacy_data_file_once(filename):
+    """Migrasi sekali jalan: salin file data lama dari folder repo ke Persistent Disk (DATA_DIR)
+    bila disk masih kosong, supaya data pemohon/user yang sudah ada tidak hilang saat pindah
+    ke DATA_DIR terpisah (mis. saat pertama kali mengaktifkan Render Persistent Disk)."""
+    if DATA_DIR == _APP_DIR:
+        return
+    legacy_path = os.path.join(_APP_DIR, filename)
+    new_path = os.path.join(DATA_DIR, filename)
+    if os.path.exists(legacy_path) and not os.path.exists(new_path):
+        try:
+            shutil.copy2(legacy_path, new_path)
+            print(f"[+] Migrasi data lama -> Persistent Disk: {filename}")
+        except Exception as e:
+            print(f"[!] Gagal migrasi {filename} ke DATA_DIR:", e)
+
+for _legacy_file in ('db_users.json', 'db_otp.json', 'db_permohonan.json', 'db_chat.json', 'db_nadine_config.json'):
+    _migrate_legacy_data_file_once(_legacy_file)
+
+DB_USERS_PATH = os.path.join(DATA_DIR, 'db_users.json')
+DB_OTP_PATH = os.path.join(DATA_DIR, 'db_otp.json')
 AUTH_SESSIONS = {}
 
 def load_db_users():
@@ -984,8 +1010,8 @@ def get_session_from_request(handler):
 
 
 # ================= DATABASE PERMOHONAN & WHATSAPP BOT ENGINE =================
-DB_PERMOHONAN_PATH = os.path.join(os.path.dirname(__file__), 'db_permohonan.json')
-DB_CHAT_PATH = os.path.join(os.path.dirname(__file__), 'db_chat.json')
+DB_PERMOHONAN_PATH = os.path.join(DATA_DIR, 'db_permohonan.json')
+DB_CHAT_PATH = os.path.join(DATA_DIR, 'db_chat.json')
 
 def load_db_chat():
     if os.path.exists(DB_CHAT_PATH):
@@ -1174,7 +1200,7 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
 
 
 # ================= NADINE KEMENKEU INTEGRATION ENGINE =================
-DB_NADINE_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db_nadine_config.json')
+DB_NADINE_CONFIG_PATH = os.path.join(DATA_DIR, 'db_nadine_config.json')
 
 def load_db_nadine_config():
     cfg = {
