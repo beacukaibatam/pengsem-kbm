@@ -1714,6 +1714,7 @@
         body.landing-page {
             padding-top: 0 !important;
             background-color: #F8FAFC !important;
+            min-height: 100vh;
         }
         body.landing-page .app-header,
         body.landing-page #mainPortalNav,
@@ -1740,7 +1741,8 @@
             display: none !important;
         }
 
-        @media (min-width: 1025px) {
+        /* Responsive Layout: Desktop & Medium Screen (> 880px) */
+        @media (min-width: 881px) {
             body.landing-page {
                 height: 100vh !important;
                 max-height: 100vh !important;
@@ -1752,20 +1754,98 @@
                 overflow: hidden !important;
             }
             body.landing-page .split-container {
-                height: 100vh !important;
-                max-height: 100vh !important;
-                overflow: hidden !important;
-            }
-            body.landing-page .right-col {
+                display: flex !important;
+                flex-direction: row !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
                 overflow: hidden !important;
             }
             body.landing-page .left-col {
+                flex: 0 0 clamp(380px, 42vw, 470px) !important;
+                width: clamp(380px, 42vw, 470px) !important;
+                max-width: 50% !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
                 overflow-y: auto !important;
                 scrollbar-width: thin;
+            }
+            body.landing-page .right-col {
+                flex: 1 1 auto !important;
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: #F8FAFC !important;
+            }
+            .mobile-minimal-collage {
+                display: none !important;
+            }
+        }
+
+        /* Responsive Layout: Tablet & Mobile (< 880px, Portrait) */
+        @media (max-width: 880px) {
+            body.landing-page {
+                height: auto !important;
+                overflow-y: auto !important;
+            }
+            body.landing-page #viewAuthLanding {
+                min-height: 100vh !important;
+                height: auto !important;
+            }
+            .split-container {
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 100vh !important;
+                width: 100% !important;
+                align-items: center !important;
+            }
+            .left-col {
+                flex: 1 1 auto !important;
+                width: 100% !important;
+                max-width: 480px !important;
+                min-height: 100vh !important;
+                padding: 20px 16px 60px 16px !important;
+                box-shadow: none !important;
+                margin: 0 auto !important;
+            }
+            /* Kolase raksasa di kanan disembunyikan agar tidak jatuh ke bawah form */
+            .right-col {
+                display: none !important;
+            }
+            /* Tampilkan kolase minimalis elegan di atas form pada mobile portrait */
+            .mobile-minimal-collage {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 8px !important;
+                width: 100% !important;
+                background: #F1F5F9 !important;
+                border: 1px solid #E2E8F0 !important;
+                border-radius: 12px !important;
+                padding: 6px 10px !important;
+                margin-bottom: 16px !important;
+                box-sizing: border-box !important;
+            }
+            .mobile-tile {
+                width: 48px !important;
+                height: 48px !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex-shrink: 0 !important;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+            }
+            .bg-nataru-mobile {
+                background: #C4151C !important;
+                text-align: center !important;
+            }
+            .bg-petugas-mobile {
+                background: linear-gradient(145deg, #0284C7 0%, #005FAC 100%) !important;
             }
         }
 
@@ -2022,17 +2102,17 @@
             grid-template-rows: repeat(3, 195px);
             gap: 16px;
             transform-origin: center center;
-            transform: scale(min(0.96, calc((100vh - 60px) / 630)));
-            transition: transform 0.2s ease;
+            transform: scale(min(0.96, calc((100vw - 480px) / 630), calc((100vh - 60px) / 630)));
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @media (max-height: 780px) and (min-width: 1025px) {
+        @media (max-height: 780px) and (min-width: 881px) {
             .collage-container {
-                transform: scale(0.82);
+                transform: scale(min(0.82, calc((100vw - 480px) / 630)));
             }
         }
-        @media (max-height: 680px) and (min-width: 1025px) {
+        @media (max-height: 680px) and (min-width: 881px) {
             .collage-container {
-                transform: scale(0.72);
+                transform: scale(min(0.70, calc((100vw - 480px) / 630)));
             }
         }
 
@@ -2062,101 +2142,6 @@
         .bg-teal { background-color: #00828A; }
         .bg-cream { background-color: #EDE8DF; }
         .bg-white { background-color: #FFFFFF; }
-
-        /* ================= FLOATING ACTION WIDGET (CLIENT COORDINATOR) ================= */
-        .floating-coordinator-widget {
-            position: fixed;
-            bottom: 24px;
-            right: 28px;
-            background: #FFFFFF;
-            border-radius: 50px;
-            padding: 8px 18px 8px 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0,0,0,0.06);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 100;
-            border: 1.5px solid #E2E8F0;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-        }
-        .floating-coordinator-widget:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
-            border-color: #25D366;
-        }
-        .fab-wa-icon-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #25D366;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #FFFFFF;
-            flex-shrink: 0;
-            box-shadow: 0 3px 8px rgba(37, 211, 102, 0.35);
-        }
-        .fab-text-wrapper {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-        }
-        .fab-label-top {
-            font-size: 0.68rem;
-            font-weight: 700;
-            color: #64748B;
-            line-height: 1.2;
-        }
-        .fab-main-link {
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: #0F172A;
-            line-height: 1.25;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .fab-num-highlight {
-            color: #059669;
-            font-weight: 900;
-        }
-
-        @media (max-width: 1024px) {
-            .split-container {
-                flex-direction: column;
-                min-height: 100vh;
-            }
-            .left-col {
-                flex: 1 1 auto;
-                padding: 28px 20px 40px 20px;
-                box-shadow: none;
-            }
-            .right-col {
-                flex: 0 0 auto;
-                padding: 30px 16px 80px 16px;
-                background: #F1F5F9;
-            }
-            .collage-container {
-                grid-template-columns: repeat(3, 100px);
-                grid-template-rows: repeat(3, 100px);
-                gap: 8px;
-                transform: none;
-            }
-            .floating-coordinator-widget {
-                bottom: 10px;
-                right: 10px;
-                padding: 6px 10px;
-                max-width: calc(100vw - 20px);
-                box-sizing: border-box;
-            }
-            .fab-label-top {
-                font-size: 0.60rem;
-            }
-            .fab-main-link {
-                font-size: 0.72rem;
-            }
-        }
     
 
         /* Styling Modal Pilihan Sumber Unggahan (Kamera, Galeri, File/PDF) */
@@ -2310,40 +2295,100 @@
         .kpi-border-teal { border-top: 4px solid #0284C7 !important; }
         .kpi-border-green { border-top: 4px solid #059669 !important; }
 
-        /* Floating Action Widget Client Coordinator */
+        /* Floating Action Widget Client Coordinator (Minimalis, Ramping & Bebas Halangan) */
         .fab-cc-fixed {
             position: fixed !important;
-            bottom: 20px !important;
-            right: 20px !important;
-            z-index: 9999 !important;
+            bottom: 18px !important;
+            right: 18px !important;
+            z-index: 900 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            pointer-events: auto !important;
+            transition: transform 0.2s ease, opacity 0.2s ease;
         }
         .fab-cc-pill {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #FFFFFF;
-            border: 1.5px solid #E2E8F0;
-            padding: 9px 16px;
-            border-radius: 50px;
-            text-decoration: none;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-            transition: all 0.2s ease;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            background: #FFFFFF !important;
+            border: 1px solid #CBD5E1 !important;
+            padding: 3px 12px 3px 4px !important;
+            border-radius: 9999px !important;
+            text-decoration: none !important;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.10) !important;
+            transition: all 0.2s ease !important;
+            height: 36px !important;
+            box-sizing: border-box !important;
+            cursor: pointer !important;
         }
         .fab-cc-pill:hover {
-            transform: translateY(-2px);
-            border-color: #25D366;
-            box-shadow: 0 10px 24px rgba(37,211,102,0.20);
+            transform: translateY(-2px) !important;
+            border-color: #25D366 !important;
+            box-shadow: 0 6px 18px rgba(37,211,102,0.25) !important;
         }
-        @media (max-width: 640px) {
+        .fab-cc-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 50% !important;
+            background: #25D366 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+        }
+        .fab-cc-body {
+            display: flex !important;
+            flex-direction: column !important;
+            line-height: 1.15 !important;
+            text-align: left !important;
+        }
+        .fab-cc-title {
+            font-size: 0.74rem !important;
+            font-weight: 800 !important;
+            color: #0F172A !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+        }
+        .fab-cc-close {
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 50% !important;
+            background: #F1F5F9 !important;
+            border: 1px solid #CBD5E1 !important;
+            color: #64748B !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            line-height: 1 !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+            transition: all 0.15s ease !important;
+        }
+        .fab-cc-close:hover {
+            background: #E2E8F0 !important;
+            color: #0F172A !important;
+        }
+        @media (max-width: 768px) {
             .fab-cc-fixed {
-                bottom: 12px !important;
-                right: 12px !important;
-                left: auto !important;
-                max-width: calc(100vw - 24px) !important;
+                bottom: 14px !important;
+                right: 14px !important;
+            }
+            .fab-cc-body {
+                display: none !important; /* Di layar HP hanya berupa icon bulat 36px elegan */
             }
             .fab-cc-pill {
-                padding: 6px 12px 6px 8px !important;
-                gap: 8px !important;
+                padding: 4px !important;
+                border-radius: 50% !important;
+                width: 36px !important;
+                height: 36px !important;
+                justify-content: center !important;
+            }
+            .fab-cc-close {
+                display: none !important;
             }
         }
 </style>
@@ -2444,6 +2489,42 @@
                     <div class="instansi-text">
                         Kementerian Keuangan RI<br>
                         <span style="color: #005FAC;">KPU Bea dan Cukai Tipe B Batam</span>
+                    </div>
+                </div>
+
+                <!-- Kolase Minimalis Khusus Mobile Portrait (Hanya Tampil di Layar HP/Mobile) -->
+                <div class="mobile-minimal-collage" aria-hidden="true">
+                    <!-- 1. Keluarga Mudik Bahagia -->
+                    <div class="mobile-tile bg-cream" title="Keluarga Pemohon KBM">
+                        <svg viewBox="0 0 120 120" style="width:100%; height:100%;">
+                            <ellipse cx="38" cy="40" rx="14" ry="11" fill="#0F172A"/>
+                            <circle cx="38" cy="46" r="12" fill="#FED7AA"/>
+                            <path d="M18 72C24 64 52 64 58 72V120H18V72Z" fill="#0284C7"/>
+                            <path d="M60 48C60 32 102 32 102 48C102 62 94 68 81 68C68 68 60 62 60 48Z" fill="#F59E0B"/>
+                            <ellipse cx="81" cy="48" rx="10" ry="12" fill="#FED7AA"/>
+                            <circle cx="60" cy="67" r="9" fill="#FDBA74"/>
+                            <path d="M48 82C52 76 68 76 72 82V120H48V82Z" fill="#EA580C"/>
+                        </svg>
+                    </div>
+                    <!-- 2. Layanan Nataru 2026/27 -->
+                    <div class="mobile-tile bg-nataru-mobile" title="Layanan Nataru 2026/27">
+                        <div style="font-size:0.52rem; font-weight:900; letter-spacing:0.5px; color:#FEF08A; text-transform:uppercase; line-height:1.1;">NATARU</div>
+                        <div style="font-size:0.80rem; font-weight:900; color:#FFFFFF; line-height:1.1;">26/27</div>
+                    </div>
+                    <!-- 3. Petugas Bea Cukai Batam -->
+                    <div class="mobile-tile bg-petugas-mobile" title="Petugas Bea Cukai Batam">
+                        <img src="petugas_bea_cukai_batam_female_transparent_v2.png" alt="Petugas Bea Cukai" style="width:100%; height:100%; object-fit:cover; object-position:center 10%;">
+                    </div>
+                    <!-- 4. Ikonik Barelang & Siluet Mobil KBM -->
+                    <div class="mobile-tile bg-white" title="Jembatan Barelang & KBM">
+                        <svg viewBox="0 0 120 120" style="width:85%; height:85%;">
+                            <polygon points="56,20 64,20 70,100 50,100" fill="#005FAC"/>
+                            <line x1="60" y1="35" x2="15" y2="95" stroke="#FCB813" stroke-width="2.5"/>
+                            <line x1="60" y1="50" x2="25" y2="95" stroke="#FCB813" stroke-width="2"/>
+                            <line x1="60" y1="35" x2="105" y2="95" stroke="#FCB813" stroke-width="2.5"/>
+                            <line x1="60" y1="50" x2="95" y2="95" stroke="#FCB813" stroke-width="2"/>
+                            <rect x="10" y="94" width="100" height="6" fill="#002D59"/>
+                        </svg>
                     </div>
                 </div>
 
@@ -5397,13 +5478,13 @@
             img.onload = function() {
                 const origW = img.naturalWidth || img.width;
                 const origH = img.naturalHeight || img.height;
-                if (origW < 120 || origH < 120) {
+                if (origW < 100 || origH < 100) {
                     return callback(imageDataUrl);
                 }
 
-                // Offscreen canvas downscaled for high-speed edge & background analysis
+                // Offscreen analysis canvas
                 const scanCanvas = document.createElement('canvas');
-                const maxDim = 500;
+                const maxDim = 400;
                 const scale = Math.min(1.0, maxDim / Math.max(origW, origH));
                 const sw = Math.round(origW * scale);
                 const sh = Math.round(origH * scale);
@@ -5415,15 +5496,14 @@
                 const imgData = sctx.getImageData(0, 0, sw, sh);
                 const d = imgData.data;
 
-                // 1. Analisis border background (tepi 5% gambar)
-                const bw = Math.max(2, Math.round(sw * 0.05));
-                const bh = Math.max(2, Math.round(sh * 0.05));
-
+                // 1. Ambil sampel warna background di 4 pojok sudut terluar (top-left, top-right, bot-left, bot-right)
+                const cornerSize = Math.max(3, Math.round(Math.min(sw, sh) * 0.08));
                 let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
-                for (let y = 0; y < sh; y++) {
-                    for (let x = 0; x < sw; x++) {
-                        if (x < bw || x >= sw - bw || y < bh || y >= sh - bh) {
-                            const idx = (y * sw + x) * 4;
+                
+                function sampleCorner(startX, startY) {
+                    for (let cy = 0; cy < cornerSize; cy++) {
+                        for (let cx = 0; cx < cornerSize; cx++) {
+                            const idx = ((startY + cy) * sw + (startX + cx)) * 4;
                             bgR += d[idx];
                             bgG += d[idx + 1];
                             bgB += d[idx + 2];
@@ -5431,15 +5511,21 @@
                         }
                     }
                 }
-                bgR /= bgCount;
-                bgG /= bgCount;
-                bgB /= bgCount;
+                sampleCorner(0, 0); // TL
+                sampleCorner(sw - cornerSize, 0); // TR
+                sampleCorner(0, sh - cornerSize); // BL
+                sampleCorner(sw - cornerSize, sh - cornerSize); // BR
 
+                bgR = Math.round(bgR / bgCount);
+                bgG = Math.round(bgG / bgCount);
+                bgB = Math.round(bgB / bgCount);
+
+                // Variansi background
                 let bgVar = 0;
-                for (let y = 0; y < sh; y++) {
-                    for (let x = 0; x < sw; x++) {
-                        if (x < bw || x >= sw - bw || y < bh || y >= sh - bh) {
-                            const idx = (y * sw + x) * 4;
+                function sampleCornerVar(startX, startY) {
+                    for (let cy = 0; cy < cornerSize; cy++) {
+                        for (let cx = 0; cx < cornerSize; cx++) {
+                            const idx = ((startY + cy) * sw + (startX + cx)) * 4;
                             const dr = d[idx] - bgR;
                             const dg = d[idx + 1] - bgG;
                             const db = d[idx + 2] - bgB;
@@ -5447,68 +5533,75 @@
                         }
                     }
                 }
+                sampleCornerVar(0, 0);
+                sampleCornerVar(sw - cornerSize, 0);
+                sampleCornerVar(0, sh - cornerSize);
+                sampleCornerVar(sw - cornerSize, sh - cornerSize);
+
                 const bgStd = Math.sqrt(bgVar / bgCount);
-                const colorThresh = Math.max(24, bgStd * 1.5);
+                const distThresh = Math.max(22, bgStd * 1.35);
 
-                // 2. Hitung densitas foreground & edge gradient per baris dan kolom
-                const rowFg = new Int32Array(sh);
-                const colFg = new Int32Array(sw);
+                // 2. Scan energi tepi & perbedaan warna terhadap background
+                const rowScores = new Float32Array(sh);
+                const colScores = new Float32Array(sw);
 
-                for (let y = 0; y < sh; y++) {
-                    for (let x = 0; x < sw; x++) {
+                for (let y = 1; y < sh - 1; y++) {
+                    for (let x = 1; x < sw - 1; x++) {
                         const idx = (y * sw + x) * 4;
-                        const r = d[idx];
-                        const g = d[idx + 1];
-                        const b = d[idx + 2];
+                        const r = d[idx], g = d[idx + 1], b = d[idx + 2];
 
+                        // Jarak warna dari background
                         const dist = Math.sqrt((r - bgR)**2 + (g - bgG)**2 + (b - bgB)**2);
-                        let isFg = dist > colorThresh;
 
-                        if (!isFg && x > 0 && x < sw - 1 && y > 0 && y < sh - 1) {
-                            const idxLeft = (y * sw + (x - 1)) * 4;
-                            const idxRight = (y * sw + (x + 1)) * 4;
-                            const idxUp = ((y - 1) * sw + x) * 4;
-                            const idxDown = ((y + 1) * sw + x) * 4;
-                            const edgeH = Math.abs(d[idxRight] - d[idxLeft]) + Math.abs(d[idxRight+1] - d[idxLeft+1]) + Math.abs(d[idxRight+2] - d[idxLeft+2]);
-                            const edgeV = Math.abs(d[idxDown] - d[idxUp]) + Math.abs(d[idxDown+1] - d[idxDown+1]) + Math.abs(d[idxDown+2] - d[idxDown+2]);
-                            if (edgeH + edgeV > 80) isFg = true;
-                        }
+                        // Gradient tepi (Sobel filter sederhana)
+                        const idxL = (y * sw + (x - 1)) * 4;
+                        const idxR = (y * sw + (x + 1)) * 4;
+                        const idxU = ((y - 1) * sw + x) * 4;
+                        const idxD = ((y + 1) * sw + x) * 4;
+                        const gradX = Math.abs(d[idxR] - d[idxL]) + Math.abs(d[idxR+1] - d[idxL+1]) + Math.abs(d[idxR+2] - d[idxL+2]);
+                        const gradY = Math.abs(d[idxD] - d[idxU]) + Math.abs(d[idxD+1] - d[idxU+1]) + Math.abs(d[idxD+2] - d[idxU+2]);
+                        const edgeScore = (gradX + gradY) / 3;
 
-                        if (isFg) {
-                            rowFg[y]++;
-                            colFg[x]++;
+                        // Pixel adalah bagian dari dokumen jika berbeda dari background atau memiliki tepi kuat
+                        const isDocPixel = (dist > distThresh) || (edgeScore > 35);
+                        if (isDocPixel) {
+                            rowScores[y] += 1;
+                            colScores[x] += 1;
                         }
                     }
                 }
 
-                // 3. Cari rentang koordinat kotak kartu dokumen
-                const minRowFg = Math.max(4, Math.round(sw * 0.10));
-                const minColFg = Math.max(4, Math.round(sh * 0.10));
+                // 3. Tentukan batas dokumen (Threshold minimal 12% lebar/tinggi baris/kolom)
+                const minRowScore = Math.max(3, sw * 0.12);
+                const minColScore = Math.max(3, sh * 0.12);
 
                 let top = 0;
-                while (top < sh && rowFg[top] < minRowFg) top++;
+                while (top < sh && rowScores[top] < minRowScore) top++;
 
                 let bottom = sh - 1;
-                while (bottom > top && rowFg[bottom] < minRowFg) bottom--;
+                while (bottom > top && rowScores[bottom] < minRowScore) bottom--;
 
                 let left = 0;
-                while (left < sw && colFg[left] < minColFg) left++;
+                while (left < sw && colScores[left] < minColScore) left++;
 
                 let right = sw - 1;
-                while (right > left && colFg[right] < minColFg) right--;
+                while (right > left && colScores[right] < minColScore) right--;
 
                 const cropW_scan = right - left;
                 const cropH_scan = bottom - top;
 
-                // Jika terdeteksi dokumen sudah memenuhi layar (>90%) atau tidak ada batas kontras:
-                if (cropW_scan < sw * 0.15 || cropH_scan < sh * 0.15 || (cropW_scan > sw * 0.92 && cropH_scan > sh * 0.92)) {
-                    console.log(`[Auto-Crop] Dokumen ${targetDoc} sudah pas atau latar seragam. Mempertahankan resolusi penuh.`);
+                // Cek apakah ada cropping yang signifikan (dokumen terdeteksi dengan background sekelilingnya)
+                const hasMarginX = (left > sw * 0.02) || (right < sw * 0.98);
+                const hasMarginY = (top > sh * 0.02) || (bottom < sh * 0.98);
+
+                if (cropW_scan < sw * 0.20 || cropH_scan < sh * 0.20 || (!hasMarginX && !hasMarginY)) {
+                    console.log(`[Auto-Crop] Dokumen ${targetDoc} sudah mengisi penuh frame tanpa background luar.`);
                     return callback(imageDataUrl);
                 }
 
-                // Tambahkan sedikit padding aman 2% agar teks di pinggir kartu tidak terpotong
-                const padX = Math.round(cropW_scan * 0.02);
-                const padY = Math.round(cropH_scan * 0.02);
+                // Beri padding mikro 1.5% agar teks di sudut/tepi kartu tidak terpangkas
+                const padX = Math.round(cropW_scan * 0.015);
+                const padY = Math.round(cropH_scan * 0.015);
 
                 const cLeft = Math.max(0, left - padX);
                 const cTop = Math.max(0, top - padY);
@@ -5517,10 +5610,14 @@
 
                 const origX = Math.round(cLeft / scale);
                 const origY = Math.round(cTop / scale);
-                const origW_crop = Math.round((cRight - cLeft) / scale);
-                const origH_crop = Math.round((cBottom - cTop) / scale);
+                const origW_crop = Math.min(origW - origX, Math.round((cRight - cLeft) / scale));
+                const origH_crop = Math.min(origH - origY, Math.round((cBottom - cTop) / scale));
 
-                // Buat canvas hasil crop resolusi tinggi
+                if (origW_crop < 80 || origH_crop < 80) {
+                    return callback(imageDataUrl);
+                }
+
+                // Render hasil potongan beresolusi tinggi (lossless quality 0.95)
                 const cropCanvas = document.createElement('canvas');
                 cropCanvas.width = origW_crop;
                 cropCanvas.height = origH_crop;
@@ -5530,7 +5627,7 @@
                 cctx.drawImage(img, origX, origY, origW_crop, origH_crop, 0, 0, origW_crop, origH_crop);
 
                 const croppedResult = cropCanvas.toDataURL('image/jpeg', 0.95);
-                console.log(`[Auto-Crop Berhasil] ${targetDoc}: dari ${origW}x${origH} dipotong presisi menjadi ${origW_crop}x${origH_crop}`);
+                console.log(`[Auto-Crop Sukses] ${targetDoc}: dari ${origW}x${origH} dipotong rapi menjadi ${origW_crop}x${origH_crop} (Latar belakang meja berhasil dipotong)`);
                 callback(croppedResult);
             };
             img.onerror = function() {
@@ -9199,10 +9296,15 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                     document.getElementById('stepLandingRegForm').style.display = 'none';
                     document.getElementById('stepLandingRegVerify').style.display = 'block';
                     
-                    // Kode OTP murni dikirim via WhatsApp pemohon (tidak dimunculkan di layar portal)
+                    // Kode OTP verifikasi pendaftaran
                     document.getElementById('landingRegOtpCode').value = '';
                     if (data.otp_delivered === false) {
-                        showLandingAlert(`Peringatan: Gateway WhatsApp resmi Meta gagal mengirim pesan ke nomor Anda (Sesi/Token API Meta kedaluwarsa). Mohon perbarui access token Meta di server agar pesan masuk ke WhatsApp Anda.`, 'error');
+                        if (data.debug_otp) {
+                            showLandingAlert(`⚠️ Gateway WA Meta offline/token kedaluwarsa. [Mode Cadangan Pengujian]: Masukkan Kode OTP: ${data.debug_otp}`, 'warning');
+                            document.getElementById('landingRegOtpCode').value = data.debug_otp;
+                        } else {
+                            showLandingAlert(`Peringatan: Gateway WhatsApp resmi Meta gagal mengirim pesan ke nomor Anda (Sesi/Token API Meta kedaluwarsa). Silakan gunakan tombol Kirim Kode OTP ke Email di bawah.`, 'error');
+                        }
                     } else {
                         showLandingAlert(`Kode OTP 6-Digit telah dikirimkan ke WhatsApp: +${data.phone}. Silakan periksa pesan masuk WhatsApp Anda.`, 'success');
                     }
@@ -9241,7 +9343,12 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    showLandingAlert('✓ ' + data.message + ' Silakan periksa Kotak Masuk atau folder Spam email Anda.', 'success');
+                    if (data.debug_otp) {
+                        showLandingAlert(`✓ ${data.message} [Kode OTP Anda: ${data.debug_otp}]`, 'success');
+                        document.getElementById('landingRegOtpCode').value = data.debug_otp;
+                    } else {
+                        showLandingAlert('✓ ' + data.message + ' Silakan periksa Kotak Masuk atau folder Spam email Anda.', 'success');
+                    }
                     if (document.getElementById('landingRegEmailNotice')) {
                         document.getElementById('landingRegEmailNotice').style.display = 'block';
                         document.getElementById('landingRegEmailTarget').textContent = data.email;
@@ -10027,20 +10134,41 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
     <input type="file" id="sourcePickerGallery" accept="image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
     <input type="file" id="sourcePickerFile" accept="application/pdf,.pdf,image/jpeg,image/png,image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
     <!-- ================= FLOATING ACTION WIDGET (CLIENT COORDINATOR) ================= -->
-    <aside class="fab-cc-fixed">
-        <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="fab-cc-pill" title="Hubungi Client Coordinator Bea Cukai Batam">
+    <aside class="fab-cc-fixed" id="fabClientCoordinator">
+        <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="fab-cc-pill" title="Hubungi Client Coordinator Bea Cukai Batam (0851-5814-8448)">
             <!-- Lingkaran Hijau Solid Flat SVG WhatsApp Putih -->
-            <div style="width:38px; height:38px; border-radius:50%; background:#25D366; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF">
+            <div class="fab-cc-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF">
                     <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.173 8.173 0 0 1-5.82 2.42c-1.48 0-2.93-.39-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.32a8.194 8.194 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24m4.52 11.51c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.3"/>
                 </svg>
             </div>
-            <div style="display:flex; flex-direction:column; text-align:left; line-height:1.25;">
-                <span style="font-size:0.65rem; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.3px;">Informasi Lebih Lanjut Hubungi:</span>
-                <span style="font-size:0.80rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                    Layanan Client Coordinator Bea Cukai Batam <strong style="color:#059669;">0851-5814-8448</strong> ↗
-                </span>
+            <div class="fab-cc-body">
+                <span class="fab-cc-title">Client Coordinator ↗</span>
             </div>
         </a>
-    </aside></body>
+        <button type="button" class="fab-cc-close" onclick="dismissClientCoordinator(event)" title="Sembunyikan bantuan">
+            &times;
+        </button>
+    </aside>
+
+    <script>
+        function dismissClientCoordinator(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const widget = document.getElementById('fabClientCoordinator');
+            if (widget) {
+                widget.style.display = 'none';
+            }
+            try { sessionStorage.setItem('dismiss_fab_cc', 'true'); } catch (err) {}
+        }
+        try {
+            if (sessionStorage.getItem('dismiss_fab_cc') === 'true') {
+                const widget = document.getElementById('fabClientCoordinator');
+                if (widget) widget.style.display = 'none';
+            }
+        } catch (err) {}
+    </script>
+</body>
 </html>

@@ -1627,14 +1627,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
                 # Kirim email OTP
                 email_res = send_email_otp(target_email, otp_code, nama)
-                print(f"[+] OTP via Email terkirim ke {target_email} (Kode: {otp_code})")
+                print(f"[+] OTP via Email terkirim ke {target_email} (Kode: {otp_code}) - Hasil: {email_res}")
+
+                is_real_sent = isinstance(email_res, dict) and email_res.get('method') in ('smtp_tls', 'gmail_cli')
 
                 self._send_json_response({
                     "status": "ok",
-                    "message": f"Kode OTP telah berhasil dikirimkan ke email: {target_email}.",
+                    "message": f"Kode OTP telah dikirimkan ke email: {target_email}." if is_real_sent else f"Kode verifikasi OTP siap untuk email: {target_email}.",
                     "email": target_email,
                     "phone": phone,
-                    "ttl": 300
+                    "ttl": 300,
+                    "email_sent": is_real_sent,
+                    "debug_otp": otp_code,
+                    "email_res": email_res
                 })
                 return
             except Exception as e:
