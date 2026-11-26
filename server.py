@@ -1306,7 +1306,6 @@ def send_email_registration_success(to_email, nama="Pemohon KBM Batam", phone=""
         f"0851-5814-8448 (Client Coordinator KPU Bea Cukai Batam)\n"
         f"https://wa.me/6285158148448\n\n"
         f"Terima kasih atas kepatuhan Anda terhadap ketentuan kepabeanan.\n\n"
-        f"Seksi Fasilitas Pabean dan Cukai\n"
         f"KPU Bea dan Cukai Tipe B Batam"
     )
 
