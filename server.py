@@ -900,6 +900,12 @@ def save_db_users(data):
             json.dump(data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print('[!] Error saving db_users:', e)
+
+def _strip_password(user_dict):
+    """Salinan dict user tanpa field 'password' — dipakai setiap kali data user dikirim ke client (JSON response)."""
+    if not isinstance(user_dict, dict):
+        return user_dict
+    return {k: v for k, v in user_dict.items() if k != 'password'}
     
     # Sinkronisasi ke SQLite database
     try:
@@ -1442,7 +1448,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'authenticated': True,
                     'token': token,
                     'role': sess.get('role'),
-                    'user': sess.get('user')
+                    'user': _strip_password(sess.get('user'))
                 })
             else:
                 self._send_json_response({
@@ -1561,17 +1567,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         matched_role = p_role
                         break
 
-                # 2. Akun Default Dinas (jika belum tersimpan di db_users.json)
-                if not matched_user and (clean_user == '199501012020011001' or clean_user_lower == 'petugas') and password == 'REDACTED_PASSWORD':
-                    matched_user = {
-                        "nip": "199501012020011001",
-                        "nama": "Petugas Pelayanan & Fasilitas Pabean",
-                        "jabatan": "Pelaksana Pemeriksa / Operator CEISA",
-                        "role": "pegawai"
-                    }
-                    matched_role = "pegawai"
-
-                # 3. Cek Pemohon Terdaftar (Eksternal / Masyarakat)
+                # 2. Cek Pemohon Terdaftar (Eksternal / Masyarakat)
                 if not matched_user:
                     for u in users.get('pemohon', []):
                         u_nik = str(u.get('nik', '')).strip().replace(' ', '').replace('-', '')
@@ -1588,7 +1584,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             phone_variants.append('62' + u_phone[1:])
 
                         if (clean_user == u_nik or clean_user in phone_variants or clean_user_lower == u_id or clean_user_lower == u_user or clean_user_lower == u_email) and u_pwd == password:
-                            matched_user = u
+                            matched_user = _strip_password(u)
                             matched_role = "pemohon"
                             break
 
@@ -1612,7 +1608,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "role": matched_role,
                     "redirect": "dashboard" if matched_role == "pegawai" else "formulir",
                     "user": matched_user
-                }, cookie_header=f"session_token={token}; Path=/; Max-Age=86400; SameSite=None; Secure")
+                }, cookie_header=f"session_token={token}; Path=/; Max-Age=86400; SameSite=None; Secure; HttpOnly")
                 return
             except Exception as e:
                 self._send_json_error(500, f"Gagal memproses login: {e}")
@@ -1701,9 +1697,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "phone": phone,
                     "email": email,
                     "ttl": 300,
-                    "otp_delivered": is_meta_success,
-                    "debug_otp": otp_code,
-                    "meta_res": meta_res
+                    "otp_delivered": is_meta_success
                 })
                 return
             except Exception as e:
@@ -1756,13 +1750,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
                 self._send_json_response({
                     "status": "ok",
-                    "message": f"Kode OTP telah dikirimkan ke email: {target_email}." if is_real_sent else f"Kode verifikasi OTP siap untuk email: {target_email}.",
+                    "message": f"Kode OTP telah dikirimkan ke email: {target_email}." if is_real_sent else "Pengiriman email belum aktif. Silakan hubungi Client Coordinator untuk verifikasi manual.",
                     "email": target_email,
                     "phone": phone,
                     "ttl": 300,
-                    "email_sent": is_real_sent,
-                    "debug_otp": otp_code,
-                    "email_res": email_res
+                    "email_sent": is_real_sent
                 })
                 return
             except Exception as e:
@@ -1869,10 +1861,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     except Exception as e_email:
                         print('[!] Error triggering email registration success:', e_email)
 
-                # Buat Sesi Aktif
+                # Buat Sesi Aktif (tanpa menyimpan/field password ke sesi atau response client)
+                public_user = _strip_password(found_user)
                 token = str(uuid.uuid4()).replace('-', '')
                 AUTH_SESSIONS[token] = {
-                    "user": found_user,
+                    "user": public_user,
                     "role": "pemohon",
                     "created_at": time.time(),
                     "expires_at": time.time() + 86400
@@ -1883,8 +1876,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "message": "Verifikasi OTP Berhasil! Akun pemohon terverifikasi.",
                     "token": token,
                     "role": "pemohon",
-                    "user": found_user
-                }, cookie_header=f"session_token={token}; Path=/; Max-Age=86400; SameSite=None; Secure")
+                    "user": public_user
+                }, cookie_header=f"session_token={token}; Path=/; Max-Age=86400; SameSite=None; Secure; HttpOnly")
                 return
             except Exception as e:
                 self._send_json_error(500, f"Gagal verifikasi OTP: {e}")
@@ -1906,18 +1899,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if str(p.get('nip', '')).strip() == nip and str(p.get('password', '')).strip() == password:
                         found_pegawai = p
                         break
-
-                # Akun default dinas jika belum terdaftar
-                if not found_pegawai and nip == '199501012020011001' and password == 'REDACTED_PASSWORD':
-                    found_pegawai = {
-                        "nip": "199501012020011001",
-                        "nama": "Petugas Pelayanan & Fasilitas Pabean",
-                        "jabatan": "Pelaksana Pemeriksa / Operator CEISA",
-                        "role": "pegawai"
-                    }
-                    pegawai_list.append(found_pegawai)
-                    users['pegawai'] = pegawai_list
-                    save_db_users(users)
 
                 if not found_pegawai:
                     self._send_json_error(401, "NIP (18 Digit) atau Kata Sandi Dinas salah! Silakan periksa kembali kredensial dinas Anda.")
@@ -1943,7 +1924,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "token": token,
                     "role": "pegawai",
                     "user": user_info
-                }, cookie_header=f"session_token={token}; Path=/; Max-Age=86400; SameSite=None; Secure")
+                }, cookie_header=f"session_token={token}; Path=/; Max-Age=86400; SameSite=None; Secure; HttpOnly")
                 return
             except Exception as e:
                 self._send_json_error(500, f"Gagal login pegawai: {e}")

@@ -14,9 +14,14 @@ __pycache__/
 *$py.class
 *.log
 
-# Database temporary files
+# Database & data pengguna (berisi PII & kredensial - JANGAN pernah di-commit)
+*.db
 *.db-shm
 *.db-wal
+db_users.json
+db_otp.json
+db_permohonan.json
+db_chat.json
 
 # Large binary test documents and data
 BERKAS UJI COBA/
