@@ -315,6 +315,42 @@ def migrate_from_json(users_file='db_users.json', permohonan_file='db_permohonan
 
     conn.close()
 
+# ================= PASSWORD HASHING (PBKDF2-SHA256) =================
+import hashlib
+import hmac
+
+_PBKDF2_ITERATIONS = 120000
+
+def hash_password(plain):
+    """Hash kata sandi dengan PBKDF2-SHA256 + salt acak 16-byte (idempotent jika sudah di-hash)."""
+    if plain is None:
+        return None
+    s = str(plain)
+    if not s:
+        return s
+    if s.startswith('pbkdf2_sha256$'):
+        return s
+    salt = os.urandom(16).hex()
+    dk = hashlib.pbkdf2_hmac('sha256', s.encode('utf-8'), bytes.fromhex(salt), _PBKDF2_ITERATIONS).hex()
+    return f"pbkdf2_sha256${_PBKDF2_ITERATIONS}${salt}${dk}"
+
+def verify_password(plain, stored):
+    """Verifikasi kata sandi (mendukung hash PBKDF2-SHA256 & fallback migrasi plaintext lama secara constant-time)."""
+    if plain is None or stored is None:
+        return False
+    p = str(plain).strip()
+    st = str(stored).strip()
+    if not p or not st:
+        return False
+    if st.startswith('pbkdf2_sha256$'):
+        try:
+            _, iter_str, salt_hex, hash_hex = st.split('$', 3)
+            dk = hashlib.pbkdf2_hmac('sha256', p.encode('utf-8'), bytes.fromhex(salt_hex), int(iter_str)).hex()
+            return hmac.compare_digest(dk, hash_hex)
+        except Exception:
+            return False
+    return hmac.compare_digest(p, st)
+
 # ================= CRUD FUNCTIONS =================
 
 def find_user_by_identifier(identifier):
@@ -361,6 +397,9 @@ def save_or_update_user(user_data):
     cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
     existing = cursor.fetchone()
 
+    raw_pwd = user_data.get('password')
+    hashed_pwd = hash_password(raw_pwd) if raw_pwd else None
+
     if existing:
         cursor.execute('''
             UPDATE users SET 
@@ -376,7 +415,7 @@ def save_or_update_user(user_data):
                 updated_at = ?
             WHERE id = ?
         ''', (
-            user_data.get('password'),
+            hashed_pwd,
             user_data.get('nama'),
             user_data.get('nip'),
             user_data.get('nik'),
@@ -395,7 +434,7 @@ def save_or_update_user(user_data):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             username,
-            user_data.get('password', '123456'),
+            hash_password(user_data.get('password', '123456')),
             user_data.get('nama', ''),
             user_data.get('nip', ''),
             user_data.get('nik', ''),
@@ -412,14 +451,14 @@ def save_or_update_user(user_data):
     conn.close()
 
 def update_user_password(identifier, new_password):
-    """Memperbarui kata sandi pengguna."""
+    """Memperbarui kata sandi pengguna (tersimpan dalam bentuk hash PBKDF2-SHA256)."""
     user = find_user_by_identifier(identifier)
     if not user:
         return False
     conn = get_db_connection()
     cursor = conn.cursor()
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute("UPDATE users SET password = ?, updated_at = ? WHERE id = ?", (new_password, now_str, user['id']))
+    cursor.execute("UPDATE users SET password = ?, updated_at = ? WHERE id = ?", (hash_password(new_password), now_str, user['id']))
     conn.commit()
     conn.close()
     return True

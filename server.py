@@ -952,23 +952,58 @@ def _make_permohonan_folder_name(record):
     nopol = _sanitize_archive_name(record.get('nopol', 'NOPOL'), 'NOPOL')[:18]
     return f"{pid}_{nama}_{nopol}"
 
+MAX_UPLOAD_FILE_BYTES = 10 * 1024 * 1024  # Batas keamanan: maks 10 MB per file unggahan
+LOGIN_FAIL_TRACKER = {}   # key: (ip, ident) -> list[timestamp]
+OTP_RATE_TRACKER = {}     # key: (ip, phone) -> list[timestamp]
+
+def _get_client_ip(handler):
+    xff = handler.headers.get('X-Forwarded-For', '') if hasattr(handler, 'headers') and handler.headers else ''
+    if xff:
+        return xff.split(',')[0].strip()
+    return handler.client_address[0] if getattr(handler, 'client_address', None) else 'unknown'
+
+def _is_rate_limited(tracker, key, max_attempts, window_seconds):
+    now = time.time()
+    attempts = [t for t in tracker.get(key, []) if now - t < window_seconds]
+    tracker[key] = attempts
+    return len(attempts) >= max_attempts
+
+def _record_rate_hit(tracker, key, window_seconds):
+    now = time.time()
+    attempts = [t for t in tracker.get(key, []) if now - t < window_seconds]
+    attempts.append(now)
+    tracker[key] = attempts
+
+def _validate_upload_magic_bytes(raw_bytes):
+    """Validasi magic bytes asli file: hanya menerima JPEG, PNG, WebP, atau PDF."""
+    if not raw_bytes or len(raw_bytes) > MAX_UPLOAD_FILE_BYTES:
+        return None, None
+    if raw_bytes.startswith(bytes([0xFF, 0xD8, 0xFF])):
+        return 'image/jpeg', '.jpg'
+    if raw_bytes.startswith(bytes([0x89, 0x50, 0x4E, 0x47])):
+        return 'image/png', '.png'
+    if raw_bytes.startswith(b'RIFF') and raw_bytes[8:12] == b'WEBP':
+        return 'image/webp', '.webp'
+    if raw_bytes.startswith(b'%PDF'):
+        return 'application/pdf', '.pdf'
+    return None, None
+
 def _decode_data_url(data_url):
     if not data_url or not isinstance(data_url, str):
         return None, None, None, None
     s = data_url.strip()
-    mime_type = 'application/octet-stream'
     b64_part = s
     if s.startswith('data:') and ',' in s:
-        header, b64_part = s.split(',', 1)
-        m = re.match(r'^data:([^;]+);base64$', header, re.IGNORECASE)
-        if m:
-            mime_type = m.group(1).lower()
-    ext = _MIME_TO_EXT.get(mime_type, '.bin')
+        _, b64_part = s.split(',', 1)
     try:
         raw_bytes = base64.b64decode(b64_part)
     except Exception:
         return None, None, None, None
-    return mime_type, ext, raw_bytes, b64_part
+    real_mime, real_ext = _validate_upload_magic_bytes(raw_bytes)
+    if not real_mime:
+        print(f"[!] Upload ditolak: tipe file tidak diizinkan atau melebihi 10 MB (size={len(raw_bytes)} bytes)")
+        return None, None, None, None
+    return real_mime, real_ext, raw_bytes, b64_part
 
 def upload_to_gdrive_bridge(subfolder, filename, mime_type, base64_data, root_folder='ARSIP_PENGSEM_KBM_BATAM'):
     """Kirim file ke Google Drive melalui Google Apps Script Web App Bridge."""
@@ -1719,6 +1754,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Vary', 'Origin')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Token, X-Requested-With')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'DENY')
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')
@@ -1923,18 +1961,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(400, "Silakan isi kolom User dan Kata Sandi.")
                     return
 
+                client_ip = _get_client_ip(self)
+                rl_key = (client_ip, user_input.lower())
+                if _is_rate_limited(LOGIN_FAIL_TRACKER, rl_key, max_attempts=5, window_seconds=300):
+                    database.log_activity(user_input, 'UNKNOWN', 'LOGIN_RATE_LIMITED', detail=f'IP {client_ip} melebihi 5 percobaan gagal')
+                    self._send_json_error(429, "Terlalu banyak percobaan gagal login. Demi keamanan, silakan coba kembali dalam 5 menit.")
+                    return
+
                 clean_user = user_input.replace(' ', '').replace('-', '')
                 clean_user_lower = user_input.lower().replace(' ', '').replace('-', '')
 
                 users = load_db_users()
                 matched_user = None
                 matched_role = None
+                matched_raw_record = None
 
                 # 1. Cek Petugas Bea Cukai (Internal) & Role Khusus
                 for p in users.get('pegawai', []):
                     p_nip = str(p.get('nip', '')).strip().replace(' ', '').replace('-', '')
                     p_user = str(p.get('username', '')).strip().lower().replace(' ', '').replace('-', '')
-                    if (p_nip == clean_user or p_user == clean_user_lower or (clean_user_lower == 'petugas' and p_nip == '199501012020011001')) and str(p.get('password', '')).strip() == password:
+                    if (p_nip == clean_user or p_user == clean_user_lower or (clean_user_lower == 'petugas' and p_nip == '199501012020011001')) and database.verify_password(password, p.get('password', '')):
                         p_role = p.get('role', 'pegawai')
                         matched_user = {
                             "nip": p.get('nip'),
@@ -1945,6 +1991,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             "is_officer": True
                         }
                         matched_role = p_role
+                        matched_raw_record = p
                         break
 
                 # 2. Cek Pemohon Terdaftar (Eksternal / Masyarakat)
@@ -1963,15 +2010,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         elif u_phone.startswith('0'):
                             phone_variants.append('62' + u_phone[1:])
 
-                        if (clean_user == u_nik or clean_user in phone_variants or clean_user_lower == u_id or clean_user_lower == u_user or clean_user_lower == u_email) and u_pwd == password:
+                        if (clean_user == u_nik or clean_user in phone_variants or clean_user_lower == u_id or clean_user_lower == u_user or clean_user_lower == u_email) and database.verify_password(password, u_pwd):
                             matched_user = _strip_password(u)
                             matched_role = "pemohon"
+                            matched_raw_record = u
                             break
 
                 if not matched_user:
-                    database.log_activity(user_input, 'UNKNOWN', 'LOGIN_FAILED', detail='User/kata sandi salah')
+                    _record_rate_hit(LOGIN_FAIL_TRACKER, rl_key, window_seconds=300)
+                    database.log_activity(user_input, 'UNKNOWN', 'LOGIN_FAILED', detail=f'User/kata sandi salah (IP {client_ip})')
                     self._send_json_error(401, "User atau Kata Sandi salah! Pastikan akun telah terdaftar.")
                     return
+
+                # Reset rate-limit counter setelah login berhasil & auto-upgrade password plaintext lama ke PBKDF2 hash
+                LOGIN_FAIL_TRACKER.pop(rl_key, None)
+                if matched_raw_record and not str(matched_raw_record.get('password', '')).startswith('pbkdf2_sha256$'):
+                    try:
+                        ident_upgrade = matched_raw_record.get('username') or matched_raw_record.get('nip') or matched_raw_record.get('phone') or matched_raw_record.get('email')
+                        if ident_upgrade:
+                            database.update_user_password(ident_upgrade, password)
+                    except Exception:
+                        pass
 
                 # Buat Token Sesi
                 token = str(uuid.uuid4()).replace('-', '')
@@ -2015,6 +2074,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if len(phone) < 10 or not phone.isdigit():
                     self._send_json_error(400, "Nomor WhatsApp tidak valid (contoh: 08123456789)")
                     return
+
+                client_ip = _get_client_ip(self)
+                otp_rl_key = (client_ip, phone)
+                if _is_rate_limited(OTP_RATE_TRACKER, otp_rl_key, max_attempts=3, window_seconds=300):
+                    database.log_activity(phone, 'pemohon', 'OTP_RATE_LIMITED', detail=f'IP {client_ip} spam OTP >3x/5 menit')
+                    self._send_json_error(429, "Terlalu banyak permintaan kode OTP. Mohon tunggu 5 menit sebelum meminta kode baru.")
+                    return
+                _record_rate_hit(OTP_RATE_TRACKER, otp_rl_key, window_seconds=300)
 
                 nik = str(body.get('nik', '')).strip().replace(' ', '').replace('-', '')
                 nama = str(body.get('nama', '')).strip().upper()
@@ -3675,6 +3742,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     target_item['sppb_qr_data_url'] = qr_data_url
                 target_item['catatan_petugas'] = f"Hasil LHP fisik disetujui. Dokumen SPPB ({no_sppb}) resmi diterbitkan. Kendaraan diizinkan meluncur ke Gate Pelabuhan."
                 save_db_permohonan(db)
+                backup_sqlite_to_gdrive_async()
                 _log_officer_action(sess, 'SPPB_TERBIT', pid, f"SPPB {no_sppb}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
@@ -3758,6 +3826,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['gate_petugas'] = sess.get('user', {}).get('nama', 'Petugas Gate Pelabuhan')
                 target_item['catatan_petugas'] = f"Kendaraan divalidasi Gate Out Pelabuhan pada {ts_gate}. KBM resmi keluar dari Kawasan Bebas Batam menuju TLDDP."
                 save_db_permohonan(db)
+                backup_sqlite_to_gdrive_async()
                 _log_officer_action(sess, 'GATE_VALIDASI', pid, f"Gate out {ts_gate}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
