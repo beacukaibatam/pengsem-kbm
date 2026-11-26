@@ -55,13 +55,19 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
   - OCR dokumen (KTP, NPWP, STNK, BPKB) via Google Gemini Vision API (`GEMINI_API_KEY`).
   - Auto-crop dokumen berbasis Canvas di sisi browser.
   - Database SQLite WAL, RBAC petugas/admin, cetak dokumen PPFTZ-01/LHP/BAP/SPPB + QR gate.
+  - Penyimpanan berkas fisik lokal per permohonan (`/var/data/uploads/<ID_NAMA_NOPOL>/`) + **Google Drive Apps Script Bridge** (`gdrive_bridge/Code.gs`) untuk arsip otomatis KTP, NPWP, STNK, BPKB, dokumen pendukung, Surat Permohonan/Pernyataan bermeterai, PPFTZ-01, LHP, BAP, SPPB, dan backup SQLite (`_BACKUP_DATABASE`).
+  - Skrip backup force majeure proyek ke Google Drive: `./backup_to_gdrive.sh` → `My Drive/PENGELUARAN_SEMENTARA_KBM_BATAM/BACKUP_WEBSITE/`.
 - **Belum Terhubung Eksternal / Lokal:**
+  - **Google Drive Bridge Env:** Perlu deploy `gdrive_bridge/Code.gs` di `script.google.com` (`ridwanmuham17@gmail.com`) lalu isi `GDRIVE_BRIDGE_URL` & `GDRIVE_BRIDGE_SECRET` di Render Cloud.
   - **SMTP Email:** Belum ada akun SMTP produksi yang dipasang di Render (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`).
   - **CEISA 4.0 DJBC & NADINE Kemenkeu:** Penomoran masih dikelola secara lokal oleh backend.
 
 ---
 
 ## 5. Log Estafet Terbaru
+
+- **Arsip Google Drive & Force Majeure Backup** — Tambah `gdrive_bridge/Code.gs` + `README_SETUP.md`, simpan berkas asli pemohon (KTP/NPWP/STNK/BPKB/pendukung/bermeterai) & dokumen pabean (PPFTZ-01/LHP/BAP/SPPB) ke `/var/data/uploads/` + antrean arsip otomatis Google Drive, serta `backup_to_gdrive.sh` untuk snapshot proyek (Antigravity, Mac Mini).
+- `0009783` — Tambah `HANDOFF.md` untuk sinkronisasi multi-agent & multi-Mac (Antigravity, Mac Mini).
 
 - `8f5d143` — Perjelas label Tahap 1 stepper bar menjadi `1. Akun Pemohon Terdaftar` (Antigravity, Mac Mini).
 - `2368f03` — Terapkan CORS whitelist (CWE-942), sanitasi XSS `escapeHtml` (CWE-79), hapus tuntas `KBM-2026-001` dari SQLite & JSON (Claude).

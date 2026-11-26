@@ -7790,6 +7790,27 @@
             const btnKirim = document.getElementById('btnKirimPermohonanFinal');
             if (btnKirim) { btnKirim.disabled = true; btnKirim.innerText = 'Mengirim...'; }
 
+            const _getDataUrlFromImg = (id) => {
+                const el = document.getElementById(id);
+                const src = el && el.getAttribute('src') ? el.getAttribute('src') : '';
+                return src.startsWith('data:') ? src : '';
+            };
+            const berkasPemohon = {};
+            const _berkasMap = [
+                ['ktp', 'imgKtpPreview'],
+                ['npwp', 'imgNpwpPreview'],
+                ['stnk', 'imgStnkPreview'],
+                ['bpkb', 'imgOwnershipPreview'],
+                ['buku_nikah', 'imgBukuNikahPreview'],
+                ['kwitansi', 'imgKwitansiPreview'],
+                ['surat_sewa', 'imgSuratSewaPreview'],
+                ['surat_kuasa', 'imgSuratKuasaPreview'],
+            ];
+            for (const [k, imgId] of _berkasMap) {
+                const du = _getDataUrlFromImg(imgId);
+                if (du) berkasPemohon[k] = du;
+            }
+
             const payload = {
                 nama_pemohon: (document.getElementById('pemohon_nama')?.value || user.nama || 'Pemohon').trim(),
                 nik: (document.getElementById('pemohon_nik')?.value || user.nik || '').trim(),
@@ -7801,7 +7822,8 @@
                 sumber: 'PORTAL_WEB',
                 status: 'BERKAS_LENGKAP',
                 dokumen_bermeterai: uploadedBermeteraiDataUrl,
-                dokumen_bermeterai_nama: uploadedBermeteraiFileName
+                dokumen_bermeterai_nama: uploadedBermeteraiFileName,
+                berkas_pemohon: berkasPemohon
             };
 
             let token = '';
@@ -8523,7 +8545,25 @@
             doc.setFontSize(7);
             doc.setTextColor(150, 150, 150);
             doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ.', 20, 285);
-            doc.save(`PPFTZ01_${item.nopol || item.id}.pdf`);
+            const ppftzFile = `07_PPFTZ01_${item.nopol || item.id}.pdf`;
+            archiveGeneratedPdfToServer(item.id, '07_PPFTZ-01', ppftzFile, doc);
+            doc.save(ppftzFile);
+        }
+
+        function archiveGeneratedPdfToServer(permohonanId, docType, filename, jsPdfDoc) {
+            if (!permohonanId || !jsPdfDoc) return;
+            try {
+                const dataUrl = jsPdfDoc.output('datauristring');
+                let token = '';
+                try { token = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                fetch(`${API_BASE_URL}/api/permohonan/archive-doc`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ id: permohonanId, doc_type: docType, filename, data_url: dataUrl })
+                }).catch(() => {});
+            } catch (e) {}
         }
 
         function generateLHPPDF(id) {
@@ -8581,7 +8621,9 @@
             doc.setFontSize(7);
             doc.setTextColor(150, 150, 150);
             doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ.', 20, 285);
-            doc.save(`LHP_${item.nopol || item.id}.pdf`);
+            const lhpFile = `08_LHP_${item.nopol || item.id}.pdf`;
+            archiveGeneratedPdfToServer(item.id, '08_LHP', lhpFile, doc);
+            doc.save(lhpFile);
         }
 
         function generateBAPPDF(id) {
@@ -8627,7 +8669,9 @@
             doc.setFontSize(7);
             doc.setTextColor(150, 150, 150);
             doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ.', 20, 285);
-            doc.save(`BAP_${item.nopol || item.id}.pdf`);
+            const bapFile = `09_BAP_${item.nopol || item.id}.pdf`;
+            archiveGeneratedPdfToServer(item.id, '09_BAP', bapFile, doc);
+            doc.save(bapFile);
         }
 
         function generateSPPBPDF(id) {
@@ -8676,7 +8720,9 @@
             doc.setFontSize(7);
             doc.setTextColor(150, 150, 150);
             doc.text('Dokumen simulasi lokal — belum terhubung ke register resmi CEISA/SPPB DJBC.', 20, 285);
-            doc.save(`SPPB_${item.nopol || item.id}.pdf`);
+            const sppbFile = `10_SPPB_${item.nopol || item.id}.pdf`;
+            archiveGeneratedPdfToServer(item.id, '10_SPPB', sppbFile, doc);
+            doc.save(sppbFile);
         }
 
         // Render Panel Aksi Berdasarkan Wewenang Role Petugas

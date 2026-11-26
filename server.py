@@ -878,7 +878,135 @@ for _legacy_file in ('db_users.json', 'db_otp.json', 'db_permohonan.json', 'db_c
 
 DB_USERS_PATH = os.path.join(DATA_DIR, 'db_users.json')
 DB_OTP_PATH = os.path.join(DATA_DIR, 'db_otp.json')
+UPLOADS_DIR = os.path.join(DATA_DIR, 'uploads')
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 AUTH_SESSIONS = {}
+
+# ================= ARSIP BERKAS LOKAL & GOOGLE DRIVE APPS SCRIPT BRIDGE =================
+_MIME_TO_EXT = {
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'application/pdf': '.pdf',
+}
+
+def _sanitize_archive_name(text, fallback='DOKUMEN'):
+    cleaned = re.sub(r'[^A-Za-z0-9._-]+', '_', str(text or '').strip()).strip('_')
+    return cleaned[:60] if cleaned else fallback
+
+def _make_permohonan_folder_name(record):
+    pid = _sanitize_archive_name(record.get('id', 'KBM'), 'KBM')
+    nama = _sanitize_archive_name(record.get('nama_pemohon', 'PEMOHON'), 'PEMOHON')[:28]
+    nopol = _sanitize_archive_name(record.get('nopol', 'NOPOL'), 'NOPOL')[:18]
+    return f"{pid}_{nama}_{nopol}"
+
+def _decode_data_url(data_url):
+    if not data_url or not isinstance(data_url, str):
+        return None, None, None, None
+    s = data_url.strip()
+    mime_type = 'application/octet-stream'
+    b64_part = s
+    if s.startswith('data:') and ',' in s:
+        header, b64_part = s.split(',', 1)
+        m = re.match(r'^data:([^;]+);base64$', header, re.IGNORECASE)
+        if m:
+            mime_type = m.group(1).lower()
+    ext = _MIME_TO_EXT.get(mime_type, '.bin')
+    try:
+        raw_bytes = base64.b64decode(b64_part)
+    except Exception:
+        return None, None, None, None
+    return mime_type, ext, raw_bytes, b64_part
+
+def upload_to_gdrive_bridge(subfolder, filename, mime_type, base64_data, root_folder='ARSIP_PENGSEM_KBM_BATAM'):
+    """Kirim file ke Google Drive melalui Google Apps Script Web App Bridge."""
+    bridge_url = (os.environ.get('GDRIVE_BRIDGE_URL') or '').strip()
+    bridge_secret = (os.environ.get('GDRIVE_BRIDGE_SECRET') or '').strip()
+    if not bridge_url or not bridge_secret:
+        return {"status": "skipped", "reason": "GDRIVE_BRIDGE_URL/SECRET belum diatur"}
+    try:
+        payload = json.dumps({
+            "secret": bridge_secret,
+            "action": "upload_file",
+            "root_folder": root_folder,
+            "subfolder": subfolder,
+            "filename": filename,
+            "mime_type": mime_type,
+            "base64_data": base64_data,
+        }).encode('utf-8')
+        req = urllib.request.Request(
+            bridge_url,
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=35) as resp:
+            raw = resp.read().decode('utf-8', errors='replace')
+            try:
+                parsed = json.loads(raw)
+            except Exception:
+                parsed = {"status": "ok", "raw": raw[:200]}
+            print(f"[+] Arsip Google Drive ({subfolder}/{filename}): {parsed.get('status')}")
+            return parsed
+    except Exception as e:
+        print(f"[!] Gagal arsip Google Drive ({subfolder}/{filename}): {e}")
+        return {"status": "error", "message": str(e)}
+
+def save_and_archive_document(record, doc_label, data_url, custom_filename=None):
+    """Simpan berkas ke disk lokal (UPLOADS_DIR/<folder>/) & antrekan sinkronisasi ke Google Drive."""
+    mime_type, ext, raw_bytes, b64_part = _decode_data_url(data_url)
+    if not raw_bytes:
+        return None
+
+    folder_name = _make_permohonan_folder_name(record)
+    local_dir = os.path.join(UPLOADS_DIR, folder_name)
+    os.makedirs(local_dir, exist_ok=True)
+
+    if custom_filename:
+        safe_fn = _sanitize_archive_name(custom_filename, doc_label)
+        if '.' not in safe_fn:
+            safe_fn += ext
+    else:
+        safe_fn = f"{_sanitize_archive_name(doc_label, 'DOKUMEN')}{ext}"
+
+    local_path = os.path.join(local_dir, safe_fn)
+    try:
+        with open(local_path, 'wb') as f:
+            f.write(raw_bytes)
+    except Exception as e:
+        print(f"[!] Gagal simpan berkas lokal {local_path}: {e}")
+
+    # Upload asinkron ke Google Drive Bridge agar tidak menghambat response HTTP
+    threading.Thread(
+        target=upload_to_gdrive_bridge,
+        args=(folder_name, safe_fn, mime_type, b64_part),
+        daemon=True
+    ).start()
+
+    return {
+        "label": doc_label,
+        "filename": safe_fn,
+        "mime_type": mime_type,
+        "size_bytes": len(raw_bytes),
+        "folder": folder_name,
+        "saved_at": datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+
+def backup_sqlite_to_gdrive_async():
+    """Kirim salinan database SQLite ke folder _BACKUP_DATABASE di Google Drive."""
+    def _worker():
+        try:
+            db_path = database.DATABASE_PATH
+            if not os.path.exists(db_path):
+                return
+            with open(db_path, 'rb') as f:
+                b64_db = base64.b64encode(f.read()).decode('utf-8')
+            ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+            upload_to_gdrive_bridge('_BACKUP_DATABASE', f'kbm_batam_{ts}.db', 'application/x-sqlite3', b64_db)
+        except Exception as e:
+            print(f"[!] Gagal backup SQLite ke Google Drive: {e}")
+    threading.Thread(target=_worker, daemon=True).start()
 
 # ================= RBAC: PERAN PETUGAS & HAK AKSES PER TAHAPAN =================
 # Setiap petugas HANYA berwenang di tahapan sesuai jabatannya (least privilege).
@@ -2435,7 +2563,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 new_id = f"KBM-2026-{str(len(db) + 1).zfill(3)}"
                 new_record = {
                     "id": new_id,
-                    "tanggal_pengajuan": body.get("tanggal_pengajuan", "2026-03-10 12:00:00"),
+                    "tanggal_pengajuan": body.get("tanggal_pengajuan", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
                     "nama_pemohon": body.get("nama_pemohon", "-"),
                     "nik": body.get("nik", "-"),
                     "npwp": body.get("npwp", "-"),
@@ -2448,13 +2576,44 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "status": "MENUNGGU_VERIFIKASI_DOKUMEN",
                     "sumber": sumber,
                     "dokumen_bermeterai_nama": body.get("dokumen_bermeterai_nama", ""),
-                    "dokumen_bermeterai_ada": bool(dokumen_bermeterai)
+                    "dokumen_bermeterai_ada": bool(dokumen_bermeterai),
+                    "archived_files": []
                 }
                 if dokumen_bermeterai:
                     new_record["dokumen_bermeterai"] = dokumen_bermeterai
+                    meta_bm = save_and_archive_document(
+                        new_record,
+                        "06_Surat_Permohonan_Pernyataan_Bermeterai",
+                        dokumen_bermeterai,
+                        custom_filename=body.get("dokumen_bermeterai_nama") or "06_Surat_Permohonan_Pernyataan_Bermeterai.pdf"
+                    )
+                    if meta_bm:
+                        new_record["archived_files"].append(meta_bm)
+
+                # Simpan & arsipkan berkas asli pemohon (KTP, NPWP, STNK, BPKB, dokumen pendukung) ke disk + Google Drive
+                berkas_pemohon = body.get("berkas_pemohon") or {}
+                if isinstance(berkas_pemohon, dict):
+                    _label_map = [
+                        ("ktp", "01_KTP"),
+                        ("npwp", "02_NPWP"),
+                        ("stnk", "03_STNK"),
+                        ("bpkb", "04_BPKB"),
+                        ("buku_nikah", "05a_Buku_Nikah_KK"),
+                        ("kwitansi", "05b_Kwitansi_Jual_Beli"),
+                        ("surat_sewa", "05c_Surat_Sewa"),
+                        ("surat_kuasa", "05d_Surat_Kuasa"),
+                    ]
+                    for key, label in _label_map:
+                        val = berkas_pemohon.get(key)
+                        if val:
+                            meta_doc = save_and_archive_document(new_record, label, val)
+                            if meta_doc:
+                                new_record["archived_files"].append(meta_doc)
+
                 db.insert(0, new_record)
                 save_db_permohonan(db)
-                database.log_activity(new_record.get('no_wa_pemohon', '-'), 'pemohon', 'PERMOHONAN_DIKIRIM', detail=f"Nopol {new_record.get('nopol','-')}, sumber {sumber}", target_id=new_id)
+                backup_sqlite_to_gdrive_async()
+                database.log_activity(new_record.get('no_wa_pemohon', '-'), 'pemohon', 'PERMOHONAN_DIKIRIM', detail=f"Nopol {new_record.get('nopol','-')}, sumber {sumber}, {len(new_record['archived_files'])} berkas diarsipkan", target_id=new_id)
                 resp = json.dumps({"status": "success", "data": new_record}).encode('utf-8')
                 self.send_response(200)
             except Exception as e:
@@ -3231,6 +3390,71 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 })
             except Exception as e:
                 self._send_json_error(500, f'Gagal validasi Gate Out: {str(e)}')
+            return
+
+        # Arsipkan Dokumen Pabean (PPFTZ-01, LHP, BAP, SPPB, Surat Permohonan/Pernyataan) ke Disk & Google Drive
+        if self.path == '/api/permohonan/archive-doc':
+            token, sess = get_session_from_request(self)
+            if not sess:
+                self._send_json_error(401, 'Sesi login tidak valid.')
+                return
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                body = json.loads(self.rfile.read(content_length).decode('utf-8'))
+                pid = str(body.get('id', '')).strip()
+                doc_label = str(body.get('doc_type', 'DOKUMEN_PABEAN')).strip()
+                filename = str(body.get('filename', '')).strip() or None
+                data_url = body.get('data_url', '')
+                if not pid or not data_url:
+                    self._send_json_error(400, 'Parameter id dan data_url wajib diisi.')
+                    return
+
+                db = load_db_permohonan()
+                target_item = next((p for p in db if p.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                meta = save_and_archive_document(target_item, doc_label, data_url, custom_filename=filename)
+                if not meta:
+                    self._send_json_error(400, 'Data berkas tidak valid.')
+                    return
+
+                archived = target_item.get('archived_files')
+                if not isinstance(archived, list):
+                    archived = []
+                archived = [a for a in archived if a.get('filename') != meta['filename']]
+                archived.append(meta)
+                target_item['archived_files'] = archived
+                save_db_permohonan(db)
+
+                self._send_json_response({
+                    'status': 'ok',
+                    'message': f'Dokumen {meta["filename"]} berhasil diarsipkan ke server & antrean Google Drive.',
+                    'file': meta
+                })
+            except Exception as e:
+                self._send_json_error(500, f'Gagal mengarsipkan dokumen: {str(e)}')
+            return
+
+        # Backup Manual Database SQLite ke Google Drive (Khusus Admin Utama)
+        if self.path == '/api/admin/backup-gdrive':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'adminutama':
+                self._send_json_error(403, 'Akses Ditolak: Hanya Admin Utama yang dapat memicu backup database.')
+                return
+            try:
+                db_path = database.DATABASE_PATH
+                if not os.path.exists(db_path):
+                    self._send_json_error(404, 'File database SQLite tidak ditemukan.')
+                    return
+                with open(db_path, 'rb') as f:
+                    b64_db = base64.b64encode(f.read()).decode('utf-8')
+                ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                res = upload_to_gdrive_bridge('_BACKUP_DATABASE', f'kbm_batam_{ts}.db', 'application/x-sqlite3', b64_db)
+                self._send_json_response({'status': 'ok', 'result': res})
+            except Exception as e:
+                self._send_json_error(500, f'Gagal backup database ke Google Drive: {str(e)}')
             return
         else:
             self.send_error(404, "Endpoint not found")

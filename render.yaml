@@ -37,5 +37,7 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
-      - key: SMTP_FROM
-        value: "Bea Cukai Batam <layanan.kbm.batam@gmail.com>"
+      - key: GDRIVE_BRIDGE_URL
+        sync: false
+      - key: GDRIVE_BRIDGE_SECRET
+        sync: false
