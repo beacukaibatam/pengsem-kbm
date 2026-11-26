@@ -1219,7 +1219,7 @@ def send_email_otp(to_email, otp_code, nama="Pemohon KBM Batam"):
         f"Halo Bapak/Ibu {nama},\n\n"
         f"Berikut adalah Kode Verifikasi (OTP) untuk pendaftaran akun portal Anda:\n\n"
         f"👉  {otp_code}  👈\n\n"
-        f"Kode ini berlaku selama 5 menit. Mohon tidak memberikan kode ini kepada siapapun demi keamanan data kepabeanan Anda.\n\n"
+        f"Kode ini berlaku selama 5 menit. Mohon tidak memberikan kode ini kepada siapapun demi keamanan data Anda.\n\n"
         f"Jika Anda tidak merasa melakukan pendaftaran ini, abaikan email ini.\n\n"
         f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
     )
@@ -1602,7 +1602,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     f"Halo Bapak/Ibu *{nama}*,\n\n"
                     f"Kode Verifikasi (OTP) pendaftaran akun portal Anda adalah:\n"
                     f"👉 *{otp_code}*\n\n"
-                    f"Kode ini berlaku 5 menit. Jangan berikan kode ini kepada siapapun demi keamanan data kepabeanan Anda.\n\n"
+                    f"Kode ini berlaku 5 menit. Jangan berikan kode ini kepada siapapun demi keamanan data Anda.\n\n"
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 )
 
