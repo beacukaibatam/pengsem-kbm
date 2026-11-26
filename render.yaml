@@ -41,3 +41,5 @@ services:
         sync: false
       - key: GDRIVE_BRIDGE_SECRET
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false

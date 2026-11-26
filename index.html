@@ -45,6 +45,18 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        html {
+            height: auto;
+            overflow-y: auto;
+            overflow-x: clip;
+        }
+
+        body:not(.landing-page) {
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
         body {
             font-family: 'Estrangelo Edessa', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-body);
@@ -54,6 +66,13 @@
             flex-direction: column;
             line-height: 1.45;
             padding-top: var(--header-height, 86px) !important;
+        }
+
+        .preview-box img {
+            margin: 0 auto !important;
+            object-fit: contain !important;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         h1, h2, h3, h4, .brand-text h1, .section-title, .form-label, .modal-header h3 {
@@ -3333,7 +3352,7 @@
                     <input type="file" id="fileNpwpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'npwp')">
                 </div>
 
-                <!-- Scanner Card 3: STNK -->
+                <!-- Scanner Card 3: STNK (2 Lembar: STNK & TBPKP) -->
                 <div class="scanner-card" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                         <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
@@ -3343,7 +3362,7 @@
                                 <line x1="16" y1="13" x2="8" y2="13"></line>
                                 <line x1="16" y1="17" x2="8" y2="17"></line>
                             </svg>
-                            STNK
+                            STNK (2 Lembar)
                         </div>
                         <div style="display:flex; align-items:center; gap:6px;">
                             <span id="badgeStnkStatus" class="pabean-badge-waiting">
@@ -3355,34 +3374,49 @@
                             </button>
                         </div>
                     </div>
-                    <!-- Sub-label STNK untuk kesimetrisan baris -->
-                    <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; font-size:0.70rem; color:#64748B;">
-                        Surat Tanda Nomor Kendaraan
+                    <!-- Sub-label STNK 2 Lembar -->
+                    <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; font-size:0.68rem; color:#64748B;">
+                        <span>Lbr 1: STNK • Lbr 2: TBPKP</span>
+                        <span id="badgeStnk2Status" style="font-weight:700; color:#64748B;"></span>
                     </div>
-                    <div class="preview-box" id="previewStnkBox" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0;">
-                        <div class="laser-line" id="laserStnk" style="display:none;">
-                            <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
-                            <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
-                            <div class="beam-opt1"></div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:0 0 6px 0;">
+                        <div class="preview-box" id="previewStnkBox" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0;">
+                            <div class="laser-line" id="laserStnk" style="display:none;">
+                                <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
+                                <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
+                                <div class="beam-opt1"></div>
+                            </div>
+                            <div id="phStnk" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#94A3B8; text-align:center; padding:4px;">
+                                <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 1</span>
+                                <span style="font-size:0.62rem; color:#94A3B8;">STNK</span>
+                            </div>
+                            <img id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
-                        <div id="phStnk" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#94A3B8;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                            <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
+                        <div class="preview-box" id="previewStnk2Box" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0;">
+                            <div class="laser-line" id="laserStnk2" style="display:none;">
+                                <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
+                                <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
+                                <div class="beam-opt1"></div>
+                            </div>
+                            <div id="phStnk2" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#94A3B8; text-align:center; padding:4px;">
+                                <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 2</span>
+                                <span style="font-size:0.62rem; color:#94A3B8;">TBPKP/Pajak</span>
+                            </div>
+                            <img id="imgStnk2Preview" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
-                        <img id="imgStnkPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR STNK -->
-                    <div id="snippetStnk" class="ocr-snippet-box">Menunggu berkas STNK diunggah...</div>
-                    <div class="scanner-btns" style="margin-top:auto;">
-                        <button type="button" class="btn btn-primary" id="btnUploadStnk" style="width:100%; justify-content:center; background:#005FAC; color:#FFFFFF; border:none; border-radius:7px; padding:8px 10px; font-weight:700; font-size:0.78rem;" onclick="pickFile('stnk')">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;">
-                                <line x1="12" y1="19" x2="12" y2="5"></line>
-                                <polyline points="5 12 12 5 19 12"></polyline>
-                            </svg>
-                            Unggah STNK
+                    <div id="snippetStnk" class="ocr-snippet-box">Menunggu berkas STNK Lembar 1 &amp; 2 diunggah...</div>
+                    <div class="scanner-btns" style="margin-top:auto; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                        <button type="button" class="btn btn-primary" id="btnUploadStnk" style="width:100%; justify-content:center; background:#005FAC; color:#FFFFFF; border:none; border-radius:7px; padding:7px 6px; font-weight:700; font-size:0.72rem;" onclick="pickFile('stnk')">
+                            Unggah Lbr 1
+                        </button>
+                        <button type="button" class="btn btn-primary" id="btnUploadStnk2" style="width:100%; justify-content:center; background:#0284C7; color:#FFFFFF; border:none; border-radius:7px; padding:7px 6px; font-weight:700; font-size:0.72rem;" onclick="document.getElementById('fileStnk2Input').click()">
+                            Unggah Lbr 2
                         </button>
                     </div>
                     <input type="file" id="fileStnkInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk')">
+                    <input type="file" id="fileStnk2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk_2')">
                 </div>
 
                 <!-- Scanner Card 4: BPKB -->
@@ -3440,11 +3474,11 @@
                             Unggah Berkas BPKB
                         </button>
                     </div>
-                    <input type="file" id="fileOwnershipInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership')">
+                    <input type="file" id="fileOwnershipInput" accept="image/*,application/pdf,.pdf" multiple style="display:none;" onchange="onFileSelected(event, 'ownership')">
                 </div>
             </div>
 
-            <!-- ================= BANNER INTEGRASI E-METERAI RESMI RP 10.000 ================= -->
+            <!-- ================= BANNER KETENTUAN E-METERAI RESMI RP 10.000 ================= -->
             <div class="emeterai-banner" style="background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:10px; padding:10px 16px; margin-top:12px; margin-bottom:8px; display:flex; align-items:center; gap:14px; box-sizing:border-box;">
                 <!-- Ikon Segel Perisai Flat SVG Emas Solid (Tanpa Emoji) -->
                 <div style="width:38px; height:38px; border-radius:8px; background:#FEF3C7; border:1px solid #FCD34D; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
@@ -3453,19 +3487,31 @@
                         <circle cx="12" cy="11" r="3" fill="#FFFFFF"></circle>
                     </svg>
                 </div>
-                <div style="flex:1; padding-right:240px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:0.86rem; font-weight:800; color:#92400E;">Integrasi Resmi e-Meterai Rp 10.000</span>
-                        <span style="font-size:0.62rem; font-weight:800; background:#FDE68A; color:#78350F; padding:2px 7px; border-radius:10px;">PERURI &amp; POS INDONESIA</span>
+                <div style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:0.86rem; font-weight:800; color:#92400E;">Ketentuan Pembubuhan e-Meterai Resmi Rp 10.000</span>
+                        <span style="font-size:0.62rem; font-weight:800; background:#FDE68A; color:#78350F; padding:2px 7px; border-radius:10px;">PERURI / POS INDONESIA</span>
                     </div>
                     <p style="font-size:0.72rem; color:#78350F; margin:2px 0 0 0; line-height:1.35;">
-                        Surat Permohonan dan Pernyataan Pengeluaran Sementara Kendaraan Bermotor (KBM) dari Kawasan Bebas Batam ke TLDDP secara otomatis tervalidasi dengan segel meterai elektronik resmi 10.000 yang sah secara hukum kepabeanan.
+                        Pada tahap akhir, unduh draf PDF Surat Permohonan &amp; Surat Pernyataan, bubuhkan <strong>e-meterai asli Rp 10.000</strong> melalui distributor resmi (PERURI / Pos Indonesia / e-meterai.co.id), lalu unggah kembali dokumen bermeterai asli tersebut sebelum mengirim permohonan.
                     </p>
                 </div>
             </div>
 
-            <!-- Bagian Kolom Form Identitas yang Tersembunyi (Akan Terbuka Otomatis setelah KTP & NPWP Terpindai) -->
-            <div id="sectionFormIdentitas" style="display:none;">
+            <!-- Panel Validasi Silang Menyeluruh (KTP vs NPWP vs BPKB vs STNK Lembar 1 & 2) + Indikasi CKD/CBU -->
+            <div id="crossValidationPanel" style="display:none; background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:10px; padding:14px 16px; margin-top:12px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                    <div style="font-size:0.86rem; font-weight:800; color:#0F172A;">
+                        🔍 Validasi Silang Antar-Dokumen (KTP • NPWP • BPKB • STNK 1 &amp; 2)
+                    </div>
+                    <span id="crossValSummaryBadge" style="font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; background:#EFF6FF; color:#1D4ED8;">Menunggu Dokumen</span>
+                </div>
+                <div id="cbuWarningBanner" style="display:none; background:#FEF2F2; border:2px solid #EF4444; border-radius:8px; padding:10px 14px; margin-bottom:10px; color:#991B1B; font-size:0.78rem; line-height:1.45;"></div>
+                <div id="crossValGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:8px; font-size:0.74rem;"></div>
+            </div>
+
+            <!-- Bagian Kolom Form Identitas (Selalu Dapat Diisi & Dikoreksi Manual) -->
+            <div id="sectionFormIdentitas" style="display:block; margin-top:14px;">
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="pemohon_nik">
@@ -3859,27 +3905,27 @@
 
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:10px;">
                     <div class="car-photo-card" onclick="triggerSingleCarPhoto(0)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phDepan" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Tampak Depan</div>
+                        <div id="phDepan" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">1. Foto Sisi Depan</div>
                         <img id="imgPhDepan" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
                     </div>
-                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(1)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phBelakang" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Tampak Belakang</div>
-                        <img id="imgPhBelakang" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
-                    </div>
                     <div class="car-photo-card" onclick="triggerSingleCarPhoto(2)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phKanan" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Samping Kanan</div>
+                        <div id="phKanan" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">2. Foto Samping Kanan</div>
                         <img id="imgPhKanan" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
                     </div>
                     <div class="car-photo-card" onclick="triggerSingleCarPhoto(3)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phKiri" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Samping Kiri</div>
+                        <div id="phKiri" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">3. Foto Samping Kiri</div>
                         <img id="imgPhKiri" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
                     </div>
+                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(1)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
+                        <div id="phBelakang" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">4. Foto Sisi Belakang</div>
+                        <img id="imgPhBelakang" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                    </div>
                     <div class="car-photo-card" onclick="triggerSingleCarPhoto(4)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phRangka" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Gesekan Rangka</div>
+                        <div id="phRangka" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">5. Foto Nomor Rangka</div>
                         <img id="imgPhRangka" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
                     </div>
                     <div class="car-photo-card" onclick="triggerSingleCarPhoto(5)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phMesin" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Gesekan Mesin</div>
+                        <div id="phMesin" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">6. Foto Nomor Mesin</div>
                         <img id="imgPhMesin" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
                     </div>
                 </div>
@@ -5695,9 +5741,9 @@
                 document.getElementById('tagBpkbAuto').style.display = 'none';
             }
 
-            const mainTargets = ['ktp', 'npwp', 'ownership', 'stnk'];
+            const mainTargets = ['ktp', 'npwp', 'ownership', 'stnk', 'stnk_2'];
             if (mainTargets.includes(target)) {
-                const boxMap = { ktp: 'previewKtpBox', npwp: 'previewNpwpBox', ownership: 'previewOwnershipBox', stnk: 'previewStnkBox' };
+                const boxMap = { ktp: 'previewKtpBox', npwp: 'previewNpwpBox', ownership: 'previewOwnershipBox', stnk: 'previewStnkBox', stnk_2: 'previewStnk2Box' };
                 const box = document.getElementById(boxMap[target]);
                 if (box) box.style.display = 'flex';
             }
@@ -5706,7 +5752,8 @@
                 'ktp': 'KTP Pemohon',
                 'npwp': 'Kartu NPWP',
                 'ownership': (currentOwnershipDocType === 'bpkb' ? 'BPKB' : 'Surat Keterangan Leasing/Bank'),
-                'stnk': 'STNK',
+                'stnk': 'STNK Lembar 1',
+                'stnk_2': 'STNK Lembar 2 (TBPKP)',
                 'bukuNikah': 'Buku Nikah / Kartu Keluarga',
                 'ktpPasangan': 'KTP Pemilik Asli (Sesuai STNK)',
                 'kwitansi': 'Kwitansi / Bukti Jual Beli',
@@ -5718,7 +5765,7 @@
 
             const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf');
 
-            const onImageReady = function(rawImageDataUrl) {
+            const onImageReady = function(rawImageDataUrl, rawPdfDataUrlForOcr) {
                 // Jalankan Auto-Crop Cerdas untuk memotong latar/meja/lingkungan luar
                 autoCropDocument(rawImageDataUrl, target, function(croppedDataUrl) {
                     // Validasi Warna pada gambar yang sudah dicrop
@@ -5728,9 +5775,9 @@
                             return;
                         }
 
-                        // Jika dokumen utama (KTP, NPWP, BPKB, STNK), jalankan OCR & update preview
+                        // Jika dokumen utama (KTP, NPWP, BPKB, STNK 1 & 2), jalankan OCR & update preview
                         if (mainTargets.includes(target)) {
-                            runRealOCR(target, croppedDataUrl);
+                            runRealOCR(target, croppedDataUrl, rawPdfDataUrlForOcr || null);
                         } else {
                             // Dokumen pendukung
                             supportingDocsUploaded[target] = true;
@@ -5758,23 +5805,34 @@
             };
 
             if (isPdf) {
-                convertPdfToImageDataUrl(file, function(dataUrl) {
-                    onImageReady(dataUrl);
-                });
+                // Untuk BPKB PDF multi-halaman, kirim raw PDF ke backend agar hingga 4 halaman terbaca Vision AI
+                const pdfReader = new FileReader();
+                pdfReader.onload = function(evPdf) {
+                    const rawPdfUrl = evPdf.target.result;
+                    convertPdfToImageDataUrl(file, function(previewImgUrl) {
+                        onImageReady(previewImgUrl, target === 'ownership' ? rawPdfUrl : null);
+                    });
+                };
+                pdfReader.readAsDataURL(file);
             } else {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    onImageReady(e.target.result);
+                    onImageReady(e.target.result, null);
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        // Bridge untuk pemanggilan onFileSelected lama
+        // Handler tunggal onFileSelected (mendukung multi-halaman BPKB & selalu lewat autoCropDocument)
         function onFileSelected(event, target) {
-            const file = event.target.files && event.target.files[0];
-            if (file) {
-                processSelectedDocument(file, target);
+            const files = event.target.files;
+            if (!files || !files.length) return;
+            if (target === 'ownership' && files.length > 1) {
+                Array.from(files).forEach((f, idx) => {
+                    setTimeout(() => processSelectedDocument(f, 'ownership'), idx * 350);
+                });
+            } else {
+                processSelectedDocument(files[0], target);
             }
         }
 
@@ -5806,83 +5864,237 @@
             reader.readAsDataURL(file);
         }
 
-        function onFileSelected(event, target) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // ================= STORE HASIL OCR PER DOKUMEN & VALIDASI SILANG KEPABEANAN =================
+        const docOcrStore = { ktp: {}, npwp: {}, bpkb: {}, stnk1: {}, stnk2: {} };
+        window._kbmCbuIndicated = false;
+        window._kbmCbuDetail = '';
 
-            // 1. Validasi Format Berkas Ketat: HANYA menerima JPG, JPEG, PNG, atau PDF
-            const validExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
-            const fileName = (file.name || '').toLowerCase();
-            const hasValidExt = validExtensions.some(ext => fileName.endsWith(ext));
-            const hasValidMime = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'application/pdf';
+        function _normCmp(val) {
+            return String(val || '').toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
+        }
 
-            if (!hasValidExt && !hasValidMime) {
-                event.target.value = '';
-                showFormatRejectionAlert(file.name);
+        function setDocCardState(target, state, snippetText) {
+            const badgeMap = {
+                ktp: 'badgeKtpStatus',
+                npwp: 'badgeNpwpStatus',
+                ownership: 'badgeOwnershipStatus',
+                stnk: 'badgeStnkStatus',
+                stnk_2: 'badgeStnk2Status'
+            };
+            const snippetMap = {
+                ktp: 'snippetKtp',
+                npwp: 'snippetNpwp',
+                ownership: 'snippetOwnership',
+                stnk: 'snippetStnk',
+                stnk_2: 'snippetStnk'
+            };
+            const btnMap = {
+                ktp: { id: 'btnUploadKtp', replace: '↻ Ganti Berkas KTP' },
+                npwp: { id: 'btnUploadNpwp', replace: '↻ Ganti Berkas NPWP' },
+                ownership: { id: 'btnUploadOwnership', replace: '↻ Ganti Berkas BPKB' },
+                stnk: { id: 'btnUploadStnk', replace: '↻ Ganti Lbr 1' },
+                stnk_2: { id: 'btnUploadStnk2', replace: '↻ Ganti Lbr 2' }
+            };
+
+            const badgeEl = document.getElementById(badgeMap[target]);
+            if (badgeEl) {
+                if (state === 'loading') {
+                    badgeEl.innerText = '⏳ Memindai...';
+                    badgeEl.style.background = '#EFF6FF';
+                    badgeEl.style.color = '#1D4ED8';
+                    badgeEl.style.borderColor = '#BFDBFE';
+                } else if (state === 'ok') {
+                    badgeEl.innerText = target === 'stnk_2' ? '✓ Lbr 2 Terbaca' : '✓ Terbaca Otomatis';
+                    badgeEl.style.background = '#DCFCE7';
+                    badgeEl.style.color = '#166534';
+                    badgeEl.style.borderColor = '#86EFAC';
+                } else if (state === 'manual') {
+                    badgeEl.innerText = target === 'stnk_2' ? 'Lbr 2 • Lengkapi Manual' : 'Terunggah • Lengkapi Manual';
+                    badgeEl.style.background = '#FEF3C7';
+                    badgeEl.style.color = '#92400E';
+                    badgeEl.style.borderColor = '#FDE68A';
+                }
+            }
+
+            const snipEl = document.getElementById(snippetMap[target]);
+            if (snipEl && snippetText) {
+                snipEl.innerText = snippetText;
+            }
+
+            if (state === 'ok' || state === 'manual') {
+                const bInfo = btnMap[target];
+                const btnEl = bInfo ? document.getElementById(bInfo.id) : null;
+                if (btnEl) {
+                    btnEl.innerText = bInfo.replace;
+                }
+            }
+        }
+
+        function checkBpkbCbuIndication(bpkbData) {
+            const apm = String(bpkbData.nama_apm_importir || '').trim();
+            const pel = String(bpkbData.pelabuhan_impor || '').trim();
+            const pelUp = pel.toUpperCase();
+            const luarBatamHints = ['PRIOK', 'JAKARTA', 'SURABAYA', 'PERAK', 'SEMARANG', 'EMAS', 'BELAWAN', 'MAKASSAR', 'PATIMBAN', 'CIGADING', 'CIWANDAN'];
+            const batamHints = ['BATAM', 'BATU AMPAR', 'SEKUPANG', 'KABIL', 'NONGSA', 'PUNGGUR', 'HARBOUR BAY', 'BATUAMPAR'];
+
+            let isCbu = false;
+            if (apm && pel) {
+                const isLuarBatam = luarBatamHints.some(h => pelUp.includes(h));
+                const isBatamPort = batamHints.some(h => pelUp.includes(h));
+                if (isBatamPort || !isLuarBatam) {
+                    isCbu = true;
+                }
+            } else if (pel && batamHints.some(h => pelUp.includes(h))) {
+                isCbu = true;
+            }
+
+            window._kbmCbuIndicated = isCbu;
+            window._kbmCbuDetail = isCbu ? `APM/Importir: ${apm || '-'} | Pelabuhan: ${pel || '-'}` : '';
+            const banner = document.getElementById('cbuWarningBanner');
+            if (banner) {
+                if (isCbu) {
+                    banner.style.display = 'block';
+                    banner.innerHTML = `<strong>⚠️ Indikasi Awal Kendaraan CBU (Perlu Verifikasi Petugas):</strong><br>` +
+                        `Pada halaman Dokumen Persyaratan Registrasi Pertama BPKB terdeteksi <strong>APM/Importir: ${escapeHtml(apm || '-')}</strong> dengan <strong>Pelabuhan: ${escapeHtml(pel || '-')}</strong> (tidak teridentifikasi masuk melalui pelabuhan di luar Batam). ` +
+                        `Fasilitas Pengeluaran Sementara KBM hanya berlaku untuk kendaraan CKD / terutang PPN (bukan CBU). Catatan ini ikut dikirim ke petugas pemeriksa.`;
+                } else {
+                    banner.style.display = 'none';
+                    banner.innerHTML = '';
+                }
+            }
+        }
+
+        function renderCrossValidationPanel() {
+            const panel = document.getElementById('crossValidationPanel');
+            const grid = document.getElementById('crossValGrid');
+            const summaryBadge = document.getElementById('crossValSummaryBadge');
+            if (!panel || !grid) return;
+
+            const k = docOcrStore.ktp || {};
+            const n = docOcrStore.npwp || {};
+            const b = docOcrStore.bpkb || {};
+            const s1 = docOcrStore.stnk1 || {};
+            const s2 = docOcrStore.stnk2 || {};
+
+            const hasAny = [k, n, b, s1, s2].some(obj => Object.keys(obj).length > 0);
+            if (!hasAny) {
+                panel.style.display = 'none';
                 return;
             }
+            panel.style.display = 'block';
 
-            // Bersihkan field terkait sebelum OCR agar tidak ada residu data percobaan lama
-            if (target === 'ktp') {
-                document.getElementById('pemohon_nik').value = '';
-                document.getElementById('pemohon_nama').value = '';
-                document.getElementById('pemohon_alamat').value = '';
-                document.getElementById('tagNikAuto').style.display = 'none';
-                document.getElementById('tagNamaAuto').style.display = 'none';
-                document.getElementById('tagAlamatAuto').style.display = 'none';
-            } else if (target === 'npwp') {
-                document.getElementById('pemohon_npwp').value = '';
-                document.getElementById('tagNpwpAuto').style.display = 'none';
-            } else if (target === 'ownership') {
-                document.getElementById('kbm_nobpkb').value = '';
-                document.getElementById('tagBpkbAuto').style.display = 'none';
+            const checks = [
+                {
+                    label: 'Nama Pemilik (KTP • NPWP • BPKB • STNK)',
+                    entries: [
+                        ['KTP', k.nama || document.getElementById('pemohon_nama')?.value],
+                        ['NPWP', n.nama],
+                        ['BPKB', b.nama_pemilik],
+                        ['STNK 1', s1.nama_pemilik],
+                        ['STNK 2', s2.nama_pemilik]
+                    ]
+                },
+                {
+                    label: 'NIK (KTP vs BPKB)',
+                    entries: [['KTP', k.nik || document.getElementById('pemohon_nik')?.value], ['BPKB', b.nik_pemilik]]
+                },
+                {
+                    label: 'Alamat (KTP vs BPKB)',
+                    entries: [['KTP', k.alamat || document.getElementById('pemohon_alamat')?.value], ['BPKB', b.alamat_pemilik]]
+                },
+                {
+                    label: 'Nomor BPKB (BPKB vs STNK Lbr 1)',
+                    entries: [['BPKB', b.no_bpkb], ['STNK 1', s1.no_bpkb]]
+                },
+                {
+                    label: 'Nomor Polisi / Plat (BPKB • STNK 1 • STNK 2)',
+                    entries: [['BPKB', b.no_polisi], ['STNK 1', s1.no_polisi], ['STNK 2', s2.no_polisi]]
+                },
+                {
+                    label: 'Merek & Tipe (BPKB • STNK 1 • STNK 2)',
+                    entries: [
+                        ['BPKB', [b.merk, b.type].filter(Boolean).join(' ')],
+                        ['STNK 1', [s1.merk, s1.type].filter(Boolean).join(' ')],
+                        ['STNK 2', [s2.merk, s2.type].filter(Boolean).join(' ')]
+                    ]
+                },
+                {
+                    label: 'Tahun Pembuatan (BPKB • STNK 1 • STNK 2)',
+                    entries: [['BPKB', b.tahun], ['STNK 1', s1.tahun], ['STNK 2', s2.tahun]]
+                },
+                {
+                    label: 'Jenis & Model (BPKB • STNK 1 • STNK 2)',
+                    entries: [
+                        ['BPKB', [b.jenis, b.model].filter(Boolean).join(' / ')],
+                        ['STNK 1', [s1.jenis, s1.model].filter(Boolean).join(' / ')],
+                        ['STNK 2', [s2.jenis, s2.model].filter(Boolean).join(' / ')]
+                    ]
+                },
+                {
+                    label: 'Warna (BPKB • STNK 1 • STNK 2)',
+                    entries: [['BPKB', b.warna], ['STNK 1', s1.warna], ['STNK 2', s2.warna]]
+                },
+                {
+                    label: 'Nomor Rangka / VIN (BPKB • STNK 1 • STNK 2)',
+                    entries: [['BPKB', b.no_rangka], ['STNK 1', s1.no_rangka], ['STNK 2', s2.no_rangka]]
+                },
+                {
+                    label: 'Nomor Mesin (BPKB • STNK 1 • STNK 2)',
+                    entries: [['BPKB', b.no_mesin], ['STNK 1', s1.no_mesin], ['STNK 2', s2.no_mesin]]
+                }
+            ];
+
+            let okCount = 0;
+            let mismatchCount = 0;
+            const cardsHtml = [];
+
+            for (const chk of checks) {
+                const filled = chk.entries.filter(([, v]) => v && String(v).trim());
+                if (filled.length < 2) {
+                    const previewTxt = filled.length === 1 ? `${filled[0][0]}: ${escapeHtml(String(filled[0][1]))}` : 'Menunggu dokumen pembanding';
+                    cardsHtml.push(`<div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:7px; padding:7px 10px;">
+                        <div style="font-weight:700; color:#475569;">${chk.label}</div>
+                        <div style="color:#64748B; margin-top:2px;">⏳ ${previewTxt}</div>
+                    </div>`);
+                    continue;
+                }
+
+                const baseNorm = _normCmp(filled[0][1]);
+                const allMatch = filled.every(([, v]) => {
+                    const nv = _normCmp(v);
+                    return nv === baseNorm || nv.includes(baseNorm) || baseNorm.includes(nv);
+                });
+
+                if (allMatch) {
+                    okCount++;
+                    cardsHtml.push(`<div style="background:#F0FDF4; border:1px solid #86EFAC; border-radius:7px; padding:7px 10px;">
+                        <div style="font-weight:700; color:#166534;">✓ ${chk.label}</div>
+                        <div style="color:#15803D; margin-top:2px;">Sesuai (${filled.map(([src, v]) => `${src}: ${escapeHtml(String(v))}`).join(' • ')})</div>
+                    </div>`);
+                } else {
+                    mismatchCount++;
+                    cardsHtml.push(`<div style="background:#FEF2F2; border:1px solid #FCA5A5; border-radius:7px; padding:7px 10px;">
+                        <div style="font-weight:700; color:#991B1B;">⚠️ ${chk.label}</div>
+                        <div style="color:#B91C1C; margin-top:2px;">Tidak Sesuai / Perlu Dicek (${filled.map(([src, v]) => `${src}: ${escapeHtml(String(v))}`).join(' vs ')})</div>
+                    </div>`);
+                }
             }
 
-            const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf');
-            if (isPdf) {
-                convertPdfToImageDataUrl(file, function(dataUrl) {
-                    if (dataUrl.startsWith('data:image/')) {
-                        validateDocumentColor(dataUrl, function(res) {
-                            if (!res.isColor) {
-                                event.target.value = '';
-                                const docLabels = {
-                                    'ktp': 'KTP Pemohon',
-                                    'npwp': 'Kartu NPWP',
-                                    'ownership': (currentOwnershipDocType === 'bpkb' ? 'BPKB Kendaraan' : 'Surat Keterangan Leasing/Bank'),
-                                    'stnk': 'Lembar STNK'
-                                };
-                                showColorRejectionAlert(docLabels[target] || 'Dokumen', target);
-                                return;
-                            }
-                            runRealOCR(target, dataUrl);
-                        });
-                    } else {
-                        runRealOCR(target, dataUrl);
-                    }
-                });
-            } else {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const dataUrl = e.target.result;
-
-                    // Validasi Warna (Tolak jika Hitam Putih / Fotokopi)
-                    validateDocumentColor(dataUrl, function(res) {
-                        if (!res.isColor) {
-                            event.target.value = '';
-                            const docLabels = {
-                                'ktp': 'KTP Pemohon',
-                                'npwp': 'Kartu NPWP',
-                                'ownership': (currentOwnershipDocType === 'bpkb' ? 'BPKB Kendaraan' : 'Surat Keterangan Leasing/Bank'),
-                                'stnk': 'Lembar STNK'
-                            };
-                            showColorRejectionAlert(docLabels[target] || 'Dokumen', target);
-                            return;
-                        }
-
-                        runRealOCR(target, dataUrl);
-                    });
-                };
-                reader.readAsDataURL(file);
+            grid.innerHTML = cardsHtml.join('');
+            if (summaryBadge) {
+                if (window._kbmCbuIndicated || mismatchCount > 0) {
+                    summaryBadge.innerText = `⚠️ ${mismatchCount} Perlu Dicek${window._kbmCbuIndicated ? ' • Indikasi CBU' : ''}`;
+                    summaryBadge.style.background = '#FEF2F2';
+                    summaryBadge.style.color = '#991B1B';
+                } else if (okCount > 0) {
+                    summaryBadge.innerText = `✓ ${okCount} Parameter Sesuai`;
+                    summaryBadge.style.background = '#DCFCE7';
+                    summaryBadge.style.color = '#166534';
+                } else {
+                    summaryBadge.innerText = 'Menunggu Dokumen Pembanding';
+                    summaryBadge.style.background = '#EFF6FF';
+                    summaryBadge.style.color = '#1D4ED8';
+                }
             }
         }
 
@@ -5927,7 +6139,7 @@
             } catch (e) {
                 console.warn('API /api/ocr not reachable, fallback to client-side OCR:', e);
             }
-            if (window.Tesseract) {
+            if (window.Tesseract && typeof imgUrl === 'string' && imgUrl.startsWith('data:image/')) {
                 try {
                     const res = await Tesseract.recognize(imgUrl, 'ind+eng');
                     return { text: res.data.text || '', parsed: {} };
@@ -5938,43 +6150,44 @@
             return { text: '', parsed: {} };
         }
 
-        async function runRealOCR(target, imgUrl) {
+        async function runRealOCR(target, imgUrl, rawPdfUrlForOcr = null) {
+            const ocrPayloadUrl = rawPdfUrlForOcr || imgUrl;
+
             if (target === 'ktp') {
                 uploadedKtpDataUrl = imgUrl;
                 const box = document.getElementById('previewKtpBox');
                 const img = document.getElementById('imgKtpPreview');
                 const ph = document.getElementById('phKtp');
                 const laser = document.getElementById('laserKtp');
-                const progressBox = document.getElementById('progressKtp');
-                const progressTxt = document.getElementById('txtProgressKtp');
 
                 if (ph) ph.style.display = 'none';
                 img.style.display = 'block';
                 img.src = imgUrl;
-                box.style.display = 'block';
-                laser.style.display = 'block';
-                if (progressBox) progressBox.style.display = 'block';
-                if (progressTxt) progressTxt.innerText = 'Memindai KTP...';
+                if (box) box.style.display = 'flex';
+                if (laser) laser.style.display = 'block';
+                setDocCardState('ktp', 'loading', 'Memindai & mengekstrak NIK, Nama, dan Alamat dari KTP...');
 
                 try {
-                    const [ocrRes] = await Promise.all([
-                        fetchOCR('ktp', imgUrl),
-                        new Promise(r => setTimeout(r, 800)) // Efek visual pemindai
-                    ]);
-                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : (typeof ocrRes === 'string' ? ocrRes : '');
+                    const ocrRes = await fetchOCR('ktp', ocrPayloadUrl);
+                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseKtpTextRobust(rawText);
                     const finalData = Object.assign({}, clientParsed, serverParsed);
-                    console.log('OCR Final KTP Data:', finalData);
-                    applyKtpData(finalData);
-                    const bKtp = document.getElementById('badgeKtpStatus');
-                    if (bKtp) { bKtp.innerText = 'Terbaca Otomatis'; bKtp.style.background = '#DCFCE7'; bKtp.style.color = '#166534'; }
+                    docOcrStore.ktp = Object.assign({}, docOcrStore.ktp, finalData);
+
+                    const hasData = !!(finalData.nik || finalData.nama || finalData.alamat);
+                    if (hasData) {
+                        applyKtpData(finalData);
+                        setDocCardState('ktp', 'ok', `NIK: ${finalData.nik || '-'} • Nama: ${finalData.nama || '-'}`);
+                    } else {
+                        setDocCardState('ktp', 'manual', 'KTP terunggah. Teks belum terbaca otomatis — silakan ketik NIK, Nama & Alamat secara manual di bawah.');
+                    }
+                    renderCrossValidationPanel();
                 } catch (err) {
                     console.warn('OCR error KTP:', err);
-                    fallbackKtp();
+                    setDocCardState('ktp', 'manual', 'KTP terunggah. OCR gagal memproses — silakan isi/koreksi data KTP manual di bawah.');
                 } finally {
-                    laser.style.display = 'none';
-                    if (progressBox) progressBox.style.display = 'none';
+                    if (laser) laser.style.display = 'none';
                 }
 
             } else if (target === 'npwp') {
@@ -5983,36 +6196,39 @@
                 const img = document.getElementById('imgNpwpPreview');
                 const ph = document.getElementById('phNpwp');
                 const laser = document.getElementById('laserNpwp');
-                const progressBox = document.getElementById('progressNpwp');
-                const progressTxt = document.getElementById('txtProgressNpwp');
 
                 if (ph) ph.style.display = 'none';
                 img.style.display = 'block';
                 img.src = imgUrl;
-                box.style.display = 'block';
-                laser.style.display = 'block';
-                if (progressBox) progressBox.style.display = 'block';
-                if (progressTxt) progressTxt.innerText = 'Memindai NPWP...';
+                if (box) box.style.display = 'flex';
+                if (laser) laser.style.display = 'block';
+                setDocCardState('npwp', 'loading', 'Memindai Nomor NPWP (format asli kartu) & Nama Wajib Pajak...');
 
                 try {
-                    const [ocrRes] = await Promise.all([
-                        fetchOCR('npwp', imgUrl),
-                        new Promise(r => setTimeout(r, 800)) // Efek visual pemindai
-                    ]);
-                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : (typeof ocrRes === 'string' ? ocrRes : '');
+                    const ocrRes = await fetchOCR('npwp', ocrPayloadUrl);
+                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseNpwpTextRobust(rawText);
                     const finalData = Object.assign({}, clientParsed, serverParsed);
-                    console.log('OCR Final NPWP Data:', finalData);
-                    applyNpwpData(finalData);
-                    const bNpwp = document.getElementById('badgeNpwpStatus');
-                    if (bNpwp) { bNpwp.innerText = 'Terbaca Otomatis'; bNpwp.style.background = '#DCFCE7'; bNpwp.style.color = '#166534'; }
+                    if (serverParsed.npwp) finalData.npwp = String(serverParsed.npwp).trim();
+                    docOcrStore.npwp = Object.assign({}, docOcrStore.npwp, finalData);
+
+                    const hasData = !!(finalData.npwp || finalData.nama);
+                    if (hasData) {
+                        applyNpwpData(finalData);
+                        if (finalData.npwp && document.getElementById('pemohon_npwp')) {
+                            document.getElementById('pemohon_npwp').value = finalData.npwp;
+                        }
+                        setDocCardState('npwp', 'ok', `NPWP: ${finalData.npwp || '-'}${finalData.nama ? ' • ' + finalData.nama : ''}`);
+                    } else {
+                        setDocCardState('npwp', 'manual', 'NPWP terunggah. Nomor belum terbaca otomatis — silakan ketik Nomor NPWP manual di bawah.');
+                    }
+                    renderCrossValidationPanel();
                 } catch (err) {
                     console.warn('OCR error NPWP:', err);
-                    fallbackNpwp();
+                    setDocCardState('npwp', 'manual', 'NPWP terunggah. OCR gagal memproses — silakan ketik Nomor NPWP manual di bawah.');
                 } finally {
-                    laser.style.display = 'none';
-                    if (progressBox) progressBox.style.display = 'none';
+                    if (laser) laser.style.display = 'none';
                 }
 
             } else if (target === 'ownership') {
@@ -6021,39 +6237,60 @@
                 const img = document.getElementById('imgOwnershipPreview');
                 const ph = document.getElementById('phOwnership');
                 const laser = document.getElementById('laserOwnership');
-                const progressBox = document.getElementById('progressOwnership');
-                const progressTxt = document.getElementById('txtProgressOwnership');
 
                 if (ph) ph.style.display = 'none';
                 img.style.display = 'block';
                 img.src = imgUrl;
-                box.style.display = 'block';
-                laser.style.display = 'block';
-                if (progressBox) progressBox.style.display = 'block';
-                if (progressTxt) progressTxt.innerText = (currentOwnershipDocType === 'bpkb') ? 'Memindai BPKB...' : 'Memindai Surat Leasing...';
+                if (box) box.style.display = 'flex';
+                if (laser) laser.style.display = 'block';
+                setDocCardState('ownership', 'loading', 'Memindai halaman BPKB (No. BPKB, Pemilik, Kendaraan & Registrasi Pertama)...');
 
                 try {
-                    const [rawText] = await Promise.all([
-                        fetchOCR('ownership', imgUrl),
-                        new Promise(r => setTimeout(r, 800))
-                    ]);
-                    console.log('OCR Raw Ownership:', rawText);
-                    const upper = (typeof rawText === 'object' && rawText.text ? rawText.text : (rawText || '')).toUpperCase();
+                    const ocrRes = await fetchOCR('ownership', ocrPayloadUrl);
+                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
+                    const upper = rawText.toUpperCase();
                     const isBpkb = (currentOwnershipDocType === 'bpkb') || upper.includes('BPKB') || upper.includes('PEMILIK KENDARAAN');
-                    if (isBpkb) {
-                        const bpkbData = (typeof rawText === 'object' && rawText.parsed && Object.keys(rawText.parsed).length) ? rawText.parsed : parseBpkbTextRobust(upper);
-                        applyBpkbData(bpkbData);
+
+                    let parsed = {};
+                    if (Object.keys(serverParsed).length) {
+                        parsed = serverParsed;
+                    } else if (isBpkb) {
+                        parsed = parseBpkbTextRobust(upper);
                     } else {
-                        const leasingData = (typeof rawText === 'object' && rawText.parsed && Object.keys(rawText.parsed).length) ? rawText.parsed : parseLeasingTextRobust(upper);
-                        applyLeasingData(leasingData);
+                        parsed = parseLeasingTextRobust(upper);
                     }
-                    const bOwn = document.getElementById('badgeOwnershipStatus');
-                    if (bOwn) { bOwn.innerText = 'Terbaca Otomatis'; bOwn.style.background = '#DCFCE7'; bOwn.style.color = '#166534'; }
+
+                    const merged = Object.assign({}, docOcrStore.bpkb);
+                    for (const [k, v] of Object.entries(parsed)) {
+                        if (v !== null && v !== undefined && String(v).trim() !== '') {
+                            merged[k] = v;
+                        }
+                    }
+                    docOcrStore.bpkb = merged;
+
+                    const hasData = !!(merged.no_bpkb || merged.nobpkb || merged.no_polisi || merged.no_rangka || merged.nama_pemilik || merged.no_kontrak);
+                    if (hasData) {
+                        const mappedForApply = Object.assign({}, merged, {
+                            nobpkb: merged.no_bpkb || merged.nobpkb || '',
+                            norangka: merged.no_rangka || merged.norangka || '',
+                            nomesin: merged.no_mesin || merged.nomesin || ''
+                        });
+                        if (isBpkb) applyBpkbData(mappedForApply);
+                        else applyLeasingData(mappedForApply);
+
+                        checkBpkbCbuIndication(merged);
+                        const cbuTag = window._kbmCbuIndicated ? ' • ⚠️ Indikasi CBU' : '';
+                        setDocCardState('ownership', 'ok', `BPKB: ${merged.no_bpkb || merged.nobpkb || '-'} • Plat: ${merged.no_polisi || '-'}${cbuTag}`);
+                    } else {
+                        setDocCardState('ownership', 'manual', 'BPKB terunggah. Teks belum terbaca otomatis — silakan lengkapi data BPKB manual di Langkah 2.');
+                    }
+                    renderCrossValidationPanel();
                 } catch (err) {
                     console.warn('OCR error Ownership:', err);
+                    setDocCardState('ownership', 'manual', 'BPKB terunggah. OCR gagal memproses — silakan lengkapi data BPKB manual di Langkah 2.');
                 } finally {
-                    laser.style.display = 'none';
-                    if (progressBox) progressBox.style.display = 'none';
+                    if (laser) laser.style.display = 'none';
                 }
 
             } else if (target === 'stnk') {
@@ -6062,36 +6299,80 @@
                 const img = document.getElementById('imgStnkPreview');
                 const ph = document.getElementById('phStnk');
                 const laser = document.getElementById('laserStnk');
-                const progressBox = document.getElementById('progressStnk');
-                const progressTxt = document.getElementById('txtProgressStnk');
 
                 if (ph) ph.style.display = 'none';
                 img.style.display = 'block';
                 img.src = imgUrl;
-                box.style.display = 'block';
-                laser.style.display = 'block';
-                if (progressBox) progressBox.style.display = 'block';
-                if (progressTxt) progressTxt.innerText = 'Memindai STNK...';
+                if (box) box.style.display = 'flex';
+                if (laser) laser.style.display = 'block';
+                setDocCardState('stnk', 'loading', 'Memindai STNK Lembar 1 (No. STNK, Plat, BPKB, Rangka & Mesin)...');
 
                 try {
-                    const [ocrRes] = await Promise.all([
-                        fetchOCR('stnk', imgUrl),
-                        new Promise(r => setTimeout(r, 800))
-                    ]);
-                    console.log('OCR Raw STNK:', ocrRes);
-                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : (typeof ocrRes === 'string' ? ocrRes : '');
+                    const ocrRes = await fetchOCR('stnk_1', ocrPayloadUrl);
+                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseStnkTextRobust(rawText);
                     const finalData = Object.assign({}, clientParsed, serverParsed);
-                    applyStnkData(finalData);
-                    const bStnk = document.getElementById('badgeStnkStatus');
-                    if (bStnk) { bStnk.innerText = 'Terbaca Otomatis'; bStnk.style.background = '#DCFCE7'; bStnk.style.color = '#166534'; }
+                    docOcrStore.stnk1 = Object.assign({}, docOcrStore.stnk1, finalData);
+
+                    const hasData = !!(finalData.no_polisi || finalData.no_stnk || finalData.nostnk || finalData.no_rangka || finalData.nama_pemilik);
+                    if (hasData) {
+                        const mapped = Object.assign({}, finalData, {
+                            nostnk: finalData.no_stnk || finalData.nostnk || '',
+                            norangka: finalData.no_rangka || finalData.norangka || '',
+                            nomesin: finalData.no_mesin || finalData.nomesin || ''
+                        });
+                        applyStnkData(mapped);
+                        setDocCardState('stnk', 'ok', `STNK Lbr 1: ${finalData.no_polisi || '-'} • No: ${finalData.no_stnk || finalData.nostnk || '-'}`);
+                    } else {
+                        setDocCardState('stnk', 'manual', 'STNK Lbr 1 terunggah. Teks belum terbaca otomatis — silakan lengkapi manual di Langkah 2.');
+                    }
+                    renderCrossValidationPanel();
                 } catch (err) {
-                    console.warn('OCR error STNK:', err);
-                    fallbackStnk();
+                    console.warn('OCR error STNK Lbr 1:', err);
+                    setDocCardState('stnk', 'manual', 'STNK Lbr 1 terunggah. OCR gagal memproses — silakan lengkapi manual di Langkah 2.');
                 } finally {
-                    laser.style.display = 'none';
-                    if (progressBox) progressBox.style.display = 'none';
+                    if (laser) laser.style.display = 'none';
+                }
+
+            } else if (target === 'stnk_2') {
+                const box = document.getElementById('previewStnk2Box');
+                const img = document.getElementById('imgStnk2Preview');
+                const ph = document.getElementById('phStnk2');
+                const laser = document.getElementById('laserStnk2');
+
+                if (ph) ph.style.display = 'none';
+                img.style.display = 'block';
+                img.src = imgUrl;
+                if (box) box.style.display = 'flex';
+                if (laser) laser.style.display = 'block';
+                setDocCardState('stnk_2', 'loading', 'Memindai STNK Lembar 2 (TBPKP / Notice Pajak & NJKB)...');
+
+                try {
+                    const ocrRes = await fetchOCR('stnk_2', ocrPayloadUrl);
+                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
+                    const clientParsed = parseStnkTextRobust(rawText);
+                    const finalData = Object.assign({}, clientParsed, serverParsed);
+                    docOcrStore.stnk2 = Object.assign({}, docOcrStore.stnk2, finalData);
+
+                    const hasData = !!(finalData.no_polisi || finalData.nama_pemilik || finalData.no_rangka || finalData.njkb);
+                    if (hasData) {
+                        const mapped = Object.assign({}, finalData, {
+                            norangka: finalData.no_rangka || finalData.norangka || '',
+                            nomesin: finalData.no_mesin || finalData.nomesin || ''
+                        });
+                        applyStnkData(mapped);
+                        setDocCardState('stnk_2', 'ok', `TBPKP Lbr 2: ${finalData.no_polisi || '-'}${finalData.njkb ? ' • NJKB Rp ' + Number(finalData.njkb).toLocaleString('id-ID') : ''}`);
+                    } else {
+                        setDocCardState('stnk_2', 'manual', 'STNK Lbr 2 (TBPKP) terunggah. Silakan cek/lengkapi data kendaraan & NJKB secara manual di Langkah 2.');
+                    }
+                    renderCrossValidationPanel();
+                } catch (err) {
+                    console.warn('OCR error STNK Lbr 2:', err);
+                    setDocCardState('stnk_2', 'manual', 'STNK Lbr 2 (TBPKP) terunggah. OCR gagal memproses — silakan lengkapi manual di Langkah 2.');
+                } finally {
+                    if (laser) laser.style.display = 'none';
                 }
             }
         }
@@ -7800,11 +8081,18 @@
                 ['ktp', 'imgKtpPreview'],
                 ['npwp', 'imgNpwpPreview'],
                 ['stnk', 'imgStnkPreview'],
+                ['stnk_2', 'imgStnk2Preview'],
                 ['bpkb', 'imgOwnershipPreview'],
                 ['buku_nikah', 'imgBukuNikahPreview'],
                 ['kwitansi', 'imgKwitansiPreview'],
                 ['surat_sewa', 'imgSuratSewaPreview'],
                 ['surat_kuasa', 'imgSuratKuasaPreview'],
+                ['foto_depan', 'imgPhDepan'],
+                ['foto_kanan', 'imgPhKanan'],
+                ['foto_kiri', 'imgPhKiri'],
+                ['foto_belakang', 'imgPhBelakang'],
+                ['foto_rangka', 'imgPhRangka'],
+                ['foto_mesin', 'imgPhMesin'],
             ];
             for (const [k, imgId] of _berkasMap) {
                 const du = _getDataUrlFromImg(imgId);
@@ -7823,6 +8111,8 @@
                 status: 'BERKAS_LENGKAP',
                 dokumen_bermeterai: uploadedBermeteraiDataUrl,
                 dokumen_bermeterai_nama: uploadedBermeteraiFileName,
+                indikasi_cbu: !!window._kbmCbuIndicated,
+                cbu_detail: window._kbmCbuDetail || '',
                 berkas_pemohon: berkasPemohon
             };
 
@@ -8169,6 +8459,13 @@
             }
 
             currentPortalView = view;
+            // Pastikan class landing-page dicabut & body tidak menjadi nested scroll container (agar trackpad 2-jari mulus)
+            document.body.classList.remove('landing-page');
+            document.documentElement.style.overflowY = 'auto';
+            document.body.style.overflow = 'visible';
+            document.body.style.height = 'auto';
+            document.body.style.maxHeight = 'none';
+
             const viewLanding = document.getElementById('viewAuthLanding');
             const viewDash = document.getElementById('viewDashboard');
             const viewForm = document.getElementById('viewFormulir');
@@ -9852,22 +10149,26 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
                 }
                 if (btnLiveChat) btnLiveChat.style.display = 'none';
 
-                // Auto-fill dan kunci identitas pemohon di form agar konsisten
+                // Auto-fill awal identitas pemohon dari akun terdaftar — TETAP EDITABLE (tidak readOnly)
+                // agar pemohon bebas mengoreksi/mengetik manual sebelum submit final
                 if (user.nik && document.getElementById('pemohon_nik')) {
                     document.getElementById('pemohon_nik').value = user.nik;
-                    document.getElementById('pemohon_nik').readOnly = true;
+                    document.getElementById('pemohon_nik').readOnly = false;
+                    document.getElementById('pemohon_nik').disabled = false;
                     document.getElementById('pemohon_nik').classList.add('filled');
                 }
                 if (user.nama && document.getElementById('pemohon_nama')) {
                     document.getElementById('pemohon_nama').value = user.nama;
-                    document.getElementById('pemohon_nama').readOnly = true;
+                    document.getElementById('pemohon_nama').readOnly = false;
+                    document.getElementById('pemohon_nama').disabled = false;
                     document.getElementById('pemohon_nama').classList.add('filled');
                 }
                 if (user.phone && document.getElementById('pemohon_telp')) {
                     let ph = user.phone;
                     if (ph.startsWith('62')) ph = '0' + ph.substring(2);
                     document.getElementById('pemohon_telp').value = ph;
-                    document.getElementById('pemohon_telp').readOnly = true;
+                    document.getElementById('pemohon_telp').readOnly = false;
+                    document.getElementById('pemohon_telp').disabled = false;
                     document.getElementById('pemohon_telp').classList.add('filled');
                 }
 

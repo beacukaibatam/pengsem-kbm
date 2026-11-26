@@ -730,70 +730,121 @@ def decode_file_bytes_to_cv2(raw_bytes):
 
     return img_cv
 
+def _detect_image_mime(raw_bytes):
+    if raw_bytes.startswith(bytes([0xFF, 0xD8, 0xFF])):
+        return 'image/jpeg'
+    if raw_bytes.startswith(bytes([0x89, 0x50, 0x4E, 0x47])):
+        return 'image/png'
+    if raw_bytes.startswith(b'RIFF') and raw_bytes[8:12] == b'WEBP':
+        return 'image/webp'
+    return 'image/jpeg'
+
 def extract_with_vision_ai(image_bytes, target=''):
-    """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini"""
+    """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini (mendukung multi-halaman PDF BPKB)."""
     if not VISION_AI_ENABLED:
         return None, ""
-        
+
     try:
-        # Konversi jika format PDF (Render kualitas tinggi 300 DPI)
+        image_parts = []
         if image_bytes.startswith(b'%PDF') and fitz:
             doc = fitz.open(stream=image_bytes, filetype="pdf")
-            if len(doc) > 0:
-                pix = doc[0].get_pixmap(dpi=300)
-                image_bytes = pix.tobytes("png")
-                
-        b64_str = base64.b64encode(image_bytes).decode('utf-8')
-        
+            max_pages = 4 if target in ('ownership', 'bpkb', 'fullset', 'all') else 2
+            for p_idx in range(min(len(doc), max_pages)):
+                pix = doc[p_idx].get_pixmap(dpi=220)
+                img_b = pix.tobytes("jpeg")
+                image_parts.append({"inlineData": {"mimeType": "image/jpeg", "data": base64.b64encode(img_b).decode('utf-8')}})
+        else:
+            mime = _detect_image_mime(image_bytes)
+            image_parts.append({"inlineData": {"mimeType": mime, "data": base64.b64encode(image_bytes).decode('utf-8')}})
+
+        if not image_parts:
+            return None, ""
+
         prompts = {
-            'ktp': "Ekstrak seluruh informasi KTP ini ke dalam JSON dengan kunci: nik (16 digit), nama (nama lengkap tanpa gelar/keterangan lain), tempat_lahir, tgl_lahir (DD-MM-YYYY), alamat (jalan, RT/RW, kelurahan, kecamatan, kota/kabupaten), jenis_kelamin, agama, pekerjaan. Hanya JSON murni.",
-            'npwp': "Ekstrak nomor NPWP dan nama wajib pajak/pemilik dari gambar ini ke dalam format JSON dengan kunci: npwp (format 15 digit XX.XXX.XXX.X-XXX.XXX), nama (nama wajib pajak). Hanya JSON murni.",
-            'stnk': "Ekstrak seluruh informasi STNK / Notice Pajak Daerah ini ke dalam format JSON dengan kunci: no_polisi (Plat BP), no_stnk (Nomor seri STNK / nomor cetak SKPD), nama_pemilik, alamat, merk, type (tipe spesifik lengkap mobil, misal B100RS-GMDF / AYLA 1.0 M MT), jenis, model, tahun, isi_silinder, no_rangka (VIN 17 digit), no_mesin, warna, bahan_bakar, njkb (Angka Nilai Jual Kendaraan Bermotor dalam integer murni tanpa titik/koma, misal 58000000). Hanya JSON murni.",
-            'ownership': "Ekstrak seluruh data dokumen kepemilikan/BPKB/leasing ini ke dalam format JSON dengan kunci: no_bpkb (Nomor seri BPKB misal L-04829182), no_polisi (Nomor registrasi BP), merk, type, model, tahun, warna, no_rangka (VIN 17 digit), no_mesin, nama_pemilik, no_kontrak. Hanya JSON murni.",
-            'vehicle': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi (Plat BP), no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, model, tahun, no_rangka (VIN 17 digit), no_mesin, warna, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni.",
-            'kbm_unified': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi (Plat BP), no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, model, tahun, no_rangka (VIN 17 digit), no_mesin, warna, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni.",
-            'fullset': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik (16 digit), nama (nama lengkap pemohon sesuai KTP), npwp (15/16 digit format XX.XXX.XXX.X-XXX.XXX), alamat (alamat lengkap domisili KTP di Batam), no_polisi (Plat BP), no_stnk, no_bpkb, merk, type (tipe spesifik lengkap mobil misal B100RS-GMDF / AYLA 1.0 M MT), model, tahun, warna, no_rangka (VIN 17 digit), no_mesin, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni.",
-            'all': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik (16 digit), nama (nama lengkap pemohon sesuai KTP), npwp (15/16 digit format XX.XXX.XXX.X-XXX.XXX), alamat (alamat lengkap domisili KTP di Batam), no_polisi (Plat BP), no_stnk, no_bpkb, merk, type, model, tahun, warna, no_rangka (VIN 17 digit), no_mesin, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni."
+            'ktp': (
+                "Ekstrak informasi KTP Indonesia ini ke dalam JSON murni dengan kunci: "
+                "nik (16 digit angka), nama (NAMA LENGKAP huruf kapital tanpa gelar tambahan), "
+                "tempat_lahir, tgl_lahir (DD-MM-YYYY), alamat (alamat lengkap termasuk RT/RW, Kel/Desa, Kecamatan), "
+                "jenis_kelamin, agama, pekerjaan. Jika tidak terbaca isi string kosong. Hanya JSON murni."
+            ),
+            'npwp': (
+                "Ekstrak nomor NPWP dan nama wajib pajak dari kartu NPWP Indonesia ini ke dalam JSON murni dengan kunci: "
+                "npwp (PERTAHANKAN format penulisan asli persis seperti di kartu, misal 15 digit bertitik/strip XX.XXX.XXX.X-XXX.XXX atau 16 digit), "
+                "nama (NAMA LENGKAP wajib pajak). Hanya JSON murni."
+            ),
+            'stnk': (
+                "Ekstrak seluruh informasi STNK Lembar 1 (Surat Tanda Nomor Kendaraan Bermotor) ke dalam JSON murni dengan kunci: "
+                "no_stnk (Nomor STNK), no_polisi (Nomor Registrasi / Plat BP), nama_pemilik, alamat, "
+                "merk, type, tahun (Tahun Pembuatan 4 digit), jenis, model, warna, "
+                "no_rangka (VIN 17 karakter), no_mesin, no_bpkb (Nomor BPKB yang tertera di STNK), "
+                "isi_silinder, bahan_bakar, njkb (integer murni bila ada). Hanya JSON murni."
+            ),
+            'stnk_1': (
+                "Ekstrak seluruh informasi STNK Lembar 1 (Surat Tanda Nomor Kendaraan Bermotor) ke dalam JSON murni dengan kunci: "
+                "no_stnk (Nomor STNK), no_polisi (Nomor Registrasi / Plat BP), nama_pemilik, alamat, "
+                "merk, type, tahun (Tahun Pembuatan 4 digit), jenis, model, warna, "
+                "no_rangka (VIN 17 karakter), no_mesin, no_bpkb (Nomor BPKB yang tertera di STNK). Hanya JSON murni."
+            ),
+            'stnk_2': (
+                "Ekstrak seluruh informasi STNK Lembar 2 (TBPKP / Tanda Bukti Pelunasan Kewajiban Pembayaran / Notice Pajak) ke dalam JSON murni dengan kunci: "
+                "no_polisi (Nomor Polisi), nama_pemilik, merk, type, tahun (Tahun Pembuatan 4 digit), "
+                "jenis, model, warna, no_rangka (VIN 17 karakter), no_mesin, "
+                "njkb (Angka integer murni NJKB Bapenda tanpa titik/koma, misal 150000000). Hanya JSON murni."
+            ),
+            'ownership': (
+                "Ekstrak seluruh informasi BPKB (atau Surat Leasing) dari halaman-halaman ini ke dalam JSON murni dengan kunci: "
+                "no_bpkb (Nomor BPKB), nama_pemilik, nik_pemilik (NIK pada lembar identitas pemilik bila ada), alamat_pemilik, "
+                "no_polisi (Nomor Registrasi / Plat), merk, type, tahun (Tahun Pembuatan 4 digit), jenis, model, warna, "
+                "no_rangka (VIN 17 karakter), no_mesin, jumlah_roda, "
+                "nama_apm_importir (Nama APM / Importir pada halaman Dokumen Persyaratan Registrasi Pertama bila ada), "
+                "pelabuhan_impor (Nama Pelabuhan pada halaman Dokumen Persyaratan Registrasi Pertama bila ada), "
+                "no_kontrak (bila surat leasing). Hanya JSON murni."
+            ),
+            'bpkb': (
+                "Ekstrak seluruh informasi BPKB dari halaman-halaman ini ke dalam JSON murni dengan kunci: "
+                "no_bpkb, nama_pemilik, nik_pemilik, alamat_pemilik, no_polisi, merk, type, tahun, jenis, model, warna, "
+                "no_rangka, no_mesin, jumlah_roda, nama_apm_importir, pelabuhan_impor. Hanya JSON murni."
+            ),
+            'vehicle': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi, no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
+            'kbm_unified': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi, no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
+            'fullset': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik, nama, npwp, alamat, no_polisi, no_stnk, no_bpkb, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
+            'all': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik, nama, npwp, alamat, no_polisi, no_stnk, no_bpkb, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni."
         }
-        
+
         prompt_text = prompts.get(target, "Ekstrak seluruh teks dan informasi penting dalam format JSON. Hanya JSON murni.")
-        
-        # Prioritas model multimodal vision
-        candidate_models = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-2.5-flash']
-        
+        candidate_models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+
         for model_name in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
             payload = {
                 "contents": [{
-                    "parts": [
-                        {"text": prompt_text},
-                        {"inlineData": {"mimeType": "image/png", "data": b64_str}}
-                    ]
+                    "parts": [{"text": prompt_text}] + image_parts
                 }],
                 "generationConfig": {
                     "responseMimeType": "application/json",
                     "temperature": 0.1
                 }
             }
-            
             try:
                 req = urllib.request.Request(
-                    url, 
+                    url,
                     data=json.dumps(payload).encode('utf-8'),
                     headers={"Content-Type": "application/json"}
                 )
-                with urllib.request.urlopen(req, timeout=12) as resp:
+                with urllib.request.urlopen(req, timeout=25) as resp:
                     data = json.loads(resp.read().decode('utf-8'))
                     candidate = data.get('candidates', [{}])[0]
                     parts = candidate.get('content', {}).get('parts', [{}])
                     out_text = parts[0].get('text', '{}')
                     parsed = json.loads(out_text)
+                    if isinstance(parsed, list) and parsed:
+                        parsed = parsed[0]
                     print(f"[+] Vision AI sukses menggunakan model: {model_name}")
                     return parsed, out_text
             except Exception as e_model:
                 print(f"[!] Vision AI Model {model_name} error: {e_model}, mencoba fallback berikutnya...")
                 continue
-                
+
         return None, ""
     except Exception as e:
         print(f"[!] Vision AI Call Error: {e}")
@@ -816,7 +867,7 @@ def process_ocr(image_bytes, target='', engine='auto'):
         parsed, combined_text = parse_ktp_image(img_cv)
     elif target == 'npwp':
         parsed, combined_text = parse_npwp_image(img_cv)
-    elif target == 'stnk':
+    elif target in ('stnk', 'stnk_1', 'stnk_2'):
         parsed, combined_text = parse_stnk_image(img_cv)
     elif target in ('bpkb', 'leasing', 'ownership'):
         parsed, combined_text = parse_ownership_image(img_cv)
@@ -2577,6 +2628,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "sumber": sumber,
                     "dokumen_bermeterai_nama": body.get("dokumen_bermeterai_nama", ""),
                     "dokumen_bermeterai_ada": bool(dokumen_bermeterai),
+                    "indikasi_cbu": bool(body.get("indikasi_cbu", False)),
+                    "cbu_detail": body.get("cbu_detail", ""),
                     "archived_files": []
                 }
                 if dokumen_bermeterai:
@@ -2590,18 +2643,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if meta_bm:
                         new_record["archived_files"].append(meta_bm)
 
-                # Simpan & arsipkan berkas asli pemohon (KTP, NPWP, STNK, BPKB, dokumen pendukung) ke disk + Google Drive
+                # Simpan & arsipkan berkas asli pemohon (KTP, NPWP, STNK 1 & 2, BPKB, pendukung, 6 foto fisik) ke disk + Google Drive
                 berkas_pemohon = body.get("berkas_pemohon") or {}
                 if isinstance(berkas_pemohon, dict):
                     _label_map = [
                         ("ktp", "01_KTP"),
                         ("npwp", "02_NPWP"),
-                        ("stnk", "03_STNK"),
+                        ("stnk", "03a_STNK_Lembar1"),
+                        ("stnk_2", "03b_STNK_Lembar2_TBPKP"),
                         ("bpkb", "04_BPKB"),
                         ("buku_nikah", "05a_Buku_Nikah_KK"),
                         ("kwitansi", "05b_Kwitansi_Jual_Beli"),
                         ("surat_sewa", "05c_Surat_Sewa"),
                         ("surat_kuasa", "05d_Surat_Kuasa"),
+                        ("foto_depan", "11a_Foto_Sisi_Depan"),
+                        ("foto_kanan", "11b_Foto_Samping_Kanan"),
+                        ("foto_kiri", "11c_Foto_Samping_Kiri"),
+                        ("foto_belakang", "11d_Foto_Sisi_Belakang"),
+                        ("foto_rangka", "11e_Foto_Nomor_Rangka"),
+                        ("foto_mesin", "11f_Foto_Nomor_Mesin"),
                     ]
                     for key, label in _label_map:
                         val = berkas_pemohon.get(key)

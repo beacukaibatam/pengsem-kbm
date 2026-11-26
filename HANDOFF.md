@@ -66,7 +66,8 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
-- **Arsip Google Drive & Force Majeure Backup** — Tambah `gdrive_bridge/Code.gs` + `README_SETUP.md`, simpan berkas asli pemohon (KTP/NPWP/STNK/BPKB/pendukung/bermeterai) & dokumen pabean (PPFTZ-01/LHP/BAP/SPPB) ke `/var/data/uploads/` + antrean arsip otomatis Google Drive, serta `backup_to_gdrive.sh` untuk snapshot proyek (Antigravity, Mac Mini).
+- **Perbaikan UX, Trackpad Scroll, Auto-Crop+OCR, Validasi Silang KTP/NPWP/BPKB(CBU)/STNK 2 Lembar & 6 Foto Kendaraan** — Perbaiki bug nested scroll container agar trackpad 2-jari mulus di `#/formulir`, buka `readOnly` kolom identitas agar semua editable manual, hapus duplikat `onFileSelected` agar `autoCropDocument` selalu aktif, perbaiki status badge/snippet jujur + tombol `↻ Ganti Berkas`, koreksi banner e-meterai, upgrade Gemini Vision OCR (`gemini-2.5-flash`/`2.0-flash`, deteksi MIME akurat, multi-halaman PDF BPKB), tambah slot STNK 2 lembar + deteksi Indikasi Awal CBU + panel komparasi silang menyeluruh + arsip 6 foto fisik kendaraan (Antigravity, Mac Mini).
+- `1b70c45` — Tambah `gdrive_bridge/Code.gs` + `README_SETUP.md`, simpan berkas asli pemohon & dokumen pabean ke `/var/data/uploads/` + antrean arsip otomatis Google Drive, serta `backup_to_gdrive.sh` (Antigravity, Mac Mini).
 - `0009783` — Tambah `HANDOFF.md` untuk sinkronisasi multi-agent & multi-Mac (Antigravity, Mac Mini).
 
 - `8f5d143` — Perjelas label Tahap 1 stepper bar menjadi `1. Akun Pemohon Terdaftar` (Antigravity, Mac Mini).
