@@ -1156,6 +1156,29 @@ def save_db_permohonan(data):
         print("[!] Error saving db_permohonan backup:", e)
         return False
 
+# ID contoh/demo yang pernah diisi dengan identitas asli developer untuk kebutuhan uji
+# tampilan dashboard petugas. Harus dibuang dari data production: selain berisiko privasi,
+# nomor WA aslinya kebetulan sama dengan akun pemohon asli, jadi membuat sistem salah
+# kira pemohon baru itu "sudah pernah mengajukan permohonan" dan menguncinya dari formulir.
+DEMO_SEED_PERMOHONAN_IDS = {
+    'KBM-2026-001', 'KBM-2026-002', 'KBM-2026-003',
+    'KBM-2026-004', 'KBM-2026-005', 'KBM-2026-006',
+}
+
+def repair_remove_demo_seed_permohonan_once():
+    try:
+        conn = database.get_db_connection()
+        placeholders = ','.join('?' for _ in DEMO_SEED_PERMOHONAN_IDS)
+        cur = conn.execute(f"SELECT COUNT(*) as c FROM permohonan WHERE id IN ({placeholders})", tuple(DEMO_SEED_PERMOHONAN_IDS))
+        count = cur.fetchone()['c']
+        if count:
+            conn.execute(f"DELETE FROM permohonan WHERE id IN ({placeholders})", tuple(DEMO_SEED_PERMOHONAN_IDS))
+            conn.commit()
+            print(f"[+] Perbaikan startup: {count} data contoh/demo permohonan dihapus dari SQLite production.")
+        conn.close()
+    except Exception as e:
+        print('[!] Gagal menjalankan pembersihan data demo permohonan:', e)
+
 def send_whatsapp_meta_message(to_number, text, buttons=None):
     """Mengirim pesan via Meta WhatsApp Cloud API resmi jika access token tersedia."""
     token, phone_id = get_meta_credentials()
@@ -2846,6 +2869,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     repair_sqlite_users_from_json_once()
+    repair_remove_demo_seed_permohonan_once()
     lan_ip = get_lan_ip()
     access_url, qr_img_path = generate_access_qr(lan_ip, PORT)
     
