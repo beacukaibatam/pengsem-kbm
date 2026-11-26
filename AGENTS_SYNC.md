@@ -99,6 +99,7 @@
 | `pemeriksabarang` | `12345` *(5 digit)* | `pemeriksabarang` | Pemeriksaan fisik kendaraan di hanggar pelabuhan & rekam LHP foto (`PPFTZ_CEK_FISIK`). |
 | `pemeriksadokumen` | `123456` | `pemeriksadokumen` | Meneliti LHP fisik dan memutuskan penerbitan dokumen SPPB (`PEMERIKSA_DOKUMEN`). |
 | `gate` | `123456` | `gate` | Validasi keberangkatan KBM di gate pelabuhan Roro Batam (`SPPB_GATE_OUT`). |
+| `pemohon` | `123456` | `pemohon` | Akun Uji Pemohon: Pengisian formulir, unggah berkas pabean, & pelacakan status KBM. |
 | `081XXXXXXXXX_REDACTED` | `REDACTED_PASSWORD` | `pemohon` | Wajib Pajak Pemohon: Mengajukan formulir & memantau status kendaraannya sendiri. |
 
 ---
@@ -113,6 +114,7 @@
 | 2026-11-26 09:15 | Antigravity | `index.html`, `Formulir_...html` | Penerapan dynamic `API_BASE_URL` dan Hash-Routing SPA (`#/masuk`, `#/registrasi`, `#/dashboard`, `#/formulir`) dengan auto-restore sesi. | Verified Playwright (0-Diff) |
 | 2026-11-26 09:20 | Antigravity | `requirements.txt`, `render.yaml` | Pembuatan paket blueprint cloud deployment Render 24/7 dan panduan UptimeRobot & GitHub Pages. | Production Ready |
 | 2026-11-26 09:22 | Antigravity | GitHub Repo & Pages | Inisialisasi repo publik `mridwansyah/pengsem-kbm`, pengamanan secret push-protection, dan rilis GitHub Pages live di `https://mridwansyah.github.io/pengsem-kbm/`. | Deployed Live (HTTP 200) |
+| 2026-11-26 09:30 | Antigravity | `server.py`, `kbm_batam.db`, `db_users.json` | Penambahan user sisi pemohon: username `pemohon`, sandi `123456`, verifikasi login & perutean formulir. | Verified Local & Tunnel (200 OK) |
 
 ---
 

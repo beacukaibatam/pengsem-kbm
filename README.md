@@ -28,7 +28,8 @@ Portal layanan terpadu resmi kepabeanan untuk pengajuan, verifikasi OCR, pemanta
 | **Pemeriksa Barang** | `pemeriksabarang` | `12345` | Rekam LHP fisik, foto kendaraan, nomor rangka & nomor mesin. |
 | **Pemeriksa Dokumen** | `pemeriksadokumen` | `123456` | Penelitian berkas & LHP serta keputusan penerbitan SPPB. |
 | **Gate Pelabuhan** | `gate` | `123456` | Pemindaian barcode SPPB & validasi izin keluar pelabuhan. |
-| **Pemohon KBM** | `081XXXXXXXXX_REDACTED` | `REDACTED_PASSWORD` | Pengisian formulir pabean & pelacakan status permohonan. |
+| **Pemohon KBM** | `pemohon` | `123456` | Akun pemohon pengujian: Formulir, unggah berkas & lacak status. |
+| **Pemohon KBM (WA)** | `081XXXXXXXXX_REDACTED` | `REDACTED_PASSWORD` | Pengisian formulir pabean & pelacakan status permohonan. |
 
 ---
 

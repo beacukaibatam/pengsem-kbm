@@ -1454,6 +1454,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         u_nik = str(u.get('nik', '')).strip().replace(' ', '').replace('-', '')
                         u_phone = str(u.get('phone', '')).strip().replace('+', '').replace('-', '').replace(' ', '')
                         u_id = str(u.get('id', '')).strip().lower()
+                        u_user = str(u.get('username', '')).strip().lower()
+                        u_email = str(u.get('email', '')).strip().lower()
                         u_pwd = str(u.get('password', '')).strip()
 
                         phone_variants = [u_phone]
@@ -1462,7 +1464,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         elif u_phone.startswith('0'):
                             phone_variants.append('62' + u_phone[1:])
 
-                        if (clean_user == u_nik or clean_user in phone_variants or clean_user_lower == u_id) and u_pwd == password:
+                        if (clean_user == u_nik or clean_user in phone_variants or clean_user_lower == u_id or clean_user_lower == u_user or clean_user_lower == u_email) and u_pwd == password:
                             matched_user = u
                             matched_role = "pemohon"
                             break
