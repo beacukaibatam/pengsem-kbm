@@ -119,6 +119,7 @@
 | 2026-11-26 09:34 | Antigravity | Tunnel & Kode Frontend | Penghentian total proses tunnel Cloudflare (PID 18154). Tunnel `trycloudflare.com` dinonaktifkan (530). | Deactivated / Cleaned |
 | 2026-11-26 09:45 | Antigravity | Render Cloud 24/7 Live | Blueprint `beacukaibatam/pengsem-kbm` deployed live di `https://api-kbm-beacukaibatam.onrender.com`. Health & Auth 200 OK. | Deployed Live 24/7 |
 | 2026-11-26 09:48 | Antigravity | UptimeRobot 24/7 Ping | Konfigurasi monitor HTTP(S) `API KBM Bea Cukai Batam` (interval 5 menit, target `/api/health`). Server Render anti-sleep. | Active Monitoring |
+| 2026-11-26 09:56 | Antigravity | `index.html`, `Formulir_...html` | Penyempurnaan UI Pemohon: Ubah nama kartu 'STNK' & 'BPKB', hapus animasi scan sebelum upload (placeholder rapi), hapus label CEISA, sembunyikan seluruh tab dinas petugas dari pemohon. | Verified Live (0-Diff) |
 
 ---
 
