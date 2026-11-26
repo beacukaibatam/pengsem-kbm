@@ -2295,100 +2295,34 @@
         .kpi-border-teal { border-top: 4px solid #0284C7 !important; }
         .kpi-border-green { border-top: 4px solid #059669 !important; }
 
-        /* Floating Action Widget Client Coordinator (Minimalis, Ramping & Bebas Halangan) */
-        .fab-cc-fixed {
+        /* Floating Action Button WhatsApp Client Coordinator (Icon Murni Simple) */
+        .fab-wa-clean {
             position: fixed !important;
-            bottom: 18px !important;
-            right: 18px !important;
-            z-index: 900 !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            pointer-events: auto !important;
-            transition: transform 0.2s ease, opacity 0.2s ease;
-        }
-        .fab-cc-pill {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 7px !important;
-            background: #FFFFFF !important;
-            border: 1px solid #CBD5E1 !important;
-            padding: 3px 12px 3px 4px !important;
-            border-radius: 9999px !important;
-            text-decoration: none !important;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.10) !important;
-            transition: all 0.2s ease !important;
-            height: 36px !important;
-            box-sizing: border-box !important;
-            cursor: pointer !important;
-        }
-        .fab-cc-pill:hover {
-            transform: translateY(-2px) !important;
-            border-color: #25D366 !important;
-            box-shadow: 0 6px 18px rgba(37,211,102,0.25) !important;
-        }
-        .fab-cc-icon {
-            width: 28px !important;
-            height: 28px !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 44px !important;
+            height: 44px !important;
             border-radius: 50% !important;
             background: #25D366 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            flex-shrink: 0 !important;
-        }
-        .fab-cc-body {
-            display: flex !important;
-            flex-direction: column !important;
-            line-height: 1.15 !important;
-            text-align: left !important;
-        }
-        .fab-cc-title {
-            font-size: 0.74rem !important;
-            font-weight: 800 !important;
-            color: #0F172A !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-            white-space: nowrap !important;
-        }
-        .fab-cc-close {
-            width: 22px !important;
-            height: 22px !important;
-            border-radius: 50% !important;
-            background: #F1F5F9 !important;
-            border: 1px solid #CBD5E1 !important;
-            color: #64748B !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 14px !important;
-            line-height: 1 !important;
+            box-shadow: 0 4px 14px rgba(37, 211, 102, 0.40) !important;
+            z-index: 900 !important;
+            text-decoration: none !important;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
             cursor: pointer !important;
-            padding: 0 !important;
-            transition: all 0.15s ease !important;
         }
-        .fab-cc-close:hover {
-            background: #E2E8F0 !important;
-            color: #0F172A !important;
+        .fab-wa-clean:hover {
+            transform: scale(1.10) translateY(-2px) !important;
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.50) !important;
         }
         @media (max-width: 768px) {
-            .fab-cc-fixed {
-                bottom: 14px !important;
-                right: 14px !important;
-            }
-            .fab-cc-body {
-                display: none !important; /* Di layar HP hanya berupa icon bulat 36px elegan */
-            }
-            .fab-cc-pill {
-                padding: 4px !important;
-                border-radius: 50% !important;
-                width: 36px !important;
-                height: 36px !important;
-                justify-content: center !important;
-            }
-            .fab-cc-close {
-                display: none !important;
+            .fab-wa-clean {
+                bottom: 16px !important;
+                right: 16px !important;
+                width: 40px !important;
+                height: 40px !important;
             }
         }
 </style>
@@ -10133,42 +10067,11 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
     <input type="file" id="sourcePickerCamera" accept="image/*" capture="environment" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
     <input type="file" id="sourcePickerGallery" accept="image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
     <input type="file" id="sourcePickerFile" accept="application/pdf,.pdf,image/jpeg,image/png,image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
-    <!-- ================= FLOATING ACTION WIDGET (CLIENT COORDINATOR) ================= -->
-    <aside class="fab-cc-fixed" id="fabClientCoordinator">
-        <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="fab-cc-pill" title="Hubungi Client Coordinator Bea Cukai Batam (0851-5814-8448)">
-            <!-- Lingkaran Hijau Solid Flat SVG WhatsApp Putih -->
-            <div class="fab-cc-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF">
-                    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.173 8.173 0 0 1-5.82 2.42c-1.48 0-2.93-.39-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.32a8.194 8.194 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24m4.52 11.51c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.3"/>
-                </svg>
-            </div>
-            <div class="fab-cc-body">
-                <span class="fab-cc-title">Client Coordinator ↗</span>
-            </div>
-        </a>
-        <button type="button" class="fab-cc-close" onclick="dismissClientCoordinator(event)" title="Sembunyikan bantuan">
-            &times;
-        </button>
-    </aside>
-
-    <script>
-        function dismissClientCoordinator(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            const widget = document.getElementById('fabClientCoordinator');
-            if (widget) {
-                widget.style.display = 'none';
-            }
-            try { sessionStorage.setItem('dismiss_fab_cc', 'true'); } catch (err) {}
-        }
-        try {
-            if (sessionStorage.getItem('dismiss_fab_cc') === 'true') {
-                const widget = document.getElementById('fabClientCoordinator');
-                if (widget) widget.style.display = 'none';
-            }
-        } catch (err) {}
-    </script>
+    <!-- ================= FLOATING ACTION BUTTON WHATSAPP (CLIENT COORDINATOR) ================= -->
+    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="fab-wa-clean" title="Hubungi Client Coordinator Bea Cukai Batam (0851-5814-8448)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF">
+            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.173 8.173 0 0 1-5.82 2.42c-1.48 0-2.93-.39-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.32a8.194 8.194 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24m4.52 11.51c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.3"/>
+        </svg>
+    </a>
 </body>
 </html>
