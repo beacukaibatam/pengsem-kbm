@@ -818,11 +818,11 @@
         /* Modal Mismatch Nama KTP vs NPWP & Modal Validasi Form */
         
         /* ================= MODERN MINIMALIST POPUP (SUCCESS & OOOOPS) ================= */
-        .modern-popup-overlay, .modal-overlay {
+        .modern-popup-overlay, .modal-overlay, .sim-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.50);
+            background: rgba(15, 23, 42, 0.60);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
             z-index: 99999;
@@ -9875,12 +9875,12 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
 </script>
 
     <!-- ================= MODAL PANDUAN & KETERANGAN DOKUMEN ================= -->
-    <div class="sim-overlay" id="modalDocGuide" style="display:none; align-items:center; justify-content:center; background:rgba(15,23,42,0.75); z-index:10005; backdrop-filter:blur(4px);">
-        <div style="width:520px; max-width:94vw; background:#FFFFFF; border-radius:12px; box-shadow:0 25px 60px -15px rgba(0,0,0,0.4); overflow:hidden; border:1px solid #CBD5E1; font-family:inherit;">
+    <div class="modal-overlay" id="modalDocGuide" onclick="if(event.target===this) closeDocGuideModal()" style="display:none; align-items:center; justify-content:center; z-index:99999;">
+        <div class="modal-card" style="width:520px; max-width:92vw; background:#FFFFFF; border-radius:14px; box-shadow:0 25px 60px -15px rgba(0,0,0,0.4); overflow:hidden; border:1px solid #CBD5E1; font-family:inherit; animation:modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);">
             <!-- Header Modal -->
-            <div style="background:#00335E; color:#FFFFFF; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid var(--gold);">
+            <div style="background:#00335E; color:#FFFFFF; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid var(--gold);">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
+                    <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
                         <svg class="flat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </div>
                     <div>
@@ -9888,11 +9888,11 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
                         <div id="docGuideSubtitle" style="font-size:0.72rem; color:var(--gold);">Petunjuk Teknis &amp; Tujuan Pengunggahan</div>
                     </div>
                 </div>
-                <button type="button" onclick="closeDocGuideModal()" style="background:none; border:none; color:#FFFFFF; font-size:1.5rem; cursor:pointer; line-height:1;">&times;</button>
+                <button type="button" onclick="closeDocGuideModal()" style="background:rgba(255,255,255,0.15); border:none; color:#FFFFFF; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.2rem; line-height:1;" title="Tutup">&times;</button>
             </div>
 
             <!-- Body Modal -->
-            <div style="padding:20px; font-size:0.86rem; color:#334155; line-height:1.55;">
+            <div style="padding:20px; font-size:0.86rem; color:#334155; line-height:1.55; max-height:calc(85vh - 130px); overflow-y:auto;">
                 <div id="docGuideBody">
                     <!-- Injected dynamically by JS -->
                 </div>
@@ -9900,7 +9900,7 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
 
             <!-- Footer Modal -->
             <div style="background:#F8FAFC; padding:12px 20px; border-top:1px solid #E2E8F0; display:flex; justify-content:flex-end;">
-                <button type="button" class="btn btn-primary" onclick="closeDocGuideModal()" style="padding:8px 20px; font-size:0.82rem; font-weight:700;">
+                <button type="button" class="btn btn-primary" onclick="closeDocGuideModal()" style="padding:8px 22px; font-size:0.82rem; font-weight:700; border-radius:8px;">
                     Saya Mengerti
                 </button>
             </div>

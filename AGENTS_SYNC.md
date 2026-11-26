@@ -121,6 +121,7 @@
 | 2026-11-26 09:48 | Antigravity | UptimeRobot 24/7 Ping | Konfigurasi monitor HTTP(S) `API KBM Bea Cukai Batam` (interval 5 menit, target `/api/health`). Server Render anti-sleep. | Active Monitoring |
 | 2026-11-26 09:56 | Antigravity | `index.html`, `Formulir_...html` | Penyempurnaan UI Pemohon: Ubah nama kartu 'STNK' & 'BPKB', hapus animasi scan sebelum upload (placeholder rapi), hapus label CEISA, sembunyikan seluruh tab dinas petugas dari pemohon. | Verified Live (0-Diff) |
 | 2026-11-26 10:10 | Antigravity | `index.html`, `Formulir_...html` | Perbaikan total layout pemohon untuk Mac Air & Mac Mini: Zero-scroll viewport fit, hilangkan bayangan floating aneh pada preview-box, selaraskan tinggi & grid 4 kartu (KTP, NPWP, STNK, BPKB) 100% simetris, perbaiki DOM nesting (hapus duplikasi input & extra tag penutup), dan cegah teks e-Meterai tertimpa floating WA widget. | Verified Live (0-Diff) |
+| 2026-11-26 10:28 | Antigravity | `index.html`, `Formulir_...html` | Perbaikan posisi popup panduan informasi berkas (`modalDocGuide`): Berikan styling `modal-overlay` dengan `position: fixed; inset: 0` dan centering penuh layar (backdrop blur 5px) sehingga popup muncul presisi di tengah layar (bukan terpotong di bagian bawah halaman). | Verified Playwright (0-Diff) |
 
 ---
 
