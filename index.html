@@ -3477,30 +3477,36 @@
                                 <line x1="12" y1="19" x2="12" y2="5"></line>
                                 <polyline points="5 12 12 5 19 12"></polyline>
                             </svg>
-                            Unggah Berkas BPKB
+                            <span id="lblUploadOwnershipHal1">Unggah BPKB (Hal. 1)</span>
                         </button>
                     </div>
-                    <input type="file" id="fileOwnershipInput" accept="image/*,application/pdf,.pdf" multiple style="display:none;" onchange="onFileSelected(event, 'ownership')">
-                </div>
-            </div>
+                    <input type="file" id="fileOwnershipInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership')">
 
-            <!-- ================= BANNER KETENTUAN E-METERAI RESMI RP 10.000 ================= -->
-            <div class="emeterai-banner" style="background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:10px; padding:10px 16px; margin-top:12px; margin-bottom:8px; display:flex; align-items:center; gap:14px; box-sizing:border-box;">
-                <!-- Ikon Segel Perisai Flat SVG Emas Solid (Tanpa Emoji) -->
-                <div style="width:38px; height:38px; border-radius:8px; background:#FEF3C7; border:1px solid #FCD34D; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#FCB813" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        <circle cx="12" cy="11" r="3" fill="#FFFFFF"></circle>
-                    </svg>
-                </div>
-                <div style="flex:1;">
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span style="font-size:0.86rem; font-weight:800; color:#92400E;">Ketentuan Pembubuhan e-Meterai Resmi Rp 10.000</span>
-                        <span style="font-size:0.62rem; font-weight:800; background:#FDE68A; color:#78350F; padding:2px 7px; border-radius:10px;">PERURI / POS INDONESIA</span>
+                    <!-- Slot Tambahan BPKB: Hal. 2 & 3 (tampil hanya saat mode BPKB) -->
+                    <div id="bpkbExtraSlots" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div class="preview-box" id="previewOwnership2Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
+                                <span id="phOwnership2" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 2</span>
+                                <img id="imgOwnership2Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                            </div>
+                            <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership2Input').click()">Unggah Hal. 2</button>
+                            <input type="file" id="fileOwnership2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_2')">
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div class="preview-box" id="previewOwnership3Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
+                                <span id="phOwnership3" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 3</span>
+                                <img id="imgOwnership3Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                            </div>
+                            <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership3Input').click()">Unggah Hal. 3</button>
+                            <input type="file" id="fileOwnership3Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_3')">
+                        </div>
                     </div>
-                    <p style="font-size:0.72rem; color:#78350F; margin:2px 0 0 0; line-height:1.35;">
-                        Pada tahap akhir, unduh draf PDF Surat Permohonan &amp; Surat Pernyataan, bubuhkan <strong>e-meterai asli Rp 10.000</strong> melalui distributor resmi (PERURI / Pos Indonesia / e-meterai.co.id), lalu unggah kembali dokumen bermeterai asli tersebut sebelum mengirim permohonan. <strong>Prinsip Paperless:</strong> Seluruh berkas awal cukup diunggah secara digital (tanpa fotokopi fisik); berkas asli (KTP, NPWP, BPKB/Surat Leasing, STNK, dan Surat Jalan Polda) cukup dibawa saat hadir Pemeriksaan Fisik setelah menerima SPF.
-                    </p>
+
+                    <!-- Slot Dinamis Leasing: tambah foto sesuai jumlah lembar surat (tampil hanya saat mode Leasing) -->
+                    <div id="leasingExtraWrap" style="display:none; margin-top:6px;">
+                        <div id="leasingExtraSlotsContainer"></div>
+                        <button type="button" id="btnAddLeasingPage" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:6px 8px; font-weight:700; font-size:0.70rem;" onclick="addLeasingExtraPage()">+ Tambah Foto Lembar Lain</button>
+                    </div>
                 </div>
             </div>
 
@@ -5189,10 +5195,16 @@
         let uploadedOwnershipDataUrl = '';
         let pendingRejectionDocType = '';
 
+        let ownershipExtraPages = {}; // { ownership_2: dataUrl, ownership_3: dataUrl, ownership_leasing_1: dataUrl, ... }
+        let leasingExtraSlotCount = 0;
+
         function switchOwnershipDocType(type) {
             currentOwnershipDocType = type;
             const desc = document.getElementById('descOwnershipDoc');
             const lblSlot = document.getElementById('labelOwnershipPreviewSlot');
+            const lblHal1 = document.getElementById('lblUploadOwnershipHal1');
+            const bpkbExtra = document.getElementById('bpkbExtraSlots');
+            const leasingExtra = document.getElementById('leasingExtraWrap');
             if (desc) {
                 if (type === 'bpkb') {
                     desc.innerText = 'Unggah scan lembar BPKB yang memuat No. Rangka, No. Mesin, dan data kepemilikan (Wajib Berwarna).';
@@ -5202,6 +5214,54 @@
                     if (lblSlot) lblSlot.innerText = '3. BPKB/Surat Keterangan';
                 }
             }
+            if (lblHal1) lblHal1.innerText = (type === 'bpkb') ? 'Unggah BPKB (Hal. 1)' : 'Unggah Surat Leasing (Lembar 1)';
+            if (bpkbExtra) bpkbExtra.style.display = (type === 'bpkb') ? 'grid' : 'none';
+            if (leasingExtra) leasingExtra.style.display = (type === 'leasing') ? 'block' : 'none';
+            resetOwnershipExtraPages();
+        }
+
+        // Bersihkan seluruh halaman tambahan BPKB/Leasing (dipanggil saat ganti mode BPKB<->Leasing)
+        function resetOwnershipExtraPages() {
+            ownershipExtraPages = {};
+            leasingExtraSlotCount = 0;
+            ['previewOwnership2Box', 'previewOwnership3Box'].forEach(boxId => {
+                const box = document.getElementById(boxId);
+                if (!box) return;
+                const img = box.querySelector('img');
+                const ph = box.querySelector('span');
+                if (img) { img.src = ''; img.style.display = 'none'; }
+                if (ph) ph.style.display = 'block';
+            });
+            const cont = document.getElementById('leasingExtraSlotsContainer');
+            if (cont) cont.innerHTML = '';
+        }
+
+        // Tambah 1 slot foto Lembar Lain untuk Surat Keterangan Leasing (jumlah dinamis, sesuai halaman surat)
+        function addLeasingExtraPage() {
+            leasingExtraSlotCount++;
+            const idx = leasingExtraSlotCount; // Lembar ke-(idx+1): idx=1 -> "Lembar 2"
+            const target = 'ownership_leasing_' + idx;
+            const cont = document.getElementById('leasingExtraSlotsContainer');
+            if (!cont) return;
+            const wrap = document.createElement('div');
+            wrap.id = 'leasingPageWrap' + idx;
+            wrap.style.cssText = 'display:flex; align-items:center; gap:6px; margin-bottom:6px;';
+            wrap.innerHTML = `
+                <div class="preview-box" id="previewLeasing${idx}Box" style="flex:1; height:46px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
+                    <span style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Lembar ${idx + 1}</span>
+                    <img id="imgLeasing${idx}Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                </div>
+                <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; white-space:nowrap;" onclick="document.getElementById('fileLeasing${idx}Input').click()">Unggah</button>
+                <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; color:#B91C1C;" onclick="removeLeasingExtraPage(${idx})" title="Hapus lembar ini">✕</button>
+                <input type="file" id="fileLeasing${idx}Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, '${target}')">
+            `;
+            cont.appendChild(wrap);
+        }
+
+        function removeLeasingExtraPage(idx) {
+            delete ownershipExtraPages['ownership_leasing_' + idx];
+            const wrap = document.getElementById('leasingPageWrap' + idx);
+            if (wrap) wrap.remove();
         }
 
         // ================= VALIDASI DOKUMEN BERWARNA VS HITAM PUTIH =================
@@ -5767,6 +5827,7 @@
             }
 
             const mainTargets = ['ktp', 'npwp', 'ownership', 'stnk', 'stnk_2'];
+            const isOwnershipExtra = (target === 'ownership_2' || target === 'ownership_3' || /^ownership_leasing_\d+$/.test(target));
             if (mainTargets.includes(target)) {
                 const boxMap = { ktp: 'previewKtpBox', npwp: 'previewNpwpBox', ownership: 'previewOwnershipBox', stnk: 'previewStnkBox', stnk_2: 'previewStnk2Box' };
                 const box = document.getElementById(boxMap[target]);
@@ -5776,7 +5837,9 @@
             const docLabels = {
                 'ktp': 'KTP Pemohon',
                 'npwp': 'Kartu NPWP',
-                'ownership': (currentOwnershipDocType === 'bpkb' ? 'BPKB' : 'Surat Keterangan Leasing/Bank'),
+                'ownership': (currentOwnershipDocType === 'bpkb' ? 'BPKB Hal. 1' : 'Surat Keterangan Leasing/Bank Lembar 1'),
+                'ownership_2': (currentOwnershipDocType === 'bpkb' ? 'BPKB Hal. 2' : 'Surat Keterangan Leasing/Bank Lembar 2'),
+                'ownership_3': (currentOwnershipDocType === 'bpkb' ? 'BPKB Hal. 3' : 'Surat Keterangan Leasing/Bank Lembar 3'),
                 'stnk': 'STNK Lembar 1',
                 'stnk_2': 'STNK Lembar 2 (TBPKP)',
                 'bukuNikah': 'Buku Nikah / Kartu Keluarga',
@@ -5796,12 +5859,12 @@
                     // Validasi Warna pada gambar yang sudah dicrop
                     validateDocumentColor(croppedDataUrl, function(res) {
                         if (!res.isColor) {
-                            showColorRejectionAlert(docLabels[target] || 'Dokumen', target);
+                            showColorRejectionAlert(docLabels[target] || (isOwnershipExtra ? 'Lembar Tambahan Dokumen Kepemilikan' : 'Dokumen'), target);
                             return;
                         }
 
-                        // Jika dokumen utama (KTP, NPWP, BPKB, STNK 1 & 2), jalankan OCR & update preview
-                        if (mainTargets.includes(target)) {
+                        // Jika dokumen utama (KTP, NPWP, BPKB, STNK 1 & 2) atau halaman tambahan BPKB/Leasing, jalankan OCR & update preview
+                        if (mainTargets.includes(target) || isOwnershipExtra) {
                             runRealOCR(target, croppedDataUrl, rawPdfDataUrlForOcr || null);
                         } else {
                             // Dokumen pendukung
@@ -5848,17 +5911,11 @@
             }
         }
 
-        // Handler tunggal onFileSelected (mendukung multi-halaman BPKB & selalu lewat autoCropDocument)
+        // Handler tunggal onFileSelected (setiap slot BPKB/Leasing kini punya input tersendiri, selalu lewat autoCropDocument)
         function onFileSelected(event, target) {
             const files = event.target.files;
             if (!files || !files.length) return;
-            if (target === 'ownership' && files.length > 1) {
-                Array.from(files).forEach((f, idx) => {
-                    setTimeout(() => processSelectedDocument(f, 'ownership'), idx * 350);
-                });
-            } else {
-                processSelectedDocument(files[0], target);
-            }
+            processSelectedDocument(files[0], target);
         }
 
         async function convertPdfToImageDataUrl(file, callback) {
@@ -6260,19 +6317,32 @@
                     if (laser) laser.style.display = 'none';
                 }
 
-            } else if (target === 'ownership') {
-                uploadedOwnershipDataUrl = imgUrl;
-                const box = document.getElementById('previewOwnershipBox');
-                const img = document.getElementById('imgOwnershipPreview');
-                const ph = document.getElementById('phOwnership');
-                const laser = document.getElementById('laserOwnership');
+            } else if (target === 'ownership' || target === 'ownership_2' || target === 'ownership_3' || /^ownership_leasing_\d+$/.test(target)) {
+                const isOwnershipPrimary = (target === 'ownership');
+                let box, img, ph, laser;
+                if (isOwnershipPrimary) {
+                    uploadedOwnershipDataUrl = imgUrl;
+                    box = document.getElementById('previewOwnershipBox');
+                    img = document.getElementById('imgOwnershipPreview');
+                    ph = document.getElementById('phOwnership');
+                    laser = document.getElementById('laserOwnership');
+                } else {
+                    ownershipExtraPages[target] = imgUrl;
+                    if (target === 'ownership_2') { box = document.getElementById('previewOwnership2Box'); img = document.getElementById('imgOwnership2Preview'); }
+                    else if (target === 'ownership_3') { box = document.getElementById('previewOwnership3Box'); img = document.getElementById('imgOwnership3Preview'); }
+                    else {
+                        const idx = target.split('_').pop();
+                        box = document.getElementById('previewLeasing' + idx + 'Box');
+                        img = document.getElementById('imgLeasing' + idx + 'Preview');
+                    }
+                    ph = box ? box.querySelector('span') : null;
+                }
 
                 if (ph) ph.style.display = 'none';
-                img.style.display = 'block';
-                img.src = imgUrl;
+                if (img) { img.style.display = 'block'; img.src = imgUrl; }
                 if (box) box.style.display = 'flex';
                 if (laser) laser.style.display = 'block';
-                setDocCardState('ownership', 'loading', 'Memindai halaman BPKB (No. BPKB, Pemilik, Kendaraan & Registrasi Pertama)...');
+                setDocCardState('ownership', 'loading', isOwnershipPrimary ? 'Memindai halaman BPKB (No. BPKB, Pemilik, Kendaraan & Registrasi Pertama)...' : 'Memindai halaman tambahan BPKB/Leasing...');
 
                 try {
                     const ocrRes = await fetchOCR('ownership', ocrPayloadUrl);
@@ -8126,6 +8196,21 @@
             for (const [k, imgId] of _berkasMap) {
                 const du = _getDataUrlFromImg(imgId);
                 if (du) berkasPemohon[k] = du;
+            }
+
+            // Halaman tambahan BPKB (Hal. 2 & 3) dan lembar tambahan Surat Keterangan Leasing (dinamis),
+            // disatukan jadi penomoran berurutan bpkb_2, bpkb_3, ... mengikuti bpkb (Hal./Lembar 1) di atas.
+            {
+                let _extraSeq = 1;
+                if (ownershipExtraPages['ownership_2']) { _extraSeq++; berkasPemohon['bpkb_' + _extraSeq] = ownershipExtraPages['ownership_2']; }
+                if (ownershipExtraPages['ownership_3']) { _extraSeq++; berkasPemohon['bpkb_' + _extraSeq] = ownershipExtraPages['ownership_3']; }
+                const leasingKeys = Object.keys(ownershipExtraPages)
+                    .filter(k => k.startsWith('ownership_leasing_'))
+                    .sort((a, b) => parseInt(a.split('_').pop(), 10) - parseInt(b.split('_').pop(), 10));
+                for (const lk of leasingKeys) {
+                    _extraSeq++;
+                    berkasPemohon['bpkb_' + _extraSeq] = ownershipExtraPages[lk];
+                }
             }
 
             const payload = {
