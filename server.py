@@ -95,6 +95,28 @@ except Exception as _e_init:
 OCR_EXECUTOR = ThreadPoolExecutor(max_workers=int(os.environ.get('OCR_MAX_WORKERS', 4)))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
+# Keamanan: direktori kerja ini berisi CAMPURAN aset publik (index.html, foto panduan,
+# dst.) DAN berkas sensitif (server.py, database.py, kbm_batam.db, render.yaml, .md,
+# dst.) karena repo & server dijalankan dari folder yang sama. SimpleHTTPRequestHandler
+# bawaan akan menyajikan APAPUN yang ada di folder ini lewat GET biasa kalau tidak
+# dibatasi — sebelumnya ini bikin source code & database bisa diunduh publik tanpa
+# autentikasi. Hanya izinkan ekstensi aset web yang memang dimaksudkan publik.
+ALLOWED_STATIC_EXTENSIONS = {
+    '.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp',
+    '.css', '.js', '.woff', '.woff2', '.ttf', '.map'
+}
+
+def _is_allowed_static_path(url_path):
+    """True hanya jika path aman disajikan sebagai berkas statis publik."""
+    clean_path = url_path.split('?', 1)[0].split('#', 1)[0]
+    if '..' in clean_path:
+        return False
+    basename = os.path.basename(clean_path)
+    if not basename or basename.startswith('.'):
+        return False
+    ext = os.path.splitext(basename)[1].lower()
+    return ext in ALLOWED_STATIC_EXTENSIONS
+
 def get_lan_ip():
     """Mendeteksi IP LAN aktif Mac mini di jaringan kantor"""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -955,6 +977,9 @@ def _make_permohonan_folder_name(record):
 MAX_UPLOAD_FILE_BYTES = 10 * 1024 * 1024  # Batas keamanan: maks 10 MB per file unggahan
 LOGIN_FAIL_TRACKER = {}   # key: (ip, ident) -> list[timestamp]
 OTP_RATE_TRACKER = {}     # key: (ip, phone) -> list[timestamp]
+VERIFY_OTP_TRACKER = {}   # key: (ip, identifier) -> list[timestamp]
+RESET_PW_TRACKER = {}     # key: (ip, identifier) -> list[timestamp]
+OCR_RATE_TRACKER = {}     # key: (ip, session_token) -> list[timestamp]
 
 def _get_client_ip(handler):
     xff = handler.headers.get('X-Forwarded-For', '') if hasattr(handler, 'headers') and handler.headers else ''
@@ -1857,6 +1882,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         # API Obrolan WhatsApp untuk Live Chat Operator Pegawai
         if path == '/api/wa/conversations':
+            token, sess = get_session_from_request(self)
+            if not _is_pegawai(sess):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Bea Cukai yang berwenang melihat riwayat percakapan WhatsApp.')
+                return
             data = load_db_chat()
             self._send_json_response(data)
             return
@@ -1945,6 +1974,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(status_data)
             return
             
+        if not _is_allowed_static_path(self.path):
+            self.send_error(404, "File not found")
+            return
         return super().do_GET()
 
     def do_POST(self):
@@ -2229,6 +2261,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 else:
                     phone = raw_phone
 
+                client_ip = _get_client_ip(self)
+                verify_rl_key = (client_ip, phone)
+                if _is_rate_limited(VERIFY_OTP_TRACKER, verify_rl_key, max_attempts=5, window_seconds=300):
+                    database.log_activity(phone, 'pemohon', 'VERIFY_OTP_RATE_LIMITED', detail=f'IP {client_ip} melebihi 5 percobaan verifikasi OTP')
+                    self._send_json_error(429, "Terlalu banyak percobaan verifikasi OTP. Mohon tunggu 5 menit lalu minta kode baru.")
+                    return
+                _record_rate_hit(VERIFY_OTP_TRACKER, verify_rl_key, window_seconds=300)
+
                 user_otp = str(body.get('otp', '')).strip()
 
                 otps = load_db_otp()
@@ -2395,6 +2435,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(400, "Silakan masukkan Nomor WhatsApp atau Email terdaftar.")
                     return
 
+                client_ip = _get_client_ip(self)
+                reset_rl_key = (client_ip, raw_ident.lower())
+                if _is_rate_limited(RESET_PW_TRACKER, reset_rl_key, max_attempts=5, window_seconds=300):
+                    database.log_activity(raw_ident, 'UNKNOWN', 'RESET_PW_RATE_LIMITED', detail=f'IP {client_ip} melebihi 5x/5 menit permintaan reset sandi')
+                    self._send_json_error(429, "Terlalu banyak permintaan reset kata sandi. Mohon tunggu 5 menit.")
+                    return
+                _record_rate_hit(RESET_PW_TRACKER, reset_rl_key, window_seconds=300)
+
                 users = load_db_users()
                 target_user = None
                 target_role = None
@@ -2549,6 +2597,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if not new_password or len(new_password) < 4:
                     self._send_json_error(400, "Kata sandi baru minimal 4 karakter.")
                     return
+
+                client_ip = _get_client_ip(self)
+                confirm_rl_key = (client_ip, key)
+                if _is_rate_limited(RESET_PW_TRACKER, confirm_rl_key, max_attempts=5, window_seconds=300):
+                    database.log_activity(key, 'UNKNOWN', 'RESET_PW_CONFIRM_RATE_LIMITED', detail=f'IP {client_ip} melebihi 5x/5 menit percobaan konfirmasi OTP reset sandi')
+                    self._send_json_error(429, "Terlalu banyak percobaan. Mohon tunggu 5 menit lalu minta kode baru.")
+                    return
+                _record_rate_hit(RESET_PW_TRACKER, confirm_rl_key, window_seconds=300)
 
                 otps = load_db_otp()
                 if key not in otps:
@@ -3051,6 +3107,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
 
         if self.path == '/api/ocr':
+            token, sess = get_session_from_request(self)
+            if not sess:
+                self._send_json_error(401, 'Sesi login tidak valid. Silakan masuk kembali.')
+                return
+            ocr_rl_key = (_get_client_ip(self), token)
+            if _is_rate_limited(OCR_RATE_TRACKER, ocr_rl_key, max_attempts=20, window_seconds=300):
+                self._send_json_error(429, 'Terlalu banyak permintaan pemindaian dokumen. Mohon tunggu beberapa menit.')
+                return
+            _record_rate_hit(OCR_RATE_TRACKER, ocr_rl_key, window_seconds=300)
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             try:
@@ -3869,6 +3934,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if not target_item:
                     self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
                     return
+
+                # IDOR: sebelumnya endpoint ini hanya mengecek "sesi login ada", tidak
+                # mengecek kepemilikan — pemohon mana pun bisa menyisipkan/menimpa
+                # dokumen ke berkas pemohon lain hanya dengan mengganti `id`. Kalau
+                # yang login adalah pemohon, wajib NIK/no. WA sesi cocok dengan
+                # permohonan target.
+                if sess.get('role') == 'pemohon':
+                    sess_user = sess.get('user', {}) or {}
+                    sess_nik = str(sess_user.get('nik', '')).strip()
+                    sess_phone = str(sess_user.get('phone', '')).strip()
+                    target_nik = str(target_item.get('nik', '')).strip()
+                    target_phone_match = sess_phone and sess_phone in (
+                        str(target_item.get('no_wa_pemohon', '')).strip(),
+                        str(target_item.get('no_wa_pengirim', '')).strip()
+                    )
+                    is_owner = (sess_nik and sess_nik == target_nik) or target_phone_match
+                    if not is_owner:
+                        self._send_json_error(403, 'Akses Ditolak: Permohonan ini bukan milik akun Anda.')
+                        return
 
                 meta = save_and_archive_document(target_item, doc_label, data_url, custom_filename=filename)
                 if not meta:

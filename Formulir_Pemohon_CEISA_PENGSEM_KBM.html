@@ -4368,6 +4368,25 @@
         </div>
     </div>
 
+    <!-- MODAL PERINGATAN SESI AKAN BERAKHIR (IDLE TIMEOUT, SEMUA ROLE) -->
+    <div class="modal-overlay" id="idleWarningModal" style="display:none; z-index:99999;">
+        <div class="modal-card" style="max-width:420px;">
+            <div class="modal-header" style="background:#B45309;">
+                <h3>⏳ Sesi Akan Berakhir</h3>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <div style="font-size:0.88rem; color:#334155; margin-bottom:10px;">
+                    Tidak ada aktivitas terdeteksi. Demi keamanan, sesi Anda akan keluar otomatis dalam:
+                </div>
+                <div id="idleWarningCountdown" style="font-size:2rem; font-weight:800; color:#B45309;">60</div>
+                <div style="font-size:0.76rem; color:#64748B; margin-top:4px;">detik</div>
+            </div>
+            <div class="modal-footer" style="justify-content:center;">
+                <button type="button" class="btn btn-primary" style="background:#005FAC;" onclick="stayLoggedIn()">Tetap Masuk</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL PORTAL E-METERAI RESMI PEMERINTAH (PERURI & POS INDONESIA) -->
     <div class="modal-overlay" id="emeteraiPortalModal" style="display:none; align-items:center; justify-content:center; background:rgba(15,23,42,0.7); z-index:9999;">
         <div class="modal-card" style="max-width:620px; background:#FFFFFF; border-radius:12px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
@@ -6125,9 +6144,13 @@
 
         async function fetchOCR(target, imgUrl) {
             try {
+                let ocrToken = '';
+                try { ocrToken = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+                const ocrHeaders = { 'Content-Type': 'application/json' };
+                if (ocrToken) ocrHeaders['Authorization'] = 'Bearer ' + ocrToken;
                 const resp = await fetch(`${API_BASE_URL}/api/ocr`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: ocrHeaders,
                     body: JSON.stringify({ target: target, image: imgUrl, engine: 'auto' })
                 });
                 if (resp.ok) {
@@ -10438,6 +10461,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
         }
 
         async function applyUserRoleUI(role, user) {
+            if (typeof resetIdleTimer === 'function') resetIdleTimer(); // Mulai/reset idle-timeout begitu sesi aktif
             updateHeaderUserProfile(role, user);
             const landing = document.getElementById('viewAuthLanding');
             const nav = document.getElementById('mainPortalNav');
@@ -10542,6 +10566,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
         }
 
         function applyUnauthenticatedUI() {
+            if (typeof resetIdleTimer === 'function') resetIdleTimer(); // Pastikan idle-timeout mati saat tidak ada sesi
             const badge = document.getElementById('authUserBadge');
             const btnOpenAuth = document.getElementById('btnOpenAuthModal');
             const tabDash = document.getElementById('tabBtnDashboard');
@@ -11056,6 +11081,76 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
         function openAuthModal() {
             showLandingAuth();
         }
+
+        // ================= AUTO-LOGOUT IDLE TIMEOUT (SEMUA ROLE) =================
+        // Keamanan: sesi otomatis keluar setelah 15 menit tanpa aktivitas (klik,
+        // ketik, scroll, atau sentuhan), dengan peringatan 1 menit sebelum sesi
+        // benar-benar berakhir. Berlaku untuk pemohon, seluruh role petugas, dan
+        // adminutama — bukan deteksi DevTools/inspect (itu tidak reliable & mudah
+        // dilewati, lihat diskusi keamanan sesi ini), tapi idle-timeout standar.
+        const IDLE_WARNING_MS = 14 * 60 * 1000;  // peringatan muncul di menit ke-14
+        const IDLE_LOGOUT_MS = 15 * 60 * 1000;   // logout paksa di menit ke-15
+        let idleWarningTimer = null;
+        let idleLogoutTimer = null;
+        let idleCountdownInterval = null;
+
+        function resetIdleTimer() {
+            if (idleWarningTimer) clearTimeout(idleWarningTimer);
+            if (idleLogoutTimer) clearTimeout(idleLogoutTimer);
+            if (idleCountdownInterval) clearInterval(idleCountdownInterval);
+            const warningModal = document.getElementById('idleWarningModal');
+            if (warningModal) warningModal.style.display = 'none';
+
+            if (!currentAuthSession) return; // Tidak perlu timer kalau belum login
+
+            idleWarningTimer = setTimeout(showIdleWarning, IDLE_WARNING_MS);
+            idleLogoutTimer = setTimeout(forceIdleLogout, IDLE_LOGOUT_MS);
+        }
+
+        function showIdleWarning() {
+            const warningModal = document.getElementById('idleWarningModal');
+            const countdownEl = document.getElementById('idleWarningCountdown');
+            if (!warningModal) return;
+            warningModal.style.display = 'flex';
+            let remaining = Math.round((IDLE_LOGOUT_MS - IDLE_WARNING_MS) / 1000);
+            if (countdownEl) countdownEl.innerText = remaining;
+            idleCountdownInterval = setInterval(() => {
+                remaining -= 1;
+                if (countdownEl) countdownEl.innerText = Math.max(remaining, 0);
+                if (remaining <= 0 && idleCountdownInterval) {
+                    clearInterval(idleCountdownInterval);
+                    idleCountdownInterval = null;
+                }
+            }, 1000);
+        }
+
+        function stayLoggedIn() {
+            resetIdleTimer();
+        }
+
+        async function forceIdleLogout() {
+            const warningModal = document.getElementById('idleWarningModal');
+            if (warningModal) warningModal.style.display = 'none';
+            if (idleCountdownInterval) { clearInterval(idleCountdownInterval); idleCountdownInterval = null; }
+            try {
+                let token = '';
+                try { token = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+                await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                });
+            } catch (e) {}
+            try { localStorage.removeItem('kbm_session_token'); } catch (e) {}
+            currentAuthSession = null;
+            applyUnauthenticatedUI();
+            window.location.hash = '#/masuk';
+            showLandingAuth();
+            alert('⏳ Sesi Anda telah berakhir otomatis karena tidak ada aktivitas selama 15 menit. Silakan masuk kembali.');
+        }
+
+        ['click', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, { passive: true });
+        });
 
 
         // ================= INTEGRASI AKUN NADINE KEMENKEU (FRONTDESK) =================
