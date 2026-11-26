@@ -1928,7 +1928,13 @@
             padding: clamp(14px, 2.2vh, 26px) clamp(20px, 3.5vw, 44px);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            /* Bukan "space-between" dengan sengaja: kombinasi justify-content:space-between
+               + overflow-y:auto pada sumbu yang sama bikin scroll trackpad terasa
+               macet/nyendat (baru bergerak kalau delta scroll cukup besar, abai delta
+               kecil) di beberapa mesin render — .auth-main-area sudah punya
+               margin-top/bottom:auto sendiri untuk tetap center-kan konten saat muat
+               tanpa scroll, jadi flex-start di sini cukup & scroll jadi responsif normal. */
+            justify-content: flex-start;
             position: relative;
             z-index: 2;
             box-shadow: 10px 0 30px rgba(0, 0, 0, 0.03);
