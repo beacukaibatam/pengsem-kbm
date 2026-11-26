@@ -5242,46 +5242,17 @@
         let activeUploadTarget = 'ktp';
 
         function openUploadSourceModal(target) {
+            // Langsung buka pemilih berkas native HP (satu langkah), tanpa modal perantara.
+            // iOS/Android sudah menampilkan sendiri pilihan Kamera/Galeri/File/Cloud dalam SATU
+            // dialog native begitu <input type="file"> diklik - modal kustom sebelumnya di sini
+            // hanya menambah satu tap ekstra sebelum dialog native yang sama tetap muncul lagi.
             activeUploadTarget = target;
-            const modal = document.getElementById('uploadSourceModal');
-            const lbl = document.getElementById('uploadSourceDocLabel');
-            const docNames = {
-                'ktp': '1. Foto / Scan KTP Asli',
-                'npwp': '2. Foto / Scan Kartu NPWP',
-                'ownership': (currentOwnershipDocType === 'bpkb' ? '3. BPKB Kendaraan (Lunas)' : '3. Surat Leasing (Kredit)'),
-                'stnk': '4. STNK Kendaraan Bermotor',
-                'bukuNikah': 'Buku Nikah / Kartu Keluarga',
-                'ktpPasangan': 'KTP Pemilik Asli (Sesuai STNK)',
-                'kwitansi': 'Kwitansi / Bukti Jual Beli',
-                'ktpPenjual': 'KTP Penjual Kendaraan',
-                'suratSewa': 'Surat Perjanjian Sewa / Rental',
-                'ktpRental': 'KTP Pemilik Rental',
-                'suratKuasa': 'Surat Kuasa Bermaterai'
-            };
-            if (lbl) {
-                lbl.innerText = 'Dokumen: ' + (docNames[target] || 'Dokumen Persyaratan');
-            }
-            if (modal) {
-                modal.style.display = 'flex';
-            }
+            const inp = document.getElementById('sourcePickerFile');
+            if (inp) { inp.value = ''; inp.click(); }
         }
 
         function closeUploadSourceModal() {
-            const modal = document.getElementById('uploadSourceModal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        function triggerSourceUpload(source) {
-            closeUploadSourceModal();
-            if (source === 'camera') {
-                const inp = document.getElementById('sourcePickerCamera');
-                if (inp) { inp.value = ''; inp.click(); }
-            } else if (source === 'file') {
-                // Galeri, File Manager, dan cloud storage (Google Drive, dll) semuanya sudah
-                // ditawarkan bawaan oleh pemilih berkas HP sendiri lewat satu input ini.
-                const inp = document.getElementById('sourcePickerFile');
-                if (inp) { inp.value = ''; inp.click(); }
-            }
+            // Tidak ada lagi modal kustom untuk ditutup; disisakan agar pemanggil lama tidak error.
         }
 
         function handleDedicatedSourceSelected(event) {
@@ -9844,100 +9815,9 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
         </div>
     </div>
 
-    <!-- ================= MODAL PILIH METODE UNGGAHAN (KAMERA, GALERI, FILE/PDF) ================= -->
-    <div class="modal-overlay" id="uploadSourceModal" onclick="if(event.target===this) closeUploadSourceModal()">
-        <div class="modal-card" style="max-width:460px; border-radius:18px; box-shadow:0 20px 40px rgba(0,0,0,0.25); overflow:hidden; animation: modalPop 0.25s ease-out;">
-            <!-- Header Modal -->
-            <div style="padding:16px 20px; background:linear-gradient(135deg, #005FAC 0%, #004077 100%); color:#FFFFFF; display:flex; align-items:center; justify-content:space-between;">
-                <div>
-                    <h3 style="font-size:1.02rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        Pilih Metode Unggah
-                    </h3>
-                    <div id="uploadSourceDocLabel" style="font-size:0.75rem; color:#BAE6FD; font-weight:600; margin-top:3px;">
-                        Dokumen: KTP Pemohon Asli
-                    </div>
-                </div>
-                <button type="button" onclick="closeUploadSourceModal()" style="background:rgba(255,255,255,0.15); border:none; color:#FFFFFF; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem; line-height:1;" title="Tutup">
-                    ✕
-                </button>
-            </div>
 
-            <!-- Body: 3 Opsi Unggahan -->
-            <div style="padding:20px; background:#F8FAFC; display:flex; flex-direction:column; gap:12px;">
-                <!-- 1. OPSI KAMERA -->
-                <button type="button" class="upload-source-btn" onclick="triggerSourceUpload('camera')">
-                    <div class="upload-source-icon-wrap" style="background:#E0F2FE; color:#005FAC;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                            <circle cx="12" cy="13" r="4"></circle>
-                        </svg>
-                    </div>
-                    <div style="text-align:left; flex:1;">
-                        <div style="font-size:0.92rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            Kamera
-                            <span style="font-size:0.65rem; background:#DCFCE7; color:#15803D; padding:2px 7px; border-radius:12px; font-weight:700;">Foto Langsung</span>
-                        </div>
-                        <div style="font-size:0.75rem; color:#64748B; margin-top:2px; line-height:1.35;">
-                            Buka kamera HP Anda untuk memotret fisik dokumen secara langsung (otomatis crop kartu).
-                        </div>
-                    </div>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-
-                <!-- 2. OPSI PILIH DARI PERANGKAT (Galeri/File/Cloud digabung - pemilih bawaan HP sudah menyediakan semua opsi ini sekaligus) -->
-                <button type="button" class="upload-source-btn" onclick="triggerSourceUpload('file')">
-                    <div class="upload-source-icon-wrap" style="background:#FEF3C7; color:#D97706;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <div style="text-align:left; flex:1;">
-                        <div style="font-size:0.92rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            Pilih dari Perangkat
-                            <span style="font-size:0.65rem; background:#FEF2F2; color:#DC2626; padding:2px 7px; border-radius:12px; font-weight:700;">Galeri / File / PDF</span>
-                        </div>
-                        <div style="font-size:0.75rem; color:#64748B; margin-top:2px; line-height:1.35;">
-                            Pilih foto atau berkas PDF dari Galeri, Berkas, atau penyimpanan cloud (Google Drive, dll).
-                        </div>
-                    </div>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-
-                <!-- Info Box Auto-Crop Cerdas -->
-                <div style="background:#EFF6FF; border:1px dashed #93C5FD; border-radius:8px; padding:9px 12px; font-size:0.72rem; color:#1E40AF; display:flex; align-items:center; gap:8px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <span><strong>Auto-Crop Cerdas Aktif:</strong> Sistem secara otomatis memotong latar belakang meja/sekitarnya dan memfokuskan tampilan hanya pada kartu/dokumen.</span>
-                </div>
-            </div>
-
-            <!-- Footer Modal -->
-            <div style="padding:12px 20px; background:#FFFFFF; border-top:1px solid #E2E8F0; display:flex; justify-content:flex-end;">
-                <button type="button" class="btn btn-secondary" onclick="closeUploadSourceModal()" style="padding:8px 18px; font-size:0.82rem; font-weight:700;">
-                    Batal
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hidden Dedicated Inputs untuk 2 Pilihan Unggah (Kamera langsung / Pilih dari Perangkat) -->
-    <input type="file" id="sourcePickerCamera" accept="image/*" capture="environment" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
+    <!-- Input unggah tersembunyi tunggal: klik langsung memicu dialog native HP (Kamera/Galeri/File/Cloud
+         dalam satu langkah), tanpa modal kustom perantara. -->
     <input type="file" id="sourcePickerFile" accept="application/pdf,.pdf,image/jpeg,image/png,image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
     <!-- ================= FLOATING ACTION BUTTON WHATSAPP (CLIENT COORDINATOR) ================= -->
     <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="fab-wa-clean" title="Hubungi Client Coordinator Bea Cukai Batam (0851-5814-8448)">
