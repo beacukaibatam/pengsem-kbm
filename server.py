@@ -898,10 +898,18 @@ def save_db_users(data):
     try:
         with open(DB_USERS_PATH, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
-        return True
     except Exception as e:
         print('[!] Error saving db_users:', e)
-        return False
+    
+    # Sinkronisasi ke SQLite database
+    try:
+        for u in data.get('pemohon', []):
+            database.save_or_update_user(u)
+        for u in data.get('pegawai', []):
+            database.save_or_update_user(u)
+    except Exception as e:
+        print('[!] Error syncing users to SQLite:', e)
+    return True
 
 def load_db_otp():
     otps = {}

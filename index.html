@@ -2660,6 +2660,24 @@
                                 </div>
                             </div>
 
+                            <!-- ================= SYARAT & KETENTUAN PERNYATAAN INTEGRITAS LAYANAN ================= -->
+                            <div class="landing-terms-box" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:10px; padding:12px 14px; margin-bottom:16px;">
+                                <label class="landing-terms-check-label" style="display:flex; align-items:flex-start; gap:10px; font-size:0.78rem; font-weight:700; color:#1E293B; cursor:pointer; line-height:1.45;">
+                                    <input type="checkbox" id="landingRegTermsAgree" style="width:18px; height:18px; margin-top:2px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
+                                    <span>Dengan melakukan registrasi ini, saya menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat, Ketentuan, dan Pernyataan Integritas Layanan.</span>
+                                </label>
+                                <details class="landing-terms-details" style="margin-top:8px; padding-left:28px;">
+                                    <summary style="font-size:0.74rem; color:#0284C7; font-weight:700; cursor:pointer; user-select:none;">Lihat Rincian Pernyataan &amp; Ketentuan ▾</summary>
+                                    <div style="margin-top:8px; font-size:0.73rem; color:#475569; line-height:1.55; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px;">
+                                        <ol style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px;">
+                                            <li><strong>Pemrosesan Data Kepabeanan:</strong> Dengan mendaftarkan akun ini, saya memahami dan menyetujui bahwa data identitas diri dan kendaraan saya diproses untuk keperluan pelayanan pabean pengeluaran sementara kendaraan bermotor dari KPBPB Batam ke TLDDP serta pengawasan rekonsiliasi pemasukan kembali ke KPBPB Batam.</li>
+                                            <li><strong>Kepatuhan Prosedur &amp; Jaminan PPN 11%:</strong> Saya menyatakan bersedia mematuhi dan mengikuti seluruh tahapan prosedur kepabeanan yang berlaku, termasuk menghadiri pemeriksaan fisik kendaraan, menerima penetapan dan menyerahkan jaminan tunai/bank garansi PPN 11%, serta mengurus penerbitan surat jalan Polri.</li>
+                                            <li><strong>Pernyataan Kebenaran Data &amp; Tanggung Jawab Hukum:</strong> Saya menyatakan dengan sebenar-benarnya bahwa seluruh data, keterangan, dan berkas fisik yang saya sampaikan adalah benar, sah, dan otentik. Apabila di kemudian hari ditemukan ketidaksesuaian atau pemalsuan data, saya bersedia mempertanggungjawabkannya dan dikenakan sanksi sesuai ketentuan peraturan perundang-undangan.</li>
+                                        </ol>
+                                    </div>
+                                </details>
+                            </div>
+
                             <button type="button" class="landing-btn-submit" id="btnLandingRegSubmit" onclick="submitLandingRegisterOtp()" style="background:#059669; box-shadow:0 4px 12px rgba(5,150,105,0.25);">
                                 Daftar & Kirim Kode OTP ➔
                             </button>
@@ -3421,24 +3439,6 @@
                         </label>
                         <input type="text" id="pemohon_alamat" class="form-input" placeholder="Alamat lengkap tempat tinggal di Batam" oninput="syncValues()">
                     </div>
-                </div>
-
-                <!-- Persetujuan Syarat & Ketentuan Sesuai Arahan Pengguna -->
-                <div class="terms-box">
-                    <label class="terms-check-label">
-                        <input type="checkbox" id="chkTermsAgree">
-                        <span>Saya memahami dan menyetujui syarat dan ketentuan</span>
-                    </label>
-                    <details class="terms-details">
-                        <summary>Lihat Rincian Syarat &amp; Ketentuan ▾</summary>
-                        <div class="terms-details-content">
-                            <ol>
-                                <li>Saya memahami dan menyetujui bahwa data identitas diri dan kendaraan saya diproses untuk keperluan pelayanan pabean pengeluaran sementara kendaraan bermotor dari KPBPB Batam ke TLDDP dan pengawasan rekonsiliasi pemasukan kembali ke KPBPB Batam.</li>
-                                <li>Saya menyatakan bersedia mematuhi dan mengikuti seluruh tahapan prosedur kepabeanan yang berlaku, termasuk menghadiri pemeriksaan fisik kendaraan, menerima penetapan dan menyerahkan jaminan tunai/bank garansi PPN 11%, serta mengurus penerbitan surat jalan Polri.</li>
-                                <li>Saya menyatakan dengan sebenar-benarnya bahwa seluruh data, keterangan, dan berkas fisik yang saya sampaikan adalah benar, sah, dan otentik. Apabila di kemudian hari ditemukan ketidaksesuaian atau pemalsuan data, saya bersedia mempertanggungjawabkannya dan dikenakan sanksi sesuai ketentuan peraturan perundang-undangan.</li>
-                            </ol>
-                        </div>
-                    </details>
                 </div>
 
                 <!-- Navigasi Bawah Page 1 -->
@@ -4893,11 +4893,6 @@
                 checkField('pemohon_telp', 'Nomor WhatsApp / HP Aktif Pemohon');
                 checkField('pemohon_alamat', 'Alamat Domisili KTP di Batam');
 
-                const terms = document.getElementById('chkTermsAgree');
-                if (terms && !terms.checked) {
-                    missing.push('Centang Persetujuan Syarat & Ketentuan Layanan');
-                    if (!firstId) firstId = 'chkTermsAgree';
-                }
                 return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Langkah 1: Identitas & KTP' };
             }
 
@@ -9126,11 +9121,13 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
             const btn = document.getElementById('btnLandingUniversalLogin');
 
             if (!userInput) {
-                showLandingAlert('Silakan masukkan User / NIP / ID Anda.', 'error');
+                showLandingAlert('Silakan masukkan User / Nomor WhatsApp / Email Anda.', 'error');
+                document.getElementById('landingLoginUser')?.focus();
                 return;
             }
             if (!password) {
                 showLandingAlert('Silakan masukkan Kata Sandi Anda.', 'error');
+                document.getElementById('landingLoginPassword')?.focus();
                 return;
             }
 
@@ -9151,7 +9148,7 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                     showLandingAlert(`✓ Berhasil Masuk sebagai ${data.role === 'pegawai' ? 'Petugas Bea Cukai' : 'Pemohon'}. Membuka portal...`, 'success');
                     applyUserRoleUI(data.role, data.user);
                 } else {
-                    showLandingAlert(data.message || 'User atau Kata Sandi salah!', 'error');
+                    showLandingAlert(data.message || 'User atau Kata Sandi salah! Pastikan akun telah terdaftar.', 'error');
                 }
             } catch (e) {
                 showLandingAlert('Kesalahan koneksi ke server: ' + e.message, 'error');
@@ -9170,39 +9167,53 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
             const email = (document.getElementById('landingRegEmail')?.value || '').trim().toLowerCase();
             const password = (document.getElementById('landingRegPassword')?.value || '').trim();
             const confirmPassword = (document.getElementById('landingRegConfirmPassword')?.value || '').trim();
+            const termsAgree = document.getElementById('landingRegTermsAgree')?.checked;
             const btn = document.getElementById('btnLandingRegSubmit');
             const nik = '';
 
             if (!nama) {
                 showLandingAlert('Silakan masukkan Nama Lengkap pemohon sesuai KTP.', 'error');
+                document.getElementById('landingRegNama')?.focus();
                 return;
             }
             if (!rawPhone) {
                 showLandingAlert('Silakan masukkan nomor WhatsApp aktif Anda.', 'error');
+                document.getElementById('landingRegPhone')?.focus();
                 return;
             }
 
             // Validasi email harus benar dan valid
             const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
             if (!email) {
-                showLandingAlert('Kolom alamat email wajib diisi.', 'error');
+                showLandingAlert('Kolom alamat email aktif wajib diisi.', 'error');
+                document.getElementById('landingRegEmail')?.focus();
                 return;
             }
             if (!emailRegex.test(email)) {
                 showLandingAlert('Format alamat email tidak valid (contoh: nama@email.com). Harap periksa kembali.', 'error');
+                document.getElementById('landingRegEmail')?.focus();
                 return;
             }
 
             if (!password || password.length < 4) {
                 showLandingAlert('Silakan buat kata sandi minimal 4 karakter.', 'error');
+                document.getElementById('landingRegPassword')?.focus();
                 return;
             }
             if (!confirmPassword) {
                 showLandingAlert('Silakan isi kolom Konfirmasi Kata Sandi.', 'error');
+                document.getElementById('landingRegConfirmPassword')?.focus();
                 return;
             }
             if (password !== confirmPassword) {
                 showLandingAlert('Konfirmasi kata sandi tidak cocok. Harap pastikan kedua input kata sandi sama persis.', 'error');
+                document.getElementById('landingRegConfirmPassword')?.focus();
+                return;
+            }
+
+            if (!termsAgree) {
+                showLandingAlert('Anda wajib mencentang persetujuan Syarat, Ketentuan, dan Pernyataan Integritas Layanan sebelum melanjutkan registrasi.', 'error');
+                document.getElementById('landingRegTermsAgree')?.focus();
                 return;
             }
 
