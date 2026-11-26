@@ -4628,11 +4628,7 @@
         // ================= DYNAMIC CLOUD API BASE URL =================
         const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? (window.location.port === '8080' ? '' : 'http://localhost:8080')
-            : (window.location.hostname.includes('trycloudflare.com')
-                ? ''
-                : (window.location.hostname.includes('github.io')
-                    ? (localStorage.getItem('kbm_api_base_url') || 'https://careers-sleep-soviet-finger.trycloudflare.com')
-                    : 'https://api-kbm-beacukaibatam.onrender.com'));
+            : (localStorage.getItem('kbm_api_base_url') || 'https://api-kbm-beacukaibatam.onrender.com');
 
         // Sesi Global
         var currentAuthSession = null;
