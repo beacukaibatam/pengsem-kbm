@@ -10,8 +10,11 @@ DATABASE_PATH = os.environ.get('DATABASE_PATH', os.path.join(_APP_DIR, 'kbm_bata
 
 # Migrasi sekali jalan: salin kbm_batam.db lama dari folder repo ke Persistent Disk
 # (DATABASE_PATH custom) bila disk masih kosong, agar data tidak hilang saat migrasi.
-if os.path.dirname(DATABASE_PATH) != _APP_DIR:
-    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+# os.path.abspath() dipakai agar DATABASE_PATH relatif (mis. "kbm_batam.db" tanpa folder)
+# tidak membuat os.path.dirname() mengembalikan string kosong lalu makedirs('') error.
+_db_dir = os.path.dirname(os.path.abspath(DATABASE_PATH))
+if _db_dir and _db_dir != _APP_DIR:
+    os.makedirs(_db_dir, exist_ok=True)
     _legacy_db = os.path.join(_APP_DIR, 'kbm_batam.db')
     if os.path.exists(_legacy_db) and not os.path.exists(DATABASE_PATH):
         try:
