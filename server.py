@@ -5,6 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import http.server
 import socketserver
+import threading
 import os
 import sys
 import shutil
@@ -879,6 +880,27 @@ DB_USERS_PATH = os.path.join(DATA_DIR, 'db_users.json')
 DB_OTP_PATH = os.path.join(DATA_DIR, 'db_otp.json')
 AUTH_SESSIONS = {}
 
+# ================= RBAC: PERAN PETUGAS & HAK AKSES PER TAHAPAN =================
+# Setiap petugas HANYA berwenang di tahapan sesuai jabatannya (least privilege).
+# Pengecualian: adminutama (kontrol penuh, dibatasi di endpoint sensitif tersendiri)
+# dan Pemeriksa Barang/Dokumen yang butuh visibilitas PENUH lintas tahap untuk
+# memvalidasi kesesuaian fisik barang terhadap seluruh berkas dokumennya.
+PEGAWAI_ROLES = {
+    'adminutama', 'frontdesk', 'loket', 'jaminan', 'fasilitas',
+    'pemeriksabarang', 'pemeriksadokumen', 'gate'
+}
+FULL_VISIBILITY_ROLES = {'adminutama', 'pemeriksabarang', 'pemeriksadokumen'}
+STAGE_VISIBILITY_BY_ROLE = {
+    'frontdesk': ('FRONTDESK_NADINE', 'BERKAS_LENGKAP'),
+    'loket': ('FRONTDESK_NADINE', 'BERKAS_LENGKAP'),
+    'fasilitas': ('VERIFIKASI_FASILITAS',),
+    'jaminan': ('LOKET_JAMINAN',),
+    'gate': ('SPPB_GATE_OUT',),
+}
+
+def _is_pegawai(sess):
+    return bool(sess) and sess.get('role') in PEGAWAI_ROLES
+
 # NIP akun "Default Dinas" dari backdoor lama (sudah dihapus dari kode login).
 # Tetap didaftarkan di sini sebagai denylist permanen: meski record ini masih ada
 # di data lama (db_users.json/kbm_batam.db) atau muncul lagi dari seed default,
@@ -1249,6 +1271,18 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
         return {"status": "error", "message": str(e)}
 
 
+def _notify_pemohon_wa(permohonan_item, message):
+    """Kirim notifikasi WA ke pemohon di background thread tiap transisi tahap
+    permohonan — kegagalan kirim WA TIDAK boleh menggagalkan transisi status itu
+    sendiri, karena itu selalu dibungkus try/except & dijalankan terpisah."""
+    phone = str(permohonan_item.get('no_wa_pemohon') or permohonan_item.get('no_wa_pengirim') or '').strip()
+    if not phone or phone == '-':
+        return
+    try:
+        threading.Thread(target=send_whatsapp_meta_message, args=(phone, message), daemon=True).start()
+    except Exception as e:
+        print('[!] Error triggering WA notification:', e)
+
 
 # ================= NADINE KEMENKEU INTEGRATION ENGINE =================
 DB_NADINE_CONFIG_PATH = os.path.join(DATA_DIR, 'db_nadine_config.json')
@@ -1503,8 +1537,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # API Autentikasi: Cek Status Sesi Aktif Pengguna
         if path == '/api/nadine/config':
             token, sess = get_session_from_request(self)
-            if not sess or sess.get('role') != 'pegawai':
-                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Bea Cukai yang berwenang mengakses konfigurasi Nadine.')
+            if not sess or sess.get('role') not in ('frontdesk', 'loket', 'adminutama'):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Frontdesk/Loket/Admin Utama yang berwenang mengakses konfigurasi Nadine.')
                 return
             cfg = load_db_nadine_config()
             safe_cfg = dict(cfg)
@@ -1560,11 +1594,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._send_json_response(data)
             return
 
-        # API Daftar Permohonan Masuk (Role-Based: Pegawai = Semua, Pemohon = Milik Sendiri)
+        # API Daftar Permohonan Masuk (RBAC: tiap petugas hanya lihat tahapannya sendiri;
+        # Admin Utama & Pemeriksa Barang/Dokumen lihat semua untuk validasi kesesuaian)
         if path == '/api/permohonan':
             token, sess = get_session_from_request(self)
             data = load_db_permohonan()
-            if sess and sess.get('role') == 'pemohon':
+            role = sess.get('role') if sess else None
+            if role == 'pemohon':
                 user_nik = str(sess.get('user', {}).get('nik', '')).strip()
                 user_phone = str(sess.get('user', {}).get('phone', '')).strip()
                 filtered = [
@@ -1573,8 +1609,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                        (user_phone and (str(p.get('no_wa_pemohon', '')).strip() == user_phone or str(p.get('no_wa_pengirim', '')).strip() == user_phone))
                 ]
                 self._send_json_response(filtered)
-            else:
+            elif role in FULL_VISIBILITY_ROLES:
                 self._send_json_response(data)
+            elif role in STAGE_VISIBILITY_BY_ROLE:
+                allowed_statuses = STAGE_VISIBILITY_BY_ROLE[role]
+                self._send_json_response([p for p in data if p.get('status') in allowed_statuses])
+            else:
+                # Sesi tidak dikenal/tidak terautentikasi: jangan bocorkan data apa pun.
+                self._send_json_response([])
             return
 
         if self.path in ('/', '/index.html', '/Formulir_Pemohon_CEISA_PENGSEM_KBM.html'):
@@ -1981,16 +2023,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(401, "NIP (18 Digit) atau Kata Sandi Dinas salah! Silakan periksa kembali kredensial dinas Anda.")
                     return
 
+                # RBAC: role spesifik petugas (jaminan/fasilitas/pemeriksabarang/dst) WAJIB
+                # diambil dari data akun, bukan di-hardcode generik "pegawai" — generik
+                # itu dulu membuat SEMUA endpoint aksi petugas bisa diakses siapa saja.
+                specific_role = found_pegawai.get('role') or 'pegawai'
                 token = str(uuid.uuid4()).replace('-', '')
                 user_info = {
                     "nip": found_pegawai.get('nip'),
                     "nama": found_pegawai.get('nama', 'Petugas Bea Cukai Batam'),
                     "jabatan": found_pegawai.get('jabatan', 'Pelaksana Pemeriksa'),
-                    "role": "pegawai"
+                    "role": specific_role
                 }
                 AUTH_SESSIONS[token] = {
                     "user": user_info,
-                    "role": "pegawai",
+                    "role": specific_role,
                     "created_at": time.time(),
                     "expires_at": time.time() + 86400
                 }
@@ -1999,7 +2045,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "status": "ok",
                     "message": "Login Pegawai Bea Cukai Berhasil. Selamat bertugas!",
                     "token": token,
-                    "role": "pegawai",
+                    "role": specific_role,
                     "user": user_info
                 }, cookie_header=f"session_token={token}; Path=/; Max-Age=86400; SameSite=None; Secure; HttpOnly")
                 return
@@ -2243,7 +2289,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Kirim Pesan Manual dari Petugas Operator WhatsApp Bea Cukai
         if self.path == '/api/wa/send':
             token, sess = get_session_from_request(self)
-            if not sess or sess.get('role') != 'pegawai':
+            if not _is_pegawai(sess):
                 self._send_json_error(403, "Akses Ditolak: Hanya Petugas Bea Cukai yang berwenang mengirim pesan operator dinas.")
                 return
 
@@ -2281,6 +2327,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             try:
                 body = json.loads(post_data.decode('utf-8'))
+                sumber = body.get("sumber", "WHATSAPP_BOT")
+                dokumen_bermeterai = body.get("dokumen_bermeterai")
+
+                # UU Bea Meterai No. 10/2020: Surat Permohonan & Surat Pernyataan WAJIB
+                # bermeterai asli sebelum sah diajukan. Validasi ini tidak boleh hanya
+                # di frontend — kalau bisa dilewati lewat panggilan API langsung, syarat
+                # hukumnya jadi tidak berarti. Berlaku untuk jalur formulir web; jalur
+                # WhatsApp bot (sumber lain) punya alur verifikasi berkasnya sendiri.
+                if sumber == 'PORTAL_WEB' and not dokumen_bermeterai:
+                    resp = json.dumps({
+                        "status": "error",
+                        "message": "Dokumen yang sudah dibubuhi e-meterai asli (Hal. 1 & 2) wajib diunggah sebelum permohonan dapat dikirim."
+                    }).encode('utf-8')
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Content-Length', str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+
                 db = load_db_permohonan()
                 new_id = f"KBM-2026-{str(len(db) + 1).zfill(3)}"
                 new_record = {
@@ -2296,8 +2363,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "merek_tipe": body.get("merek_tipe", "Sedang Diproses"),
                     "pelabuhan_tujuan": body.get("pelabuhan_tujuan", "Kuala Tungkal (Jambi)"),
                     "status": "MENUNGGU_VERIFIKASI_DOKUMEN",
-                    "sumber": body.get("sumber", "WHATSAPP_BOT")
+                    "sumber": sumber,
+                    "dokumen_bermeterai_nama": body.get("dokumen_bermeterai_nama", ""),
+                    "dokumen_bermeterai_ada": bool(dokumen_bermeterai)
                 }
+                if dokumen_bermeterai:
+                    new_record["dokumen_bermeterai"] = dokumen_bermeterai
                 db.insert(0, new_record)
                 save_db_permohonan(db)
                 resp = json.dumps({"status": "success", "data": new_record}).encode('utf-8')
@@ -2537,8 +2608,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 # ================= NADINE KEMENKEU ENDPOINTS =================
         if self.path == '/api/nadine/config':
             token, sess = get_session_from_request(self)
-            if not sess or sess.get('role') != 'pegawai':
-                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Bea Cukai yang berwenang memperbarui konfigurasi Nadine.')
+            if not sess or sess.get('role') not in ('frontdesk', 'loket', 'adminutama'):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Frontdesk/Loket/Admin Utama yang berwenang memperbarui konfigurasi Nadine.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
@@ -2562,8 +2633,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if self.path == '/api/nadine/test-login':
             token, sess = get_session_from_request(self)
-            if not sess or sess.get('role') != 'pegawai':
-                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Bea Cukai yang berwenang menguji koneksi Nadine.')
+            if not sess or sess.get('role') not in ('frontdesk', 'loket', 'adminutama'):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Frontdesk/Loket/Admin Utama yang berwenang menguji koneksi Nadine.')
                 return
             cfg = load_db_nadine_config()
             username = cfg.get('username')
@@ -2602,7 +2673,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if self.path == '/api/nadine/upload-permohonan':
             token, sess = get_session_from_request(self)
-            if not _is_role_allowed(sess, ['frontdesk', 'loket', 'pegawai']):
+            if not _is_role_allowed(sess, ['frontdesk', 'loket']):
                 self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Frontdesk / Loket yang berwenang merekam naskah dinas ke Nadine.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
@@ -2633,6 +2704,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'petugas_frontdesk': sess.get('user', {}).get('nama', 'Petugas Frontdesk')
                 }
                 save_db_permohonan(db)
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Berkas permohonan Anda ({target_item.get('nopol', '-')}) telah diverifikasi dan direkam ke Nadine Kemenkeu, diteruskan ke Seksi Fasilitas Pabean untuk penelitian lebih lanjut.\n\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
 
                 self._send_json_response({
                     'status': 'ok',
@@ -2650,7 +2728,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # 2. Endpoint Fasilitas (Penerbitan Surat S & KEP Persetujuan)
         if self.path == '/api/fasilitas/terbitkan-skep':
             token, sess = get_session_from_request(self)
-            if not _is_role_allowed(sess, ['fasilitas', 'pegawai']):
+            if not _is_role_allowed(sess, ['fasilitas']):
                 self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Seksi Fasilitas yang berwenang menerbitkan Surat (S) dan KEP.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
@@ -2673,6 +2751,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['tgl_skep'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 target_item['catatan_petugas'] = f"Naskah dinas keluar Surat Persetujuan ({no_surat_s}) dan KEP ({no_skep}) diterbitkan Seksi Fasilitas. Berkas dilanjutkan ke Loket Jaminan."
                 save_db_permohonan(db)
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Persetujuan (KEP) permohonan Anda ({target_item.get('nopol', '-')}) telah TERBIT.\n"
+                    f"No. KEP: *{no_skep}*\n\n"
+                    f"Berkas diteruskan ke Loket Jaminan untuk penerbitan kode billing Jaminan PPN 11%.\n\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
 
                 self._send_json_response({
                     'status': 'ok',
@@ -2688,7 +2775,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # 3. Endpoint Jaminan (Penerbitan Billing Jaminan & Generate Permohonan Berlampirkan KEP)
         if self.path == '/api/jaminan/terbitkan-billing':
             token, sess = get_session_from_request(self)
-            if not _is_role_allowed(sess, ['jaminan', 'pegawai']):
+            if not _is_role_allowed(sess, ['jaminan']):
                 self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Seksi Perbendaharaan/Jaminan yang berwenang menerbitkan billing jaminan.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
@@ -2723,6 +2810,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['tgl_billing'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 target_item['catatan_petugas'] = f"Kode Billing Jaminan ({kode_billing}) terbit sebesar Rp {nilai_jaminan:,}. Surat permohonan berlampiran KEP ter-generate. Silakan lanjut pemeriksaan fisik barang."
                 save_db_permohonan(db)
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Kode Billing Jaminan PPN 11% untuk kendaraan Anda ({target_item.get('nopol', '-')}) telah terbit.\n"
+                    f"Kode Billing: *{kode_billing}* — Nominal: Rp {nilai_jaminan:,}\n\n"
+                    f"Silakan segera lakukan pembayaran. Berkas akan dilanjutkan ke pemeriksaan fisik kendaraan setelah jaminan lunas.\n\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
 
                 self._send_json_response({
                     'status': 'ok',
@@ -2738,7 +2834,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # 4. Endpoint Pemeriksa Barang (Rekam LHP Fisik & 5 Foto Kendaraan)
         if self.path == '/api/pemeriksaan/rekam-lhp':
             token, sess = get_session_from_request(self)
-            if not _is_role_allowed(sess, ['pemeriksabarang', 'pegawai']):
+            if not _is_role_allowed(sess, ['pemeriksabarang']):
                 self._send_json_error(403, 'Akses Ditolak: Hanya Pejabat Pemeriksa Barang yang berwenang merekam LHP.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
@@ -2781,6 +2877,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 kondisi_mesin_txt = 'sesuai' if kesesuaian_mesin == 'SESUAI' else 'TIDAK SESUAI'
                 target_item['catatan_petugas'] = f"Pemeriksaan fisik selesai ({no_lhp}). Nomor rangka {kondisi_rangka_txt}, nomor mesin {kondisi_mesin_txt}. 5 kategori foto fisik lengkap. Berkas diteruskan ke Pemeriksa Dokumen untuk terbit SPPB."
                 save_db_permohonan(db)
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Pemeriksaan fisik kendaraan Anda ({target_item.get('nopol', '-')}) telah SELESAI (LHP {no_lhp}).\n"
+                    f"Berkas diteruskan ke Pejabat Pemeriksa Dokumen (PFPD) untuk penerbitan SPPB.\n\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
 
                 self._send_json_response({
                     'status': 'ok',
@@ -2795,7 +2899,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # 5. Endpoint Pemeriksa Dokumen (Verifikasi LHP & Terbitkan SPPB)
         if self.path == '/api/pemeriksaan/terbitkan-sppb':
             token, sess = get_session_from_request(self)
-            if not _is_role_allowed(sess, ['pemeriksadokumen', 'pegawai']):
+            if not _is_role_allowed(sess, ['pemeriksadokumen']):
                 self._send_json_error(403, 'Akses Ditolak: Hanya Pejabat Pemeriksa Dokumen (PFPD) yang berwenang menerbitkan SPPB.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
@@ -2820,6 +2924,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['tgl_sppb'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 target_item['catatan_petugas'] = f"Hasil LHP fisik disetujui. Dokumen SPPB ({no_sppb}) resmi diterbitkan. Kendaraan diizinkan meluncur ke Gate Pelabuhan."
                 save_db_permohonan(db)
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Dokumen SPPB untuk kendaraan Anda ({target_item.get('nopol', '-')}) resmi TERBIT.\n"
+                    f"No. SPPB: *{no_sppb}*\n\n"
+                    f"Kendaraan Anda sudah diizinkan menuju Gate Pelabuhan untuk divalidasi keberangkatan.\n\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
 
                 self._send_json_response({
                     'status': 'ok',
@@ -2834,7 +2947,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # 6. Endpoint Gate Out (Validasi Keberangkatan di Gate Pelabuhan)
         if self.path == '/api/gate/validasi-keluar':
             token, sess = get_session_from_request(self)
-            if not _is_role_allowed(sess, ['gate', 'pegawai']):
+            if not _is_role_allowed(sess, ['gate']):
                 self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Gate Pelabuhan yang berwenang memvalidasi pengeluaran kendaraan.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
@@ -2854,6 +2967,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item['gate_petugas'] = sess.get('user', {}).get('nama', 'Petugas Gate Pelabuhan')
                 target_item['catatan_petugas'] = f"Kendaraan divalidasi Gate Out Pelabuhan pada {ts_gate}. KBM resmi keluar dari Kawasan Bebas Batam menuju TLDDP."
                 save_db_permohonan(db)
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Kendaraan Anda ({target_item.get('nopol', '-')}) telah divalidasi Gate Out pada {ts_gate} dan resmi berangkat dari Kawasan Bebas Batam menuju TLDDP.\n\n"
+                    f"Terima kasih telah menggunakan layanan PENGSEM KBM Batam.\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
 
                 self._send_json_response({
                     'status': 'ok',

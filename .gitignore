@@ -22,6 +22,7 @@ db_users.json
 db_otp.json
 db_permohonan.json
 db_chat.json
+db_nadine_config.json
 
 # Large binary test documents and data
 BERKAS UJI COBA/
