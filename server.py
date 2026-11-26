@@ -999,8 +999,28 @@ def log_chat_message(phone, sender, text, name=None):
     })
     save_db_chat(chats)
 META_VERIFY_TOKEN = 'beacukai_batam_pengsem_kbm_secret_2026'
-META_WA_ACCESS_TOKEN = os.environ.get('META_WA_ACCESS_TOKEN', '')
-META_PHONE_NUMBER_ID = os.environ.get('META_PHONE_NUMBER_ID', '1445699195298363')
+
+def get_meta_credentials():
+    token = os.environ.get('META_WA_ACCESS_TOKEN') or os.environ.get('WA_META_ACCESS_TOKEN', '')
+    phone_id = os.environ.get('META_PHONE_NUMBER_ID') or os.environ.get('WA_META_PHONE_NUMBER_ID', '')
+    if not token or not phone_id:
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if '=' in line and not line.strip().startswith('#'):
+                            k, v = line.strip().split('=', 1)
+                            k, v = k.strip(), v.strip()
+                            if k in ('META_WA_ACCESS_TOKEN', 'WA_META_ACCESS_TOKEN') and not token:
+                                token = v
+                            if k in ('META_PHONE_NUMBER_ID', 'WA_META_PHONE_NUMBER_ID') and not phone_id:
+                                phone_id = v
+            except Exception as e_env:
+                print("[!] Error reading .env for Meta:", e_env)
+    return token or '', phone_id or '1445699195298363'
+
+META_WA_ACCESS_TOKEN, META_PHONE_NUMBER_ID = get_meta_credentials()
 META_WABA_ID = os.environ.get('META_WABA_ID', '2252215596173280')
 WA_SESSIONS = {}
 
@@ -1051,14 +1071,15 @@ def save_db_permohonan(data):
 
 def send_whatsapp_meta_message(to_number, text, buttons=None):
     """Mengirim pesan via Meta WhatsApp Cloud API resmi jika access token tersedia."""
-    if not META_WA_ACCESS_TOKEN or not META_PHONE_NUMBER_ID:
+    token, phone_id = get_meta_credentials()
+    if not token or not phone_id:
         print(f"[*] [WA Sandbox Log] to: {to_number} -> {text[:80]}... (Buttons: {buttons})")
         return {"status": "logged_offline"}
 
     import urllib.request
-    url = f"https://graph.facebook.com/v19.0/{META_PHONE_NUMBER_ID}/messages"
+    url = f"https://graph.facebook.com/v19.0/{phone_id}/messages"
     headers = {
-        "Authorization": f"Bearer {META_WA_ACCESS_TOKEN}",
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
