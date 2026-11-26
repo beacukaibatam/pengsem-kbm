@@ -1283,6 +1283,82 @@ def send_email_otp(to_email, otp_code, nama="Pemohon KBM Batam"):
     return {"status": "ok", "method": "logged_fallback"}
 
 
+def send_email_registration_success(to_email, nama="Pemohon KBM Batam", phone=""):
+    """Mengirimkan email konfirmasi registrasi akun berhasil dengan penegasan keamanan & kontak pelaporan."""
+    import subprocess
+    import shutil
+    
+    subject = "🏛️ [KPU Bea Cukai Batam] Registrasi Akun Portal Layanan PENGSEM KBM Berhasil"
+    body = (
+        f"🏛️ KPU BEA DAN CUKAI TIPE B BATAM\n"
+        f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+        f"Halo Bapak/Ibu {nama},\n\n"
+        f"Selamat! Akun Anda pada Portal Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) KPU Bea dan Cukai Tipe B Batam telah berhasil didaftarkan dan terverifikasi.\n\n"
+        f"📌 Rincian Akun Terdaftar:\n"
+        f" • Nama Lengkap  : {nama}\n"
+        f" • No. WhatsApp  : +{phone}\n"
+        f" • Alamat Email  : {to_email}\n"
+        f" • Status Akun   : Terverifikasi (Aktif)\n\n"
+        f"Akun Anda kini telah aktif dan siap digunakan untuk mengajukan permohonan pengeluaran sementara kendaraan bermotor dari Kawasan Bebas Batam ke Tempat Lain Dalam Daerah Pabean (TLDDP).\n\n"
+        f"⚠️ PEMBERITAHUAN KEAMANAN PENTING:\n"
+        f"Apabila Anda merasa tidak pernah melakukan pendaftaran akun ini atau data identitas Anda digunakan oleh pihak lain tanpa persetujuan, harap segera laporkan kepada kami melalui kontak bantuan resmi di bawah ini agar akun dapat segera dibekukan/ditindaklanjuti:\n\n"
+        f"📞 Kontak Bantuan & Pengaduan:\n"
+        f"0851-5814-8448 (Client Coordinator KPU Bea Cukai Batam)\n"
+        f"https://wa.me/6285158148448\n\n"
+        f"Terima kasih atas kepatuhan Anda terhadap ketentuan kepabeanan.\n\n"
+        f"Seksi Fasilitas Pabean dan Cukai\n"
+        f"KPU Bea dan Cukai Tipe B Batam"
+    )
+
+    # 1. Coba kirim via SMTP TLS jika Environment Variables tersedia (Produksi Cloud)
+    smtp_host = os.environ.get('SMTP_HOST')
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_pass = os.environ.get('SMTP_PASS')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+    smtp_from = os.environ.get('SMTP_FROM', f"Bea Cukai Batam <{smtp_user}>" if smtp_user else "layanan.kbm.batam@gmail.com")
+
+    if smtp_host and smtp_user and smtp_pass:
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = smtp_from
+            msg['To'] = to_email
+            part_text = MIMEText(body, 'plain', 'utf-8')
+            msg.attach(part_text)
+
+            server_smtp = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+            server_smtp.starttls()
+            server_smtp.login(smtp_user, smtp_pass)
+            server_smtp.sendmail(smtp_from, [to_email], msg.as_string())
+            server_smtp.quit()
+            print(f"[+] Email konfirmasi registrasi berhasil terkirim ke {to_email} via SMTP TLS")
+            return {"status": "ok", "method": "smtp_tls"}
+        except Exception as e_smtp:
+            print(f"[!] SMTP TLS Error: {e_smtp}, mencoba opsi fallback...")
+
+    # 2. Coba kirim via gmail CLI jika tersedia
+    gmail_bin = shutil.which('gmail') or '/Users/macridm4/.gemini/antigravity/bin/gmail'
+    if os.path.exists(gmail_bin) or shutil.which('gmail'):
+        try:
+            cmd = [
+                gmail_bin if os.path.exists(gmail_bin) else 'gmail',
+                'mutate', 'send',
+                '--to', to_email,
+                '--subject', subject,
+                '--body', body
+            ]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=12)
+            if res.returncode == 0:
+                print(f"[+] Email konfirmasi registrasi berhasil terkirim ke {to_email} via gmail CLI")
+                return {"status": "ok", "method": "gmail_cli"}
+        except Exception as e:
+            print(f"[!] Error running gmail CLI: {e}")
+
+    # Fallback log
+    print(f"[*] [Email Fallback Log] Registrasi sukses terkirim ke: {to_email} (Nama: {nama})")
+    return {"status": "ok", "method": "logged_fallback"}
+
+
 GLOBAL_SESSION_EPOCH = 1795622471.301933
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -1781,6 +1857,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     found_user['updated_at'] = now_str
                 users['pemohon'] = pemohon_list
                 save_db_users(users)
+
+                # Kirim email konfirmasi registrasi berhasil jika ada email terdaftar
+                user_email = found_user.get('email', '')
+                if user_email and '@' in user_email:
+                    try:
+                        threading.Thread(
+                            target=send_email_registration_success,
+                            args=(user_email, found_user.get('nama', 'Pemohon KBM Batam'), phone),
+                            daemon=True
+                        ).start()
+                    except Exception as e_email:
+                        print('[!] Error triggering email registration success:', e_email)
 
                 # Buat Sesi Aktif
                 token = str(uuid.uuid4()).replace('-', '')
