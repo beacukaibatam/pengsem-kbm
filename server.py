@@ -2586,12 +2586,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         
         # Tambah Permohonan Baru (dari Bot WhatsApp / Simulator Real)
         if self.path == '/api/permohonan/create':
+            # Endpoint ini dulu TIDAK memverifikasi sesi sama sekali untuk semua nilai
+            # `sumber` (termasuk default WHATSAPP_BOT) — siapa pun bisa POST langsung
+            # tanpa login, bikin celah broken access control sekaligus memperbesar
+            # dampak stored-XSS di field bebas (nama_pemohon/nopol/dst.). Alur bot
+            # WhatsApp yang sungguhan menulis permohonan LANGSUNG di proses webhook
+            # (lihat WAITING_NPWP di handler /api/webhook/whatsapp), bukan lewat
+            # endpoint publik ini — jadi mewajibkan sesi pemohon di sini tidak
+            # memutus integrasi bot apa pun yang sudah berjalan.
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'pemohon':
+                self._send_json_error(403, 'Akses Ditolak: Hanya pemohon yang sudah masuk (login) yang berwenang mengajukan permohonan.')
+                return
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             try:
                 body = json.loads(post_data.decode('utf-8'))
                 sumber = body.get("sumber", "WHATSAPP_BOT")
                 dokumen_bermeterai = body.get("dokumen_bermeterai")
+                # Identitas (NIK/no. WA pemohon) WAJIB diambil dari akun yang sedang
+                # login, bukan dipercaya mentah dari body — supaya satu akun tidak
+                # bisa mengaku-aku jadi identitas orang lain (sumber bug "tabrakan
+                # identitas" yang pernah terjadi di produksi).
+                sess_user = sess.get('user', {}) or {}
+                sess_nik = str(sess_user.get('nik', '')).strip()
+                sess_phone = str(sess_user.get('phone', '')).strip()
 
                 # UU Bea Meterai No. 10/2020: Surat Permohonan & Surat Pernyataan WAJIB
                 # bermeterai asli sebelum sah diajukan. Validasi ini tidak boleh hanya
@@ -2616,10 +2635,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "id": new_id,
                     "tanggal_pengajuan": body.get("tanggal_pengajuan", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
                     "nama_pemohon": body.get("nama_pemohon", "-"),
-                    "nik": body.get("nik", "-"),
+                    "nik": sess_nik or body.get("nik", "-"),
                     "npwp": body.get("npwp", "-"),
                     "no_wa_pengirim": body.get("no_wa_pengirim", "-"),
-                    "no_wa_pemohon": body.get("no_wa_pemohon", "-"),
+                    "no_wa_pemohon": sess_phone or body.get("no_wa_pemohon", "-"),
                     "nomor_berbeda": body.get("nomor_berbeda", False),
                     "nopol": body.get("nopol", "BP - (Menunggu STNK)"),
                     "merek_tipe": body.get("merek_tipe", "Sedang Diproses"),
