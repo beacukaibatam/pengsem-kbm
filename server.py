@@ -761,6 +761,34 @@ def _detect_image_mime(raw_bytes):
         return 'image/webp'
     return 'image/jpeg'
 
+# Label dokumen yang SAH untuk tiap target slot unggah — dipakai untuk mendeteksi ketidaksesuaian
+# dokumen (mis. pemohon unggah foto STNK ke kolom KTP). 'ownership' menerima BPKB ATAU Surat
+# Leasing karena memang satu slot yang sama dipakai untuk kedua jenis dokumen itu (lihat radio
+# "BPKB (Lunas)" vs "Leasing (Kredit)" di formulir).
+_VALID_DOC_TYPES_BY_TARGET = {
+    'ktp': {'KTP'},
+    'npwp': {'NPWP'},
+    'stnk': {'STNK'},
+    'stnk_1': {'STNK'},
+    'stnk_2': {'STNK'},
+    'ownership': {'BPKB', 'SURAT_LEASING'},
+    'bpkb': {'BPKB', 'SURAT_LEASING'},
+}
+
+def check_document_type_mismatch(target, parsed_data):
+    """Bandingkan jenis_dokumen_terdeteksi (dari Vision AI) dengan jenis dokumen yang SEHARUSNYA
+    diunggah di slot `target`. Mengembalikan (is_mismatch, detected_label) — detected_label None
+    kalau field tidak ada (mis. hasil dari OCR lokal/EasyOCR yang tidak mengisi field ini, atau
+    target di luar daftar yang diaudit)."""
+    valid_types = _VALID_DOC_TYPES_BY_TARGET.get(target)
+    if not valid_types or not isinstance(parsed_data, dict):
+        return False, None
+    detected_raw = (parsed_data.get('jenis_dokumen_terdeteksi') or '').strip()
+    if not detected_raw:
+        return False, None
+    detected = detected_raw.upper().replace(' ', '_')
+    return (detected not in valid_types), detected_raw
+
 def extract_with_vision_ai(image_bytes, target=''):
     """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini (mendukung multi-halaman PDF BPKB)."""
     if not VISION_AI_ENABLED:
@@ -834,7 +862,35 @@ def extract_with_vision_ai(image_bytes, target=''):
         }
 
         prompt_text = prompts.get(target, "Ekstrak seluruh teks dan informasi penting dalam format JSON. Hanya JSON murni.")
-        candidate_models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+
+        # Klasifikasi jenis dokumen DITARUH DI DEPAN sebagai langkah terpisah (bukan ditempel di akhir
+        # prompt ekstraksi) supaya model benar-benar menjawabnya, bukan hanya fokus mengekstrak field
+        # yang diminta. Dipakai server untuk mendeteksi KETIDAKCOCOKAN dokumen (mis. pemohon unggah
+        # STNK ke kolom KTP) — lihat check_document_type_mismatch(). Hanya ditambahkan untuk target
+        # yang memang diaudit kecocokannya (lihat _VALID_DOC_TYPES_BY_TARGET).
+        if target in _VALID_DOC_TYPES_BY_TARGET:
+            prompt_text = (
+                "TUGAS 1 (WAJIB dijawab lebih dulu, JANGAN dilewati): amati gambar ini dan tentukan jenis "
+                "dokumen yang BENAR-BENAR terlihat — independen dari jenis dokumen yang diminta untuk "
+                "diekstrak di TUGAS 2 di bawah. Isi kunci JSON jenis_dokumen_terdeteksi dengan SATU nilai "
+                "ini yang paling sesuai: \"KTP\", \"NPWP\", \"STNK\", \"BPKB\", \"SURAT_LEASING\", \"LAINNYA\". "
+                "Contoh: kalau gambar yang diberikan ternyata adalah STNK padahal TUGAS 2 memintamu "
+                "mengekstrak data KTP, tetap isi jenis_dokumen_terdeteksi dengan \"STNK\" (jujur sesuai "
+                "gambar), JANGAN dipaksakan menjadi \"KTP\".\n\n"
+                "TUGAS 2: " + prompt_text
+            )
+
+        # 'gemini-2.0-flash', 'gemini-1.5-flash', DAN 'gemini-2.5-flash-lite' SEMUA TERBUKTI mati
+        # (404 Not Found) saat diuji langsung ke API sungguhan 27 Nov 2026 — berarti fallback chain
+        # ini SUDAH LAMA tidak pernah benar-benar jadi cadangan nyata (cuma 'gemini-2.5-flash' yang
+        # hidup), dan baru ketahuan sekarang karena 'gemini-2.5-flash' kena rate-limit (429) saat
+        # pengujian sesi ini. TIDAK ditambahkan model pengganti tebakan lain di sini karena tidak ada
+        # cara memverifikasi nama model yang valid tanpa kuota API yang masih tersedia (hasil
+        # pencarian web soal nama model Gemini terkini saling bertentangan/tidak bisa dipercaya).
+        # TINDAK LANJUT YANG DISARANKAN (belum dikerjakan): cek daftar model valid di
+        # https://ai.google.dev/gemini-api/docs/models dengan kuota yang masih tersedia, lalu isi
+        # ulang daftar ini dengan model cadangan yang SUDAH TERBUKTI jalan via tes langsung ke API.
+        candidate_models = ['gemini-2.5-flash']
 
         for model_name in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
@@ -3188,13 +3244,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 extracted_text, parsed_data = process_ocr(raw_bytes, target, engine)
-                
+                is_mismatch, detected_doc_type = check_document_type_mismatch(target, parsed_data)
+
                 response_data = json.dumps({
                     'status': 'ok',
                     'target': target,
                     'engine_used': 'vision_ai' if engine in ('vision', 'auto') and VISION_AI_ENABLED else 'easyocr_local',
                     'text': extracted_text,
-                    'parsed': parsed_data
+                    'parsed': parsed_data,
+                    'document_mismatch': is_mismatch,
+                    'detected_document_type': detected_doc_type
                 }).encode('utf-8')
                 
                 self.send_response(200)

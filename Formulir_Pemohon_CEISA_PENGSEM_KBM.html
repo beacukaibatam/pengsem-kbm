@@ -427,8 +427,6 @@
             justify-content: center;
             box-sizing: border-box;
             transition: border-color 0.2s, background-color 0.2s;
-            contain: layout paint style;
-            transform: translateZ(0);
         }
 
         .preview-box img {
@@ -4314,6 +4312,36 @@
         </div>
     </div>
 
+    <!-- MODAL PERINGATAN KETIDAKSESUAIAN JENIS DOKUMEN (mis. STNK diunggah ke kolom KTP) -->
+    <div class="modern-popup-overlay" id="docMismatchModal">
+        <div class="modern-popup-card">
+            <button type="button" class="popup-close-btn" onclick="closeDocMismatchModal()" title="Tutup">&times;</button>
+            <div class="popup-icon-circle error">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 class="popup-title-error">Dokumen Tidak Sesuai</h3>
+            <p class="popup-desc" style="margin-bottom:12px;">Sistem mendeteksi jenis dokumen yang berbeda dari yang seharusnya diunggah di kolom ini.</p>
+
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin-bottom:20px; width:100%; text-align:left; box-sizing:border-box; z-index:2; position:relative; font-size:0.80rem;">
+                <div style="margin-bottom:4px; color:#334155;">Seharusnya: <strong id="docMismatchExpected" style="color:#166534;">-</strong></div>
+                <div style="color:#334155;">Terdeteksi sebagai: <strong id="docMismatchDetected" style="color:#DC2626;">-</strong></div>
+            </div>
+
+            <button type="button" class="popup-btn-error" onclick="retryDocMismatchUpload()">
+                Unggah Ulang Dokumen yang Benar
+            </button>
+
+            <svg class="popup-wave-bg" viewBox="0 0 400 65" fill="none" preserveAspectRatio="none">
+                <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#FEF2F2" opacity="0.8"/>
+                <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#FEE2E2" opacity="0.9"/>
+            </svg>
+        </div>
+    </div>
+
     <!-- MODAL KAMERA VIEW FINDER -->
     <div class="modal-overlay" id="cameraModal">
         <div class="modal-card" style="max-width:500px;">
@@ -5421,6 +5449,48 @@
             }
         }
 
+        // ================= PERINGATAN KETIDAKSESUAIAN JENIS DOKUMEN =================
+        // Dipicu saat Vision AI mendeteksi jenis dokumen yang BERBEDA dari slot unggahnya
+        // (mis. STNK diunggah ke kolom KTP) — lihat field document_mismatch dari /api/ocr.
+        let pendingMismatchDocTarget = '';
+        const DOC_MISMATCH_EXPECTED_LABEL = {
+            'ktp': 'KTP',
+            'npwp': 'Kartu NPWP',
+            'ownership': 'BPKB atau Surat Keterangan Leasing/Bank',
+            'stnk': 'STNK',
+            'stnk_2': 'STNK Lembar 2 (TBPKP)'
+        };
+        const DOC_MISMATCH_DETECTED_LABEL = {
+            'KTP': 'KTP',
+            'NPWP': 'Kartu NPWP',
+            'STNK': 'STNK',
+            'BPKB': 'BPKB',
+            'SURAT_LEASING': 'Surat Keterangan Leasing/Bank',
+            'LAINNYA': 'Dokumen lain yang tidak dikenali'
+        };
+        function showDocumentMismatchAlert(target, detectedRaw) {
+            pendingMismatchDocTarget = target || '';
+            const expectedLabel = DOC_MISMATCH_EXPECTED_LABEL[target] || 'dokumen yang sesuai untuk kolom ini';
+            const detectedKey = (detectedRaw || '').toUpperCase().replace(/\s+/g, '_');
+            const detectedLabel = DOC_MISMATCH_DETECTED_LABEL[detectedKey] || detectedRaw || 'tidak dikenali';
+            const modal = document.getElementById('docMismatchModal');
+            if (modal) {
+                document.getElementById('docMismatchExpected').innerText = expectedLabel;
+                document.getElementById('docMismatchDetected').innerText = detectedLabel;
+                modal.style.display = 'flex';
+            } else {
+                alert(`⚠️ DOKUMEN TIDAK SESUAI\n\nSeharusnya: ${expectedLabel}\nTerdeteksi sebagai: ${detectedLabel}\n\nMohon unggah ulang dokumen yang benar.`);
+            }
+        }
+        function closeDocMismatchModal() {
+            const modal = document.getElementById('docMismatchModal');
+            if (modal) modal.style.display = 'none';
+        }
+        function retryDocMismatchUpload() {
+            closeDocMismatchModal();
+            if (pendingMismatchDocTarget) pickFile(pendingMismatchDocTarget);
+        }
+
         function triggerMasterFullsetUpload() {
             const input = document.getElementById('fileMasterFullsetInput');
             if (input) input.click();
@@ -6374,6 +6444,14 @@
 
                 try {
                     const ocrRes = await fetchOCR('ktp', ocrPayloadUrl);
+                    if (ocrRes && ocrRes.document_mismatch) {
+                        showDocumentMismatchAlert('ktp', ocrRes.detected_document_type);
+                        setDocCardState('ktp', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya KTP, terdeteksi sebagai ${ocrRes.detected_document_type || 'dokumen lain'}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        uploadedKtpDataUrl = null;
+                        return;
+                    }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseKtpTextRobust(rawText);
@@ -6411,6 +6489,14 @@
 
                 try {
                     const ocrRes = await fetchOCR('npwp', ocrPayloadUrl);
+                    if (ocrRes && ocrRes.document_mismatch) {
+                        showDocumentMismatchAlert('npwp', ocrRes.detected_document_type);
+                        setDocCardState('npwp', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya Kartu NPWP, terdeteksi sebagai ${ocrRes.detected_document_type || 'dokumen lain'}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        uploadedNpwpDataUrl = null;
+                        return;
+                    }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseNpwpTextRobust(rawText);
@@ -6465,6 +6551,14 @@
 
                 try {
                     const ocrRes = await fetchOCR('ownership', ocrPayloadUrl);
+                    if (ocrRes && ocrRes.document_mismatch) {
+                        showDocumentMismatchAlert('ownership', ocrRes.detected_document_type);
+                        setDocCardState('ownership', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya BPKB atau Surat Leasing, terdeteksi sebagai ${ocrRes.detected_document_type || 'dokumen lain'}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        if (isOwnershipPrimary) { uploadedOwnershipDataUrl = null; } else { delete ownershipExtraPages[target]; }
+                        return;
+                    }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const upper = rawText.toUpperCase();
@@ -6527,6 +6621,14 @@
 
                 try {
                     const ocrRes = await fetchOCR('stnk_1', ocrPayloadUrl);
+                    if (ocrRes && ocrRes.document_mismatch) {
+                        showDocumentMismatchAlert('stnk', ocrRes.detected_document_type);
+                        setDocCardState('stnk', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya STNK, terdeteksi sebagai ${ocrRes.detected_document_type || 'dokumen lain'}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        uploadedStnkDataUrl = null;
+                        return;
+                    }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseStnkTextRobust(rawText);
@@ -6568,6 +6670,13 @@
 
                 try {
                     const ocrRes = await fetchOCR('stnk_2', ocrPayloadUrl);
+                    if (ocrRes && ocrRes.document_mismatch) {
+                        showDocumentMismatchAlert('stnk_2', ocrRes.detected_document_type);
+                        setDocCardState('stnk_2', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya STNK Lembar 2 (TBPKP), terdeteksi sebagai ${ocrRes.detected_document_type || 'dokumen lain'}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        return;
+                    }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseStnkTextRobust(rawText);
