@@ -911,20 +911,39 @@ def load_db_otp():
                 otps = json.load(f)
         except Exception as e:
             print('[!] Error loading db_otp:', e)
+    
+    # Sinkronisasi dengan database SQLite (persisten lintas restart / worker)
+    try:
+        db_otps = database.load_all_registration_otps()
+        if db_otps:
+            otps.update(db_otps)
+    except Exception as e:
+        print('[!] Error syncing SQLite OTPs:', e)
+
     now = time.time()
     valid_otps = {k: v for k, v in otps.items() if v.get('expires_at', 0) > now}
     if len(valid_otps) != len(otps):
-        save_db_otp(valid_otps)
+        try:
+            with open(DB_OTP_PATH, 'w', encoding='utf-8') as f:
+                json.dump(valid_otps, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
     return valid_otps
 
 def save_db_otp(data):
     try:
         with open(DB_OTP_PATH, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
-        return True
     except Exception as e:
         print('[!] Error saving db_otp:', e)
-        return False
+    
+    # Simpan juga ke database SQLite
+    try:
+        for p, d in data.items():
+            database.save_registration_otp(p, d)
+    except Exception as e:
+        print('[!] Error saving SQLite OTP:', e)
+    return True
 
 def get_session_from_request(handler):
     token = None
@@ -1674,6 +1693,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 body = json.loads(post_data.decode('utf-8'))
                 raw_phone = str(body.get('phone', '')).strip().replace('+', '').replace('-', '').replace(' ', '')
+                if not raw_phone or len(raw_phone) < 5:
+                    self._send_json_error(400, "Nomor WhatsApp tidak terdeteksi. Silakan ulangi proses pendaftaran.")
+                    return
                 if raw_phone.startswith('08'):
                     phone = '628' + raw_phone[2:]
                 elif raw_phone.startswith('8'):
@@ -1694,6 +1716,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if time.time() > otp_info.get('expires_at', 0):
                     otps.pop(phone, None)
                     save_db_otp(otps)
+                    try:
+                        database.delete_registration_otp(phone)
+                    except Exception:
+                        pass
                     self._send_json_error(400, "Kode OTP telah kedaluwarsa (lebih dari 5 menit). Silakan kirim ulang kode baru.")
                     return
 
@@ -1704,6 +1730,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 # OTP Valid! Hapus OTP terpakai
                 otps.pop(phone, None)
                 save_db_otp(otps)
+                try:
+                    database.delete_registration_otp(phone)
+                except Exception:
+                    pass
 
                 # Simpan / perbarui di db_users.json
                 users = load_db_users()

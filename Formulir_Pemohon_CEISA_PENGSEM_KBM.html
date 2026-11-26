@@ -9220,6 +9220,12 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
                     landingPendingPhone = data.phone;
+                    try {
+                        sessionStorage.setItem('kbm_reg_pending_phone', data.phone);
+                        sessionStorage.setItem('kbm_reg_pending_email', data.email || landingPendingEmail || '');
+                        sessionStorage.setItem('kbm_reg_pending_password', password || '');
+                    } catch (e) {}
+
                     if (document.getElementById('landingRegOtpTarget')) {
                         document.getElementById('landingRegOtpTarget').textContent = '+' + data.phone;
                     }
@@ -9260,7 +9266,25 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
         // Request OTP via Email Fallback
         async function requestEmailOtp() {
             const btn = document.getElementById('btnLandingSendEmailOtp');
-            if (!landingPendingPhone) {
+            let phone = landingPendingPhone || '';
+            try { phone = phone || sessionStorage.getItem('kbm_reg_pending_phone') || ''; } catch (e) {}
+            if (!phone) {
+                const targetEl = document.getElementById('landingRegOtpTarget');
+                if (targetEl && targetEl.textContent) {
+                    phone = targetEl.textContent.replace(/[^0-9]/g, '');
+                }
+            }
+            if (!phone) {
+                phone = (document.getElementById('landingRegPhone')?.value || '').trim();
+            }
+
+            let email = landingPendingEmail || '';
+            try { email = email || sessionStorage.getItem('kbm_reg_pending_email') || ''; } catch (e) {}
+            if (!email) {
+                email = (document.getElementById('landingRegEmail')?.value || '').trim();
+            }
+
+            if (!phone) {
                 showLandingAlert('Sesi registrasi tidak ditemukan. Silakan isi form kembali.', 'error');
                 return;
             }
@@ -9273,7 +9297,7 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                 const res = await fetch(`${API_BASE_URL}/api/auth/request-email-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: landingPendingPhone, email: landingPendingEmail })
+                    body: JSON.stringify({ phone, email })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
@@ -9310,6 +9334,27 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                 return;
             }
 
+            // Dapatkan nomor WhatsApp dengan multi-layer fallback kebal refresh / tab switch
+            let phone = landingPendingPhone || '';
+            try { phone = phone || sessionStorage.getItem('kbm_reg_pending_phone') || ''; } catch (e) {}
+            if (!phone) {
+                const targetEl = document.getElementById('landingRegOtpTarget');
+                if (targetEl && targetEl.textContent) {
+                    phone = targetEl.textContent.replace(/[^0-9]/g, '');
+                }
+            }
+            if (!phone) {
+                phone = (document.getElementById('landingRegPhone')?.value || '').trim();
+            }
+
+            let pwd = landingRegPendingPassword || '';
+            try { pwd = pwd || sessionStorage.getItem('kbm_reg_pending_password') || ''; } catch (e) {}
+
+            if (!phone) {
+                showLandingAlert('Nomor WhatsApp pendaftaran tidak ditemukan. Harap klik "Kembali / Ganti Data Registrasi".', 'error');
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = 'Memverifikasi Akun...';
 
@@ -9317,12 +9362,17 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                 const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: landingPendingPhone, otp, password: landingRegPendingPassword })
+                    body: JSON.stringify({ phone, otp, password: pwd })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
                     showLandingAlert('✓ Registrasi Berhasil! Selamat datang di Portal KBM.', 'success');
                     clearInterval(landingOtpTimerInterval);
+                    try {
+                        sessionStorage.removeItem('kbm_reg_pending_phone');
+                        sessionStorage.removeItem('kbm_reg_pending_email');
+                        sessionStorage.removeItem('kbm_reg_pending_password');
+                    } catch (e) {}
                     setTimeout(() => {
                         checkAuthSession();
                     }, 400);

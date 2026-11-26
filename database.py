@@ -46,7 +46,7 @@ def init_db():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);')
 
-    # 2. Tabel OTP Sessions
+    # 2. Tabel OTP Sessions & Registrations
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS otp_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,6 +60,19 @@ def init_db():
     );
     ''')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_otp_identifier ON otp_sessions(identifier, is_used);')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS otp_registrations (
+        phone TEXT PRIMARY KEY,
+        otp TEXT NOT NULL,
+        expires_at REAL NOT NULL,
+        nik TEXT,
+        nama TEXT,
+        email TEXT,
+        password TEXT,
+        created_at TEXT
+    );
+    ''')
 
     # 3. Tabel Permohonan
     cursor.execute('''
@@ -364,6 +377,69 @@ def verify_otp_session(identifier, input_otp):
         conn.commit()
         conn.close()
         return False, "Kode OTP salah."
+
+def save_registration_otp(phone, otp_data):
+    """Menyimpan sesi OTP registrasi ke SQLite WAL untuk persistensi lintas restart/worker."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO otp_registrations (phone, otp, expires_at, nik, nama, email, password, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            str(phone),
+            str(otp_data.get('otp', '')),
+            float(otp_data.get('expires_at', 0)),
+            str(otp_data.get('nik', '')),
+            str(otp_data.get('nama', '')),
+            str(otp_data.get('email', '')),
+            str(otp_data.get('password', '')),
+            str(otp_data.get('created_at', ''))
+        ))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print('[!] Error saving registration OTP to SQLite:', e)
+        return False
+
+def load_all_registration_otps():
+    """Mengambil semua sesi OTP registrasi yang belum kedaluwarsa dari SQLite."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        now = time.time()
+        cursor.execute("SELECT * FROM otp_registrations WHERE expires_at > ?", (now,))
+        rows = cursor.fetchall()
+        result = {}
+        for r in rows:
+            result[r['phone']] = {
+                'otp': r['otp'],
+                'expires_at': r['expires_at'],
+                'nik': r['nik'],
+                'nama': r['nama'],
+                'email': r['email'],
+                'password': r['password'],
+                'created_at': r['created_at']
+            }
+        conn.close()
+        return result
+    except Exception as e:
+        print('[!] Error loading registration OTPs from SQLite:', e)
+        return {}
+
+def delete_registration_otp(phone):
+    """Menghapus sesi OTP registrasi dari SQLite setelah diverifikasi."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM otp_registrations WHERE phone = ?", (str(phone),))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print('[!] Error deleting registration OTP from SQLite:', e)
+        return False
 
 # ================= PERMOHONAN MANAGEMENT =================
 
