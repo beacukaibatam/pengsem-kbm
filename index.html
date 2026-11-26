@@ -4496,19 +4496,22 @@
 
                 <!-- Section Dokumen Terlampir -->
                 <div class="dash-drawer-section">
-                    <div class="dash-drawer-section-title"><svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Dokumen Terlampir (AI Vision Verified)</div>
+                    <div class="dash-drawer-section-title"><svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Jenis Dokumen Wajib (Periksa Manual oleh Petugas)</div>
+                    <div style="font-size:0.68rem; color:#92400E; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:5px 8px; margin-bottom:6px;">
+                        ⚠️ Daftar ini hanya checklist jenis berkas, bukan hasil verifikasi AI otomatis per pemohon. Cocokkan keaslian berkas secara manual.
+                    </div>
                     <div style="display:flex; flex-direction:column; gap:6px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; padding:8px 12px; border-radius:6px; border:1px solid var(--border);">
                             <div><strong>KTP Asli Berwarna</strong></div>
-                            <span class="flat-badge DISETUJUI"><svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Terverifikasi AI</span>
+                            <span class="flat-badge DOKUMEN_LENGKAP">Wajib Diperiksa Petugas</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; padding:8px 12px; border-radius:6px; border:1px solid var(--border);">
                             <div><strong>Kartu NPWP Asli</strong></div>
-                            <span class="flat-badge DISETUJUI"><svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Cocok dengan KTP</span>
+                            <span class="flat-badge DOKUMEN_LENGKAP">Wajib Diperiksa Petugas</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; padding:8px 12px; border-radius:6px; border:1px solid var(--border);">
                             <div><strong>Dokumen STNK &amp; BPKB / Leasing</strong></div>
-                            <span class="flat-badge DOKUMEN_LENGKAP">Tersedia</span>
+                            <span class="flat-badge DOKUMEN_LENGKAP">Wajib Diperiksa Petugas</span>
                         </div>
                     </div>
                 </div>
@@ -7867,11 +7870,14 @@
                     </div>
                     <div style="margin-bottom:8px;">
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Naskah Dinas Nadine (Surat Keluar S):</label>
-                        <input type="text" id="actionFasilitasNoS" value="S-582/KPU.02/BD.05/2026" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; box-sizing:border-box;">
+                        <input type="text" id="actionFasilitasNoS" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; color:#64748B; box-sizing:border-box;">
                     </div>
-                    <div style="margin-bottom:12px;">
+                    <div style="margin-bottom:8px;">
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nomor KEP Persetujuan Pengeluaran KBM:</label>
-                        <input type="text" id="actionFasilitasNoKep" value="KEP-104/KPU.02/2026" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; box-sizing:border-box;">
+                        <input type="text" id="actionFasilitasNoKep" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.80rem; font-weight:700; color:#64748B; box-sizing:border-box;">
+                    </div>
+                    <div style="font-size:0.68rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:6px 8px; margin-bottom:12px;">
+                        ⚠️ Nomor simulasi lokal — belum terhubung ke register resmi CEISA/Nadine Kemenkeu.
                     </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiFasilitas('${item.id}')" style="background:#005FAC; padding:10px 14px; font-size:0.84rem;">
                         ✓ Terbitkan SKEP &amp; Teruskan ke Loket Jaminan ➔
@@ -7885,15 +7891,15 @@
                         Terbitkan kode billing Simponi jaminan PPN 11% dan generate surat permohonan baru pemohon berlampirkan KEP Persetujuan.
                     </div>
                     <div style="margin-bottom:8px;">
-                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nilai Jaminan PPN 11%:</label>
-                        <input type="text" id="actionJaminanNilai" value="Rp 25.000.000" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.82rem; font-weight:800; box-sizing:border-box; color:#0F172A;">
+                        <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nilai Jaminan PPN 11% (isi manual = 11% × NJKB kendaraan):</label>
+                        <input type="number" id="actionJaminanNilai" placeholder="Contoh: 8470000" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.82rem; font-weight:800; box-sizing:border-box; color:#0F172A;">
                     </div>
-                    <div style="margin-bottom:12px;">
+                    <div style="margin-bottom:8px;">
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Kode Billing Simponi (MPN G3):</label>
-                        <input type="text" id="actionJaminanBilling" value="8202611260012" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.88rem; font-weight:800; font-family:monospace; box-sizing:border-box; color:#005FAC;">
+                        <input type="text" id="actionJaminanBilling" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.82rem; font-weight:700; color:#64748B; box-sizing:border-box;">
                     </div>
-                    <div style="background:#F0FDF4; border:1px solid #86EFAC; border-radius:6px; padding:8px 10px; margin-bottom:12px; font-size:0.74rem; color:#166534;">
-                        ✓ Dokumen surat permohonan pemohon dengan lampiran KEP tergenerate otomatis.
+                    <div style="font-size:0.68rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:6px 8px; margin-bottom:10px;">
+                        ⚠️ Nilai jaminan &amp; kode billing simulasi lokal — belum terhubung ke NJKB Bapenda &amp; Simponi MPN G3 resmi. Periksa manual nilai jaminan sebelum menerbitkan.
                     </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiJaminan('${item.id}')" style="background:#7C3AED; padding:10px 14px; font-size:0.84rem;">
                         ✓ Terbitkan Billing &amp; Teruskan ke Pemeriksaan Fisik ➔
@@ -7922,16 +7928,18 @@
                             </select>
                         </div>
                     </div>
-                    <!-- 5 Foto Wajib -->
+                    <!-- 5 Foto Wajib: petugas WAJIB centang manual tiap kategori (foto diambil di HP masing-masing,
+                         portal ini belum punya upload kamera langsung) sebelum LHP bisa disimpan. -->
                     <div style="margin-bottom:10px;">
-                        <label style="font-size:0.70rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">5 Foto Pemeriksaan Fisik Wajib:</label>
-                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; font-size:0.68rem; text-align:center;">
-                            <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px;">📸 Semua Sisi Mobil</div>
-                            <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px;">📸 Bersama Pemilik</div>
-                            <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px;">📸 No. Rangka</div>
-                            <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px;">📸 No. Mesin</div>
-                            <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; grid-column:span 2;">📸 Muatan / Barang Bawaan</div>
+                        <label style="font-size:0.70rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Centang 5 Foto Pemeriksaan Fisik yang Sudah Diambil:</label>
+                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; font-size:0.68rem;">
+                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoSemuaSisi"> 📸 Semua Sisi Mobil</label>
+                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoPemilik"> 📸 Bersama Pemilik</label>
+                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoRangka"> 📸 No. Rangka</label>
+                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoMesin"> 📸 No. Mesin</label>
+                            <label style="background:#FFFFFF; border:1px solid #CBD5E1; padding:6px; border-radius:6px; grid-column:span 2; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" class="chk-lhp-foto" id="lhpFotoMuatan"> 📸 Muatan / Barang Bawaan</label>
                         </div>
+                        <div style="font-size:0.66rem; color:#64748B; margin-top:4px;">Centang hanya jika foto benar-benar sudah diambil dan tersimpan di berkas pemeriksaan.</div>
                     </div>
                     <div style="margin-bottom:10px;">
                         <label style="font-size:0.70rem; font-weight:700; color:#334155;">Catatan Hasil Pemeriksaan Fisik (LHP):</label>
@@ -7948,14 +7956,17 @@
                     <div style="font-size:0.78rem; color:#475569; margin-bottom:10px;">
                         Teliti kesesuaian dokumen pabean dengan LHP fisik hanggar dan putuskan persetujuan pengeluaran (SPPB).
                     </div>
-                    <div style="background:#F0FDF4; border:1px solid #86EFAC; border-radius:6px; padding:8px 10px; margin-bottom:10px; font-size:0.74rem; color:#166534;">
-                        ✓ LHP Fisik: Nomor Rangka &amp; Mesin Sesuai. 5 Foto Fisik Lengkap.
+                    <div style="background:${(item.lhp_data?.kesesuaian_rangka==='SESUAI' && item.lhp_data?.kesesuaian_mesin==='SESUAI') ? '#F0FDF4' : '#FEF2F2'}; border:1px solid ${(item.lhp_data?.kesesuaian_rangka==='SESUAI' && item.lhp_data?.kesesuaian_mesin==='SESUAI') ? '#86EFAC' : '#FCA5A5'}; border-radius:6px; padding:8px 10px; margin-bottom:10px; font-size:0.74rem; color:${(item.lhp_data?.kesesuaian_rangka==='SESUAI' && item.lhp_data?.kesesuaian_mesin==='SESUAI') ? '#166534' : '#991B1B'};">
+                        ${item.lhp_data ? `${item.lhp_data.kesesuaian_rangka==='SESUAI' ? '✓' : '✗'} No. Rangka: ${item.lhp_data.kesesuaian_rangka} | ${item.lhp_data.kesesuaian_mesin==='SESUAI' ? '✓' : '✗'} No. Mesin: ${item.lhp_data.kesesuaian_mesin}. Pemeriksa: ${item.lhp_data.pemeriksa || '-'}.` : 'Data LHP belum tersedia.'}
                     </div>
-                    <div style="margin-bottom:12px;">
+                    <div style="margin-bottom:8px;">
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nomor Dokumen SPPB Pabean:</label>
-                        <input type="text" id="actionSppbNomor" value="SPPB-0842/KPU.02/PPFTZ01/2026" style="width:100%; padding:8px 10px; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.84rem; font-weight:800; font-family:monospace; box-sizing:border-box; color:#005FAC;">
+                        <input type="text" id="actionSppbNomor" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.84rem; font-weight:800; color:#64748B; box-sizing:border-box;">
                     </div>
-                    <button type="button" class="landing-btn-submit" onclick="eksekusiAksiSppb('${item.id}')" style="background:#0284C7; padding:10px 14px; font-size:0.84rem;">
+                    <div style="font-size:0.68rem; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:6px 8px; margin-bottom:12px;">
+                        ⚠️ Nomor simulasi lokal — belum terhubung ke register resmi CEISA PPFTZ-01.
+                    </div>
+                    <button type="button" class="landing-btn-submit" onclick="eksekusiAksiSppb('${item.id}')" style="background:#0284C7; padding:10px 14px; font-size:0.84rem;" ${(item.lhp_data?.kesesuaian_rangka!=='SESUAI' || item.lhp_data?.kesesuaian_mesin!=='SESUAI') ? 'disabled title="Tidak bisa terbit SPPB: ada ketidaksesuaian nomor rangka/mesin pada LHP"' : ''}>
                         ✓ Setujui &amp; Terbitkan Dokumen SPPB Pabean ➔
                     </button>
                 `;
@@ -8005,6 +8016,8 @@
                             <option value="SPPB_GATE_OUT" ${item.status==='SPPB_GATE_OUT'?'selected':''}>6. Validasi Gate Keluar (Gate Pelabuhan)</option>
                             <option value="SELESAI_KELUAR_TLDDP" ${item.status==='SELESAI_KELUAR_TLDDP'?'selected':''}>7. Selesai Keluar ke TLDDP</option>
                         </select>
+                        <label style="font-size:0.70rem; font-weight:700; color:#DC2626; display:block; margin-bottom:4px;">Alasan Override (wajib diisi untuk jejak audit):</label>
+                        <textarea id="overrideReason" rows="2" placeholder="Contoh: Koreksi kesalahan input petugas Jaminan, dikonfirmasi via telepon." style="width:100%; padding:7px; border-radius:6px; border:1.5px solid #DC2626; font-size:0.76rem; box-sizing:border-box; margin-bottom:8px;"></textarea>
                         <button type="button" class="btn-portal-action" onclick="saveStatusUpdate()" style="width:100%; background:#DC2626; color:#FFF; font-size:0.76rem; padding:8px;">
                             Simpan Perubahan Manual (Admin Override)
                         </button>
@@ -8043,21 +8056,21 @@ Status diteruskan ke Seksi Fasilitas.`);
         }
 
         async function eksekusiAksiFasilitas(id) {
-            const noS = document.getElementById('actionFasilitasNoS').value;
-            const noKep = document.getElementById('actionFasilitasNoKep').value;
-            if (!confirm(`Terbitkan Persetujuan SKEP ${noKep} dan Naskah Dinas ${noS} untuk agenda ${id}?`)) return;
+            if (!confirm(`Terbitkan Persetujuan SKEP dan Naskah Dinas untuk agenda ${id}? Nomor resmi akan digenerate otomatis oleh sistem.`)) return;
             try {
                 const res = await fetch(`${API_BASE_URL}/api/fasilitas/terbitkan-skep`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, no_s: noS, no_kep: noKep })
+                    body: JSON.stringify({ id })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert(`✓ PERSATUJUAN SKEP RESMI DITERBITKAN!
+                    alert(`✓ PERSETUJUAN SKEP DITERBITKAN (SIMULASI LOKAL)!
 
 Nomor KEP: ${data.no_kep}
 Nomor Naskah S: ${data.no_s}
+
+⚠️ Nomor di atas dibuat oleh sistem internal, belum tersambung ke register resmi CEISA/Nadine Kemenkeu.
 
 Status diteruskan ke Seksi Jaminan.`);
                     await loadPermohonanData();
@@ -8071,20 +8084,28 @@ Status diteruskan ke Seksi Jaminan.`);
         }
 
         async function eksekusiAksiJaminan(id) {
-            const billing = document.getElementById('actionJaminanBilling').value;
-            if (!confirm(`Terbitkan Kode Billing Simponi ${billing} untuk permohonan ${id}?`)) return;
+            const nilaiJaminan = parseInt(document.getElementById('actionJaminanNilai').value, 10);
+            if (!nilaiJaminan || nilaiJaminan <= 0) {
+                alert('Silakan isi Nilai Jaminan PPN 11% terlebih dahulu (hitung manual: 11% × NJKB kendaraan dari Samsat/Bapenda).');
+                document.getElementById('actionJaminanNilai').focus();
+                return;
+            }
+            if (!confirm(`Terbitkan Kode Billing Simponi dengan Nilai Jaminan Rp ${nilaiJaminan.toLocaleString('id-ID')} untuk permohonan ${id}? Kode billing akan digenerate otomatis oleh sistem.`)) return;
             try {
                 const res = await fetch(`${API_BASE_URL}/api/jaminan/terbitkan-billing`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, kode_billing: billing, nilai_jaminan: 25000000 })
+                    body: JSON.stringify({ id, nilai_jaminan: nilaiJaminan })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert(`✓ BILLING JAMINAN PPN 11% RESMI DITERBITKAN!
+                    alert(`✓ BILLING JAMINAN DITERBITKAN (SIMULASI LOKAL)!
 
 Kode Billing: ${data.kode_billing}
+Nilai Jaminan: Rp ${(data.nilai_jaminan || nilaiJaminan).toLocaleString('id-ID')}
 Dokumen Permohonan Pemohon Baru Berlampirkan KEP berhasil digenerate.
+
+⚠️ Kode billing simulasi lokal, belum tersambung ke Simponi MPN G3 resmi.
 
 Status diteruskan ke Pemeriksaan Fisik Lapangan.`);
                     await loadPermohonanData();
@@ -8101,17 +8122,28 @@ Status diteruskan ke Pemeriksaan Fisik Lapangan.`);
             const rangka = document.getElementById('actionLhpRangka').value;
             const mesin = document.getElementById('actionLhpMesin').value;
             const catatan = document.getElementById('actionLhpCatatan').value;
+            const fotoIds = ['lhpFotoSemuaSisi', 'lhpFotoPemilik', 'lhpFotoRangka', 'lhpFotoMesin', 'lhpFotoMuatan'];
+            const fotoChecked = fotoIds.map(fid => document.getElementById(fid)?.checked === true);
+            const fotoCount = fotoChecked.filter(Boolean).length;
+            if (fotoCount < fotoIds.length) {
+                alert(`Baru ${fotoCount} dari 5 kategori foto yang dicentang. Centang semua foto yang sudah benar-benar diambil sebelum menyimpan LHP.`);
+                return;
+            }
             if (!confirm(`Simpan Laporan Hasil Pemeriksaan (LHP) Fisik untuk agenda ${id}?`)) return;
             try {
                 const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/rekam-lhp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        id, 
-                        hasil_rangka: rangka, 
-                        hasil_mesin: mesin, 
+                    body: JSON.stringify({
+                        id,
+                        kesesuaian_rangka: rangka,
+                        kesesuaian_mesin: mesin,
                         catatan_fisik: catatan,
-                        foto_uploaded: 5
+                        foto_semua_sisi: fotoChecked[0],
+                        foto_depan_pemilik: fotoChecked[1],
+                        foto_no_rangka: fotoChecked[2],
+                        foto_no_mesin: fotoChecked[3],
+                        foto_lainnya: fotoChecked[4]
                     })
                 });
                 const data = await res.json();
@@ -8119,7 +8151,8 @@ Status diteruskan ke Pemeriksaan Fisik Lapangan.`);
                     alert(`✓ LHP PEMERIKSAAN FISIK HANGGAR BERHASIL DIREKAM!
 
 Nomor LHP: ${data.no_lhp}
-5 Foto Pemeriksaan Fisik Terunggah.
+Rangka: ${rangka} | Mesin: ${mesin}
+5 Kategori Foto Dicentang Lengkap.
 
 Status diteruskan ke Pejabat Pemeriksa Dokumen (PFPD).`);
                     await loadPermohonanData();
@@ -8133,19 +8166,20 @@ Status diteruskan ke Pejabat Pemeriksa Dokumen (PFPD).`);
         }
 
         async function eksekusiAksiSppb(id) {
-            const sppb = document.getElementById('actionSppbNomor').value;
-            if (!confirm(`Setujui dan Terbitkan Dokumen SPPB ${sppb} untuk permohonan ${id}?`)) return;
+            if (!confirm(`Setujui dan terbitkan Dokumen SPPB untuk permohonan ${id}? Nomor resmi akan digenerate otomatis oleh sistem.`)) return;
             try {
                 const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/terbitkan-sppb`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, no_sppb: sppb })
+                    body: JSON.stringify({ id })
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert(`✓ DOKUMEN SPPB RESMI DITERBITKAN!
+                    alert(`✓ DOKUMEN SPPB DITERBITKAN (SIMULASI LOKAL)!
 
 Nomor SPPB: ${data.no_sppb}
+
+⚠️ Nomor simulasi lokal, belum tersambung ke CEISA PPFTZ-01 resmi.
 
 Status diteruskan ke Petugas Gate Pelabuhan.`);
                     await loadPermohonanData();
@@ -8197,6 +8231,13 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
             const newStatusEl = document.getElementById('selectNewStatus');
             if (!newStatusEl) return;
             const newStatus = newStatusEl.value;
+            const reasonEl = document.getElementById('overrideReason');
+            const reason = (reasonEl?.value || '').trim();
+            if (!reason) {
+                alert('Alasan override wajib diisi untuk jejak audit sebelum status bisa diubah paksa.');
+                reasonEl?.focus();
+                return;
+            }
 
             const item = allPermohonan.find(p => p.id === selectedPermohonanId);
             if (item) {
@@ -8205,7 +8246,7 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                     await fetch(`${API_BASE_URL}/api/permohonan/update`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: selectedPermohonanId, status: newStatus })
+                        body: JSON.stringify({ id: selectedPermohonanId, status: newStatus, override_reason: reason })
                     });
                 } catch (e) {
                     console.log('Update local state fallback');
@@ -8214,7 +8255,7 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
 
             closeDrawerDirect();
             await loadPermohonanData();
-            alert(`✓ Status Permohonan ${selectedPermohonanId} berhasil diperbarui menjadi ${newStatus}!`);
+            alert(`✓ Status Permohonan ${selectedPermohonanId} berhasil diperbarui menjadi ${newStatus}!\n\nAlasan tercatat: ${reason}`);
         }
 
         // ================= REAL 100% INTERACTIVE WHATSAPP BOT SIMULATOR =================

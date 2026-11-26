@@ -2270,8 +2270,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if self.path == '/api/permohonan/update':
             token, sess = get_session_from_request(self)
-            if not sess or sess.get('role') != 'pegawai':
-                self._send_json_error(403, "Akses Ditolak: Hanya Petugas Bea Cukai yang berwenang memperbarui status tahapan permohonan.")
+            # Ini endpoint override status bebas: hanya adminutama (bukan role pegawai lain)
+            # yang boleh melompat status manual di luar alur tahap normal.
+            if not sess or sess.get('role') != 'adminutama':
+                self._send_json_error(403, "Akses Ditolak: Hanya Admin Utama yang berwenang melakukan override status manual.")
                 return
 
             content_length = int(self.headers.get('Content-Length', 0))
@@ -2280,15 +2282,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 body = json.loads(post_data.decode('utf-8'))
                 pid = body.get('id')
                 new_status = body.get('status')
-                catatan = body.get('catatan', '')
-                
+                override_reason = str(body.get('override_reason', '')).strip()
+                if not override_reason:
+                    self._send_json_error(400, "Alasan override wajib diisi untuk jejak audit.")
+                    return
+
                 db = load_db_permohonan()
                 found = False
                 for item in db:
                     if item.get('id') == pid:
                         item['status'] = new_status
-                        item['catatan_petugas'] = catatan
-                        item['updated_at'] = '2026-03-10 12:00:00'
+                        item['catatan_petugas'] = f"[OVERRIDE ADMIN oleh {sess.get('user', {}).get('nama', 'Admin Utama')}] {override_reason}"
+                        item['updated_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         found = True
                         break
                 if found:
@@ -2654,8 +2659,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 kode_billing = f"82026{random.randint(1000000000, 9999999999)}"
-                njkb = target_item.get('njkb') or 350000000
-                nilai_jaminan = target_item.get('nilai_jaminan') or int(njkb * 0.11)
+                # Nilai jaminan WAJIB diisi manual oleh petugas Jaminan (11% x NJKB riil kendaraan) karena
+                # kalkulator NJKB otomatis (Bapenda Kepri) belum tersambung ke alur ini. Jangan pernah
+                # jatuh ke angka hardcode — tolak kalau belum ada nilai valid dari petugas/record.
+                body_nilai = body.get('nilai_jaminan')
+                try:
+                    body_nilai = int(body_nilai) if body_nilai else None
+                except (TypeError, ValueError):
+                    body_nilai = None
+                nilai_jaminan = body_nilai or target_item.get('nilai_jaminan')
+                if not nilai_jaminan or nilai_jaminan <= 0:
+                    self._send_json_error(400, 'Nilai Jaminan PPN belum diisi. Hitung manual 11% x NJKB kendaraan terlebih dahulu.')
+                    return
 
                 target_item['status'] = 'PPFTZ_CEK_FISIK'
                 target_item['kode_billing'] = kode_billing
@@ -2693,23 +2708,34 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
                     return
 
+                kesesuaian_rangka = body.get('kesesuaian_rangka', 'SESUAI')
+                kesesuaian_mesin = body.get('kesesuaian_mesin', 'SESUAI')
+                foto_flags = {
+                    'foto_semua_sisi': bool(body.get('foto_semua_sisi')),
+                    'foto_depan_pemilik': bool(body.get('foto_depan_pemilik')),
+                    'foto_no_rangka': bool(body.get('foto_no_rangka')),
+                    'foto_no_mesin': bool(body.get('foto_no_mesin')),
+                    'foto_lainnya': bool(body.get('foto_lainnya')),
+                }
+                if not all(foto_flags.values()):
+                    self._send_json_error(400, 'Semua 5 kategori foto pemeriksaan fisik wajib dicentang sebelum LHP dapat disimpan.')
+                    return
+
                 no_lhp = f"LHP-0{random.randint(20, 99)}/KPU.02/HANGGAR/2026"
                 target_item['status'] = 'PEMERIKSA_DOKUMEN'
                 target_item['no_lhp'] = no_lhp
                 target_item['tgl_lhp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 target_item['lhp_data'] = {
                     'no_lhp': no_lhp,
-                    'kesesuaian_rangka': body.get('kesesuaian_rangka', 'SESUAI'),
-                    'kesesuaian_mesin': body.get('kesesuaian_mesin', 'SESUAI'),
+                    'kesesuaian_rangka': kesesuaian_rangka,
+                    'kesesuaian_mesin': kesesuaian_mesin,
                     'kondisi_fisik': body.get('kondisi_fisik', 'BAIK & TERAWAT'),
-                    'foto_semua_sisi': True,
-                    'foto_depan_pemilik': True,
-                    'foto_no_rangka': True,
-                    'foto_no_mesin': True,
-                    'foto_lainnya': True,
+                    **foto_flags,
                     'pemeriksa': sess.get('user', {}).get('nama', 'Pemeriksa Barang')
                 }
-                target_item['catatan_petugas'] = f"Pemeriksaan fisik selesai ({no_lhp}). 5 kategori foto fisik lengkap dan cocok. Berkas diteruskan ke Pemeriksa Dokumen untuk terbit SPPB."
+                kondisi_rangka_txt = 'sesuai' if kesesuaian_rangka == 'SESUAI' else 'TIDAK SESUAI'
+                kondisi_mesin_txt = 'sesuai' if kesesuaian_mesin == 'SESUAI' else 'TIDAK SESUAI'
+                target_item['catatan_petugas'] = f"Pemeriksaan fisik selesai ({no_lhp}). Nomor rangka {kondisi_rangka_txt}, nomor mesin {kondisi_mesin_txt}. 5 kategori foto fisik lengkap. Berkas diteruskan ke Pemeriksa Dokumen untuk terbit SPPB."
                 save_db_permohonan(db)
 
                 self._send_json_response({
@@ -2737,6 +2763,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item = next((item for item in db if item.get('id') == pid), None)
                 if not target_item:
                     self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                lhp_data = target_item.get('lhp_data') or {}
+                if lhp_data.get('kesesuaian_rangka') != 'SESUAI' or lhp_data.get('kesesuaian_mesin') != 'SESUAI':
+                    self._send_json_error(400, 'SPPB tidak dapat diterbitkan: LHP mencatat ketidaksesuaian nomor rangka/mesin. Eskalasi ke PFPD/penyidikan, jangan diloloskan.')
                     return
 
                 no_sppb = f"SPPB-0{random.randint(20, 99)}/KPU.02/PPFTZ01/2026"
