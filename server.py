@@ -976,6 +976,21 @@ def _make_permohonan_folder_name(record):
 
 MAX_UPLOAD_FILE_BYTES = 10 * 1024 * 1024  # Batas keamanan: maks 10 MB per file unggahan
 LOGIN_FAIL_TRACKER = {}   # key: (ip, ident) -> list[timestamp]
+# Keamanan: LOGIN_FAIL_TRACKER di atas dikunci per (ip, ident) — terbukti lewat
+# pengujian langsung ke production BISA DILEWATI dengan mengganti header
+# X-Forwarded-For di tiap percobaan (Render tidak memvalidasi/menimpa header
+# itu, jadi _get_client_ip() ikut percaya nilai palsu apa pun yang dikirim
+# klien). ACCOUNT_FAIL_TRACKER ini TIDAK bergantung IP sama sekali — kuncinya
+# HANYA identitas akun (username/NIP/email/no.WA dinormalisasi) — supaya tidak
+# bisa dilewati dengan spoofing IP. Dipakai bersama oleh /api/auth/login DAN
+# /api/auth/login-pegawai (kunci yang sama) supaya penyerang tidak bisa
+# membagi jatah percobaan antara dua endpoint untuk menggandakan budget.
+ACCOUNT_FAIL_TRACKER = {}  # key: ident_normalized -> list[timestamp]
+ACCOUNT_FAIL_MAX_ATTEMPTS = 10
+ACCOUNT_FAIL_WINDOW_SECONDS = 600  # 10 menit
+
+def _normalize_login_ident(raw):
+    return str(raw or '').strip().lower().replace(' ', '').replace('-', '')
 OTP_RATE_TRACKER = {}     # key: (ip, phone) -> list[timestamp]
 VERIFY_OTP_TRACKER = {}   # key: (ip, identifier) -> list[timestamp]
 RESET_PW_TRACKER = {}     # key: (ip, identifier) -> list[timestamp]
@@ -1995,9 +2010,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
                 client_ip = _get_client_ip(self)
                 rl_key = (client_ip, user_input.lower())
+                acct_rl_key = _normalize_login_ident(user_input)
                 if _is_rate_limited(LOGIN_FAIL_TRACKER, rl_key, max_attempts=5, window_seconds=300):
                     database.log_activity(user_input, 'UNKNOWN', 'LOGIN_RATE_LIMITED', detail=f'IP {client_ip} melebihi 5 percobaan gagal')
                     self._send_json_error(429, "Terlalu banyak percobaan gagal login. Demi keamanan, silakan coba kembali dalam 5 menit.")
+                    return
+                # Limiter berbasis akun SAJA (tanpa syarat IP) — tidak bisa dilewati
+                # dengan memalsukan header X-Forwarded-For seperti limiter di atas.
+                if _is_rate_limited(ACCOUNT_FAIL_TRACKER, acct_rl_key, max_attempts=ACCOUNT_FAIL_MAX_ATTEMPTS, window_seconds=ACCOUNT_FAIL_WINDOW_SECONDS):
+                    database.log_activity(user_input, 'UNKNOWN', 'LOGIN_ACCOUNT_RATE_LIMITED', detail=f'Akun melebihi {ACCOUNT_FAIL_MAX_ATTEMPTS} percobaan gagal lintas-IP dalam {ACCOUNT_FAIL_WINDOW_SECONDS // 60} menit')
+                    self._send_json_error(429, "Terlalu banyak percobaan gagal login untuk akun ini. Demi keamanan, silakan coba kembali dalam beberapa menit.")
                     return
 
                 clean_user = user_input.replace(' ', '').replace('-', '')
@@ -2050,12 +2072,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
                 if not matched_user:
                     _record_rate_hit(LOGIN_FAIL_TRACKER, rl_key, window_seconds=300)
+                    _record_rate_hit(ACCOUNT_FAIL_TRACKER, acct_rl_key, window_seconds=ACCOUNT_FAIL_WINDOW_SECONDS)
                     database.log_activity(user_input, 'UNKNOWN', 'LOGIN_FAILED', detail=f'User/kata sandi salah (IP {client_ip})')
                     self._send_json_error(401, "User atau Kata Sandi salah! Pastikan akun telah terdaftar.")
                     return
 
                 # Reset rate-limit counter setelah login berhasil & auto-upgrade password plaintext lama ke PBKDF2 hash
                 LOGIN_FAIL_TRACKER.pop(rl_key, None)
+                ACCOUNT_FAIL_TRACKER.pop(acct_rl_key, None)
                 if matched_raw_record and not str(matched_raw_record.get('password', '')).startswith('pbkdf2_sha256$'):
                     try:
                         ident_upgrade = matched_raw_record.get('username') or matched_raw_record.get('nip') or matched_raw_record.get('phone') or matched_raw_record.get('email')
@@ -2382,17 +2406,30 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 nip = str(body.get('nip', '')).strip().replace(' ', '').replace('-', '')
                 password = str(body.get('password', '')).strip()
 
+                # Limiter berbasis akun saja (sama dengan /api/auth/login) — endpoint ini
+                # tidak dipakai frontend saat ini, tapi tetap bisa dipanggil langsung via
+                # API jadi tetap wajib dilindungi, dan berbagi kunci dengan /api/auth/login
+                # supaya penyerang tidak bisa membagi jatah percobaan antar dua endpoint.
+                acct_rl_key_pegawai = _normalize_login_ident(nip)
+                if _is_rate_limited(ACCOUNT_FAIL_TRACKER, acct_rl_key_pegawai, max_attempts=ACCOUNT_FAIL_MAX_ATTEMPTS, window_seconds=ACCOUNT_FAIL_WINDOW_SECONDS):
+                    database.log_activity(nip, 'UNKNOWN', 'LOGIN_ACCOUNT_RATE_LIMITED', detail=f'Akun melebihi {ACCOUNT_FAIL_MAX_ATTEMPTS} percobaan gagal lintas-IP dalam {ACCOUNT_FAIL_WINDOW_SECONDS // 60} menit (login-pegawai)')
+                    self._send_json_error(429, "Terlalu banyak percobaan gagal login untuk akun ini. Demi keamanan, silakan coba kembali dalam beberapa menit.")
+                    return
+
                 users = load_db_users()
                 pegawai_list = users.get('pegawai', [])
                 found_pegawai = None
                 for p in pegawai_list:
-                    if str(p.get('nip', '')).strip() == nip and str(p.get('password', '')).strip() == password:
+                    if str(p.get('nip', '')).strip() == nip and database.verify_password(password, p.get('password', '')):
                         found_pegawai = p
                         break
 
                 if not found_pegawai:
+                    _record_rate_hit(ACCOUNT_FAIL_TRACKER, acct_rl_key_pegawai, window_seconds=ACCOUNT_FAIL_WINDOW_SECONDS)
+                    database.log_activity(nip, 'UNKNOWN', 'LOGIN_FAILED', detail='NIP/kata sandi salah (login-pegawai)')
                     self._send_json_error(401, "NIP (18 Digit) atau Kata Sandi Dinas salah! Silakan periksa kembali kredensial dinas Anda.")
                     return
+                ACCOUNT_FAIL_TRACKER.pop(acct_rl_key_pegawai, None)
 
                 # RBAC: role spesifik petugas (jaminan/fasilitas/pemeriksabarang/dst) WAJIB
                 # diambil dari data akun, bukan di-hardcode generik "pegawai" — generik
