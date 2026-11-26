@@ -4775,6 +4775,20 @@
             ? (window.location.port === '8080' ? '' : 'http://localhost:8080')
             : (localStorage.getItem('kbm_api_base_url') || 'https://api-kbm-beacukaibatam.onrender.com');
 
+        // ================= SANITASI HTML ANTI-XSS (CWE-79) =================
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        function escapeJsAttr(str) {
+            return escapeHtml(String(str === null || str === undefined ? '' : str).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+        }
+
         // Sesi Global
         var currentAuthSession = null;
 
@@ -7369,7 +7383,7 @@
                 const res = await fetch(`${API_BASE_URL}/api/admin/users`, { headers: _authHeaders() });
                 const data = await res.json();
                 if (!res.ok) {
-                    pegawaiEl.innerHTML = `<div style="color:#DC2626;">${data.message || 'Gagal memuat akun.'}</div>`;
+                    pegawaiEl.innerHTML = `<div style="color:#DC2626;">${escapeHtml(data.message || 'Gagal memuat akun.')}</div>`;
                     return;
                 }
                 const roleBadge = (role) => {
@@ -7379,20 +7393,20 @@
                 pegawaiEl.innerHTML = (data.pegawai || []).map(p => `
                     <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:6px; padding:8px 10px; margin-bottom:6px;">
                         <div>
-                            <strong>${p.nama || p.username}</strong> <span style="color:#64748B;">(${p.username})</span><br>
-                            <span style="font-size:0.72rem; color:#475569;">${roleBadge(p.role)} ${p.nip ? '• NIP ' + p.nip : ''}</span>
+                            <strong>${escapeHtml(p.nama || p.username)}</strong> <span style="color:#64748B;">(${escapeHtml(p.username)})</span><br>
+                            <span style="font-size:0.72rem; color:#475569;">${escapeHtml(roleBadge(p.role))} ${p.nip ? '• NIP ' + escapeHtml(p.nip) : ''}</span>
                         </div>
-                        <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:5px 10px;" onclick="openResetPasswordModal('${p.username}', 'pegawai', '${(p.nama || p.username).replace(/'/g, "")}')">🔑 Reset Sandi</button>
+                        <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:5px 10px;" onclick="openResetPasswordModal('${escapeJsAttr(p.username)}', 'pegawai', '${escapeJsAttr(p.nama || p.username)}')">🔑 Reset Sandi</button>
                     </div>
                 `).join('') || '<div style="color:#64748B;">Belum ada akun petugas.</div>';
 
                 pemohonEl.innerHTML = (data.pemohon || []).map(p => `
                     <div style="display:flex; justify-content:space-between; align-items:center; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:6px; padding:8px 10px; margin-bottom:6px;">
                         <div>
-                            <strong>${p.nama || p.username || p.id}</strong><br>
-                            <span style="font-size:0.72rem; color:#475569;">${p.phone || '-'} ${p.nik ? '• NIK ' + p.nik : ''}</span>
+                            <strong>${escapeHtml(p.nama || p.username || p.id)}</strong><br>
+                            <span style="font-size:0.72rem; color:#475569;">${escapeHtml(p.phone || '-')} ${p.nik ? '• NIK ' + escapeHtml(p.nik) : ''}</span>
                         </div>
-                        <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:5px 10px;" onclick="openResetPasswordModal('${p.username || p.id}', 'pemohon', '${(p.nama || p.username || p.id).replace(/'/g, "")}')">🔑 Reset Sandi</button>
+                        <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:5px 10px;" onclick="openResetPasswordModal('${escapeJsAttr(p.username || p.id)}', 'pemohon', '${escapeJsAttr(p.nama || p.username || p.id)}')">🔑 Reset Sandi</button>
                     </div>
                 `).join('') || '<div style="color:#64748B;">Belum ada akun pemohon.</div>';
             } catch (e) {
@@ -7482,7 +7496,7 @@
                 const res = await fetch(`${API_BASE_URL}/api/admin/activity-log?${params.toString()}`, { headers: _authHeaders() });
                 const data = await res.json();
                 if (!res.ok) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#DC2626; padding:16px;">${data.message || 'Gagal memuat log.'}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#DC2626; padding:16px;">${escapeHtml(data.message || 'Gagal memuat log.')}</td></tr>`;
                     return;
                 }
                 const logs = data.logs || [];
@@ -7492,12 +7506,12 @@
                 }
                 tbody.innerHTML = logs.map(l => `
                     <tr>
-                        <td>${l.timestamp || '-'}</td>
-                        <td>${l.actor_username || '-'}</td>
-                        <td>${l.actor_role || '-'}</td>
-                        <td><strong>${l.action || '-'}</strong></td>
-                        <td>${l.detail || '-'}</td>
-                        <td>${l.target_id || '-'}</td>
+                        <td>${escapeHtml(l.timestamp || '-')}</td>
+                        <td>${escapeHtml(l.actor_username || '-')}</td>
+                        <td>${escapeHtml(l.actor_role || '-')}</td>
+                        <td><strong>${escapeHtml(l.action || '-')}</strong></td>
+                        <td>${escapeHtml(l.detail || '-')}</td>
+                        <td>${escapeHtml(l.target_id || '-')}</td>
                     </tr>
                 `).join('');
             } catch (e) {
@@ -7743,7 +7757,7 @@
                 uploadedBermeteraiDataUrl = e.target.result;
                 uploadedBermeteraiFileName = file.name;
                 if (statusEl) {
-                    statusEl.innerHTML = `✓ <strong>${file.name}</strong> siap dikirim.`;
+                    statusEl.innerHTML = `✓ <strong>${escapeHtml(file.name)}</strong> siap dikirim.`;
                     statusEl.style.color = '#059669';
                 }
                 if (btnKirim) {
@@ -8323,24 +8337,24 @@
                 } else if (p.status === 'SELESAI_KELUAR_TLDDP') {
                     badgeHtml = '<span style="background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Selesai Keluar ke TLDDP</span>';
                 } else {
-                    badgeHtml = '<span style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line></svg> ' + (p.status || 'Diproses') + '</span>';
+                    badgeHtml = '<span style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line></svg> ' + escapeHtml(p.status || 'Diproses') + '</span>';
                 }
 
                 return `
                     <tr>
-                        <td class="mono" style="font-weight:800; color:#005FAC;">${p.id}</td>
-                        <td style="font-size:0.78rem; color:#475569;">${p.created_at || 'Baru Saja'}</td>
+                        <td class="mono" style="font-weight:800; color:#005FAC;">${escapeHtml(p.id)}</td>
+                        <td style="font-size:0.78rem; color:#475569;">${escapeHtml(p.created_at || 'Baru Saja')}</td>
                         <td>
-                            <strong style="color:#0F172A;">${p.nama_pemohon || 'Wajib Pajak'}</strong>
-                            <div style="font-size:0.70rem; color:#64748B; margin-top:2px;">NIK: ${p.nik || '-'} • WA: ${p.no_wa_pemohon || '-'}</div>
+                            <strong style="color:#0F172A;">${escapeHtml(p.nama_pemohon || 'Wajib Pajak')}</strong>
+                            <div style="font-size:0.70rem; color:#64748B; margin-top:2px;">NIK: ${escapeHtml(p.nik || '-')} • WA: ${escapeHtml(p.no_wa_pemohon || '-')}</div>
                         </td>
                         <td>
-                            <strong style="color:#0F172A;">${p.nopol || 'BP -'}</strong>
-                            <div style="font-size:0.70rem; color:#64748B; margin-top:2px;">${p.merek || 'Mobil'} (${p.tahun || '-'})</div>
+                            <strong style="color:#0F172A;">${escapeHtml(p.nopol || 'BP -')}</strong>
+                            <div style="font-size:0.70rem; color:#64748B; margin-top:2px;">${escapeHtml(p.merek || 'Mobil')} (${escapeHtml(p.tahun || '-')})</div>
                         </td>
                         <td>${badgeHtml}</td>
                         <td>
-                            <button type="button" class="btn-sm" onclick="openDrawerDetail('${p.id}')" style="background:#005FAC; color:#FFFFFF; border:none; border-radius:6px; padding:6px 12px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-family:inherit;">
+                            <button type="button" class="btn-sm" onclick="openDrawerDetail('${escapeJsAttr(p.id)}')" style="background:#005FAC; color:#FFFFFF; border:none; border-radius:6px; padding:6px 12px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-family:inherit;">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                                 Buka Berkas
                             </button>
@@ -8365,7 +8379,7 @@
             document.getElementById('dWaPemohon').innerText = item.no_wa_pemohon || '-';
             
             if (item.nomor_berbeda) {
-                document.getElementById('dWaPengirim').innerHTML = `<span style="color:#005FAC; font-weight:700;">${item.no_wa_pengirim} (Berbeda dengan pemohon - Submitter)</span>`;
+                document.getElementById('dWaPengirim').innerHTML = `<span style="color:#005FAC; font-weight:700;">${escapeHtml(item.no_wa_pengirim)} (Berbeda dengan pemohon - Submitter)</span>`;
             } else {
                 document.getElementById('dWaPengirim').innerText = (item.no_wa_pengirim || item.no_wa_pemohon || '-') + ' (Sama dengan pemohon)';
             }
@@ -9161,7 +9175,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             if (!body) return;
             const bubble = document.createElement('div');
             bubble.className = 'dash-chat-bubble dash-chat-bot';
-            bubble.innerHTML = text.replace(/\\n/g, '<br>').replace(/\\*(.*?)\\*/g, '<strong>$1</strong>');
+            bubble.innerHTML = escapeHtml(text).replace(/\n/g, '<br>').replace(/\*(.*?)\*/g, '<strong>$1</strong>');
 
             if (buttons.length > 0) {
                 const btnGroup = document.createElement('div');
@@ -9763,7 +9777,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
                 };
 
                 if (pill) {
-                    pill.innerHTML = `${rDef.icon} <strong>${rDef.badge}:</strong> ${user.nama || 'Petugas'} (NIP: ${user.nip || '-'})`;
+                    pill.innerHTML = `${rDef.icon} <strong>${escapeHtml(rDef.badge)}:</strong> ${escapeHtml(user.nama || 'Petugas')} (NIP: ${escapeHtml(user.nip || '-')})`;
                     pill.style.background = rDef.bg;
                     pill.style.borderColor = rDef.border;
                     pill.style.color = rDef.text;
@@ -9785,7 +9799,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
                     window.location.hash = '#/formulir';
                 }
                 if (pill) {
-                    pill.innerHTML = `👤 <strong>Pemohon:</strong> ${user.nama || 'Wajib Pajak'} (+${user.phone})`;
+                    pill.innerHTML = `👤 <strong>Pemohon:</strong> ${escapeHtml(user.nama || 'Wajib Pajak')} (+${escapeHtml(user.phone)})`;
                     pill.style.background = '#ECFDF5';
                     pill.style.borderColor = '#10B981';
                     pill.style.color = '#065F46';
@@ -10585,10 +10599,10 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
             }
             lockNotice.innerHTML = `
                 <div>
-                    <div style="font-weight:800; font-size:0.95rem; margin-bottom:3px;">🔒 Berkas Permohonan Telah Diajukan (${p.id || 'KBM-2026'})</div>
-                    <div style="font-size:0.75rem; color:#1D4ED8;">Status saat ini: <strong>${p.status || 'BERKAS_LENGKAP'}</strong>. Dokumen kepabeanan Anda telah terkunci untuk proses verifikasi petugas Bea Cukai Batam.</div>
+                    <div style="font-weight:800; font-size:0.95rem; margin-bottom:3px;">🔒 Berkas Permohonan Telah Diajukan (${escapeHtml(p.id || 'KBM-2026')})</div>
+                    <div style="font-size:0.75rem; color:#1D4ED8;">Status saat ini: <strong>${escapeHtml(p.status || 'BERKAS_LENGKAP')}</strong>. Dokumen kepabeanan Anda telah terkunci untuk proses verifikasi petugas Bea Cukai Batam.</div>
                 </div>
-                <button type="button" class="btn-portal-action" onclick="openDrawerDetail('${p.id}')" style="background:#005FAC; color:#FFFFFF; border:none; padding:8px 14px; font-size:0.75rem; font-weight:700; cursor:pointer; border-radius:6px;">
+                <button type="button" class="btn-portal-action" onclick="openDrawerDetail('${escapeJsAttr(p.id)}')" style="background:#005FAC; color:#FFFFFF; border:none; padding:8px 14px; font-size:0.75rem; font-weight:700; cursor:pointer; border-radius:6px;">
                     Lihat Detail Berkas
                 </button>
             `;

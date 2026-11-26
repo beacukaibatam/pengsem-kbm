@@ -1142,7 +1142,7 @@ def load_db_permohonan():
     # Mengambil data dari SQLite WAL berkinerja tinggi & terindeks
     try:
         perms = database.get_all_permohonan()
-        if perms:
+        if perms is not None:
             return perms
     except Exception as e_sql:
         print("[!] SQLite permohonan query fallback to JSON:", e_sql)
@@ -1204,7 +1204,21 @@ def repair_remove_demo_seed_permohonan_once():
             print(f"[+] Perbaikan startup: {count} data contoh/demo permohonan dihapus dari SQLite production.")
         conn.close()
     except Exception as e:
-        print('[!] Gagal menjalankan pembersihan data demo permohonan:', e)
+        print('[!] Gagal menjalankan pembersihan data demo permohonan di SQLite:', e)
+
+    # Bersihkan juga file backup JSON agar tidak ter-fallback atau termigrasi ulang saat startup berikutnya
+    try:
+        if os.path.exists(DB_PERMOHONAN_PATH):
+            with open(DB_PERMOHONAN_PATH, 'r', encoding='utf-8') as f:
+                raw_json = json.load(f)
+            if isinstance(raw_json, list):
+                cleaned = [p for p in raw_json if isinstance(p, dict) and p.get('id') not in DEMO_SEED_PERMOHONAN_IDS]
+                if len(cleaned) != len(raw_json):
+                    with open(DB_PERMOHONAN_PATH, 'w', encoding='utf-8') as f:
+                        json.dump(cleaned, f, indent=2, ensure_ascii=False)
+                    print(f"[+] Perbaikan startup: {len(raw_json) - len(cleaned)} data contoh/demo permohonan dihapus dari db_permohonan.json.")
+    except Exception as e:
+        print('[!] Gagal menjalankan pembersihan data demo permohonan di JSON:', e)
 
 def send_whatsapp_meta_message(to_number, text, buttons=None):
     """Mengirim pesan via Meta WhatsApp Cloud API resmi jika access token tersedia."""
@@ -1507,19 +1521,25 @@ def send_email_registration_success(to_email, nama="Pemohon KBM Batam", phone=""
 
 GLOBAL_SESSION_EPOCH = 1795622471.301933
 
+ALLOWED_CORS_ORIGINS = {
+    'https://beacukaibatam.github.io',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+}
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
     def end_headers(self):
-        # Header CORS dinamis untuk akses GitHub Pages & multi-perangkat
-        origin = self.headers.get('Origin') if hasattr(self, 'headers') and self.headers else '*'
-        if not origin:
-            origin = '*'
-        self.send_header('Access-Control-Allow-Origin', origin)
+        # Header CORS ketat (whitelist) untuk mencegah kebocoran lintas-domain (CWE-942)
+        origin = self.headers.get('Origin', '').strip() if hasattr(self, 'headers') and self.headers else ''
+        if origin in ALLOWED_CORS_ORIGINS:
+            self.send_header('Access-Control-Allow-Origin', origin)
+            self.send_header('Access-Control-Allow-Credentials', 'true')
+            self.send_header('Vary', 'Origin')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Token, X-Requested-With')
-        self.send_header('Access-Control-Allow-Credentials', 'true')
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')
@@ -2379,7 +2399,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 resp = json.dumps({'status': 'error', 'message': str(e)}).encode('utf-8')
                 self.send_response(500)
             self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-Length', str(len(resp)))
             self.end_headers()
             self.wfile.write(resp)
@@ -2407,7 +2426,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     }).encode('utf-8')
                     self.send_response(400)
                     self.send_header('Content-Type', 'application/json')
-                    self.send_header('Access-Control-Allow-Origin', '*')
                     self.send_header('Content-Length', str(len(resp)))
                     self.end_headers()
                     self.wfile.write(resp)
@@ -2443,7 +2461,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 resp = json.dumps({"status": "error", "message": str(e)}).encode('utf-8')
                 self.send_response(500)
             self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-Length', str(len(resp)))
             self.end_headers()
             self.wfile.write(resp)
@@ -2492,7 +2509,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 resp = json.dumps({'status': 'error', 'message': str(e)}).encode('utf-8')
                 self.send_response(500)
             self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-Length', str(len(resp)))
             self.end_headers()
             self.wfile.write(resp)
