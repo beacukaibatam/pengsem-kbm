@@ -730,70 +730,121 @@ def decode_file_bytes_to_cv2(raw_bytes):
 
     return img_cv
 
+def _detect_image_mime(raw_bytes):
+    if raw_bytes.startswith(bytes([0xFF, 0xD8, 0xFF])):
+        return 'image/jpeg'
+    if raw_bytes.startswith(bytes([0x89, 0x50, 0x4E, 0x47])):
+        return 'image/png'
+    if raw_bytes.startswith(b'RIFF') and raw_bytes[8:12] == b'WEBP':
+        return 'image/webp'
+    return 'image/jpeg'
+
 def extract_with_vision_ai(image_bytes, target=''):
-    """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini"""
+    """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini (mendukung multi-halaman PDF BPKB)."""
     if not VISION_AI_ENABLED:
         return None, ""
-        
+
     try:
-        # Konversi jika format PDF (Render kualitas tinggi 300 DPI)
+        image_parts = []
         if image_bytes.startswith(b'%PDF') and fitz:
             doc = fitz.open(stream=image_bytes, filetype="pdf")
-            if len(doc) > 0:
-                pix = doc[0].get_pixmap(dpi=300)
-                image_bytes = pix.tobytes("png")
-                
-        b64_str = base64.b64encode(image_bytes).decode('utf-8')
-        
+            max_pages = 4 if target in ('ownership', 'bpkb', 'fullset', 'all') else 2
+            for p_idx in range(min(len(doc), max_pages)):
+                pix = doc[p_idx].get_pixmap(dpi=220)
+                img_b = pix.tobytes("jpeg")
+                image_parts.append({"inlineData": {"mimeType": "image/jpeg", "data": base64.b64encode(img_b).decode('utf-8')}})
+        else:
+            mime = _detect_image_mime(image_bytes)
+            image_parts.append({"inlineData": {"mimeType": mime, "data": base64.b64encode(image_bytes).decode('utf-8')}})
+
+        if not image_parts:
+            return None, ""
+
         prompts = {
-            'ktp': "Ekstrak seluruh informasi KTP ini ke dalam JSON dengan kunci: nik (16 digit), nama (nama lengkap tanpa gelar/keterangan lain), tempat_lahir, tgl_lahir (DD-MM-YYYY), alamat (jalan, RT/RW, kelurahan, kecamatan, kota/kabupaten), jenis_kelamin, agama, pekerjaan. Hanya JSON murni.",
-            'npwp': "Ekstrak nomor NPWP dan nama wajib pajak/pemilik dari gambar ini ke dalam format JSON dengan kunci: npwp (format 15 digit XX.XXX.XXX.X-XXX.XXX), nama (nama wajib pajak). Hanya JSON murni.",
-            'stnk': "Ekstrak seluruh informasi STNK / Notice Pajak Daerah ini ke dalam format JSON dengan kunci: no_polisi (Plat BP), no_stnk (Nomor seri STNK / nomor cetak SKPD), nama_pemilik, alamat, merk, type (tipe spesifik lengkap mobil, misal B100RS-GMDF / AYLA 1.0 M MT), jenis, model, tahun, isi_silinder, no_rangka (VIN 17 digit), no_mesin, warna, bahan_bakar, njkb (Angka Nilai Jual Kendaraan Bermotor dalam integer murni tanpa titik/koma, misal 58000000). Hanya JSON murni.",
-            'ownership': "Ekstrak seluruh data dokumen kepemilikan/BPKB/leasing ini ke dalam format JSON dengan kunci: no_bpkb (Nomor seri BPKB misal L-04829182), no_polisi (Nomor registrasi BP), merk, type, model, tahun, warna, no_rangka (VIN 17 digit), no_mesin, nama_pemilik, no_kontrak. Hanya JSON murni.",
-            'vehicle': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi (Plat BP), no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, model, tahun, no_rangka (VIN 17 digit), no_mesin, warna, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni.",
-            'kbm_unified': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi (Plat BP), no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, model, tahun, no_rangka (VIN 17 digit), no_mesin, warna, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni.",
-            'fullset': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik (16 digit), nama (nama lengkap pemohon sesuai KTP), npwp (15/16 digit format XX.XXX.XXX.X-XXX.XXX), alamat (alamat lengkap domisili KTP di Batam), no_polisi (Plat BP), no_stnk, no_bpkb, merk, type (tipe spesifik lengkap mobil misal B100RS-GMDF / AYLA 1.0 M MT), model, tahun, warna, no_rangka (VIN 17 digit), no_mesin, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni.",
-            'all': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik (16 digit), nama (nama lengkap pemohon sesuai KTP), npwp (15/16 digit format XX.XXX.XXX.X-XXX.XXX), alamat (alamat lengkap domisili KTP di Batam), no_polisi (Plat BP), no_stnk, no_bpkb, merk, type, model, tahun, warna, no_rangka (VIN 17 digit), no_mesin, njkb (Angka integer murni NJKB Bapenda tanpa titik, misal 58000000). Hanya JSON murni."
+            'ktp': (
+                "Ekstrak informasi KTP Indonesia ini ke dalam JSON murni dengan kunci: "
+                "nik (16 digit angka), nama (NAMA LENGKAP huruf kapital tanpa gelar tambahan), "
+                "tempat_lahir, tgl_lahir (DD-MM-YYYY), alamat (alamat lengkap termasuk RT/RW, Kel/Desa, Kecamatan), "
+                "jenis_kelamin, agama, pekerjaan. Jika tidak terbaca isi string kosong. Hanya JSON murni."
+            ),
+            'npwp': (
+                "Ekstrak nomor NPWP dan nama wajib pajak dari kartu NPWP Indonesia ini ke dalam JSON murni dengan kunci: "
+                "npwp (PERTAHANKAN format penulisan asli persis seperti di kartu, misal 15 digit bertitik/strip XX.XXX.XXX.X-XXX.XXX atau 16 digit), "
+                "nama (NAMA LENGKAP wajib pajak). Hanya JSON murni."
+            ),
+            'stnk': (
+                "Ekstrak seluruh informasi STNK Lembar 1 (Surat Tanda Nomor Kendaraan Bermotor) ke dalam JSON murni dengan kunci: "
+                "no_stnk (Nomor STNK), no_polisi (Nomor Registrasi / Plat BP), nama_pemilik, alamat, "
+                "merk, type, tahun (Tahun Pembuatan 4 digit), jenis, model, warna, "
+                "no_rangka (VIN 17 karakter), no_mesin, no_bpkb (Nomor BPKB yang tertera di STNK), "
+                "isi_silinder, bahan_bakar, njkb (integer murni bila ada). Hanya JSON murni."
+            ),
+            'stnk_1': (
+                "Ekstrak seluruh informasi STNK Lembar 1 (Surat Tanda Nomor Kendaraan Bermotor) ke dalam JSON murni dengan kunci: "
+                "no_stnk (Nomor STNK), no_polisi (Nomor Registrasi / Plat BP), nama_pemilik, alamat, "
+                "merk, type, tahun (Tahun Pembuatan 4 digit), jenis, model, warna, "
+                "no_rangka (VIN 17 karakter), no_mesin, no_bpkb (Nomor BPKB yang tertera di STNK). Hanya JSON murni."
+            ),
+            'stnk_2': (
+                "Ekstrak seluruh informasi STNK Lembar 2 (TBPKP / Tanda Bukti Pelunasan Kewajiban Pembayaran / Notice Pajak) ke dalam JSON murni dengan kunci: "
+                "no_polisi (Nomor Polisi), nama_pemilik, merk, type, tahun (Tahun Pembuatan 4 digit), "
+                "jenis, model, warna, no_rangka (VIN 17 karakter), no_mesin, "
+                "njkb (Angka integer murni NJKB Bapenda tanpa titik/koma, misal 150000000). Hanya JSON murni."
+            ),
+            'ownership': (
+                "Ekstrak seluruh informasi BPKB (atau Surat Leasing) dari halaman-halaman ini ke dalam JSON murni dengan kunci: "
+                "no_bpkb (Nomor BPKB), nama_pemilik, nik_pemilik (NIK pada lembar identitas pemilik bila ada), alamat_pemilik, "
+                "no_polisi (Nomor Registrasi / Plat), merk, type, tahun (Tahun Pembuatan 4 digit), jenis, model, warna, "
+                "no_rangka (VIN 17 karakter), no_mesin, jumlah_roda, "
+                "nama_apm_importir (Nama APM / Importir pada halaman Dokumen Persyaratan Registrasi Pertama bila ada), "
+                "pelabuhan_impor (Nama Pelabuhan pada halaman Dokumen Persyaratan Registrasi Pertama bila ada), "
+                "no_kontrak (bila surat leasing). Hanya JSON murni."
+            ),
+            'bpkb': (
+                "Ekstrak seluruh informasi BPKB dari halaman-halaman ini ke dalam JSON murni dengan kunci: "
+                "no_bpkb, nama_pemilik, nik_pemilik, alamat_pemilik, no_polisi, merk, type, tahun, jenis, model, warna, "
+                "no_rangka, no_mesin, jumlah_roda, nama_apm_importir, pelabuhan_impor. Hanya JSON murni."
+            ),
+            'vehicle': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi, no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
+            'kbm_unified': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi, no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
+            'fullset': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik, nama, npwp, alamat, no_polisi, no_stnk, no_bpkb, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
+            'all': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik, nama, npwp, alamat, no_polisi, no_stnk, no_bpkb, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni."
         }
-        
+
         prompt_text = prompts.get(target, "Ekstrak seluruh teks dan informasi penting dalam format JSON. Hanya JSON murni.")
-        
-        # Prioritas model multimodal vision
-        candidate_models = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-2.5-flash']
-        
+        candidate_models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+
         for model_name in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
             payload = {
                 "contents": [{
-                    "parts": [
-                        {"text": prompt_text},
-                        {"inlineData": {"mimeType": "image/png", "data": b64_str}}
-                    ]
+                    "parts": [{"text": prompt_text}] + image_parts
                 }],
                 "generationConfig": {
                     "responseMimeType": "application/json",
                     "temperature": 0.1
                 }
             }
-            
             try:
                 req = urllib.request.Request(
-                    url, 
+                    url,
                     data=json.dumps(payload).encode('utf-8'),
                     headers={"Content-Type": "application/json"}
                 )
-                with urllib.request.urlopen(req, timeout=12) as resp:
+                with urllib.request.urlopen(req, timeout=25) as resp:
                     data = json.loads(resp.read().decode('utf-8'))
                     candidate = data.get('candidates', [{}])[0]
                     parts = candidate.get('content', {}).get('parts', [{}])
                     out_text = parts[0].get('text', '{}')
                     parsed = json.loads(out_text)
+                    if isinstance(parsed, list) and parsed:
+                        parsed = parsed[0]
                     print(f"[+] Vision AI sukses menggunakan model: {model_name}")
                     return parsed, out_text
             except Exception as e_model:
                 print(f"[!] Vision AI Model {model_name} error: {e_model}, mencoba fallback berikutnya...")
                 continue
-                
+
         return None, ""
     except Exception as e:
         print(f"[!] Vision AI Call Error: {e}")
@@ -816,7 +867,7 @@ def process_ocr(image_bytes, target='', engine='auto'):
         parsed, combined_text = parse_ktp_image(img_cv)
     elif target == 'npwp':
         parsed, combined_text = parse_npwp_image(img_cv)
-    elif target == 'stnk':
+    elif target in ('stnk', 'stnk_1', 'stnk_2'):
         parsed, combined_text = parse_stnk_image(img_cv)
     elif target in ('bpkb', 'leasing', 'ownership'):
         parsed, combined_text = parse_ownership_image(img_cv)
@@ -878,7 +929,135 @@ for _legacy_file in ('db_users.json', 'db_otp.json', 'db_permohonan.json', 'db_c
 
 DB_USERS_PATH = os.path.join(DATA_DIR, 'db_users.json')
 DB_OTP_PATH = os.path.join(DATA_DIR, 'db_otp.json')
+UPLOADS_DIR = os.path.join(DATA_DIR, 'uploads')
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 AUTH_SESSIONS = {}
+
+# ================= ARSIP BERKAS LOKAL & GOOGLE DRIVE APPS SCRIPT BRIDGE =================
+_MIME_TO_EXT = {
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'application/pdf': '.pdf',
+}
+
+def _sanitize_archive_name(text, fallback='DOKUMEN'):
+    cleaned = re.sub(r'[^A-Za-z0-9._-]+', '_', str(text or '').strip()).strip('_')
+    return cleaned[:60] if cleaned else fallback
+
+def _make_permohonan_folder_name(record):
+    pid = _sanitize_archive_name(record.get('id', 'KBM'), 'KBM')
+    nama = _sanitize_archive_name(record.get('nama_pemohon', 'PEMOHON'), 'PEMOHON')[:28]
+    nopol = _sanitize_archive_name(record.get('nopol', 'NOPOL'), 'NOPOL')[:18]
+    return f"{pid}_{nama}_{nopol}"
+
+def _decode_data_url(data_url):
+    if not data_url or not isinstance(data_url, str):
+        return None, None, None, None
+    s = data_url.strip()
+    mime_type = 'application/octet-stream'
+    b64_part = s
+    if s.startswith('data:') and ',' in s:
+        header, b64_part = s.split(',', 1)
+        m = re.match(r'^data:([^;]+);base64$', header, re.IGNORECASE)
+        if m:
+            mime_type = m.group(1).lower()
+    ext = _MIME_TO_EXT.get(mime_type, '.bin')
+    try:
+        raw_bytes = base64.b64decode(b64_part)
+    except Exception:
+        return None, None, None, None
+    return mime_type, ext, raw_bytes, b64_part
+
+def upload_to_gdrive_bridge(subfolder, filename, mime_type, base64_data, root_folder='ARSIP_PENGSEM_KBM_BATAM'):
+    """Kirim file ke Google Drive melalui Google Apps Script Web App Bridge."""
+    bridge_url = (os.environ.get('GDRIVE_BRIDGE_URL') or '').strip()
+    bridge_secret = (os.environ.get('GDRIVE_BRIDGE_SECRET') or '').strip()
+    if not bridge_url or not bridge_secret:
+        return {"status": "skipped", "reason": "GDRIVE_BRIDGE_URL/SECRET belum diatur"}
+    try:
+        payload = json.dumps({
+            "secret": bridge_secret,
+            "action": "upload_file",
+            "root_folder": root_folder,
+            "subfolder": subfolder,
+            "filename": filename,
+            "mime_type": mime_type,
+            "base64_data": base64_data,
+        }).encode('utf-8')
+        req = urllib.request.Request(
+            bridge_url,
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=35) as resp:
+            raw = resp.read().decode('utf-8', errors='replace')
+            try:
+                parsed = json.loads(raw)
+            except Exception:
+                parsed = {"status": "ok", "raw": raw[:200]}
+            print(f"[+] Arsip Google Drive ({subfolder}/{filename}): {parsed.get('status')}")
+            return parsed
+    except Exception as e:
+        print(f"[!] Gagal arsip Google Drive ({subfolder}/{filename}): {e}")
+        return {"status": "error", "message": str(e)}
+
+def save_and_archive_document(record, doc_label, data_url, custom_filename=None):
+    """Simpan berkas ke disk lokal (UPLOADS_DIR/<folder>/) & antrekan sinkronisasi ke Google Drive."""
+    mime_type, ext, raw_bytes, b64_part = _decode_data_url(data_url)
+    if not raw_bytes:
+        return None
+
+    folder_name = _make_permohonan_folder_name(record)
+    local_dir = os.path.join(UPLOADS_DIR, folder_name)
+    os.makedirs(local_dir, exist_ok=True)
+
+    if custom_filename:
+        safe_fn = _sanitize_archive_name(custom_filename, doc_label)
+        if '.' not in safe_fn:
+            safe_fn += ext
+    else:
+        safe_fn = f"{_sanitize_archive_name(doc_label, 'DOKUMEN')}{ext}"
+
+    local_path = os.path.join(local_dir, safe_fn)
+    try:
+        with open(local_path, 'wb') as f:
+            f.write(raw_bytes)
+    except Exception as e:
+        print(f"[!] Gagal simpan berkas lokal {local_path}: {e}")
+
+    # Upload asinkron ke Google Drive Bridge agar tidak menghambat response HTTP
+    threading.Thread(
+        target=upload_to_gdrive_bridge,
+        args=(folder_name, safe_fn, mime_type, b64_part),
+        daemon=True
+    ).start()
+
+    return {
+        "label": doc_label,
+        "filename": safe_fn,
+        "mime_type": mime_type,
+        "size_bytes": len(raw_bytes),
+        "folder": folder_name,
+        "saved_at": datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+
+def backup_sqlite_to_gdrive_async():
+    """Kirim salinan database SQLite ke folder _BACKUP_DATABASE di Google Drive."""
+    def _worker():
+        try:
+            db_path = database.DATABASE_PATH
+            if not os.path.exists(db_path):
+                return
+            with open(db_path, 'rb') as f:
+                b64_db = base64.b64encode(f.read()).decode('utf-8')
+            ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+            upload_to_gdrive_bridge('_BACKUP_DATABASE', f'kbm_batam_{ts}.db', 'application/x-sqlite3', b64_db)
+        except Exception as e:
+            print(f"[!] Gagal backup SQLite ke Google Drive: {e}")
+    threading.Thread(target=_worker, daemon=True).start()
 
 # ================= RBAC: PERAN PETUGAS & HAK AKSES PER TAHAPAN =================
 # Setiap petugas HANYA berwenang di tahapan sesuai jabatannya (least privilege).
@@ -897,7 +1076,7 @@ FULL_VISIBILITY_ROLES = {'adminutama', 'pemeriksabarang', 'pemeriksadokumen'}
 ADMIN_OVERRIDE_BLOCKED_STATUSES = {'PEMERIKSA_DOKUMEN', 'SPPB_GATE_OUT', 'SELESAI_KELUAR_TLDDP'}
 STAGE_VISIBILITY_BY_ROLE = {
     'frontdesk': ('FRONTDESK_NADINE', 'BERKAS_LENGKAP'),
-    'loket': ('FRONTDESK_NADINE', 'BERKAS_LENGKAP'),
+    'loket': ('FRONTDESK_NADINE', 'BERKAS_LENGKAP', 'LOKET_VERIFIKASI'),
     'fasilitas': ('VERIFIKASI_FASILITAS',),
     'jaminan': ('LOKET_JAMINAN',),
     'gate': ('SPPB_GATE_OUT',),
@@ -2435,7 +2614,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 new_id = f"KBM-2026-{str(len(db) + 1).zfill(3)}"
                 new_record = {
                     "id": new_id,
-                    "tanggal_pengajuan": body.get("tanggal_pengajuan", "2026-03-10 12:00:00"),
+                    "tanggal_pengajuan": body.get("tanggal_pengajuan", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
                     "nama_pemohon": body.get("nama_pemohon", "-"),
                     "nik": body.get("nik", "-"),
                     "npwp": body.get("npwp", "-"),
@@ -2448,13 +2627,53 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "status": "MENUNGGU_VERIFIKASI_DOKUMEN",
                     "sumber": sumber,
                     "dokumen_bermeterai_nama": body.get("dokumen_bermeterai_nama", ""),
-                    "dokumen_bermeterai_ada": bool(dokumen_bermeterai)
+                    "dokumen_bermeterai_ada": bool(dokumen_bermeterai),
+                    "indikasi_cbu": bool(body.get("indikasi_cbu", False)),
+                    "cbu_detail": body.get("cbu_detail", ""),
+                    "archived_files": []
                 }
                 if dokumen_bermeterai:
                     new_record["dokumen_bermeterai"] = dokumen_bermeterai
+                    meta_bm = save_and_archive_document(
+                        new_record,
+                        "06_Surat_Permohonan_Pernyataan_Bermeterai",
+                        dokumen_bermeterai,
+                        custom_filename=body.get("dokumen_bermeterai_nama") or "06_Surat_Permohonan_Pernyataan_Bermeterai.pdf"
+                    )
+                    if meta_bm:
+                        new_record["archived_files"].append(meta_bm)
+
+                # Simpan & arsipkan berkas asli pemohon (KTP, NPWP, STNK 1 & 2, BPKB, pendukung, 6 foto fisik) ke disk + Google Drive
+                berkas_pemohon = body.get("berkas_pemohon") or {}
+                if isinstance(berkas_pemohon, dict):
+                    _label_map = [
+                        ("ktp", "01_KTP"),
+                        ("npwp", "02_NPWP"),
+                        ("stnk", "03a_STNK_Lembar1"),
+                        ("stnk_2", "03b_STNK_Lembar2_TBPKP"),
+                        ("bpkb", "04_BPKB"),
+                        ("buku_nikah", "05a_Buku_Nikah_KK"),
+                        ("kwitansi", "05b_Kwitansi_Jual_Beli"),
+                        ("surat_sewa", "05c_Surat_Sewa"),
+                        ("surat_kuasa", "05d_Surat_Kuasa"),
+                        ("foto_depan", "11a_Foto_Sisi_Depan"),
+                        ("foto_kanan", "11b_Foto_Samping_Kanan"),
+                        ("foto_kiri", "11c_Foto_Samping_Kiri"),
+                        ("foto_belakang", "11d_Foto_Sisi_Belakang"),
+                        ("foto_rangka", "11e_Foto_Nomor_Rangka"),
+                        ("foto_mesin", "11f_Foto_Nomor_Mesin"),
+                    ]
+                    for key, label in _label_map:
+                        val = berkas_pemohon.get(key)
+                        if val:
+                            meta_doc = save_and_archive_document(new_record, label, val)
+                            if meta_doc:
+                                new_record["archived_files"].append(meta_doc)
+
                 db.insert(0, new_record)
                 save_db_permohonan(db)
-                database.log_activity(new_record.get('no_wa_pemohon', '-'), 'pemohon', 'PERMOHONAN_DIKIRIM', detail=f"Nopol {new_record.get('nopol','-')}, sumber {sumber}", target_id=new_id)
+                backup_sqlite_to_gdrive_async()
+                database.log_activity(new_record.get('no_wa_pemohon', '-'), 'pemohon', 'PERMOHONAN_DIKIRIM', detail=f"Nopol {new_record.get('nopol','-')}, sumber {sumber}, {len(new_record['archived_files'])} berkas diarsipkan", target_id=new_id)
                 resp = json.dumps({"status": "success", "data": new_record}).encode('utf-8')
                 self.send_response(200)
             except Exception as e:
@@ -2966,11 +3185,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_json_error(500, f'Gagal menerbitkan Surat/KEP: {str(e)}')
             return
 
-        # 3. Endpoint Jaminan (Penerbitan Billing Jaminan & Generate Permohonan Berlampirkan KEP)
-        if self.path == '/api/jaminan/terbitkan-billing':
+        # 3a. Endpoint Jaminan (Petugas Jaminan: Unggah Billing dari Portal Eksternal)
+        if self.path in ('/api/jaminan/unggah-billing', '/api/jaminan/terbitkan-billing'):
             token, sess = get_session_from_request(self)
             if not _is_role_allowed(sess, ['jaminan']):
-                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Seksi Perbendaharaan/Jaminan yang berwenang menerbitkan billing jaminan.')
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Jaminan yang berwenang mengunggah Billing Jaminan.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
@@ -2983,57 +3202,322 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
                     return
 
-                kode_billing = f"82026{random.randint(1000000000, 9999999999)}"
-                # Nilai jaminan WAJIB diisi manual oleh petugas Jaminan (11% x NJKB riil kendaraan) karena
-                # kalkulator NJKB otomatis (Bapenda Kepri) belum tersambung ke alur ini. Jangan pernah
-                # jatuh ke angka hardcode — tolak kalau belum ada nilai valid dari petugas/record.
+                billing_file = body.get('billing_file_data_url') or ''
+                billing_fname = str(body.get('billing_file_name') or '06b_Billing_Jaminan.pdf').strip()
+                kode_billing = str(body.get('kode_billing') or '').strip()
                 body_nilai = body.get('nilai_jaminan')
                 try:
-                    body_nilai = int(body_nilai) if body_nilai else None
+                    nilai_jaminan = int(body_nilai) if body_nilai else target_item.get('nilai_jaminan')
                 except (TypeError, ValueError):
-                    body_nilai = None
-                nilai_jaminan = body_nilai or target_item.get('nilai_jaminan')
-                if not nilai_jaminan or nilai_jaminan <= 0:
-                    self._send_json_error(400, 'Nilai Jaminan PPN belum diisi. Hitung manual 11% x NJKB kendaraan terlebih dahulu.')
+                    nilai_jaminan = target_item.get('nilai_jaminan')
+
+                if not billing_file:
+                    self._send_json_error(400, 'File Billing Jaminan (PDF/gambar) wajib diunggah terlebih dahulu.')
                     return
 
-                no_ppftz = f"{random.randint(10, 99)}/PPFTZ-01/KPU.02/2026"
-                target_item['status'] = 'PPFTZ_CEK_FISIK'
-                target_item['kode_billing'] = kode_billing
-                target_item['nilai_jaminan'] = nilai_jaminan
-                target_item['surat_permohonan_final'] = True
+                meta_bill = save_and_archive_document(
+                    target_item,
+                    '06b_Billing_Jaminan',
+                    billing_file,
+                    custom_filename=billing_fname
+                )
+                archived = target_item.get('archived_files') if isinstance(target_item.get('archived_files'), list) else []
+                if meta_bill:
+                    archived = [a for a in archived if a.get('label') != '06b_Billing_Jaminan']
+                    archived.append(meta_bill)
+                    target_item['archived_files'] = archived
+
+                target_item['status'] = 'LOKET_JAMINAN'
+                target_item['jaminan_status'] = 'MENUNGGU_BAYAR_PEMOHON'
+                target_item['billing_file_data_url'] = billing_file
+                target_item['billing_file_name'] = billing_fname
+                if kode_billing:
+                    target_item['kode_billing'] = kode_billing
+                if nilai_jaminan and nilai_jaminan > 0:
+                    target_item['nilai_jaminan'] = nilai_jaminan
                 target_item['tgl_billing'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                target_item['no_ppftz'] = no_ppftz
-                target_item['tgl_ppftz'] = datetime.datetime.now().strftime('%Y-%m-%d')
-                target_item['catatan_petugas'] = f"Kode Billing Jaminan ({kode_billing}) terbit sebesar Rp {nilai_jaminan:,}. Surat permohonan berlampiran KEP ter-generate (PPFTZ {no_ppftz}). Silakan lanjut pemeriksaan fisik barang."
+                target_item['jaminan_alasan_tolak'] = ''
+                nominal_txt = f" sebesar Rp {nilai_jaminan:,}" if (nilai_jaminan and nilai_jaminan > 0) else ""
+                kode_txt = f" (Kode: {kode_billing})" if kode_billing else ""
+                target_item['catatan_petugas'] = f"Billing Jaminan{kode_txt}{nominal_txt} telah diunggah oleh Petugas Jaminan. Menunggu pembayaran & unggah bukti bayar oleh pemohon."
                 save_db_permohonan(db)
-                _log_officer_action(sess, 'BILLING_TERBIT', pid, f"Billing {kode_billing}, Rp {nilai_jaminan:,}")
+                _log_officer_action(sess, 'JAMINAN_UNGGAH_BILLING', pid, f"Billing {kode_billing or billing_fname}{nominal_txt}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
                     f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
-                    f"Kode Billing Jaminan PPN 11% untuk kendaraan Anda ({target_item.get('nopol', '-')}) telah terbit.\n"
-                    f"Kode Billing: *{kode_billing}* — Nominal: Rp {nilai_jaminan:,}\n\n"
-                    f"Silakan segera lakukan pembayaran. Berkas akan dilanjutkan ke pemeriksaan fisik kendaraan setelah jaminan lunas.\n\n"
+                    f"Billing Jaminan untuk kendaraan Anda ({target_item.get('nopol', '-')}) telah tersedia di Portal PENGSEM{kode_txt}{nominal_txt}.\n\n"
+                    f"Silakan masuk ke Portal PENGSEM → menu *Status Permohonan Saya* untuk mengunduh Billing Jaminan, melakukan pembayaran melalui kanal pembayaran resmi, lalu mengunggah *Bukti Bayar* pada portal.\n\n"
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 ))
 
                 self._send_json_response({
                     'status': 'ok',
-                    'message': f'Kode Billing Jaminan ({kode_billing}) berhasil diterbitkan dan Surat Permohonan pemohon berlampiran KEP telah ter-generate!',
-                    'kode_billing': kode_billing,
-                    'nilai_jaminan': nilai_jaminan,
+                    'message': 'Billing Jaminan berhasil diunggah & notifikasi WhatsApp telah dikirim ke pemohon!',
                     'permohonan': target_item
                 })
             except Exception as e:
-                self._send_json_error(500, f'Gagal menerbitkan billing jaminan: {str(e)}')
+                self._send_json_error(500, f'Gagal mengunggah billing jaminan: {str(e)}')
             return
 
-        # 4. Endpoint Pemeriksa Barang (Rekam LHP Fisik & 5 Foto Kendaraan)
+        # 3b. Endpoint Pemohon: Unggah Bukti Bayar Billing Jaminan
+        if self.path == '/api/jaminan/unggah-bukti-bayar':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') not in ('pemohon', 'adminutama'):
+                self._send_json_error(403, 'Akses Ditolak: Silakan masuk sebagai Pemohon untuk mengunggah bukti bayar.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                pid = body.get('id')
+                bukti_url = body.get('bukti_bayar_data_url') or ''
+                bukti_name = str(body.get('bukti_bayar_name') or '06c_Bukti_Bayar_Jaminan.pdf').strip()
+                catatan_pemohon = str(body.get('catatan_pemohon') or '').strip()
+
+                if not pid or not bukti_url:
+                    self._send_json_error(400, 'File Bukti Bayar Jaminan wajib dipilih sebelum dikirim.')
+                    return
+
+                db = load_db_permohonan()
+                target_item = next((item for item in db if item.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                # Pastikan pemohon hanya bisa mengunggah untuk berkas miliknya sendiri
+                if sess.get('role') == 'pemohon':
+                    u = sess.get('user', {})
+                    u_nik = str(u.get('nik', '')).strip()
+                    u_phone = re.sub(r'\D', '', str(u.get('phone', '')))
+                    p_nik = str(target_item.get('nik', '')).strip()
+                    p_phone = re.sub(r'\D', '', str(target_item.get('no_wa_pemohon', '')))
+                    if u_phone.startswith('62'): u_phone = '0' + u_phone[2:]
+                    if p_phone.startswith('62'): p_phone = '0' + p_phone[2:]
+                    if not ((u_nik and u_nik == p_nik) or (u_phone and u_phone == p_phone)):
+                        self._send_json_error(403, 'Akses Ditolak: Anda hanya dapat mengunggah bukti bayar untuk permohonan milik Anda sendiri.')
+                        return
+
+                meta_bukti = save_and_archive_document(
+                    target_item,
+                    '06c_Bukti_Bayar_Jaminan',
+                    bukti_url,
+                    custom_filename=bukti_name
+                )
+                archived = target_item.get('archived_files') if isinstance(target_item.get('archived_files'), list) else []
+                if meta_bukti:
+                    archived = [a for a in archived if a.get('label') != '06c_Bukti_Bayar_Jaminan']
+                    archived.append(meta_bukti)
+                    target_item['archived_files'] = archived
+
+                target_item['bukti_bayar_data_url'] = bukti_url
+                target_item['bukti_bayar_name'] = bukti_name
+                target_item['tgl_bukti_bayar'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                target_item['catatan_bukti_bayar'] = catatan_pemohon
+                target_item['jaminan_status'] = 'MENUNGGU_VERIFIKASI_JAMINAN'
+                target_item['jaminan_alasan_tolak'] = ''
+                target_item['catatan_petugas'] = 'Pemohon telah mengunggah Bukti Bayar Jaminan. Menunggu verifikasi Petugas Jaminan.'
+                save_db_permohonan(db)
+                database.log_activity(sess.get('user', {}).get('phone', 'pemohon'), 'pemohon', 'UNGGAH_BUKTI_BAYAR_JAMINAN', detail=bukti_name, target_id=pid)
+
+                self._send_json_response({
+                    'status': 'ok',
+                    'message': 'Bukti Bayar Jaminan berhasil diunggah! Status: Menunggu Verifikasi Petugas Jaminan.',
+                    'permohonan': target_item
+                })
+            except Exception as e:
+                self._send_json_error(500, f'Gagal mengunggah bukti bayar: {str(e)}')
+            return
+
+        # 3c. Endpoint Petugas Jaminan: Verifikasi Pembayaran (Terima -> LOKET_VERIFIKASI | Tolak -> Unggah Ulang)
+        if self.path == '/api/jaminan/verifikasi-pembayaran':
+            token, sess = get_session_from_request(self)
+            if not _is_role_allowed(sess, ['jaminan']):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Jaminan yang berwenang memverifikasi pembayaran jaminan.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                pid = body.get('id')
+                keputusan = str(body.get('keputusan', '')).strip().upper()
+                no_bpj = str(body.get('no_bpj', '')).strip()
+                catatan = str(body.get('catatan', '')).strip()
+
+                db = load_db_permohonan()
+                target_item = next((item for item in db if item.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                if keputusan == 'TERIMA':
+                    target_item['jaminan_status'] = 'TERVERIFIKASI'
+                    target_item['status'] = 'LOKET_VERIFIKASI'
+                    target_item['no_bpj'] = no_bpj or target_item.get('no_bpj', '')
+                    target_item['tgl_verifikasi_jaminan'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    target_item['verifikator_jaminan'] = sess.get('user', {}).get('nama', 'Petugas Jaminan')
+                    target_item['jaminan_alasan_tolak'] = ''
+                    bpj_txt = f" (No. BPJ: {no_bpj})" if no_bpj else ""
+                    target_item['catatan_petugas'] = f"Pembayaran jaminan TERVERIFIKASI{bpj_txt}. {catatan} Berkas diteruskan ke Petugas Loket untuk verifikasi 3 bundel & penerbitan PPFTZ/SPF/IP.".strip()
+                    save_db_permohonan(db)
+                    _log_officer_action(sess, 'JAMINAN_TERVERIFIKASI', pid, f"Terverifikasi{bpj_txt}. {catatan}")
+                    _notify_pemohon_wa(target_item, (
+                        f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                        f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                        f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                        f"Pembayaran Jaminan Anda untuk kendaraan ({target_item.get('nopol', '-')}) telah *TERVERIFIKASI*{bpj_txt}.\n"
+                        f"Berkas kini diteruskan ke *Petugas Loket* untuk verifikasi akhir dan penerbitan PPFTZ serta Surat Pemberitahuan Pemeriksaan Fisik (SPF).\n\n"
+                        f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                    ))
+                    self._send_json_response({
+                        'status': 'ok',
+                        'message': 'Jaminan terverifikasi! Berkas otomatis diteruskan ke antrean Petugas Loket (LOKET_VERIFIKASI).',
+                        'permohonan': target_item
+                    })
+                elif keputusan == 'TOLAK':
+                    if not catatan:
+                        self._send_json_error(400, 'Alasan penolakan / permintaan unggah ulang bukti bayar wajib diisi.')
+                        return
+                    target_item['jaminan_status'] = 'DITOLAK_UNGGAH_ULANG'
+                    target_item['status'] = 'LOKET_JAMINAN'
+                    target_item['jaminan_alasan_tolak'] = catatan
+                    target_item['catatan_petugas'] = f"Bukti bayar jaminan ditolak: {catatan}. Diminta unggah ulang oleh pemohon."
+                    save_db_permohonan(db)
+                    _log_officer_action(sess, 'JAMINAN_DITOLAK', pid, catatan)
+                    _notify_pemohon_wa(target_item, (
+                        f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                        f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                        f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                        f"Bukti Bayar Jaminan yang Anda unggah untuk kendaraan ({target_item.get('nopol', '-')}) *perlu diunggah ulang*.\n"
+                        f"Alasan: _{catatan}_\n\n"
+                        f"Silakan masuk kembali ke Portal PENGSEM → *Status Permohonan Saya* untuk mengunggah ulang bukti bayar yang benar.\n\n"
+                        f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                    ))
+                    self._send_json_response({
+                        'status': 'ok',
+                        'message': 'Bukti bayar ditolak & notifikasi unggah ulang telah dikirim ke pemohon.',
+                        'permohonan': target_item
+                    })
+                else:
+                    self._send_json_error(400, 'Keputusan tidak valid (harus TERIMA atau TOLAK).')
+            except Exception as e:
+                self._send_json_error(500, f'Gagal memverifikasi pembayaran jaminan: {str(e)}')
+            return
+
+        # 3d. Endpoint Petugas Loket: Verifikasi 3 Bundel & Otomatisasi 4 Output Atomik (PPFTZ, Pemeriksa Dokumen, SPF, IP)
+        if self.path == '/api/loket/approve':
+            token, sess = get_session_from_request(self)
+            if not _is_role_allowed(sess, ['loket']):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Petugas Loket yang berwenang melakukan approval tahap Loket Verifikasi.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                pid = body.get('id')
+                chk1 = bool(body.get('chk_bundel_permohonan'))
+                chk2 = bool(body.get('chk_bundel_skep'))
+                chk3 = bool(body.get('chk_bundel_jaminan'))
+                if not (chk1 and chk2 and chk3):
+                    self._send_json_error(400, 'Ketiga bundel verifikasi Loket (Permohonan+Lampiran, SKEP Fasilitas, dan Jaminan Terverifikasi) wajib dicentang sebelum Approval.')
+                    return
+
+                db = load_db_permohonan()
+                target_item = next((item for item in db if item.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+                if target_item.get('status') != 'LOKET_VERIFIKASI' and sess.get('role') != 'adminutama':
+                    self._send_json_error(400, f'Berkas {pid} belum berada pada tahap LOKET_VERIFIKASI (status saat ini: {target_item.get("status")}).')
+                    return
+
+                # Cari petugas Pemeriksa Dokumen & Pemeriksa Barang terdaftar di database
+                users_all = load_db_users().get('pegawai', [])
+                pfpd_user = next((u for u in users_all if u.get('role') == 'pemeriksadokumen'), None)
+                pemeriksa_brg_user = next((u for u in users_all if u.get('role') == 'pemeriksabarang'), None)
+
+                pfpd_nama = str(body.get('pemeriksa_dokumen_nama') or (pfpd_user.get('nama') if pfpd_user else 'Pejabat Pemeriksa Dokumen (PFPD)')).strip()
+                pfpd_nip = str(body.get('pemeriksa_dokumen_nip') or (pfpd_user.get('nip') if pfpd_user else '-')).strip()
+                pbrg_nama = str(body.get('pemeriksa_barang_nama') or (pemeriksa_brg_user.get('nama') if pemeriksa_brg_user else 'Pejabat Pemeriksa Barang (Fisik)')).strip()
+                pbrg_nip = str(body.get('pemeriksa_barang_nip') or (pemeriksa_brg_user.get('nip') if pemeriksa_brg_user else '-')).strip()
+
+                now_dt = datetime.datetime.now()
+                now_str = now_dt.strftime('%Y-%m-%d %H:%M:%S')
+                today_str = now_dt.strftime('%Y-%m-%d')
+                rand3 = random.randint(100, 999)
+
+                # 4 OUTPUT OTOMATIS ATOMIK:
+                # 1. Terbit PPFTZ-01 & Proforma PPFTZ-03
+                no_ppftz = f"{random.randint(10, 99)}/PPFTZ-01/KPU.02/2026"
+                no_proforma_ppftz03 = f"PRO-{rand3}/PPFTZ-03/KPU.02/2026"
+                # 2. Penunjukan Pemeriksa Dokumen
+                # 3. Terbit SPF (Surat Pemberitahuan Pemeriksaan Fisik)
+                no_spf = f"SPF-{rand3}/KPU.02/2026"
+                # 4. Terbit IP (Instruksi Pemeriksaan) penunjukan Pemeriksa Barang
+                no_ip = f"IP-{rand3}/KPU.02/2026"
+
+                target_item['status'] = 'PPFTZ_CEK_FISIK'
+                target_item['no_ppftz'] = no_ppftz
+                target_item['no_proforma_ppftz03'] = no_proforma_ppftz03
+                target_item['tgl_ppftz'] = today_str
+                target_item['no_spf'] = no_spf
+                target_item['tgl_spf'] = now_str
+                target_item['no_ip'] = no_ip
+                target_item['tgl_ip'] = now_str
+                target_item['pemeriksa_dokumen_nama'] = pfpd_nama
+                target_item['pemeriksa_dokumen_nip'] = pfpd_nip
+                target_item['pemeriksa_barang_nama'] = pbrg_nama
+                target_item['pemeriksa_barang_nip'] = pbrg_nip
+                target_item['loket_verifikasi_data'] = {
+                    'chk_bundel_permohonan': True,
+                    'chk_bundel_skep': True,
+                    'chk_bundel_jaminan': True,
+                    'petugas_loket': sess.get('user', {}).get('nama', 'Petugas Loket'),
+                    'approved_at': now_str
+                }
+                target_item['catatan_petugas'] = (
+                    f"Approval Loket selesai. Terbit otomatis: PPFTZ-01 ({no_ppftz}), Proforma PPFTZ-03 ({no_proforma_ppftz03}), "
+                    f"SPF ({no_spf}), IP ({no_ip}). Pemeriksa Barang: {pbrg_nama}; Pemeriksa Dokumen: {pfpd_nama}."
+                )
+                save_db_permohonan(db)
+                backup_sqlite_to_gdrive_async()
+                _log_officer_action(sess, 'LOKET_APPROVAL_4_OUTPUT', pid, f"PPFTZ {no_ppftz} | SPF {no_spf} | IP {no_ip} | PFPD {pfpd_nama} | PBrg {pbrg_nama}")
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Berkas permohonan kendaraan Anda ({target_item.get('nopol', '-')}) telah *DISETUJUI PETUGAS LOKET*.\n"
+                    f"• No. PPFTZ-01: *{no_ppftz}*\n"
+                    f"• Proforma PPFTZ-03: *{no_proforma_ppftz03}*\n"
+                    f"• No. SPF: *{no_spf}*\n\n"
+                    f"📌 *WAJIB HADIR PEMERIKSAAN FISIK KENDARAAN* dengan membawa berkas *ASLI* berikut:\n"
+                    f"1. KTP Asli\n"
+                    f"2. NPWP Asli\n"
+                    f"3. BPKB Asli / Surat Keterangan Asli dari Leasing\n"
+                    f"4. STNK Asli\n"
+                    f"5. Surat Jalan Asli dari Polda\n\n"
+                    f"Dokumen SPF dapat dilihat/diunduh di Portal PENGSEM.\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
+
+                self._send_json_response({
+                    'status': 'ok',
+                    'message': f'Approval Loket berhasil! 4 output terbit otomatis (PPFTZ {no_ppftz}, SPF {no_spf}, IP {no_ip}, Pemeriksa Dokumen & Barang ditunjuk).',
+                    'no_ppftz': no_ppftz,
+                    'no_proforma_ppftz03': no_proforma_ppftz03,
+                    'no_spf': no_spf,
+                    'no_ip': no_ip,
+                    'permohonan': target_item
+                })
+            except Exception as e:
+                self._send_json_error(500, f'Gagal memproses approval loket: {str(e)}')
+            return
+
+        # 4. Endpoint Pemeriksa Barang (Verifikasi 5 Berkas Asli, Upload Foto Lapangan, Rekam BAP & LHP)
         if self.path == '/api/pemeriksaan/rekam-lhp':
             token, sess = get_session_from_request(self)
             if not _is_role_allowed(sess, ['pemeriksabarang']):
-                self._send_json_error(403, 'Akses Ditolak: Hanya Pejabat Pemeriksa Barang yang berwenang merekam LHP.')
+                self._send_json_error(403, 'Akses Ditolak: Hanya Pejabat Pemeriksa Barang yang berwenang merekam LHP & BAP.')
                 return
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
@@ -3044,6 +3528,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_item = next((item for item in db if item.get('id') == pid), None)
                 if not target_item:
                     self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                # 1. Checklist Pencocokan 5 Berkas Fisik Asli
+                berkas_asli_flags = {
+                    'ktp_asli': bool(body.get('cek_ktp_asli')),
+                    'npwp_asli': bool(body.get('cek_npwp_asli')),
+                    'bpkb_asli': bool(body.get('cek_bpkb_asli')),
+                    'stnk_asli': bool(body.get('cek_stnk_asli')),
+                    'surat_jalan_polda': bool(body.get('cek_surat_jalan_polda')),
+                }
+                catatan_berkas_asli = str(body.get('catatan_berkas_asli', '')).strip()
+                if not all(berkas_asli_flags.values()) and not catatan_berkas_asli:
+                    self._send_json_error(400, 'Semua 5 berkas fisik asli wajib dicentang (atau isi Catatan Ketidaksesuaian Berkas Asli bila ada yang belum sesuai).')
                     return
 
                 kesesuaian_rangka = body.get('kesesuaian_rangka', 'SESUAI')
@@ -3056,43 +3553,72 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'foto_lainnya': bool(body.get('foto_lainnya')),
                 }
                 if not all(foto_flags.values()):
-                    self._send_json_error(400, 'Semua 5 kategori foto pemeriksaan fisik wajib dicentang sebelum LHP dapat disimpan.')
+                    self._send_json_error(400, 'Semua 5 kategori foto pemeriksaan fisik wajib dicentang sebelum LHP & BAP dapat disimpan.')
                     return
 
-                no_lhp = f"LHP-0{random.randint(20, 99)}/KPU.02/HANGGAR/2026"
+                # 2. Simpan Foto Hasil Pemeriksaan Lapangan (multi-foto) ke disk lokal & Google Drive Bridge
+                foto_lapangan_list = body.get('foto_lapangan') or []
+                saved_field_photos = []
+                archived = target_item.get('archived_files') if isinstance(target_item.get('archived_files'), list) else []
+                if isinstance(foto_lapangan_list, list):
+                    for idx_f, fitem in enumerate(foto_lapangan_list[:10], start=1):
+                        if isinstance(fitem, dict) and fitem.get('data_url'):
+                            meta_f = save_and_archive_document(
+                                target_item,
+                                f'12_Foto_Pemeriksaan_Lapangan_{idx_f}',
+                                fitem['data_url'],
+                                custom_filename=fitem.get('filename') or f'12_Foto_Pemeriksaan_Lapangan_{idx_f}.jpg'
+                            )
+                            if meta_f:
+                                saved_field_photos.append(meta_f)
+                                archived.append(meta_f)
+                target_item['archived_files'] = archived
+
+                rand2 = random.randint(20, 99)
+                no_lhp = f"LHP-0{rand2}/KPU.02/HANGGAR/2026"
+                no_bap = f"BAP-0{rand2}/KPU.02/HANGGAR/2026"
+                now_ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 target_item['status'] = 'PEMERIKSA_DOKUMEN'
                 target_item['no_lhp'] = no_lhp
-                target_item['tgl_lhp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                target_item['no_bap'] = no_bap
+                target_item['tgl_lhp'] = now_ts
                 target_item['lhp_data'] = {
                     'no_lhp': no_lhp,
+                    'no_bap': no_bap,
                     'kesesuaian_rangka': kesesuaian_rangka,
                     'kesesuaian_mesin': kesesuaian_mesin,
-                    'kondisi_fisik': body.get('kondisi_fisik', 'BAIK & TERAWAT'),
+                    'kondisi_fisik': body.get('catatan_fisik') or body.get('kondisi_fisik') or 'BAIK & TERAWAT',
+                    'catatan_bap': body.get('catatan_bap') or body.get('catatan_fisik') or 'Pemeriksaan fisik berjalan lancar sesuai dokumen.',
+                    'berkas_asli': berkas_asli_flags,
+                    'catatan_berkas_asli': catatan_berkas_asli,
+                    'jumlah_foto_lapangan': len(saved_field_photos),
                     **foto_flags,
                     'pemeriksa': sess.get('user', {}).get('nama', 'Pemeriksa Barang')
                 }
                 kondisi_rangka_txt = 'sesuai' if kesesuaian_rangka == 'SESUAI' else 'TIDAK SESUAI'
                 kondisi_mesin_txt = 'sesuai' if kesesuaian_mesin == 'SESUAI' else 'TIDAK SESUAI'
-                target_item['catatan_petugas'] = f"Pemeriksaan fisik selesai ({no_lhp}). Nomor rangka {kondisi_rangka_txt}, nomor mesin {kondisi_mesin_txt}. 5 kategori foto fisik lengkap. Berkas diteruskan ke Pemeriksa Dokumen untuk terbit SPPB."
+                target_item['catatan_petugas'] = f"Pemeriksaan fisik selesai ({no_lhp} & {no_bap}). Nomor rangka {kondisi_rangka_txt}, nomor mesin {kondisi_mesin_txt}. Berkas asli diverifikasi & {len(saved_field_photos)} foto lapangan diarsipkan. Berkas diteruskan ke Pemeriksa Dokumen untuk terbit SPPB."
                 save_db_permohonan(db)
-                _log_officer_action(sess, 'LHP_REKAM', pid, f"LHP {no_lhp}: rangka {kesesuaian_rangka}, mesin {kesesuaian_mesin}")
+                backup_sqlite_to_gdrive_async()
+                _log_officer_action(sess, 'LHP_BAP_REKAM', pid, f"{no_lhp} & {no_bap}: rangka {kesesuaian_rangka}, mesin {kesesuaian_mesin}, {len(saved_field_photos)} foto lapangan")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
                     f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
-                    f"Pemeriksaan fisik kendaraan Anda ({target_item.get('nopol', '-')}) telah SELESAI (LHP {no_lhp}).\n"
+                    f"Pemeriksaan fisik kendaraan Anda ({target_item.get('nopol', '-')}) telah SELESAI ({no_lhp} & {no_bap}).\n"
                     f"Berkas diteruskan ke Pejabat Pemeriksa Dokumen (PFPD) untuk penerbitan SPPB.\n\n"
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 ))
 
                 self._send_json_response({
                     'status': 'ok',
-                    'message': f'LHP Fisik ({no_lhp}) dan 5 kategori foto kendaraan berhasil disimpan!',
+                    'message': f'LHP ({no_lhp}) & BAP ({no_bap}) berhasil direkam bersama {len(saved_field_photos)} foto pemeriksaan lapangan!',
                     'no_lhp': no_lhp,
+                    'no_bap': no_bap,
                     'permohonan': target_item
                 })
             except Exception as e:
-                self._send_json_error(500, f'Gagal merekam LHP: {str(e)}')
+                self._send_json_error(500, f'Gagal merekam LHP & BAP: {str(e)}')
             return
 
         # 5. Endpoint Pemeriksa Dokumen (Verifikasi LHP & Terbitkan SPPB)
@@ -3231,6 +3757,71 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 })
             except Exception as e:
                 self._send_json_error(500, f'Gagal validasi Gate Out: {str(e)}')
+            return
+
+        # Arsipkan Dokumen Pabean (PPFTZ-01, LHP, BAP, SPPB, Surat Permohonan/Pernyataan) ke Disk & Google Drive
+        if self.path == '/api/permohonan/archive-doc':
+            token, sess = get_session_from_request(self)
+            if not sess:
+                self._send_json_error(401, 'Sesi login tidak valid.')
+                return
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                body = json.loads(self.rfile.read(content_length).decode('utf-8'))
+                pid = str(body.get('id', '')).strip()
+                doc_label = str(body.get('doc_type', 'DOKUMEN_PABEAN')).strip()
+                filename = str(body.get('filename', '')).strip() or None
+                data_url = body.get('data_url', '')
+                if not pid or not data_url:
+                    self._send_json_error(400, 'Parameter id dan data_url wajib diisi.')
+                    return
+
+                db = load_db_permohonan()
+                target_item = next((p for p in db if p.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                meta = save_and_archive_document(target_item, doc_label, data_url, custom_filename=filename)
+                if not meta:
+                    self._send_json_error(400, 'Data berkas tidak valid.')
+                    return
+
+                archived = target_item.get('archived_files')
+                if not isinstance(archived, list):
+                    archived = []
+                archived = [a for a in archived if a.get('filename') != meta['filename']]
+                archived.append(meta)
+                target_item['archived_files'] = archived
+                save_db_permohonan(db)
+
+                self._send_json_response({
+                    'status': 'ok',
+                    'message': f'Dokumen {meta["filename"]} berhasil diarsipkan ke server & antrean Google Drive.',
+                    'file': meta
+                })
+            except Exception as e:
+                self._send_json_error(500, f'Gagal mengarsipkan dokumen: {str(e)}')
+            return
+
+        # Backup Manual Database SQLite ke Google Drive (Khusus Admin Utama)
+        if self.path == '/api/admin/backup-gdrive':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'adminutama':
+                self._send_json_error(403, 'Akses Ditolak: Hanya Admin Utama yang dapat memicu backup database.')
+                return
+            try:
+                db_path = database.DATABASE_PATH
+                if not os.path.exists(db_path):
+                    self._send_json_error(404, 'File database SQLite tidak ditemukan.')
+                    return
+                with open(db_path, 'rb') as f:
+                    b64_db = base64.b64encode(f.read()).decode('utf-8')
+                ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                res = upload_to_gdrive_bridge('_BACKUP_DATABASE', f'kbm_batam_{ts}.db', 'application/x-sqlite3', b64_db)
+                self._send_json_response({'status': 'ok', 'result': res})
+            except Exception as e:
+                self._send_json_error(500, f'Gagal backup database ke Google Drive: {str(e)}')
             return
         else:
             self.send_error(404, "Endpoint not found")
