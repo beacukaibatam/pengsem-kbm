@@ -9279,6 +9279,14 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
+                    // PENTING: simpan token sesi SEBELUM checkAuthSession() dipanggil. Tanpa ini,
+                    // checkAuthSession() tidak menemukan token apa pun, menganggap belum login, dan
+                    // melempar user balik ke halaman Masuk walau akun sudah berhasil dibuat di server -
+                    // membuat user mengira registrasi gagal lalu mencoba lagi dengan OTP yang sudah
+                    // terpakai (muncul error "Kode OTP belum diminta").
+                    if (data.token) {
+                        try { localStorage.setItem('kbm_session_token', data.token); } catch (e) {}
+                    }
                     showLandingAlert('✓ Registrasi Berhasil! Selamat datang di Portal KBM.', 'success');
                     clearInterval(landingOtpTimerInterval);
                     try {
@@ -9288,6 +9296,28 @@ Pengeluaran KBM Berhasil Dituntaskan.`);
                     setTimeout(() => {
                         checkAuthSession();
                     }, 400);
+                } else if (/belum diminta|sudah kedaluwarsa/i.test(data.message || '')) {
+                    // Kemungkinan OTP ini sebenarnya SUDAH berhasil dipakai sebelumnya (mis. akibat
+                    // percobaan verifikasi ganda). Coba login otomatis dengan data yang baru saja
+                    // diisi - kalau cocok, akun memang sudah aktif, jangan tampilkan seolah gagal.
+                    try {
+                        const loginRes = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user: phone, password: pwd })
+                        });
+                        const loginData = await loginRes.json();
+                        if (loginRes.ok && loginData.status === 'ok' && loginData.token) {
+                            try { localStorage.setItem('kbm_session_token', loginData.token); } catch (e) {}
+                            showLandingAlert('✓ Akun Anda sudah terverifikasi sebelumnya. Selamat datang di Portal KBM.', 'success');
+                            clearInterval(landingOtpTimerInterval);
+                            setTimeout(() => { checkAuthSession(); }, 400);
+                        } else {
+                            showLandingAlert(data.message || 'Kode OTP tidak cocok.', 'error');
+                        }
+                    } catch (e2) {
+                        showLandingAlert(data.message || 'Kode OTP tidak cocok.', 'error');
+                    }
                 } else {
                     showLandingAlert(data.message || 'Kode OTP tidak cocok.', 'error');
                 }

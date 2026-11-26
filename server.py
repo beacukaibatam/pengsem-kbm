@@ -934,13 +934,11 @@ def save_db_users(data):
     except Exception as e:
         print('[!] Error saving db_users:', e)
 
-def _strip_password(user_dict):
-    """Salinan dict user tanpa field 'password' — dipakai setiap kali data user dikirim ke client (JSON response)."""
-    if not isinstance(user_dict, dict):
-        return user_dict
-    return {k: v for k, v in user_dict.items() if k != 'password'}
-    
-    # Sinkronisasi ke SQLite database
+    # Sinkronisasi ke SQLite database (sumber utama yang dibaca load_db_users()).
+    # BUG REGRESI sebelumnya: blok ini sempat terdampar jadi kode mati tak terjangkau
+    # di dalam fungsi _strip_password() akibat edit sebelumnya, sehingga akun pemohon
+    # baru hasil verifikasi OTP tersimpan di db_users.json tapi TIDAK di SQLite -
+    # login berikutnya gagal 401 karena load_db_users() membaca SQLite lebih dulu.
     try:
         for u in data.get('pemohon', []):
             database.save_or_update_user(u)
@@ -949,6 +947,12 @@ def _strip_password(user_dict):
     except Exception as e:
         print('[!] Error syncing users to SQLite:', e)
     return True
+
+def _strip_password(user_dict):
+    """Salinan dict user tanpa field 'password' — dipakai setiap kali data user dikirim ke client (JSON response)."""
+    if not isinstance(user_dict, dict):
+        return user_dict
+    return {k: v for k, v in user_dict.items() if k != 'password'}
 
 def load_db_otp():
     otps = {}
