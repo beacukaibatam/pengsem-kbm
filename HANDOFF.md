@@ -70,6 +70,32 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Verifikasi Ketat Pola Dokumen Resmi (KTP, NPWP Lama+Baru 16-Digit/NIK, STNK 1&2, BPKB) & Penolakan Mutlak Dokumen Salah Unggah (Anti-Mismatch 100% Offline & Server)** (Antigravity) — Menyelesaikan instruksi user perihal *"POLA KTP, NPWP (ADA VERSI LAMA ADA BARU), BKPB, STNK KAN GITU2 AJA, KENAPA GA PELAJARI POLANYA AJA"* dan *"LALU INI KENAPA SISTEM TERIMA2 AJA KOLOM KTP DIUNGGAH DOKUMEN LAIN?"* (di mana STNK diunggah ke slot KTP diterima sistem dan mengekstrak alamat `JALAN JAHE RTRW. SIDOREIQ...` sebagai `nama`):
+  1. **Akar Masalah Ditemukan**:
+     - `check_document_type_mismatch` di `server.py` sebelumnya hanya mengecek `jenis_dokumen_terdeteksi` dari Gemini. Ketika Gemini terkena rate limit (429) atau fallback lokal aktif, field tersebut bernilai kosong `""`, sehingga mismatch check mengevaluasi ke `False, None` (tidak ada peringatan!).
+     - `parse_ktp_image` dan `parseKtpTextRobust` tidak memblokir kata alamat/jalan saat mencari nama kandidat, sehingga teks alamat STNK diambil sebagai `nama` pemohon.
+     - `fetchOCR` di `index.html` hanya me-return jika `hasFields` true, mengabaikan flag mismatch jika parsed kosong.
+     - Parser NPWP sebelumnya hanya mengenali pola 15 digit lama, tidak mengenali format 16 digit baru (NIK sebagai NPWP per PMK 112/2022).
+  2. **Sidik Jari Teks Dokumen Deterministik (Pillar 1 - Python & JS Mirror)**:
+     - Dibuat fungsi sidik jari `detect_document_pattern(raw_text)` di `server.py` dan `detectDocumentPatternClient(rawText)` di `index.html` dengan pembobotan kata kunci resmi:
+       - **KTP**: Header `REPUBLIK INDONESIA`, `KARTU TANDA PENDUDUK`, `PROVINSI`, `KOTA/KABUPATEN`, `NIK`, `GOL. DARAH`, `STATUS PERKAWINAN`, `BERLAKU HINGGA`, `SEUMUR HIDUP`.
+       - **NPWP**: Mendukung **Versi Lama (15 digit `XX.XXX.XXX.X-XXX.XXX`)** DAN **Versi Baru (16 digit angka / NIK per PMK 112/PMK.03/2022 & Coretax DJP)**, dengan header `KEMENTERIAN KEUANGAN`, `DIREKTORAT JENDERAL PAJAK`, `NPWP (16 DIGIT)`, `NITKU`, `KPP PRATAMA`.
+       - **STNK**: Header `KEPOLISIAN NEGARA REPUBLIK INDONESIA`, `SURAT TANDA NOMOR KENDARAAN`, `TBPKP`, `PKB/BBN-KB`, `SWDKLLJ`, `NJKB`, `NOMOR REGISTRASI`, `NO. RANGKA`, `NO. MESIN`, `WARNA TNKB`.
+       - **BPKB**: Header `BUKU PEMILIK KENDARAAN BERMOTOR`, `NO. BPKB`, `SUBDIT REGIDENT`, `SURAT KETERANGAN LEASING`.
+  3. **Penolakan Mutlak Mismatch & Pengosongan Data (Pillar 2)**:
+     - Jika dokumen yang diunggah tidak sesuai slot (mis. STNK diunggah ke kolom KTP), `check_document_type_mismatch` langsung mengembalikan `is_mismatch: True, detected_doc_type: 'STNK'`.
+     - Data `parsed` seketika DIKOSONGKAN (`parsed: {}`), dan status disetel ke `'mismatch'`.
+     - Frontend langsung memicu modal peringatan `showDocumentMismatchAlert(target, detectedType)`, mengosongkan pratinjau kartu (`img.src = ''`, tampilkan placeholder), dan membatalkan auto-fill agar data alamat/STNK tidak pernah mengotori formulir pemohon.
+     - Di `parse_ktp_image` & `parseKtpTextRobust`: baris dengan kata jalan/alamat (`JALAN`, `JL`, `PERUM`, `RTRW`, `DESA`, `KELURAHAN`, `KECAMATAN`, `KABUPATEN`, `PROVINSI`, `BPKB`, `STNK`) DITOLAK KERAS (`BANNED_ROAD_REGEX`) dari kandidat nama pemohon.
+  4. **Penyempurnaan Auto-Crop Anti-Karpet-Motif (Pillar 3)**:
+     - Pada `auto_warp_document_opencv` di `server.py`: ditambahkan `cv2.bilateralFilter` + Otsu thresholding + `MORPH_CLOSE (15, 15)` untuk meredam tekstur karpet bermotif kontras tinggi, lalu mendeteksi 4 sudut poligon kartu dengan aspect ratio standar 1.585 dan melakukan `cv2.warpPerspective`.
+     - Pada `autoCropDocument` di `index.html`: ditambahkan segmentasi warna kromatik kartu fisik (KTP cyan/blue, NPWP yellow/white) yang langsung membatasi bounding box kartu, mengabaikan garis-garis tepi karpet di luarnya.
+  5. **Verifikasi Kualitas**:
+     - `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0 (Zero-Diff Rule terpenuhi).
+     - `python3 -m py_compile server.py database.py` = 0 error.
+     - Node.js syntax check pada 431KB JavaScript inline di `index.html` = VALID SYNTAX.
+     - Unit test Python untuk mismatch STNK pada KTP & NPWP Baru 16-digit = PASS 100%.
+
 - **Deteksi Kontur Poligon 4-Titik & Koreksi Perspektif (Perspective Warp) OpenCV/Canvas + Jaminan Auto-Fill Field 100% (Fallback Tesseract Offline Seamless)** (Antigravity) — Menjawab instruksi mutlak user: *"apapun kondisinya ktp, npwp, dll harus sudah tercrop saat selesai scanning, dan semuanya otomatis terisi kolom2 yang datanya diambil dari ktp, npwp, dll"*:
   1. **Perspective Warp & 4-Corner Contour Detection (`server.py`)**: Ditambahkan fungsi OpenCV `auto_warp_document_opencv(image_bytes, target)` yang secara otomatis mendeteksi 4 sudut poligon kartu (bahkan dalam posisi miring/terotasi di atas karpet/meja) menggunakan Canny edge + morphological close + `cv2.approxPolyDP` / `cv2.minAreaRect`, lalu mengeksekusi `cv2.getPerspectiveTransform` dan `cv2.warpPerspective` ke kanvas persegi panjang datar dengan rasio standar kartu ID internasional (85.6 × 54 mm ≈ 1.585 : 1 untuk KTP/NPWP, proporsional untuk STNK). Hasil potongan dikembalikan via response `/api/ocr` sebagai `cropped_image`.
   2. **Auto-Crop 4-Corner Inward Scanning di Sisi Browser (`index.html`)**: `autoCropDocument()` ditingkatkan dengan deteksi kromatisitas warna spesifik kartu (KTP: cyan/blue `B > R + 8 && G > R - 8`; NPWP: golden yellow `R > B + 18 && G > B + 8`) serta pemindaian tepi inward scanning dari 4 sisi ke tengah, sehingga kartu di atas karpet bermotif langsung terdeteksi batas fisiknya dan dipotong dengan rasio standar 1.585:1 secara instan di browser.

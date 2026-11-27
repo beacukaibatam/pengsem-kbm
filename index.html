@@ -5642,6 +5642,15 @@
         // Dipicu saat Vision AI mendeteksi jenis dokumen yang BERBEDA dari slot unggahnya
         // (mis. STNK diunggah ke kolom KTP) — lihat field document_mismatch dari /api/ocr.
         let pendingMismatchDocTarget = '';
+        const DOC_VALID_TYPES_BY_TARGET = {
+            'ktp': ['KTP'],
+            'npwp': ['NPWP'],
+            'ownership': ['BPKB', 'SURAT_LEASING'],
+            'bpkb': ['BPKB', 'SURAT_LEASING'],
+            'stnk': ['STNK'],
+            'stnk_1': ['STNK'],
+            'stnk_2': ['STNK']
+        };
         const DOC_MISMATCH_EXPECTED_LABEL = {
             'ktp': 'KTP',
             'npwp': 'Kartu NPWP',
@@ -5657,6 +5666,123 @@
             'SURAT_LEASING': 'Surat Keterangan Leasing/Bank',
             'LAINNYA': 'Dokumen lain yang tidak dikenali'
         };
+
+        function detectDocumentPatternClient(rawText) {
+            if (!rawText || typeof rawText !== 'string') return 'UNKNOWN';
+            const upper = rawText.toUpperCase();
+
+            // 1. Sidik Jari STNK
+            let stnkScore = 0;
+            const stnkKw = [
+                ['SURAT TANDA NOMOR KENDARAAN', 100],
+                ['KEPOLISIAN NEGARA REPUBLIK INDONESIA', 60],
+                ['KORLANTAS', 50],
+                ['DITLANTAS', 40],
+                ['SAMSAT', 40],
+                ['TBPKP', 60],
+                ['SURAT KETETAPAN PAJAK DAERAH', 70],
+                ['PKB/BBN-KB', 60],
+                ['SWDKLLJ', 60],
+                ['NJKB', 50],
+                ['NOMOR REGISTRASI', 50],
+                ['NO. REGISTRASI', 50],
+                ['NO. RANGKA', 40],
+                ['NO. MESIN', 40],
+                ['WARNA TNKB', 40],
+                ['BAHAN BAKAR', 30],
+                ['ISI SILINDER', 30],
+                ['BIAYA ADM', 30],
+                ['JUMLAH RUPIAH', 30],
+                ['STNK', 25]
+            ];
+            for (const [kw, pts] of stnkKw) {
+                if (upper.includes(kw)) stnkScore += pts;
+            }
+
+            // 2. Sidik Jari BPKB
+            let bpkbScore = 0;
+            const bpkbKw = [
+                ['BUKU PEMILIK KENDARAAN BERMOTOR', 120],
+                ['NO. BPKB', 70],
+                ['NOMOR BPKB', 70],
+                ['SUBDIT REGIDENT', 60],
+                ['SURAT KETERANGAN LEASING', 90],
+                ['SURAT KETERANGAN LUNAS', 70],
+                ['PEMBIAYAAN KONSUMEN', 60],
+                ['KANTOR BERSAMA SAMSAT', 50],
+                ['BPKB', 30]
+            ];
+            for (const [kw, pts] of bpkbKw) {
+                if (upper.includes(kw)) bpkbScore += pts;
+            }
+
+            // 3. Sidik Jari NPWP (Versi Lama 15 digit & Versi Baru 16 digit per PMK 112/2022)
+            let npwpScore = 0;
+            const npwpKw = [
+                ['KEMENTERIAN KEUANGAN', 80],
+                ['DIREKTORAT JENDERAL PAJAK', 80],
+                ['NOMOR POKOK WAJIB PAJAK', 100],
+                ['NPWP (16 DIGIT)', 90],
+                ['NPWP (15 DIGIT)', 80],
+                ['NITKU', 60],
+                ['KPP PRATAMA', 50],
+                ['KPP MADYA', 50],
+                ['WAJIB PAJAK', 40],
+                ['TERDAFTAR', 25],
+                ['NPWP', 35]
+            ];
+            for (const [kw, pts] of npwpKw) {
+                if (upper.includes(kw)) npwpScore += pts;
+            }
+            if (/[0-9]{2}[\.\s]?[0-9]{3}[\.\s]?[0-9]{3}[\.\s]?[0-9]{1}[\-\s]?[0-9]{3}[\.\s]?[0-9]{3}/.test(upper)) {
+                npwpScore += 60;
+            }
+            if ((upper.includes('NPWP') || upper.includes('PAJAK')) && /\b[0-9]{16}\b/.test(upper)) {
+                npwpScore += 50;
+            }
+
+            // 4. Sidik Jari KTP
+            let ktpScore = 0;
+            const ktpKw = [
+                ['REPUBLIK INDONESIA', 70],
+                ['KARTU TANDA PENDUDUK', 120],
+                ['PROVINSI', 50],
+                ['KABUPATEN', 40],
+                ['KOTA', 30],
+                ['NIK', 40],
+                ['GOL. DARAH', 50],
+                ['GOL DARAH', 50],
+                ['STATUS PERKAWINAN', 50],
+                ['BERLAKU HINGGA', 50],
+                ['SEUMUR HIDUP', 50],
+                ['KEWARGANEGARAAN', 40],
+                ['TEMPAT/TGL LAHIR', 50],
+                ['JENIS KELAMIN', 40]
+            ];
+            for (const [kw, pts] of ktpKw) {
+                if (upper.includes(kw)) ktpScore += pts;
+            }
+            if (/\b[1-9][0-9]{15}\b/.test(upper) && (upper.includes('PROVINSI') || upper.includes('KOTA') || upper.includes('KABUPATEN') || upper.includes('AGAMA') || upper.includes('DARAH') || upper.includes('PERKAWINAN'))) {
+                ktpScore += 60;
+            }
+
+            const scores = {
+                'STNK': stnkScore,
+                'BPKB': bpkbScore,
+                'NPWP': npwpScore,
+                'KTP': ktpScore
+            };
+            let bestDoc = 'UNKNOWN';
+            let maxScore = 0;
+            for (const doc in scores) {
+                if (scores[doc] > maxScore) {
+                    maxScore = scores[doc];
+                    bestDoc = doc;
+                }
+            }
+            return maxScore >= 45 ? bestDoc : 'UNKNOWN';
+        }
+
         function showDocumentMismatchAlert(target, detectedRaw) {
             pendingMismatchDocTarget = target || '';
             const expectedLabel = DOC_MISMATCH_EXPECTED_LABEL[target] || 'dokumen yang sesuai untuk kolom ini';
@@ -6284,6 +6410,8 @@
                 // Hitung magnitudo gradien (Sobel tepi) dan perbedaan warna/kromatisitas
                 const edgeMap = new Uint8Array(sw * sh);
                 const isIdCard = (targetDoc === 'ktp' || targetDoc === 'npwp');
+                let colorMinX = sw, colorMaxX = 0, colorMinY = sh, colorMaxY = 0;
+                let colorPixelCount = 0;
 
                 for (let y = 1; y < sh - 1; y++) {
                     for (let x = 1; x < sw - 1; x++) {
@@ -6310,6 +6438,14 @@
                             cardColorMatch = ((r > b + 18) && (g > b + 8)) || ((r + g + b) > 520);
                         } else {
                             cardColorMatch = ((r + g + b) > 380);
+                        }
+
+                        if (cardColorMatch) {
+                            colorPixelCount++;
+                            if (x < colorMinX) colorMinX = x;
+                            if (x > colorMaxX) colorMaxX = x;
+                            if (y < colorMinY) colorMinY = y;
+                            if (y > colorMaxY) colorMaxY = y;
                         }
 
                         if (grad > 30 || cardColorMatch) {
@@ -6366,6 +6502,28 @@
                     }
                     if (edgeHits > (bottom - top) * 0.22) break;
                     right--;
+                }
+
+                // Anti-Karpet-Motif: Jika scan tepi terhambat oleh tekstur karpet di luar kartu,
+                // manfaatkan bounding box klaster warna fisik kartu
+                if (isIdCard && colorPixelCount >= (sw * sh * 0.06)) {
+                    const cW = colorMaxX - colorMinX;
+                    const cH = colorMaxY - colorMinY;
+                    if (cW >= minCardWidth && cH >= minCardHeight) {
+                        const padX = Math.round(cW * 0.03);
+                        const padY = Math.round(cH * 0.03);
+                        const cLeftEst = Math.max(marginX, colorMinX - padX);
+                        const cRightEst = Math.min(sw - 1 - marginX, colorMaxX + padX);
+                        const cTopEst = Math.max(marginY, colorMinY - padY);
+                        const cBottomEst = Math.min(sh - 1 - marginY, colorMaxY + padY);
+                        // Jika tepi scan sebelumnya terhenti di ujung frame karpet, pakai estimasi warna kartu
+                        if (top <= marginY + 2 || bottom >= sh - 2 - marginY || left <= marginX + 2 || right >= sw - 2 - marginX) {
+                            left = cLeftEst;
+                            right = cRightEst;
+                            top = cTopEst;
+                            bottom = cBottomEst;
+                        }
+                    }
                 }
 
                 const cropW_scan = right - left;
@@ -6860,6 +7018,10 @@
                         if (data && data.cropped_image) {
                             serverCroppedImage = data.cropped_image;
                         }
+                        // Jika server mendeteksi mismatch dokumen, langsung teruskan responsnya tanpa fallback lokal
+                        if (data && data.document_mismatch) {
+                            return data;
+                        }
                         const hasFields = data && data.parsed && Object.keys(data.parsed).some(k => k !== 'jenis_dokumen_terdeteksi' && k !== 'doc_bbox' && String(data.parsed[k]).trim().length > 0);
                         if (data.status === 'ok' && hasFields) {
                             return data;
@@ -6887,6 +7049,20 @@
                     console.log(`[OCR 24/7] Mengaktifkan mesin Vision lokal browser untuk target: ${target}...`);
                     const res = await Tesseract.recognize(inputForClientOcr, 'ind+eng');
                     const rawText = res.data.text || '';
+                    const detectedPattern = detectDocumentPatternClient(rawText);
+                    const validDocs = DOC_VALID_TYPES_BY_TARGET[target] || [];
+                    if (validDocs.length > 0 && detectedPattern !== 'UNKNOWN' && !validDocs.includes(detectedPattern)) {
+                        console.warn(`[Client OCR 24/7] Mismatch terdeteksi: target=${target}, terdeteksi=${detectedPattern}`);
+                        return {
+                            status: 'mismatch',
+                            document_mismatch: true,
+                            detected_document_type: detectedPattern,
+                            parsed: {},
+                            text: rawText,
+                            cropped_image: serverCroppedImage
+                        };
+                    }
+
                     let clientParsed = {};
                     if (target === 'ktp' && typeof parseKtpTextRobust === 'function') {
                         clientParsed = parseKtpTextRobust(rawText);
@@ -6980,6 +7156,17 @@
                         }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
+                    const clientDetectedKtp = detectDocumentPatternClient(rawText);
+                    if (clientDetectedKtp !== 'UNKNOWN' && clientDetectedKtp !== 'KTP') {
+                        showDocumentMismatchAlert('ktp', clientDetectedKtp);
+                        setDocCardState('ktp', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya KTP, terdeteksi sebagai ${clientDetectedKtp}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        uploadedKtpDataUrl = null;
+                        docOcrStore.ktp = {};
+                        return;
+                    }
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseKtpTextRobust(rawText);
                     const finalData = Object.assign({}, clientParsed, serverParsed);
@@ -7035,6 +7222,17 @@
                         }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
+                    const clientDetectedNpwp = detectDocumentPatternClient(rawText);
+                    if (clientDetectedNpwp !== 'UNKNOWN' && clientDetectedNpwp !== 'NPWP') {
+                        showDocumentMismatchAlert('npwp', clientDetectedNpwp);
+                        setDocCardState('npwp', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya Kartu NPWP, terdeteksi sebagai ${clientDetectedNpwp}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        uploadedNpwpDataUrl = null;
+                        docOcrStore.npwp = {};
+                        return;
+                    }
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseNpwpTextRobust(rawText);
                     const finalData = Object.assign({}, clientParsed, serverParsed);
@@ -7107,6 +7305,16 @@
                         }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
+                    const clientDetectedOwnership = detectDocumentPatternClient(rawText);
+                    if (clientDetectedOwnership !== 'UNKNOWN' && clientDetectedOwnership !== 'BPKB' && clientDetectedOwnership !== 'SURAT_LEASING') {
+                        showDocumentMismatchAlert('ownership', clientDetectedOwnership);
+                        setDocCardState('ownership', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya BPKB atau Surat Leasing, terdeteksi sebagai ${clientDetectedOwnership}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        if (isOwnershipPrimary) { uploadedOwnershipDataUrl = null; } else { delete ownershipExtraPages[target]; }
+                        return;
+                    }
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const upper = rawText.toUpperCase();
                     const isBpkb = (currentOwnershipDocType === 'bpkb') || upper.includes('BPKB') || upper.includes('PEMILIK KENDARAAN');
@@ -7187,6 +7395,17 @@
                         }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
+                    const clientDetectedStnk = detectDocumentPatternClient(rawText);
+                    if (clientDetectedStnk !== 'UNKNOWN' && clientDetectedStnk !== 'STNK') {
+                        showDocumentMismatchAlert('stnk', clientDetectedStnk);
+                        setDocCardState('stnk', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya STNK, terdeteksi sebagai ${clientDetectedStnk}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        uploadedStnkDataUrl = null;
+                        docOcrStore.stnk1 = {};
+                        return;
+                    }
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseStnkTextRobust(rawText);
                     const finalData = Object.assign({}, clientParsed, serverParsed);
@@ -7245,6 +7464,17 @@
                         }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
+                    const clientDetectedStnk = detectDocumentPatternClient(rawText);
+                    if (clientDetectedStnk !== 'UNKNOWN' && clientDetectedStnk !== 'STNK') {
+                        showDocumentMismatchAlert('stnk_2', clientDetectedStnk);
+                        setDocCardState('stnk_2', 'manual', `⚠️ Dokumen TIDAK SESUAI — seharusnya STNK Lembar 2 (TBPKP), terdeteksi sebagai ${clientDetectedStnk}. Mohon unggah ulang.`);
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = null;
+                        docOcrStore.stnk2 = {};
+                        return;
+                    }
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseStnkTextRobust(rawText);
                     const finalData = Object.assign({}, clientParsed, serverParsed);
@@ -7288,6 +7518,13 @@
         // ================= ROBUST KTP PARSER (UNIVERSAL DINAMIS) =================
         function parseKtpTextRobust(rawText) {
             const upper = rawText.toUpperCase();
+            // Sidik jari dokumen: Jika berkas terdeteksi STNK, NPWP, atau BPKB, tolak ekstraksi data KTP!
+            const detectedDoc = detectDocumentPatternClient(rawText);
+            if (detectedDoc === 'STNK' || detectedDoc === 'NPWP' || detectedDoc === 'BPKB') {
+                console.warn(`[parseKtpTextRobust] Penolakan parsing: berkas terdeteksi sebagai ${detectedDoc}, bukan KTP!`);
+                return {};
+            }
+
             const rawLines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
             const lines = rawLines.map(l => l.toUpperCase());
             const res = {};
@@ -7356,12 +7593,14 @@
                 res.nik = n.substring(0, 12) + last4;
             }
 
-            // 3. Ekstraksi Nama
+            // 3. Ekstraksi Nama (Anti-False-Positive: Tolak keras nama jalan/alamat/stnk)
+            const BANNED_ROAD_REGEX = /\b(?:JALAN|DALAN|JL|PERUM|KOMPLEK|DUSUN|DESA|KELURAHAN|KECAMATAN|KABUPATEN|PROVINSI|RTRW|RT[\s\.\/]*\d|RW[\s\.\/]*\d|GANG|GG\b|BLOK|NOMOR|POLISI|REGISTRASI|RANGKA|MESIN|BPKB|STNK)\b/i;
             for (let l of lines) {
                 const m = l.match(/(?:NAMA|MAMA|NEMA|HAMA|WAMA)[\s\:\+\=\-\.\>]+(.*)/i);
                 if (m) {
                     let val = m[1].replace(/[^A-Za-z\s\.]/g, '').trim();
                     val = val.replace(/^[^\w]+/, '');
+                    if (BANNED_ROAD_REGEX.test(val)) continue;
                     let words = val.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w.toUpperCase()) && w.length >= 1);
                     if (words.length >= 1 && words.join('').length >= 3) {
                         res.nama = words.join(' ').toUpperCase();
@@ -7376,6 +7615,7 @@
                     if (lu.includes('TEMPAT') || lu.includes('TGL') || lu.includes('LAHIR') || lu.includes('SIDOMULYO') || lu.includes('BANGKA')) {
                         if (i > 0) {
                             let prev = lines[i-1].replace(/[^A-Za-z\s\.]/g, '').trim();
+                            if (BANNED_ROAD_REGEX.test(prev)) continue;
                             let words = prev.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w.toUpperCase()) && w.length >= 1);
                             if (words.length >= 1 && words.join('').length >= 3) {
                                 res.nama = words.join(' ').toUpperCase();
@@ -7500,18 +7740,34 @@
         // ================= ROBUST NPWP PARSER (DENGAN NIK & NAMA WAJIB PAJAK) =================
         function parseNpwpTextRobust(rawText) {
             const upper = rawText.toUpperCase();
+            // Sidik jari dokumen: Jika berkas terdeteksi STNK, KTP, atau BPKB, tolak ekstraksi NPWP!
+            const detectedDoc = detectDocumentPatternClient(rawText);
+            if (detectedDoc === 'STNK' || detectedDoc === 'KTP' || detectedDoc === 'BPKB') {
+                console.warn(`[parseNpwpTextRobust] Penolakan parsing: berkas terdeteksi sebagai ${detectedDoc}, bukan NPWP!`);
+                return {};
+            }
+
             const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
             const res = {};
 
             // 1. Pola standar 15 digit berformat: XX.XXX.XXX.X-XXX.XXX
             const m1 = upper.match(/([0-9]{2}[\.\s][0-9]{3}[\.\s][0-9]{3}[\.\s][0-9]{1}[\-\s][0-9]{3}[\.\s][0-9]{3})/);
+            // 2. Pola NPWP Baru 16 Digit / NIK per PMK 112/2022
+            const m16 = upper.match(/(?:NPWP\s*\(?16\s*DIGIT\)?|NIK\s*\/\s*NPWP16|NPWP16)[\s\:\.\>]*([0-9]{16})/);
+
             if (m1) {
                 res.npwp = m1[1].replace(/\s/g, '');
+            } else if (m16) {
+                res.npwp = m16[1];
+                res.nik = m16[1];
             } else {
                 const m2 = upper.match(/NPWP[\s:\.]*([0-9\.\-\s]{15,24})/);
                 if (m2) {
                     const digits = m2[1].replace(/[^0-9]/g, '');
-                    if (digits.length >= 15) {
+                    if (digits.length >= 16) {
+                        res.npwp = digits.substring(0, 16);
+                        res.nik = digits.substring(0, 16);
+                    } else if (digits.length >= 15) {
                         const d = digits.substring(0, 15);
                         res.npwp = `${d.substring(0,2)}.${d.substring(2,5)}.${d.substring(5,8)}.${d.substring(8,9)}-${d.substring(9,12)}.${d.substring(12,15)}`;
                     }
@@ -7522,12 +7778,18 @@
                 const m3 = upper.match(/([0-9]{2})[\.,\s]?([0-9]{3})[\.,\s]?([0-9]{3})[\.,\s]?([0-9]{1})[\-,\s]?([0-9]{3})[\.,\s]?([0-9]{3})/);
                 if (m3) {
                     res.npwp = `${m3[1]}.${m3[2]}.${m3[3]}.${m3[4]}-${m3[5]}.${m3[6]}`;
+                } else {
+                    const d16 = upper.match(/\b([0-9]{16})\b/);
+                    if (d16 && (upper.includes('PAJAK') || upper.includes('NPWP') || upper.includes('DJP') || upper.includes('KEUANGAN'))) {
+                        res.npwp = d16[1];
+                        res.nik = d16[1];
+                    }
                 }
             }
 
             // 2. NIK Pemohon tertera pada Kartu NPWP
             const mNik = upper.match(/NIK[\s\:\.\>]*([0-9]{16})/);
-            if (mNik) {
+            if (mNik && !res.nik) {
                 res.nik = mNik[1];
             }
 

@@ -239,6 +239,12 @@ def parse_ktp_image(img_cv):
     combined_text = "\n".join(all_lines)
     upper = combined_text.upper()
     
+    # Sidik jari dokumen: Jika berkas yang diunggah terdeteksi STNK, NPWP, atau BPKB, tolak ekstraksi KTP!
+    detected_pattern = detect_document_pattern(combined_text)
+    if detected_pattern in ('STNK', 'NPWP', 'BPKB'):
+        print(f"[!] Mismatch terdeteksi pada parse_ktp_image: dokumen adalah {detected_pattern}, bukan KTP!")
+        return {}, combined_text
+        
     res = {}
     
     # 1. Tanggal Lahir (DDMMYY)
@@ -324,6 +330,9 @@ def parse_ktp_image(img_cv):
         cand = re.sub(r'\b(?:ARIEIN|AHEW)\b', 'ARIFIN', cand, flags=re.I)
         
         cand = cand.strip().upper()
+        # Tolak mentah-mentah jika baris adalah alamat/jalan/desa/kelurahan/nomor polisi/stnk
+        if re.search(r'\b(?:JALAN|DALAN|JL|PERUM|KOMPLEK|DUSUN|DESA|KELURAHAN|KECAMATAN|KABUPATEN|PROVINSI|RTRW|RT[\s\.\/]*\d|RW[\s\.\/]*\d|GANG|GG\b|BLOK|NOMOR|POLISI|REGISTRASI|RANGKA|MESIN|BPKB|STNK)\b', cand, re.I):
+            continue
         words = [w for w in cand.split() if w not in banned_name_words and len(w) >= 2] or [w for w in cand.split() if w == 'M.']
         if not words: continue
         
@@ -430,20 +439,29 @@ def parse_npwp_image(img_cv):
     
     res = {}
     
-    # 1. Nomor NPWP (Format 15 digit: XX.XXX.XXX.X-XXX.XXX)
-    m_npwp = re.search(r'([0-9]{2}[\.\s][0-9]{3}[\.\s][0-9]{3}[\.\s][0-9]{1}[\-\s][0-9]{3}[\.\s][0-9]{3})', upper)
-    if m_npwp:
-        res['npwp'] = re.sub(r'\s+', '', m_npwp.group(1))
+    # 1. Nomor NPWP (Mendukung Versi Lama 15 digit & Versi Baru 16 digit per PMK 112/2022)
+    m_npwp15 = re.search(r'([0-9]{2}[\.\s][0-9]{3}[\.\s][0-9]{3}[\.\s][0-9]{1}[\-\s][0-9]{3}[\.\s][0-9]{3})', upper)
+    m_npwp16 = re.search(r'(?:NPWP\s*\(?16\s*DIGIT\)?|NIK\s*\/\s*NPWP16|NPWP16)[\s\:\.\>]*([0-9]{16})', upper)
+
+    if m_npwp15:
+        res['npwp'] = re.sub(r'\s+', '', m_npwp15.group(1))
+    elif m_npwp16:
+        res['npwp'] = m_npwp16.group(1)
+        res['nik'] = m_npwp16.group(1)
     else:
-        # Cari 15 digit angka berturut-turut
-        digits = re.findall(r'[0-9]{15}', re.sub(r'[^0-9\n]', '', full_text))
-        if digits:
-            d = digits[0]
+        # Cari 15 digit atau 16 digit angka berturut-turut
+        digits15 = re.findall(r'\b[0-9]{15}\b', upper)
+        digits16 = re.findall(r'\b[0-9]{16}\b', upper)
+        if digits15:
+            d = digits15[0]
             res['npwp'] = f"{d[0:2]}.{d[2:5]}.{d[5:8]}.{d[8:9]}-{d[9:12]}.{d[12:15]}"
+        elif digits16 and any(k in upper for k in ['PAJAK', 'NPWP', 'DJP', 'KEUANGAN']):
+            res['npwp'] = digits16[0]
+            res['nik'] = digits16[0]
             
     # 2. NIK / NITKU (Format 16 digit atau 22 digit baru DJP)
     m_nitku = re.search(r'(?:NITKU|NIK)[\s\:\.\>]*([0-9]{16,22})', upper)
-    if m_nitku:
+    if m_nitku and not res.get('nik'):
         res['nik'] = m_nitku.group(1)[:16]
         
     # 3. Nama Wajib Pajak (Ekstraksi Cerdas Pemilik NPWP)
@@ -789,19 +807,145 @@ _VALID_DOC_TYPES_BY_TARGET = {
     'bpkb': {'BPKB', 'SURAT_LEASING'},
 }
 
-def check_document_type_mismatch(target, parsed_data):
-    """Bandingkan jenis_dokumen_terdeteksi (dari Vision AI) dengan jenis dokumen yang SEHARUSNYA
-    diunggah di slot `target`. Mengembalikan (is_mismatch, detected_label) — detected_label None
-    kalau field tidak ada (mis. hasil dari OCR lokal/EasyOCR yang tidak mengisi field ini, atau
-    target di luar daftar yang diaudit)."""
+def detect_document_pattern(raw_text):
+    """Mendeteksi jenis dokumen secara deterministik berdasarkan sidik jari teks (fingerprint pattern).
+    Mengenali KTP, NPWP (Lama 15-digit & Baru 16-digit/NIK), STNK (Lbr 1 & Lbr 2), dan BPKB."""
+    if not raw_text or not isinstance(raw_text, str):
+        return 'UNKNOWN'
+    
+    text_upper = raw_text.upper()
+    
+    # 1. Skor STNK
+    stnk_score = 0
+    stnk_keywords = [
+        ('SURAT TANDA NOMOR KENDARAAN', 100),
+        ('KEPOLISIAN NEGARA REPUBLIK INDONESIA', 60),
+        ('KORLANTAS', 50),
+        ('DITLANTAS', 40),
+        ('SAMSAT', 40),
+        ('TBPKP', 60),
+        ('SURAT KETETAPAN PAJAK DAERAH', 70),
+        ('PKB/BBN-KB', 60),
+        ('SWDKLLJ', 60),
+        ('NJKB', 50),
+        ('NOMOR REGISTRASI', 50),
+        ('NO. REGISTRASI', 50),
+        ('NO. RANGKA', 40),
+        ('NO. MESIN', 40),
+        ('WARNA TNKB', 40),
+        ('BAHAN BAKAR', 30),
+        ('ISI SILINDER', 30),
+        ('BIAYA ADM', 30),
+        ('JUMLAH RUPIAH', 30),
+        ('STNK', 25)
+    ]
+    for kw, pts in stnk_keywords:
+        if kw in text_upper:
+            stnk_score += pts
+            
+    # 2. Skor BPKB
+    bpkb_score = 0
+    bpkb_keywords = [
+        ('BUKU PEMILIK KENDARAAN BERMOTOR', 120),
+        ('NO. BPKB', 70),
+        ('NOMOR BPKB', 70),
+        ('SUBDIT REGIDENT', 60),
+        ('SURAT KETERANGAN LEASING', 90),
+        ('SURAT KETERANGAN LUNAS', 70),
+        ('PEMBIAYAAN KONSUMEN', 60),
+        ('KANTOR BERSAMA SAMSAT', 50),
+        ('BPKB', 30)
+    ]
+    for kw, pts in bpkb_keywords:
+        if kw in text_upper:
+            bpkb_score += pts
+
+    # 3. Skor NPWP (Mendukung Versi Lama 15-digit & Versi Baru 16-digit / NIK per PMK 112/2022)
+    npwp_score = 0
+    npwp_keywords = [
+        ('KEMENTERIAN KEUANGAN', 80),
+        ('DIREKTORAT JENDERAL PAJAK', 80),
+        ('NOMOR POKOK WAJIB PAJAK', 100),
+        ('NPWP (16 DIGIT)', 90),
+        ('NPWP (15 DIGIT)', 80),
+        ('NITKU', 60),
+        ('KPP PRATAMA', 50),
+        ('KPP MADYA', 50),
+        ('WAJIB PAJAK', 40),
+        ('TERDAFTAR', 25),
+        ('NPWP', 35)
+    ]
+    for kw, pts in npwp_keywords:
+        if kw in text_upper:
+            npwp_score += pts
+    # Format NPWP 15-digit regex
+    if re.search(r'\b[0-9]{2}[\.\s]?[0-9]{3}[\.\s]?[0-9]{3}[\.\s]?[0-9]{1}[\-\s]?[0-9]{3}[\.\s]?[0-9]{3}\b', text_upper):
+        npwp_score += 60
+    # Format NPWP 16-digit (khusus jika ada kata NPWP/DJP/PAJAK di sekitarnya)
+    if ('NPWP' in text_upper or 'PAJAK' in text_upper) and re.search(r'\b[0-9]{16}\b', text_upper):
+        npwp_score += 50
+
+    # 4. Skor KTP
+    ktp_score = 0
+    ktp_keywords = [
+        ('REPUBLIK INDONESIA', 70),
+        ('KARTU TANDA PENDUDUK', 120),
+        ('PROVINSI', 50),
+        ('KABUPATEN', 40),
+        ('KOTA', 30),
+        ('NIK', 40),
+        ('GOL. DARAH', 50),
+        ('GOL DARAH', 50),
+        ('STATUS PERKAWINAN', 50),
+        ('BERLAKU HINGGA', 50),
+        ('SEUMUR HIDUP', 50),
+        ('KEWARGANEGARAAN', 40),
+        ('TEMPAT/TGL LAHIR', 50),
+        ('JENIS KELAMIN', 40)
+    ]
+    for kw, pts in ktp_keywords:
+        if kw in text_upper:
+            ktp_score += pts
+    if re.search(r'\b[1-9][0-9]{15}\b', text_upper) and any(w in text_upper for w in ['PROVINSI', 'KOTA', 'KABUPATEN', 'AGAMA', 'DARAH', 'PERKAWINAN']):
+        ktp_score += 60
+
+    scores = {
+        'STNK': stnk_score,
+        'BPKB': bpkb_score,
+        'NPWP': npwp_score,
+        'KTP': ktp_score
+    }
+    best_doc, best_score = max(scores.items(), key=lambda x: x[1])
+    if best_score >= 45:
+        return best_doc
+    return 'UNKNOWN'
+
+def check_document_type_mismatch(target, parsed_data, raw_text=''):
+    """Bandingkan jenis dokumen (dari Gemini Vision AI maupun sidik jari teks offline)
+    dengan jenis dokumen yang SEHARUSNYA diunggah di slot `target`.
+    Mengembalikan (is_mismatch, detected_label)."""
     valid_types = _VALID_DOC_TYPES_BY_TARGET.get(target)
-    if not valid_types or not isinstance(parsed_data, dict):
+    if not valid_types:
         return False, None
-    detected_raw = (parsed_data.get('jenis_dokumen_terdeteksi') or '').strip()
-    if not detected_raw:
-        return False, None
-    detected = detected_raw.upper().replace(' ', '_')
-    return (detected not in valid_types), detected_raw
+    
+    detected_raw = ''
+    if isinstance(parsed_data, dict):
+        detected_raw = (parsed_data.get('jenis_dokumen_terdeteksi') or '').strip()
+    
+    detected_pattern = detect_document_pattern(raw_text)
+    
+    # Prioritas: Jika Gemini Vision AI mendeteksi atau jika Pattern Text mendeteksi
+    detected_candidate = detected_raw.upper().replace(' ', '_') if detected_raw else detected_pattern
+    
+    if not detected_candidate or detected_candidate == 'UNKNOWN':
+        # Cek apakah teks jelas mengandung dokumen lain
+        if detected_pattern in ('STNK', 'BPKB', 'NPWP', 'KTP'):
+            detected_candidate = detected_pattern
+        else:
+            return False, None
+
+    is_mismatch = (detected_candidate not in valid_types)
+    return is_mismatch, (detected_raw or detected_candidate)
 
 def _optimize_image_for_vision(image_bytes, max_dim=1600):
     """Kompresi cerdas dan downscale gambar kamera sebelum dikirim ke Gemini Vision API
@@ -838,7 +982,9 @@ def _order_points_4(pts):
 def auto_warp_document_opencv(image_bytes, target=''):
     """Mendeteksi 4 sudut poligon kartu/dokumen via kontur OpenCV dan melakukan
     transformasi perspektif (perspective warp) ke rasio standar (1.585 untuk KTP/NPWP,
-    proporsional untuk STNK/BPKB). Mengembalikan (warped_bytes, data_url) atau (image_bytes, None)."""
+    proporsional untuk STNK/BPKB).
+    Dilengkapi filter anti-karpet-motif (bilateral filter + Otsu + morph closing) agar kartu
+    di atas latar bermotif tajam tetap terdeteksi konturnya dengan sempurna."""
     try:
         if not image_bytes or image_bytes.startswith(b'%PDF'):
             return image_bytes, None
@@ -854,46 +1000,62 @@ def auto_warp_document_opencv(image_bytes, target=''):
         # Standar rasio aspek ID Card (KTP/NPWP 85.6mm x 54mm = 1.585)
         target_ratio = 1.585 if target in ('ktp', 'npwp') else (1.85 if target in ('stnk', 'stnk_1', 'stnk_2') else None)
 
-        # Scale down for fast robust edge & contour analysis (max dim 600)
-        max_dim = 600
+        # Scale down for fast robust edge & contour analysis (max dim 650)
+        max_dim = 650
         scale = min(1.0, max_dim / float(max(orig_h, orig_w)))
         sw, sh = int(round(orig_w * scale)), int(round(orig_h * scale))
         resized = cv2.resize(img, (sw, sh), interpolation=cv2.INTER_AREA)
 
         gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        edges = cv2.Canny(blurred, 35, 120)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
-        closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-
-        cnts, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if not cnts:
-            return image_bytes, None
-
-        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
         img_area = float(sw * sh)
         card_contour_pts = None
 
-        for c in cnts[:5]:
-            area = cv2.contourArea(c)
-            # Kartu harus setidaknya 10% dan maksimal 95% dari total frame
-            if area < (img_area * 0.10) or area > (img_area * 0.96):
-                continue
-            peri = cv2.arcLength(c, True)
-            approx = cv2.approxPolyDP(c, 0.03 * peri, True)
-            if len(approx) == 4:
-                card_contour_pts = approx.reshape(4, 2)
-                break
-            else:
-                # Minimum area oriented bounding box
-                rect = cv2.minAreaRect(c)
-                box = cv2.boxPoints(rect)
-                bw, bh = rect[1]
-                if min(bw, bh) > 0:
-                    ar = max(bw, bh) / min(bw, bh)
-                    if 1.1 <= ar <= 2.8: # rasio kartu wajar
-                        card_contour_pts = box
-                        break
+        # Strategi 1: Bilateral Filter + Otsu Thresholding + Morph Closing (Sangat efektif untuk karpet bermotif)
+        blurred_bilateral = cv2.bilateralFilter(gray, 9, 75, 75)
+        _, thresh_otsu = cv2.threshold(blurred_bilateral, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        kernel_large = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+        closed_otsu = cv2.morphologyEx(thresh_otsu, cv2.MORPH_CLOSE, kernel_large)
+
+        cnts_otsu, _ = cv2.findContours(closed_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        candidates = []
+        if cnts_otsu:
+            for c in cnts_otsu:
+                area = cv2.contourArea(c)
+                if (img_area * 0.08) <= area <= (img_area * 0.95):
+                    rect = cv2.minAreaRect(c)
+                    bw, bh = rect[1]
+                    if min(bw, bh) > 0:
+                        ar = max(bw, bh) / min(bw, bh)
+                        if 1.1 <= ar <= 2.8:
+                            peri = cv2.arcLength(c, True)
+                            approx = cv2.approxPolyDP(c, 0.03 * peri, True)
+                            pts = approx.reshape(4, 2) if len(approx) == 4 else cv2.boxPoints(rect)
+                            candidates.append((area, pts))
+
+        # Strategi 2: Canny Edge Detection + Morph Closing (untuk kontras tepi standar)
+        blurred_gauss = cv2.GaussianBlur(gray, (5, 5), 0)
+        edges = cv2.Canny(blurred_gauss, 35, 120)
+        kernel_edge = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+        closed_edge = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel_edge)
+        cnts_edge, _ = cv2.findContours(closed_edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if cnts_edge:
+            for c in cnts_edge:
+                area = cv2.contourArea(c)
+                if (img_area * 0.08) <= area <= (img_area * 0.95):
+                    rect = cv2.minAreaRect(c)
+                    bw, bh = rect[1]
+                    if min(bw, bh) > 0:
+                        ar = max(bw, bh) / min(bw, bh)
+                        if 1.1 <= ar <= 2.8:
+                            peri = cv2.arcLength(c, True)
+                            approx = cv2.approxPolyDP(c, 0.03 * peri, True)
+                            pts = approx.reshape(4, 2) if len(approx) == 4 else cv2.boxPoints(rect)
+                            candidates.append((area, pts))
+
+        if candidates:
+            # Pilih kandidat kontur kartu terbaik yang paling mendekati rasio standar
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            card_contour_pts = candidates[0][1]
 
         if card_contour_pts is None:
             return image_bytes, None
@@ -3665,11 +3827,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 input_for_ocr = warped_bytes if cropped_image_url else raw_bytes
 
                 extracted_text, parsed_data = process_ocr(input_for_ocr, target, engine)
-                is_mismatch, detected_doc_type = check_document_type_mismatch(target, parsed_data)
+                is_mismatch, detected_doc_type = check_document_type_mismatch(target, parsed_data, extracted_text)
+
+                # Jika terbukti salah slot (mis. STNK diunggah ke kolom KTP), JANGAN PERNAH mengisi formulir!
+                if is_mismatch:
+                    parsed_data = {}
+                    cropped_image_url = None
 
                 # Validasi doc_bbox [ymin, xmin, ymax, xmax] skala 0..1000 dari Vision AI untuk auto-crop presisi
                 valid_doc_bbox = None
-                if isinstance(parsed_data, dict):
+                if not is_mismatch and isinstance(parsed_data, dict):
                     raw_bbox = parsed_data.get('doc_bbox')
                     if isinstance(raw_bbox, (list, tuple)) and len(raw_bbox) == 4:
                         try:
@@ -3687,17 +3854,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         except Exception:
                             valid_doc_bbox = None
 
-                has_valid_fields = isinstance(parsed_data, dict) and any(
+                has_valid_fields = (not is_mismatch) and isinstance(parsed_data, dict) and any(
                     str(v).strip() for k, v in parsed_data.items()
                     if k not in ('doc_bbox', 'jenis_dokumen_terdeteksi', '_error')
                 )
 
                 response_data = json.dumps({
-                    'status': 'ok' if (has_valid_fields or cropped_image_url) else 'failed',
+                    'status': 'mismatch' if is_mismatch else ('ok' if (has_valid_fields or cropped_image_url) else 'failed'),
                     'target': target,
                     'engine_used': 'vision_ai' if engine in ('vision', 'auto') and VISION_AI_ENABLED else 'easyocr_local',
                     'text': extracted_text,
-                    'parsed': parsed_data if has_valid_fields else {},
+                    'parsed': {} if is_mismatch else (parsed_data if has_valid_fields else {}),
                     'document_mismatch': is_mismatch,
                     'detected_document_type': detected_doc_type,
                     'doc_bbox': valid_doc_bbox,
