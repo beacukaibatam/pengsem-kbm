@@ -212,3 +212,7 @@
   - Memperkaya bar footer (`.app-footer-bar`) dengan link terpadu WhatsApp Client Coordinator Bea Cukai Batam (`0851-5814-8448`) lengkap dengan ikon SVG WhatsApp resmi (`#25D366`), pill badge berlatar halus, nomor telepon beraksen hijau lembut, dan hover feedback interaktif.
   - Mengintegrasikan link bantuan WhatsApp Client Coordinator di footer halaman landing (`.landing-footer-legal`) agar pengguna yang belum masuk tetap memiliki akses langsung.
   - Desain adaptif responsif: pada layar smartphone (<= 640px) teks label disederhanakan otomatis agar seluruh footer tetap rapi dalam satu baris tanpa wrap.
+- [x] Poin 36 (Antigravity): **PEMBARUAN LABEL/DUA NOMOR KONTAK FOOTER ("Butuh Bantuan? [WA] 0851-4490-1346 / CC: 0851-5814-8448") & EFEK SALJU TURUN EKSKLUSIF DI HEADER**:
+  - Mengubah pill badge kontak footer (`.footer-contact`) menjadi format baru: `Butuh Bantuan? [icon whatsapp] 0851-4490-1346 / CC: 0851-5814-8448` dengan link interaktif mandiri untuk masing-masing nomor (Layanan WhatsApp Official Bea Cukai `0851-4490-1346` dan Client Coordinator `0851-5814-8448`).
+  - Menambahkan animasi salju turun eksklusif hanya di dalam area `<header class="app-header">` via native Canvas (`headerSnowCanvas`) berkinerja tinggi, halus 60fps, responsif otomatis saat resize jendela, dengan `pointer-events: none` dan `overflow: hidden` pada header sehingga tidak pernah keluar/tumpah ke body aplikasi ataupun mengganggu interaksi tombol/logo.
+  - Sinkronisasi 100% (zero-diff) `index.html` dan `Formulir_Pemohon_CEISA_PENGSEM_KBM.html`.
