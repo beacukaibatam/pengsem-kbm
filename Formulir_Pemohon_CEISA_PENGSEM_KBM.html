@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengeluaran Sementara Kendaraan Bermotor | KPU BC Batam</title>
-    <!-- Favicon: Logo Direktorat Jenderal Bea dan Cukai di atas latar biru navy resmi -->
-    <link rel="icon" type="image/png" sizes="512x512" href="favicon-512.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
-    <link rel="shortcut icon" href="favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+    <!-- Favicon: Logo Direktorat Jenderal Bea dan Cukai (transparan tanpa latar biru) -->
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon-512.png?v=2">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=2">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+    <link rel="shortcut icon" href="favicon.ico?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png?v=2">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,12 +88,12 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-            /* pointer-events diaktifkan lagi (sebelumnya none) supaya gambar preview bisa diklik
-               untuk popup perbesar (lihat openImageLightbox). Dicatat: pointer-events:none TERBUKTI
-               TIDAK memperbaiki bug scroll trackpad macet (lihat HANDOFF.md), jadi mengaktifkannya
-               lagi tidak mengorbankan fix yang sebelumnya memang tidak bekerja. */
-            pointer-events: auto;
-            cursor: zoom-in;
+            /* TETAP pointer-events:none (JANGAN diubah ke auto) — Antigravity menemukan akar
+               masalah scroll trackpad macet terkait `.preview-box` sebagai scroll/hit-test
+               container, bukan cuma soal drag/select (lihat HANDOFF.md). Supaya gambar tetap
+               bisa dibuka di popup lightbox TANPA menyentuh pointer-events di sini, dipakai
+               tombol kaca pembesar kecil terpisah (lihat .preview-zoom-btn & attachZoomButton). */
+            pointer-events: none;
         }
 
         h1, h2, h3, h4, .brand-text h1, .section-title, .form-label, .modal-header h3 {
@@ -423,7 +423,7 @@
             height: 110px;
             margin: 6px 0 8px 0;
             border-radius: 8px;
-            overflow: hidden;
+            overflow: clip !important;
             border: 1.5px dashed #CBD5E1;
             box-shadow: none !important;
             background: #F8FAFC;
@@ -431,6 +431,7 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
+            pointer-events: none;
             transition: border-color 0.2s, background-color 0.2s;
         }
 
@@ -441,6 +442,32 @@
             display: block;
             border-radius: 6px;
         }
+
+        /* Tombol kecil kaca pembesar di sudut kotak pratinjau, satu-satunya elemen dengan
+           pointer-events:auto di dalam .preview-box — sengaja TIDAK membuat seluruh gambar
+           bisa diklik lagi supaya tidak mengganggu fix scroll trackpad macet (lihat catatan
+           pointer-events di .preview-box img di atas). */
+        .preview-zoom-btn {
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.55);
+            color: #fff;
+            border: none;
+            font-size: 11px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-in;
+            pointer-events: auto;
+            z-index: 3;
+            padding: 0;
+        }
+        .preview-zoom-btn:hover { background: rgba(15, 23, 42, 0.8); }
 
         /* Lightbox popup perbesar gambar pratinjau dokumen (KTP/NPWP/STNK/BPKB/dll) */
         .image-lightbox-overlay {
@@ -1879,9 +1906,10 @@
             overscroll-behavior-x: none !important;
         }
 
-        * {
-            overscroll-behavior-y: none;
-        }
+        /* JANGAN pasang `* { overscroll-behavior-y: none; }` secara global:
+           di Chromium/macOS trackpad, kombinasi `* { overscroll-behavior-y: none }`
+           dengan elemen `overflow: hidden` memutus scroll chaining ke `<html>`
+           sehingga scroll dua jari macet total di atas kotak preview gambar. */
 
         .sim-overlay, .drawer-panel, #operatorChatBody, #conversationListContainer {
             overscroll-behavior: contain !important;
@@ -2460,7 +2488,7 @@
             font-family: inherit;
             display: flex;
             align-items: center;
-            overflow: hidden;
+            overflow: clip;
             text-overflow: ellipsis;
             box-sizing: border-box;
             -webkit-touch-callout: none;
@@ -2797,7 +2825,7 @@
                             <div class="brand-title-line">BEA CUKAI BATAM</div>
                             <div class="brand-tagline">
                                 <div style="font-weight:700; color:#334155;">Pelayanan Pengeluaran Sementara Kendaraan Bermotor</div>
-                                <div style="color:#64748B;">dari Kawasan Bebas Batam ke Tempat Lain Dalam Daerah Pabean</div>
+                                <div style="font-weight:700; color:#334155;">dari Kawasan Bebas Batam ke Tempat Lain Dalam Daerah Pabean</div>
                             </div>
                         </div>
                     </div>
@@ -2968,14 +2996,19 @@
                                 <button type="button" id="btnLandingRegResend" onclick="submitLandingRegisterOtp()" disabled style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; text-decoration:underline;">Kirim Ulang WA</button>
                             </div>
 
-                            <!-- BANTUAN MANUAL JIKA WA TIDAK MASUK (Bukan jalur OTP email palsu) -->
+                            <!-- BANTUAN MANUAL JIKA WA TIDAK MASUK (Buka Jendela 24 Jam Bot WA + CC) -->
                             <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px; margin-bottom:16px; text-align:center;">
-                                <div style="font-size:0.74rem; color:#0369A1; font-weight:600; margin-bottom:6px;">
-                                    ⚠️ Tidak menerima kode di WhatsApp?
+                                <div style="font-size:0.74rem; color:#0369A1; font-weight:600; margin-bottom:7px;">
+                                    ⚠️ Tidak menerima kode di WhatsApp? Sapa Bot WA dulu lalu klik Kirim Ulang WA:
                                 </div>
-                                <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnLandingSendEmailOtp" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:8px 14px; font-size:0.78rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
-                                    📞 Hubungi Client Coordinator
-                                </a>
+                                <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                    <a href="https://wa.me/6285144901346?text=Halo%20Bot%20PENGSEM%20KBM" target="_blank" rel="noopener" style="background:#16A34A; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        💬 Sapa Bot WA
+                                    </a>
+                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnLandingSendEmailOtp" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        📞 Client Coordinator
+                                    </a>
+                                </div>
                             </div>
 
                             <button type="button" id="btnLandingRegVerify" onclick="submitLandingRegisterVerifyOtp()" style="width:100%; padding:11px; background:var(--primary); color:#FFFFFF; border:none; border-radius:7px; font-size:0.88rem; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0,68,124,0.3); margin-bottom:10px;">
@@ -3035,14 +3068,19 @@
                                 <button type="button" id="btnForgotResend" onclick="submitForgotPasswordRequestOtp()" disabled style="background:none; border:none; color:#005FAC; font-weight:700; cursor:pointer; text-decoration:underline;">Kirim Ulang WA</button>
                             </div>
 
-                            <!-- Bantuan Manual (Bukan jalur OTP email palsu) -->
+                            <!-- Bantuan Manual (Buka Jendela 24 Jam Bot WA + CC) -->
                             <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:9px 12px; margin-bottom:16px; text-align:center;">
-                                <div style="font-size:0.72rem; color:#0369A1; font-weight:600; margin-bottom:5px;">
-                                    ⚠️ Tidak menerima kode di WhatsApp?
+                                <div style="font-size:0.72rem; color:#0369A1; font-weight:600; margin-bottom:6px;">
+                                    ⚠️ Tidak menerima kode di WhatsApp? Sapa Bot WA dulu lalu klik Kirim Ulang WA:
                                 </div>
-                                <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnForgotEmailFallback" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 12px; font-size:0.76rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
-                                    📞 Hubungi Client Coordinator
-                                </a>
+                                <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                    <a href="https://wa.me/6285144901346?text=Halo%20Bot%20PENGSEM%20KBM" target="_blank" rel="noopener" style="background:#16A34A; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        💬 Sapa Bot WA
+                                    </a>
+                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnForgotEmailFallback" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        📞 Client Coordinator
+                                    </a>
+                                </div>
                             </div>
 
                             <!-- Input Kata Sandi Baru -->
@@ -3477,7 +3515,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img decoding="async" id="imgKtpPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgKtpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR KTP -->
                     <div id="snippetKtp" class="ocr-snippet-box">Menunggu berkas KTP diunggah...</div>
@@ -3527,7 +3565,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img decoding="async" id="imgNpwpPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgNpwpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR NPWP -->
                     <div id="snippetNpwp" class="ocr-snippet-box">Menunggu berkas NPWP diunggah...</div>
@@ -3581,7 +3619,7 @@
                                 <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 1</span>
                                 <span style="font-size:0.62rem; color:#94A3B8;">STNK</span>
                             </div>
-                            <img decoding="async" id="imgStnkPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
+                            <img decoding="async" id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
                         <div class="preview-box" id="previewStnk2Box" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0;">
                             <div class="laser-line" id="laserStnk2" style="display:none;">
@@ -3593,7 +3631,7 @@
                                 <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 2</span>
                                 <span style="font-size:0.62rem; color:#94A3B8;">TBPKP/Pajak</span>
                             </div>
-                            <img decoding="async" id="imgStnk2Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
+                            <img decoding="async" id="imgStnk2Preview" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
                     </div>
                     <!-- Cuplikan Data Hasil OCR STNK -->
@@ -3652,7 +3690,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img decoding="async" id="imgOwnershipPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgOwnershipPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR BPKB -->
                     <div id="snippetOwnership" class="ocr-snippet-box">Menunggu berkas BPKB diunggah...</div>
@@ -3672,7 +3710,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div class="preview-box" id="previewOwnership2Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                                 <span id="phOwnership2" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 2</span>
-                                <img decoding="async" id="imgOwnership2Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                <img decoding="async" id="imgOwnership2Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
                             <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership2Input').click()">Unggah Hal. 2</button>
                             <input type="file" id="fileOwnership2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_2')">
@@ -3680,7 +3718,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div class="preview-box" id="previewOwnership3Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                                 <span id="phOwnership3" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 3</span>
-                                <img decoding="async" id="imgOwnership3Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                <img decoding="async" id="imgOwnership3Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
                             <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership3Input').click()">Unggah Hal. 3</button>
                             <input type="file" id="fileOwnership3Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_3')">
@@ -3881,7 +3919,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">1. Foto/Scan Buku Nikah / Kartu Keluarga (Wajib Berwarna)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Membuktikan hubungan perkawinan / keluarga yang sah.</div>
                             <div class="preview-box" id="previewBukuNikahBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgBukuNikahPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Buku Nikah / KK">
+                                <img decoding="async" id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('bukuNikah')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Buku Nikah / KK</button>
                             <input type="file" id="fileBukuNikahInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'bukuNikah')">
@@ -3891,7 +3929,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Asli (Suami / Istri)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">KTP pemilik kendaraan yang namanya tertera di STNK.</div>
                             <div class="preview-box" id="previewKtpPasanganBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpPasanganPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau KTP Pasangan">
+                                <img decoding="async" id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPasangan')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Pasangan</button>
                             <input type="file" id="fileKtpPasanganInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPasangan')">
@@ -3921,7 +3959,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">1. Kwitansi / Surat Perjanjian Jual Beli (Bermeterai)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Menyatakan pengalihan hak kepemilikan kendaraan secara sah.</div>
                             <div class="preview-box" id="previewKwitansiBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKwitansiPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Kwitansi">
+                                <img decoding="async" id="imgKwitansiPreview" src="" alt="Pratinjau Kwitansi">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('kwitansi')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Kwitansi Jual Beli</button>
                             <input type="file" id="fileKwitansiInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'kwitansi')">
@@ -3931,7 +3969,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Lama / Penjual</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Fotokopi / scan KTP penjual sesuai nama pada STNK/BPKB.</div>
                             <div class="preview-box" id="previewKtpPenjualBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpPenjualPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau KTP Penjual">
+                                <img decoding="async" id="imgKtpPenjualPreview" src="" alt="Pratinjau KTP Penjual">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPenjual')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Penjual</button>
                             <input type="file" id="fileKtpPenjualInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPenjual')">
@@ -3961,7 +3999,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">1. Surat Perjanjian Sewa / Rekomendasi Resmi Rental (Bermeterai)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Surat izin dari pemilik/perusahaan rental untuk membawa mobil keluar Batam.</div>
                             <div class="preview-box" id="previewSuratSewaBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgSuratSewaPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Surat Sewa">
+                                <img decoding="async" id="imgSuratSewaPreview" src="" alt="Pratinjau Surat Sewa">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratSewa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Sewa</button>
                             <input type="file" id="fileSuratSewaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratSewa')">
@@ -3971,7 +4009,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">2. KTP Pemilik / Penanggung Jawab Rental</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Identitas pemilik tertera pada STNK / penanggung jawab rental.</div>
                             <div class="preview-box" id="previewKtpRentalBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpRentalPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau KTP Rental">
+                                <img decoding="async" id="imgKtpRentalPreview" src="" alt="Pratinjau KTP Rental">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpRental')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Rental</button>
                             <input type="file" id="fileKtpRentalInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpRental')">
@@ -3999,7 +4037,7 @@
                         <div style="font-size:0.75rem; font-weight:700; color:#334155; margin-bottom:4px;">Surat Kuasa Khusus Bermeterai Rp 10.000</div>
                         <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">* Sesuai ketentuan IK, NPWP yang dilampirkan pemohon wajib NPWP Pemberi Kuasa.</div>
                         <div class="preview-box" id="previewSuratKuasaBox" style="display:none; height:100px; margin-bottom:6px;">
-                            <img decoding="async" id="imgSuratKuasaPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Surat Kuasa">
+                            <img decoding="async" id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
                         </div>
                         <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratKuasa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Kuasa</button>
                         <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratKuasa')">
@@ -5491,13 +5529,14 @@
             wrap.innerHTML = `
                 <div class="preview-box" id="previewLeasing${idx}Box" style="flex:1; height:46px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                     <span style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Lembar ${idx + 1}</span>
-                    <img decoding="async" id="imgLeasing${idx}Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                    <img decoding="async" id="imgLeasing${idx}Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                 </div>
                 <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; white-space:nowrap;" onclick="document.getElementById('fileLeasing${idx}Input').click()">Unggah</button>
                 <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; color:#B91C1C;" onclick="removeLeasingExtraPage(${idx})" title="Hapus lembar ini">✕</button>
                 <input type="file" id="fileLeasing${idx}Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, '${target}')">
             `;
             cont.appendChild(wrap);
+            attachZoomButtonTo(document.getElementById('previewLeasing' + idx + 'Box'));
         }
 
         function removeLeasingExtraPage(idx) {
@@ -5707,6 +5746,29 @@
             applyLightboxZoom();
             const vp = document.getElementById('lightboxViewport');
             if (vp) { vp.scrollLeft = 0; vp.scrollTop = 0; }
+        }
+
+        // Tombol kaca pembesar kecil di sudut .preview-box (satu-satunya elemen pointer-events:auto
+        // di dalamnya) sebagai pemicu lightbox — SENGAJA tidak memakai onclick di <img> itu sendiri
+        // supaya tidak perlu mengubah pointer-events gambar (lihat catatan di CSS .preview-box img).
+        function attachZoomButtonTo(previewBoxEl) {
+            if (!previewBoxEl || previewBoxEl.querySelector('.preview-zoom-btn')) return;
+            const img = previewBoxEl.querySelector('img');
+            if (!img) return;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'preview-zoom-btn';
+            btn.title = 'Perbesar Gambar';
+            btn.innerHTML = '&#128269;';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                if (img.src) openImageLightbox(img.src, img.id);
+            };
+            previewBoxEl.appendChild(btn);
+        }
+
+        function initPreviewZoomButtons() {
+            document.querySelectorAll('.preview-box').forEach(attachZoomButtonTo);
         }
 
         // ---- Mode potong manual (dipakai saat auto-crop tidak berhasil memotong rapi, mis. latar
@@ -6853,6 +6915,43 @@
             return { text: '', parsed: {} };
         }
 
+        // Auto-crop presisi berbasis bounding box [ymin, xmin, ymax, xmax] (0..1000) dari Vision AI
+        // Mengatasi kegagalan crop lokal pada latar bermotif/berkontras tinggi (mis. karpet belang)
+        function cropImageByNormalizedBbox(dataUrl, bbox) {
+            return new Promise((resolve) => {
+                if (!dataUrl || !Array.isArray(bbox) || bbox.length !== 4) return resolve(null);
+                const [ymin, xmin, ymax, xmax] = bbox.map(Number);
+                if (![ymin, xmin, ymax, xmax].every(Number.isFinite) || ymax <= ymin || xmax <= xmin) return resolve(null);
+                const im = new Image();
+                im.onload = () => {
+                    try {
+                        const nw = im.naturalWidth || im.width;
+                        const nh = im.naturalHeight || im.height;
+                        if (nw < 80 || nh < 80) return resolve(null);
+                        // Tambah margin tipis 1% agar sudut kartu tidak terpotong
+                        const pad = 10;
+                        const x1 = Math.max(0, Math.floor(((xmin - pad) / 1000) * nw));
+                        const y1 = Math.max(0, Math.floor(((ymin - pad) / 1000) * nh));
+                        const x2 = Math.min(nw, Math.ceil(((xmax + pad) / 1000) * nw));
+                        const y2 = Math.min(nh, Math.ceil(((ymax + pad) / 1000) * nh));
+                        const cw = x2 - x1;
+                        const ch = y2 - y1;
+                        if (cw < 40 || ch < 40) return resolve(null);
+                        const c = document.createElement('canvas');
+                        c.width = cw;
+                        c.height = ch;
+                        const ctx = c.getContext('2d');
+                        ctx.drawImage(im, x1, y1, cw, ch, 0, 0, cw, ch);
+                        resolve(c.toDataURL('image/jpeg', 0.92));
+                    } catch (e) {
+                        resolve(null);
+                    }
+                };
+                im.onerror = () => resolve(null);
+                im.src = dataUrl;
+            });
+        }
+
         async function runRealOCR(target, imgUrl, rawPdfUrlForOcr = null) {
             const ocrPayloadUrl = rawPdfUrlForOcr || imgUrl;
 
@@ -6879,6 +6978,13 @@
                         if (ph) ph.style.display = 'flex';
                         uploadedKtpDataUrl = null;
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            uploadedKtpDataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
@@ -6924,6 +7030,13 @@
                         if (ph) ph.style.display = 'flex';
                         uploadedNpwpDataUrl = null;
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            uploadedNpwpDataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
@@ -6986,6 +7099,13 @@
                         if (ph) ph.style.display = 'flex';
                         if (isOwnershipPrimary) { uploadedOwnershipDataUrl = null; } else { delete ownershipExtraPages[target]; }
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            if (isOwnershipPrimary) { uploadedOwnershipDataUrl = aiCropped; } else { ownershipExtraPages[target] = aiCropped; }
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
@@ -7057,6 +7177,13 @@
                         uploadedStnkDataUrl = null;
                         return;
                     }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            uploadedStnkDataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
+                    }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseStnkTextRobust(rawText);
@@ -7104,6 +7231,13 @@
                         if (img) { img.style.display = 'none'; img.src = ''; }
                         if (ph) ph.style.display = 'flex';
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
@@ -11008,6 +11142,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             await checkAuthSession();
             handleHashRouting();
             loadPermohonanData();
+            initPreviewZoomButtons();
         });
 
 
@@ -11741,7 +11876,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
                         }
                     }
 
-                    showLandingAlert(data.message, 'success');
+                    showLandingAlert(data.message, data.otp_delivered === false ? 'error' : 'success');
                     startLandingTimer('forgotTimerDisplay', 'btnForgotResend', data.ttl || 300);
                     document.getElementById('forgotOtpCode').value = '';
                     setTimeout(() => {
@@ -12250,6 +12385,205 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
         function closeDocGuideModal() {
             const m = document.getElementById('modalDocGuide');
             if (m) m.style.display = 'none';
+        }
+
+        // ================= KONSOL LIVE CHAT OPERATOR WHATSAPP (+62 851-4490-1346) =================
+        let liveChatConversationsCache = [];
+        let liveChatActivePhone = null;
+        let liveChatPollTimer = null;
+
+        function openWhatsAppChatConsole() {
+            const modal = document.getElementById('liveChatModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            loadLiveChatConversations();
+            if (liveChatPollTimer) clearInterval(liveChatPollTimer);
+            liveChatPollTimer = setInterval(() => {
+                if (modal.style.display !== 'none') loadLiveChatConversations(true);
+            }, 6000);
+        }
+
+        function closeLiveChatModal() {
+            const modal = document.getElementById('liveChatModal');
+            if (modal) modal.style.display = 'none';
+            if (liveChatPollTimer) {
+                clearInterval(liveChatPollTimer);
+                liveChatPollTimer = null;
+            }
+        }
+
+        async function loadLiveChatConversations(silent = false) {
+            const listEl = document.getElementById('conversationListContainer');
+            if (!listEl) return;
+            if (!silent && liveChatConversationsCache.length === 0) {
+                listEl.innerHTML = '<div style="padding:18px; text-align:center; color:#64748B; font-size:0.78rem;">Memuat daftar obrolan WhatsApp...</div>';
+            }
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/wa/conversations`, {
+                    headers: _authHeaders(),
+                    credentials: 'include'
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    listEl.innerHTML = `<div style="padding:16px; color:#DC2626; font-size:0.78rem;">${escapeHtml(err.message || 'Gagal memuat obrolan WA (HTTP ' + res.status + ').')}</div>`;
+                    return;
+                }
+                const raw = await res.json();
+                // Dukung format array [{phone, nama, messages}] atau object {phone: {nama, messages}}
+                let list = [];
+                if (Array.isArray(raw)) {
+                    list = raw;
+                } else if (raw && typeof raw === 'object') {
+                    list = Object.entries(raw).map(([k, v]) => Object.assign({ phone: k }, v || {}));
+                }
+                liveChatConversationsCache = list;
+                filterContactList();
+                if (liveChatActivePhone) {
+                    const active = list.find(c => String(c.phone || c.no_wa || '') === String(liveChatActivePhone));
+                    if (active) renderLiveChatMessages(active);
+                }
+            } catch (e) {
+                if (!silent) {
+                    listEl.innerHTML = `<div style="padding:16px; color:#DC2626; font-size:0.78rem;">Gagal menghubungi server: ${escapeHtml(e.message)}</div>`;
+                }
+            }
+        }
+
+        function filterContactList() {
+            const listEl = document.getElementById('conversationListContainer');
+            if (!listEl) return;
+            const q = (document.getElementById('searchContactInput')?.value || '').trim().toLowerCase();
+            const filtered = liveChatConversationsCache.filter(c => {
+                const nama = String(c.nama || c.name || '').toLowerCase();
+                const phone = String(c.phone || c.no_wa || '').toLowerCase();
+                return !q || nama.includes(q) || phone.includes(q);
+            });
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div style="padding:18px; text-align:center; color:#94A3B8; font-size:0.78rem;">Belum ada obrolan WhatsApp masuk.</div>';
+                return;
+            }
+            listEl.innerHTML = filtered.map(c => {
+                const phone = String(c.phone || c.no_wa || '-');
+                const nama = String(c.nama || c.name || ('+' + phone));
+                const msgs = Array.isArray(c.messages) ? c.messages : [];
+                const last = msgs.length ? msgs[msgs.length - 1] : null;
+                const preview = last ? String(last.text || '').slice(0, 48) : 'Belum ada pesan';
+                const isSelected = String(liveChatActivePhone) === phone;
+                return `
+                    <div onclick="selectLiveChatContact('${escapeJsAttr(phone)}')" style="padding:10px 12px; border-radius:8px; margin-bottom:4px; cursor:pointer; background:${isSelected ? '#EFF6FF' : '#FFFFFF'}; border:1px solid ${isSelected ? '#3B82F6' : '#E2E8F0'};">
+                        <div style="font-weight:700; font-size:0.80rem; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(nama)}</div>
+                        <div style="font-size:0.70rem; color:#059669; font-weight:600;">+${escapeHtml(phone)}</div>
+                        <div style="font-size:0.70rem; color:#64748B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">${escapeHtml(preview)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectLiveChatContact(phone) {
+            liveChatActivePhone = phone;
+            filterContactList();
+            const conv = liveChatConversationsCache.find(c => String(c.phone || c.no_wa || '') === String(phone));
+            if (conv) renderLiveChatMessages(conv);
+        }
+
+        function formatLiveChatWibTime(rawTs) {
+            const raw = String(rawTs || '').trim();
+            if (!raw) return '';
+            if (/WIB$/i.test(raw)) return raw;
+            try {
+                let d = null;
+                if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/.test(raw)) {
+                    // Timestamp lama dari Render (UTC tanpa zona) -> konversi ke WIB (UTC+7)
+                    d = new Date(raw.replace(' ', 'T') + 'Z');
+                } else if (/^\d{10,13}$/.test(raw)) {
+                    const num = Number(raw);
+                    d = new Date(raw.length === 10 ? num * 1000 : num);
+                } else {
+                    d = new Date(raw);
+                }
+                if (d && !isNaN(d.getTime())) {
+                    const parts = new Intl.DateTimeFormat('en-CA', {
+                        timeZone: 'Asia/Jakarta',
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                        hour12: false
+                    }).formatToParts(d);
+                    const getP = (t) => (parts.find(p => p.type === t) || {}).value || '00';
+                    return `${getP('year')}-${getP('month')}-${getP('day')} ${getP('hour')}:${getP('minute')}:${getP('second')} WIB`;
+                }
+            } catch (_) {}
+            return raw;
+        }
+
+        function renderLiveChatMessages(conv) {
+            const nameEl = document.getElementById('activeChatName');
+            const phoneEl = document.getElementById('activeChatPhone');
+            const badgeEl = document.getElementById('activeChatBadge');
+            const bodyEl = document.getElementById('operatorChatBody');
+            const phone = String(conv.phone || conv.no_wa || '-');
+            if (nameEl) nameEl.textContent = conv.nama || conv.name || ('+' + phone);
+            if (phoneEl) phoneEl.textContent = '+' + phone;
+            if (badgeEl) {
+                badgeEl.textContent = `${(conv.messages || []).length} Pesan`;
+                badgeEl.style.background = '#DCFCE7';
+                badgeEl.style.color = '#166534';
+            }
+            if (!bodyEl) return;
+            const msgs = Array.isArray(conv.messages) ? conv.messages : [];
+            if (msgs.length === 0) {
+                bodyEl.innerHTML = '<div style="margin:auto; color:#94A3B8; font-size:0.82rem;">Belum ada isi pesan untuk kontak ini.</div>';
+                return;
+            }
+            bodyEl.innerHTML = msgs.map(m => {
+                const sender = String(m.sender || m.role || 'user').toLowerCase();
+                const isOut = (sender === 'officer' || sender === 'bot' || sender === 'admin');
+                const safeText = escapeHtml(m.text || '').replace(/\n/g, '<br>');
+                const ts = escapeHtml(formatLiveChatWibTime(m.time || m.timestamp || ''));
+                const label = sender === 'officer' ? 'Petugas' : (sender === 'bot' ? 'Bot WA' : 'Pemohon/Masuk');
+                return `
+                    <div style="align-self:${isOut ? 'flex-end' : 'flex-start'}; max-width:78%; background:${isOut ? '#DCFCE7' : '#FFFFFF'}; border:1px solid ${isOut ? '#86EFAC' : '#E2E8F0'}; border-radius:10px; padding:8px 12px; font-size:0.80rem; color:#0F172A;">
+                        <div style="font-size:0.66rem; font-weight:700; color:${isOut ? '#166534' : '#005FAC'}; margin-bottom:2px;">${label}${ts ? ' • ' + ts : ''}</div>
+                        <div style="line-height:1.4; word-break:break-word;">${safeText}</div>
+                    </div>
+                `;
+            }).join('');
+            bodyEl.scrollTop = bodyEl.scrollHeight;
+        }
+
+        function insertQuickReply(text) {
+            const inp = document.getElementById('txtOperatorMessage');
+            if (inp) { inp.value = text; inp.focus(); }
+        }
+
+        async function sendOperatorMessage() {
+            if (!liveChatActivePhone) {
+                alert('Pilih kontak terlebih dahulu di sisi kiri.');
+                return;
+            }
+            const inp = document.getElementById('txtOperatorMessage');
+            const text = (inp?.value || '').trim();
+            if (!text) return;
+            const btn = document.getElementById('btnSendOperator');
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/wa/send`, {
+                    method: 'POST',
+                    headers: _authHeaders({ 'Content-Type': 'application/json' }),
+                    credentials: 'include',
+                    body: JSON.stringify({ to: liveChatActivePhone, text })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    if (inp) inp.value = '';
+                    await loadLiveChatConversations(true);
+                } else {
+                    alert('Gagal mengirim WA: ' + (data.message || 'HTTP ' + res.status));
+                }
+            } catch (e) {
+                alert('Gagal mengirim WA: ' + e.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 </script>
 

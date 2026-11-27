@@ -3,6 +3,12 @@
 .env.*
 *.env
 
+# WhatsApp Gateway (Baileys) — JANGAN PERNAH commit sesi WA / node_modules
+wa_gateway/auth_info/
+wa_gateway/node_modules/
+wa_gateway/.env
+wa_gateway/*.log
+
 # macOS
 .DS_Store
 .AppleDouble

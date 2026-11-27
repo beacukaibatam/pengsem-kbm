@@ -870,13 +870,18 @@ def extract_with_vision_ai(image_bytes, target=''):
         # yang memang diaudit kecocokannya (lihat _VALID_DOC_TYPES_BY_TARGET).
         if target in _VALID_DOC_TYPES_BY_TARGET:
             prompt_text = (
-                "TUGAS 1 (WAJIB dijawab lebih dulu, JANGAN dilewati): amati gambar ini dan tentukan jenis "
+                "TUGAS 1A (WAJIB dijawab lebih dulu, JANGAN dilewati): amati gambar ini dan tentukan jenis "
                 "dokumen yang BENAR-BENAR terlihat — independen dari jenis dokumen yang diminta untuk "
                 "diekstrak di TUGAS 2 di bawah. Isi kunci JSON jenis_dokumen_terdeteksi dengan SATU nilai "
                 "ini yang paling sesuai: \"KTP\", \"NPWP\", \"STNK\", \"BPKB\", \"SURAT_LEASING\", \"LAINNYA\". "
                 "Contoh: kalau gambar yang diberikan ternyata adalah STNK padahal TUGAS 2 memintamu "
                 "mengekstrak data KTP, tetap isi jenis_dokumen_terdeteksi dengan \"STNK\" (jujur sesuai "
                 "gambar), JANGAN dipaksakan menjadi \"KTP\".\n\n"
+                "TUGAS 1B (WAJIB untuk auto-crop presisi): tentukan kotak batas ketat (bounding box) HANYA "
+                "untuk fisik kartu/lembar dokumennya saja (BUANG seluruh latar belakang seperti karpet, "
+                "meja, lantai, atau tangan). Isi kunci JSON doc_bbox berupa array 4 bilangan bulat "
+                "[ymin, xmin, ymax, xmax] dalam skala 0 sampai 1000 (0 = tepi atas/kiri gambar, "
+                "1000 = tepi bawah/kanan gambar).\n\n"
                 "TUGAS 2: " + prompt_text
             )
 
@@ -1327,6 +1332,53 @@ def _strip_password(user_dict):
         return user_dict
     return {k: v for k, v in user_dict.items() if k != 'password'}
 
+def _normalize_phone_id(raw_phone):
+    """Normalisasi nomor WhatsApp Indonesia ke format 628xxx untuk komparasi duplikasi yang akurat."""
+    s = str(raw_phone or '').strip().replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '').replace('.', '')
+    if not s or not s.isdigit():
+        return ''
+    if s.startswith('08'):
+        return '628' + s[2:]
+    if s.startswith('8'):
+        return '628' + s[1:]
+    if s.startswith('62'):
+        return s
+    return '62' + s.lstrip('0')
+
+def _find_duplicate_registration(users_data, phone='', email=''):
+    """Periksa apakah nomor WA atau email sudah terdaftar pada akun pemohon maupun pegawai."""
+    norm_phone = _normalize_phone_id(phone)
+    norm_email = str(email or '').strip().lower()
+    phone_exists = False
+    email_exists = False
+    all_users = (users_data.get('pemohon', []) if isinstance(users_data, dict) else []) + \
+                (users_data.get('pegawai', []) if isinstance(users_data, dict) else [])
+    for u in all_users:
+        if not isinstance(u, dict):
+            continue
+        if norm_phone:
+            u_phone = _normalize_phone_id(u.get('phone', ''))
+            u_uname_phone = _normalize_phone_id(u.get('username', ''))
+            if norm_phone in (u_phone, u_uname_phone):
+                phone_exists = True
+        if norm_email:
+            u_email = str(u.get('email', '') or '').strip().lower()
+            u_uname_email = str(u.get('username', '') or '').strip().lower()
+            if norm_email in (u_email, u_uname_email):
+                email_exists = True
+        if phone_exists and email_exists:
+            break
+    return phone_exists, email_exists
+
+def _duplicate_registration_message(phone_exists, email_exists):
+    if phone_exists and email_exists:
+        return "Nomor WhatsApp dan alamat email ini sudah terdaftar di sistem. Silakan langsung Masuk (Login) atau gunakan fitur Lupa Kata Sandi."
+    if phone_exists:
+        return "Nomor WhatsApp ini sudah terdaftar di sistem. Silakan langsung Masuk (Login) atau gunakan fitur Lupa Kata Sandi."
+    if email_exists:
+        return "Alamat email ini sudah terdaftar di sistem. Silakan gunakan alamat email lain atau langsung Masuk (Login) jika sudah memiliki akun."
+    return ""
+
 def load_db_otp():
     otps = {}
     if os.path.exists(DB_OTP_PATH):
@@ -1415,14 +1467,19 @@ def save_db_chat(data):
         print('[!] Error saving db_chat:', e)
         return False
 
+def _now_wib_str():
+    """Mengembalikan waktu saat ini dalam WIB (UTC+7) format YYYY-MM-DD HH:MM:SS WIB."""
+    wib = datetime.timezone(datetime.timedelta(hours=7))
+    return datetime.datetime.now(wib).strftime('%Y-%m-%d %H:%M:%S WIB')
+
 def log_chat_message(phone, sender, text, name=None):
-    import datetime, time
-    clean_phone = phone.strip().replace('+', '').replace('-', '').replace(' ', '')
+    import time
+    clean_phone = _normalize_phone_id(phone) or str(phone or '').strip().replace('+', '').replace('-', '').replace(' ', '')
     if clean_phone.startswith('08'):
         clean_phone = '628' + clean_phone[2:]
     chats = load_db_chat()
-    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
+    now_str = _now_wib_str()
+
     if clean_phone not in chats:
         chats[clean_phone] = {
             'nama': name or f'Pemohon WA ({clean_phone})',
@@ -1430,9 +1487,9 @@ def log_chat_message(phone, sender, text, name=None):
             'updated_at': now_str,
             'messages': []
         }
-    if name and not chats[clean_phone].get('nama'):
+    if name and (not chats[clean_phone].get('nama') or str(chats[clean_phone].get('nama', '')).startswith('Pemohon WA (')):
         chats[clean_phone]['nama'] = name
-        
+
     chats[clean_phone]['updated_at'] = now_str
     chats[clean_phone]['messages'].append({
         'id': f'msg_{int(time.time()*1000)}',
@@ -1549,8 +1606,91 @@ def repair_remove_demo_seed_permohonan_once():
     except Exception as e:
         print('[!] Gagal menjalankan pembersihan data demo permohonan di JSON:', e)
 
-def send_whatsapp_meta_message(to_number, text, buttons=None):
-    """Mengirim pesan via Meta WhatsApp Cloud API resmi jika access token tersedia."""
+def get_wa_gateway_config():
+    """Membaca WA_GATEWAY_URL dan WA_GATEWAY_SECRET dari environment (fallback .env lokal)."""
+    gw_url = (os.environ.get('WA_GATEWAY_URL') or '').strip()
+    gw_secret = (os.environ.get('WA_GATEWAY_SECRET') or '').strip()
+    if not gw_url or not gw_secret:
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if '=' in line and not line.strip().startswith('#'):
+                            k, v = line.strip().split('=', 1)
+                            k, v = k.strip(), v.strip().strip('"').strip("'")
+                            if k == 'WA_GATEWAY_URL' and not gw_url:
+                                gw_url = v
+                            if k == 'WA_GATEWAY_SECRET' and not gw_secret:
+                                gw_secret = v
+            except Exception as e_env:
+                print("[!] Error reading .env for WA Gateway:", e_env)
+    return gw_url.rstrip('/'), gw_secret
+
+def send_whatsapp_via_gateway(to_number, text, log_chat=True):
+    """Kirim pesan WhatsApp melalui Self-Hosted Baileys Gateway (Mac Mini / Cloudflare Tunnel)."""
+    gw_url, gw_secret = get_wa_gateway_config()
+    if not gw_url:
+        return {"status": "error", "provider": "wa_gateway", "message": "WA_GATEWAY_URL belum dikonfigurasi."}
+    if not gw_secret:
+        return {"status": "error", "provider": "wa_gateway", "message": "WA_GATEWAY_SECRET belum dikonfigurasi di server."}
+
+    import urllib.request
+    endpoint = f"{gw_url}/send"
+    headers = {
+        "Content-Type": "application/json",
+        "X-WA-Gateway-Secret": gw_secret,
+        "User-Agent": "PENGSEM-KBM-Backend/1.0"
+    }
+    payload = {"to": str(to_number), "text": str(text)}
+    try:
+        req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            res_data = json.loads(resp.read().decode('utf-8'))
+            if isinstance(res_data, dict) and res_data.get('status') in ('ok', 'success'):
+                if log_chat:
+                    try:
+                        log_chat_message(to_number, 'bot', text)
+                    except Exception:
+                        pass
+                msg_id = res_data.get('message_id', '')
+                return {
+                    "status": "success",
+                    "provider": "wa_gateway",
+                    "message_id": msg_id,
+                    "messages": [{"id": msg_id}]
+                }
+            return {
+                "status": "error",
+                "provider": "wa_gateway",
+                "message": (res_data.get('message') if isinstance(res_data, dict) else None) or "Respon tidak valid dari WA Gateway."
+            }
+    except urllib.error.HTTPError as he:
+        err_msg = f"WA Gateway HTTP {he.code}"
+        try:
+            err_json = json.loads(he.read().decode('utf-8'))
+            if isinstance(err_json, dict) and err_json.get('message'):
+                err_msg = err_json['message']
+        except Exception:
+            pass
+        print(f"[!] WA Gateway HTTP Error {he.code}: {err_msg}")
+        return {"status": "error", "provider": "wa_gateway", "code": he.code, "message": err_msg}
+    except Exception as e:
+        print("[!] Error sending via WA Gateway:", e)
+        return {"status": "error", "provider": "wa_gateway", "message": f"Gagal menghubungi WA Gateway: {e}"}
+
+def send_whatsapp_meta_message(to_number, text, buttons=None, log_chat=True):
+    """Mengirim pesan WhatsApp: prioritas Self-Hosted WA Gateway jika WA_GATEWAY_URL terisi,
+    fallback ke Meta WhatsApp Cloud API resmi jika WA_GATEWAY_URL kosong."""
+    gw_url, _ = get_wa_gateway_config()
+    if gw_url:
+        msg_text = str(text or '')
+        if buttons and len(buttons) > 0:
+            opts = "\n".join(f"• {b.get('title', '')}" for b in buttons[:3] if b.get('title'))
+            if opts:
+                msg_text = f"{msg_text}\n\n{opts}"
+        return send_whatsapp_via_gateway(to_number, msg_text, log_chat=log_chat)
+
     token, phone_id = get_meta_credentials()
     if not token or not phone_id:
         print(f"[*] [WA Sandbox Log] to: {to_number} -> {text[:80]}... (Buttons: {buttons})")
@@ -1597,12 +1737,13 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
 
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             res_data = json.loads(resp.read().decode('utf-8'))
-            try:
-                log_chat_message(to_number, 'bot', text)
-            except Exception:
-                pass
+            if log_chat:
+                try:
+                    log_chat_message(to_number, 'bot', text)
+                except Exception:
+                    pass
             return res_data
     except urllib.error.HTTPError as he:
         err_body = ""
@@ -1617,6 +1758,61 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
     except Exception as e:
         print("[!] Error sending WhatsApp Meta message:", e)
         return {"status": "error", "message": str(e)}
+
+def send_whatsapp_otp_template(to_number, otp_code, fallback_text):
+    """Kirim OTP: prioritas Self-Hosted WA Gateway (bebas aturan 24 jam Meta) jika WA_GATEWAY_URL
+    terisi. Jika kosong, pakai Meta WhatsApp Authentication Template (bila META_OTP_TEMPLATE_NAME
+    disetel) lalu fallback ke pesan teks standar Meta."""
+    gw_url, _ = get_wa_gateway_config()
+    if gw_url:
+        return send_whatsapp_via_gateway(to_number, fallback_text)
+
+    token, phone_id = get_meta_credentials()
+    template_name = os.environ.get('META_OTP_TEMPLATE_NAME', '').strip()
+    template_lang = os.environ.get('META_OTP_TEMPLATE_LANG', 'id').strip() or 'id'
+
+    if token and phone_id and template_name:
+        import urllib.request
+        url = f"https://graph.facebook.com/v19.0/{phone_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": to_number,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {"code": template_lang},
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [{"type": "text", "text": str(otp_code)}]
+                    },
+                    {
+                        "type": "button",
+                        "sub_type": "url",
+                        "index": "0",
+                        "parameters": [{"type": "text", "text": str(otp_code)}]
+                    }
+                ]
+            }
+        }
+        try:
+            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                res_data = json.loads(resp.read().decode('utf-8'))
+                try:
+                    log_chat_message(to_number, 'bot', f"[OTP Template: {template_name}] Kode OTP terkirim.")
+                except Exception:
+                    pass
+                return res_data
+        except Exception as e_tpl:
+            print(f"[!] OTP Template '{template_name}' gagal ({e_tpl}), fallback ke pesan teks standar...")
+
+    return send_whatsapp_meta_message(to_number, fallback_text)
 
 
 def _generate_qr_data_url(payload_text):
@@ -2223,19 +2419,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(400, "Format alamat email tidak valid (contoh: nama@email.com).")
                     return
                 
-                # Cek jika pemohon sudah terdaftar di db_users.json
+                # Tolak registrasi jika nomor WA atau email sudah terdaftar di sistem
                 users = load_db_users()
-                existing_pemohon = None
-                for u in users.get('pemohon', []):
-                    if u.get('phone') == phone:
-                        existing_pemohon = u
-                        break
+                phone_exists, email_exists = _find_duplicate_registration(users, phone=phone, email=email)
+                if phone_exists or email_exists:
+                    dup_msg = _duplicate_registration_message(phone_exists, email_exists)
+                    database.log_activity(
+                        phone, 'pemohon', 'REGISTRASI_DITOLAK_DUPLIKAT',
+                        detail=f"Duplikat {'WA & Email' if (phone_exists and email_exists) else ('WA' if phone_exists else 'Email')} (phone={phone}, email={email})"
+                    )
+                    self._send_json_error(409, dup_msg)
+                    return
 
-                if not nama and existing_pemohon:
-                    nama = existing_pemohon.get('nama', 'PEMOHON TERDAFTAR')
-                    if not nik:
-                        nik = existing_pemohon.get('nik', '')
-                elif not nama:
+                if not nama:
                     nama = "PEMOHON KBM BATAM"
 
                 # Generate 6 digit angka acak
@@ -2265,9 +2461,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 )
 
-                meta_res = send_whatsapp_meta_message(phone, wa_message)
+                meta_res = send_whatsapp_otp_template(phone, otp_code, wa_message)
                 log_chat_message(phone, 'bot', wa_message, name=nama)
-                print(f"[+] OTP pendaftaran terkirim ke {phone} (Kode: {otp_code}) - Meta: {meta_res}")
+                print(f"[+] OTP pendaftaran diproses untuk {phone} (Kode: {otp_code}) - Meta: {meta_res}")
 
                 is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline')) and ('messages' in meta_res or meta_res.get('status') == 'success')
 
@@ -2312,6 +2508,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_email = req_email or otp_data.get('email', '')
                 if not target_email or '@' not in target_email:
                     self._send_json_error(400, "Alamat email tidak valid. Silakan masukkan alamat email yang benar.")
+                    return
+
+                # Tolak jika email tujuan atau nomor WA sudah terdaftar pada akun lain
+                phone_exists, email_exists = _find_duplicate_registration(load_db_users(), phone=phone, email=target_email)
+                if phone_exists or email_exists:
+                    dup_msg = _duplicate_registration_message(phone_exists, email_exists)
+                    database.log_activity(
+                        phone, 'pemohon', 'REGISTRASI_DITOLAK_DUPLIKAT',
+                        detail=f"Duplikat saat request-email-otp (phone={phone}, email={target_email})"
+                    )
+                    self._send_json_error(409, dup_msg)
                     return
 
                 otp_data['email'] = target_email
@@ -2398,42 +2605,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 except Exception:
                     pass
 
-                # Simpan / perbarui di db_users.json
+                # Tolak pembuatan akun jika nomor WA atau email sudah terdaftar (cegah race condition / timpa akun)
                 users = load_db_users()
-                pemohon_list = users.get('pemohon', [])
-                found_user = None
-                for u in pemohon_list:
-                    if u.get('phone') == phone or (otp_info.get('nik') and u.get('nik') == otp_info.get('nik')):
-                        found_user = u
-                        break
+                reg_email = str(otp_info.get('email', '') or '').strip().lower()
+                phone_exists, email_exists = _find_duplicate_registration(users, phone=phone, email=reg_email)
+                if phone_exists or email_exists:
+                    dup_msg = _duplicate_registration_message(phone_exists, email_exists)
+                    database.log_activity(
+                        phone, 'pemohon', 'REGISTRASI_DITOLAK_DUPLIKAT',
+                        detail=f"Duplikat saat verify-otp (phone={phone}, email={reg_email})"
+                    )
+                    self._send_json_error(409, dup_msg)
+                    return
 
+                # Simpan akun pemohon baru di db_users.json & SQLite
+                pemohon_list = users.get('pemohon', [])
                 user_pwd = str(body.get('password', '')).strip() or otp_info.get('password', '') or 'pemohon123'
                 now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                if not found_user:
-                    new_id = f"USR-PEMOHON-{str(len(pemohon_list) + 1).zfill(3)}"
-                    found_user = {
-                        "id": new_id,
-                        "nik": otp_info.get('nik', ''),
-                        "nama": otp_info.get('nama', 'PEMOHON TERVERIFIKASI'),
-                        "phone": phone,
-                        "email": otp_info.get('email', ''),
-                        "password": user_pwd,
-                        "status": "verified",
-                        "role": "pemohon",
-                        "registered_at": now_str
-                    }
-                    pemohon_list.append(found_user)
-                else:
-                    found_user['status'] = 'verified'
-                    if otp_info.get('nama'):
-                        found_user['nama'] = otp_info['nama']
-                    if otp_info.get('nik'):
-                        found_user['nik'] = otp_info['nik']
-                    if otp_info.get('email'):
-                        found_user['email'] = otp_info['email']
-                    if user_pwd:
-                        found_user['password'] = user_pwd
-                    found_user['updated_at'] = now_str
+                new_id = f"USR-PEMOHON-{str(len(pemohon_list) + 1).zfill(3)}"
+                found_user = {
+                    "id": new_id,
+                    "nik": otp_info.get('nik', ''),
+                    "nama": otp_info.get('nama', 'PEMOHON TERVERIFIKASI'),
+                    "phone": phone,
+                    "email": reg_email,
+                    "password": user_pwd,
+                    "status": "verified",
+                    "role": "pemohon",
+                    "registered_at": now_str
+                }
+                pemohon_list.append(found_user)
                 users['pemohon'] = pemohon_list
                 save_db_users(users)
 
@@ -2636,19 +2837,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 )
 
+                meta_res = None
                 if phone_to_use:
-                    send_whatsapp_meta_message(phone_to_use, wa_msg)
+                    meta_res = send_whatsapp_otp_template(phone_to_use, otp_code, wa_msg)
                     log_chat_message(phone_to_use, 'bot', wa_msg, name=nama_to_use)
-                    print(f"[+] OTP Reset Password terkirim ke WhatsApp {phone_to_use} (Kode: {otp_code})")
+                    print(f"[+] OTP Reset Password diproses untuk WhatsApp {phone_to_use} (Kode: {otp_code}) - Meta: {meta_res}")
+
+                is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
+                if phone_to_use and is_meta_success:
+                    resp_msg = f"Kode OTP verifikasi telah dikirimkan ke WhatsApp +{phone_to_use}."
+                elif phone_to_use:
+                    resp_msg = f"Kode OTP untuk +{phone_to_use} belum berhasil terkirim dari WhatsApp Meta. Silakan klik 'Sapa Bot WA' lalu 'Kirim Ulang WA', atau hubungi Client Coordinator."
+                else:
+                    resp_msg = f"Kode OTP telah diproses untuk email {email_to_use}."
 
                 self._send_json_response({
                     "status": "ok",
-                    "message": f"Kode OTP verifikasi telah dikirimkan ke WhatsApp +{phone_to_use}." if phone_to_use else f"Kode OTP telah dikirimkan ke email {email_to_use}.",
+                    "message": resp_msg,
                     "key": otp_key,
                     "phone": phone_to_use,
                     "email": email_to_use,
                     "nama": nama_to_use,
-                    "ttl": 300
+                    "ttl": 300,
+                    "otp_delivered": is_meta_success
                 })
                 return
             except Exception as e:
@@ -2785,6 +2996,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             }, cookie_header="session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
             return
 
+        # Webhook Pesan Masuk dari Self-Hosted WhatsApp Gateway (Baileys Mac Mini)
+        if self.path == '/api/webhook/baileys':
+            import hmac
+            _, expected_secret = get_wa_gateway_config()
+            provided_secret = (self.headers.get('X-WA-Gateway-Secret') or '').strip()
+            if not expected_secret or not provided_secret or not hmac.compare_digest(provided_secret, expected_secret):
+                self._send_json_error(403, "Forbidden: X-WA-Gateway-Secret tidak valid atau belum dikonfigurasi.")
+                return
+
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                sender_phone = str(body.get('from') or body.get('phone') or '').strip()
+                text = str(body.get('text') or '').strip()
+                push_name = str(body.get('push_name') or body.get('name') or '').strip() or None
+                if not sender_phone or not text:
+                    self._send_json_error(400, "Parameter 'from' dan 'text' wajib diisi.")
+                    return
+
+                log_chat_message(sender_phone, 'user', text, name=push_name)
+                self._send_json_response({"status": "ok"})
+                return
+            except Exception as e:
+                self._send_json_error(500, f"Gagal memproses webhook Baileys: {e}")
+                return
+
         # Kirim Pesan Manual dari Petugas Operator WhatsApp Bea Cukai
         if self.path == '/api/wa/send':
             token, sess = get_session_from_request(self)
@@ -2800,23 +3038,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if to_num.startswith('08'):
                     to_num = '628' + to_num[2:]
                 text = body.get('text', '').strip()
-                
-                # Kirim ke Meta Cloud API resmi
-                meta_res = send_whatsapp_meta_message(to_num, text)
-                
-                # Catat ke log chat operator
+                if not to_num or not text:
+                    self._send_json_error(400, "Nomor tujuan dan isi pesan wajib diisi.")
+                    return
+
+                # Kirim via WA Gateway (prioritas) atau Meta Cloud API (fallback)
+                meta_res = send_whatsapp_meta_message(to_num, text, log_chat=False)
+                is_sent = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') in ('success', 'ok'))
+
+                if not is_sent:
+                    err_msg = (meta_res.get('message') if isinstance(meta_res, dict) else None) or "Pengiriman WhatsApp gagal. Pastikan WA Gateway Mac Mini aktif dan terhubung."
+                    self._send_json_error(502, err_msg)
+                    return
+
+                # Catat ke log chat operator hanya jika benar-benar terkirim
                 log_chat_message(to_num, 'officer', text, name=body.get('nama'))
-                
-                resp = json.dumps({'status': 'success', 'meta_response': meta_res}).encode('utf-8')
-                self.send_response(200)
+                self._send_json_response({'status': 'success', 'meta_response': meta_res})
+                return
             except Exception as e:
-                resp = json.dumps({'status': 'error', 'message': str(e)}).encode('utf-8')
-                self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(resp)))
-            self.end_headers()
-            self.wfile.write(resp)
-            return
+                self._send_json_error(500, str(e))
+                return
         # Update Status Permohonan dari Dashboard Pegawai
         
         # Tambah Permohonan Baru (dari Bot WhatsApp / Simulator Real)
@@ -3265,6 +3506,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 extracted_text, parsed_data = process_ocr(raw_bytes, target, engine)
                 is_mismatch, detected_doc_type = check_document_type_mismatch(target, parsed_data)
 
+                # Validasi doc_bbox [ymin, xmin, ymax, xmax] skala 0..1000 dari Vision AI untuk auto-crop presisi
+                valid_doc_bbox = None
+                if isinstance(parsed_data, dict):
+                    raw_bbox = parsed_data.get('doc_bbox')
+                    if isinstance(raw_bbox, (list, tuple)) and len(raw_bbox) == 4:
+                        try:
+                            ymin, xmin, ymax, xmax = [int(round(float(v))) for v in raw_bbox]
+                            ymin = max(0, min(1000, ymin))
+                            xmin = max(0, min(1000, xmin))
+                            ymax = max(0, min(1000, ymax))
+                            xmax = max(0, min(1000, xmax))
+                            bw = xmax - xmin
+                            bh = ymax - ymin
+                            area_ratio = (bw * bh) / 1000000.0
+                            # Hanya terapkan crop jika kotak valid (>= 12% lebar/tinggi) dan benar-benar membuang background (< 96% area)
+                            if bw >= 120 and bh >= 120 and 0.03 <= area_ratio <= 0.96:
+                                valid_doc_bbox = [ymin, xmin, ymax, xmax]
+                        except Exception:
+                            valid_doc_bbox = None
+
                 response_data = json.dumps({
                     'status': 'ok',
                     'target': target,
@@ -3272,7 +3533,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'text': extracted_text,
                     'parsed': parsed_data,
                     'document_mismatch': is_mismatch,
-                    'detected_document_type': detected_doc_type
+                    'detected_document_type': detected_doc_type,
+                    'doc_bbox': valid_doc_bbox
                 }).encode('utf-8')
                 
                 self.send_response(200)
