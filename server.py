@@ -1604,6 +1604,57 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
         print("[!] Error sending WhatsApp Meta message:", e)
         return {"status": "error", "message": str(e)}
 
+def send_whatsapp_otp_template(to_number, otp_code, fallback_text):
+    """Kirim OTP via Meta WhatsApp Authentication Template jika META_OTP_TEMPLATE_NAME disetel
+    (bebas aturan jendela 24 jam Meta). Jika belum disetel atau template gagal, otomatis fallback
+    ke pesan teks standar send_whatsapp_meta_message()."""
+    token, phone_id = get_meta_credentials()
+    template_name = os.environ.get('META_OTP_TEMPLATE_NAME', '').strip()
+    template_lang = os.environ.get('META_OTP_TEMPLATE_LANG', 'id').strip() or 'id'
+
+    if token and phone_id and template_name:
+        import urllib.request
+        url = f"https://graph.facebook.com/v19.0/{phone_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": to_number,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {"code": template_lang},
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [{"type": "text", "text": str(otp_code)}]
+                    },
+                    {
+                        "type": "button",
+                        "sub_type": "url",
+                        "index": "0",
+                        "parameters": [{"type": "text", "text": str(otp_code)}]
+                    }
+                ]
+            }
+        }
+        try:
+            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                res_data = json.loads(resp.read().decode('utf-8'))
+                try:
+                    log_chat_message(to_number, 'bot', f"[OTP Template: {template_name}] Kode OTP terkirim.")
+                except Exception:
+                    pass
+                return res_data
+        except Exception as e_tpl:
+            print(f"[!] OTP Template '{template_name}' gagal ({e_tpl}), fallback ke pesan teks standar...")
+
+    return send_whatsapp_meta_message(to_number, fallback_text)
+
 
 def _generate_qr_data_url(payload_text):
     """Hasilkan QR code PNG base64 data URL dari teks payload. Kembalikan None
@@ -2251,9 +2302,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 )
 
-                meta_res = send_whatsapp_meta_message(phone, wa_message)
+                meta_res = send_whatsapp_otp_template(phone, otp_code, wa_message)
                 log_chat_message(phone, 'bot', wa_message, name=nama)
-                print(f"[+] OTP pendaftaran terkirim ke {phone} (Kode: {otp_code}) - Meta: {meta_res}")
+                print(f"[+] OTP pendaftaran diproses untuk {phone} (Kode: {otp_code}) - Meta: {meta_res}")
 
                 is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline')) and ('messages' in meta_res or meta_res.get('status') == 'success')
 
@@ -2622,19 +2673,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 )
 
+                meta_res = None
                 if phone_to_use:
-                    send_whatsapp_meta_message(phone_to_use, wa_msg)
+                    meta_res = send_whatsapp_otp_template(phone_to_use, otp_code, wa_msg)
                     log_chat_message(phone_to_use, 'bot', wa_msg, name=nama_to_use)
-                    print(f"[+] OTP Reset Password terkirim ke WhatsApp {phone_to_use} (Kode: {otp_code})")
+                    print(f"[+] OTP Reset Password diproses untuk WhatsApp {phone_to_use} (Kode: {otp_code}) - Meta: {meta_res}")
+
+                is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
+                if phone_to_use and is_meta_success:
+                    resp_msg = f"Kode OTP verifikasi telah dikirimkan ke WhatsApp +{phone_to_use}."
+                elif phone_to_use:
+                    resp_msg = f"Kode OTP untuk +{phone_to_use} belum berhasil terkirim dari WhatsApp Meta. Silakan klik 'Sapa Bot WA' lalu 'Kirim Ulang WA', atau hubungi Client Coordinator."
+                else:
+                    resp_msg = f"Kode OTP telah diproses untuk email {email_to_use}."
 
                 self._send_json_response({
                     "status": "ok",
-                    "message": f"Kode OTP verifikasi telah dikirimkan ke WhatsApp +{phone_to_use}." if phone_to_use else f"Kode OTP telah dikirimkan ke email {email_to_use}.",
+                    "message": resp_msg,
                     "key": otp_key,
                     "phone": phone_to_use,
                     "email": email_to_use,
                     "nama": nama_to_use,
-                    "ttl": 300
+                    "ttl": 300,
+                    "otp_delivered": is_meta_success
                 })
                 return
             except Exception as e:

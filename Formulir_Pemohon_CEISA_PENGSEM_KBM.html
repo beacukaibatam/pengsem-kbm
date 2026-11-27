@@ -2862,14 +2862,19 @@
                                 <button type="button" id="btnLandingRegResend" onclick="submitLandingRegisterOtp()" disabled style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; text-decoration:underline;">Kirim Ulang WA</button>
                             </div>
 
-                            <!-- BANTUAN MANUAL JIKA WA TIDAK MASUK (Bukan jalur OTP email palsu) -->
+                            <!-- BANTUAN MANUAL JIKA WA TIDAK MASUK (Buka Jendela 24 Jam Bot WA + CC) -->
                             <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px; margin-bottom:16px; text-align:center;">
-                                <div style="font-size:0.74rem; color:#0369A1; font-weight:600; margin-bottom:6px;">
-                                    ⚠️ Tidak menerima kode di WhatsApp?
+                                <div style="font-size:0.74rem; color:#0369A1; font-weight:600; margin-bottom:7px;">
+                                    ⚠️ Tidak menerima kode di WhatsApp? Sapa Bot WA dulu lalu klik Kirim Ulang WA:
                                 </div>
-                                <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnLandingSendEmailOtp" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:8px 14px; font-size:0.78rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
-                                    📞 Hubungi Client Coordinator
-                                </a>
+                                <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                    <a href="https://wa.me/6285144901346?text=Halo%20Bot%20PENGSEM%20KBM" target="_blank" rel="noopener" style="background:#16A34A; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        💬 Sapa Bot WA
+                                    </a>
+                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnLandingSendEmailOtp" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        📞 Client Coordinator
+                                    </a>
+                                </div>
                             </div>
 
                             <button type="button" id="btnLandingRegVerify" onclick="submitLandingRegisterVerifyOtp()" style="width:100%; padding:11px; background:var(--primary); color:#FFFFFF; border:none; border-radius:7px; font-size:0.88rem; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0,68,124,0.3); margin-bottom:10px;">
@@ -2929,14 +2934,19 @@
                                 <button type="button" id="btnForgotResend" onclick="submitForgotPasswordRequestOtp()" disabled style="background:none; border:none; color:#005FAC; font-weight:700; cursor:pointer; text-decoration:underline;">Kirim Ulang WA</button>
                             </div>
 
-                            <!-- Bantuan Manual (Bukan jalur OTP email palsu) -->
+                            <!-- Bantuan Manual (Buka Jendela 24 Jam Bot WA + CC) -->
                             <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:9px 12px; margin-bottom:16px; text-align:center;">
-                                <div style="font-size:0.72rem; color:#0369A1; font-weight:600; margin-bottom:5px;">
-                                    ⚠️ Tidak menerima kode di WhatsApp?
+                                <div style="font-size:0.72rem; color:#0369A1; font-weight:600; margin-bottom:6px;">
+                                    ⚠️ Tidak menerima kode di WhatsApp? Sapa Bot WA dulu lalu klik Kirim Ulang WA:
                                 </div>
-                                <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnForgotEmailFallback" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 12px; font-size:0.76rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
-                                    📞 Hubungi Client Coordinator
-                                </a>
+                                <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                    <a href="https://wa.me/6285144901346?text=Halo%20Bot%20PENGSEM%20KBM" target="_blank" rel="noopener" style="background:#16A34A; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        💬 Sapa Bot WA
+                                    </a>
+                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnForgotEmailFallback" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        📞 Client Coordinator
+                                    </a>
+                                </div>
                             </div>
 
                             <!-- Input Kata Sandi Baru -->
@@ -11387,7 +11397,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
                         }
                     }
 
-                    showLandingAlert(data.message, 'success');
+                    showLandingAlert(data.message, data.otp_delivered === false ? 'error' : 'success');
                     startLandingTimer('forgotTimerDisplay', 'btnForgotResend', data.ttl || 300);
                     document.getElementById('forgotOtpCode').value = '';
                     setTimeout(() => {
