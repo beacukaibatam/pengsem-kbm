@@ -2277,17 +2277,17 @@ def save_db_nadine_config(data):
         return False
 
 
-def send_email_otp(to_email, otp_code, nama="Pemohon KBM Batam"):
-    """Mengirim kode OTP pendaftaran pabean ke email pemohon menggunakan gmail CLI atau fallback."""
+def send_email_otp(to_email, otp_code, nama="Pemohon KBM Batam", purpose="Pendaftaran Akun"):
+    """Mengirim kode OTP pendaftaran pabean ke email pemohon menggunakan SMTP TLS atau fallback."""
     import subprocess
     import shutil
     
-    subject = f"🏛️ [KPU Bea Cukai Batam] Kode Verifikasi OTP Registrasi Akun: {otp_code}"
+    subject = f"🏛️ [KPU Bea Cukai Batam] Kode Verifikasi OTP {purpose}: {otp_code}"
     body = (
         f"🏛️ KPU BEA DAN CUKAI TIPE B BATAM\n"
         f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
         f"Halo Bapak/Ibu {nama},\n\n"
-        f"Berikut adalah Kode Verifikasi (OTP) untuk pendaftaran akun portal Anda:\n\n"
+        f"Berikut adalah Kode Verifikasi (OTP) untuk {purpose} portal Anda:\n\n"
         f"👉  {otp_code}  👈\n\n"
         f"Kode ini berlaku selama 5 menit. Mohon tidak memberikan kode ini kepada siapapun demi keamanan data Anda.\n\n"
         f"Jika Anda tidak merasa melakukan pendaftaran ini, abaikan email ini.\n\n"
@@ -2856,13 +2856,32 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
                 is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline')) and ('messages' in meta_res or meta_res.get('status') == 'success')
 
+                # Dual-Delivery: kirimkan juga secara otomatis ke email pemohon jika email valid
+                email_res = None
+                if email and '@' in email:
+                    try:
+                        email_res = send_email_otp(email, otp_code, nama, purpose="Pendaftaran Akun")
+                        print(f"[+] OTP pendaftaran otomatis dikirimkan ke email {email}: {email_res}")
+                    except Exception as e_em:
+                        print(f"[!] Gagal auto-send OTP pendaftaran ke email {email}: {e_em}")
+
+                is_email_success = isinstance(email_res, dict) and email_res.get('status') == 'ok' and email_res.get('method') in ('smtp_tls', 'gmail_cli')
+                is_any_delivered = is_meta_success or is_email_success
+
+                msg_detail = f"Kode OTP 6-digit berhasil diproses untuk nomor +{phone}"
+                if is_email_success:
+                    msg_detail += f" dan email {email}"
+                msg_detail += "."
+
                 self._send_json_response({
                     "status": "ok",
-                    "message": f"Kode OTP 6-digit berhasil diproses untuk nomor +{phone}.",
+                    "message": msg_detail,
                     "phone": phone,
                     "email": email,
                     "ttl": 300,
-                    "otp_delivered": is_meta_success
+                    "otp_delivered": is_any_delivered,
+                    "wa_delivered": is_meta_success,
+                    "email_delivered": is_email_success
                 })
                 return
             except Exception as e:
@@ -3233,10 +3252,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     print(f"[+] OTP Reset Password diproses untuk WhatsApp {phone_to_use} (Kode: {otp_code}) - Meta: {meta_res}")
 
                 is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
-                if phone_to_use and is_meta_success:
+
+                # Dual-Delivery: kirimkan juga ke email jika email terdaftar
+                email_res = None
+                if email_to_use and '@' in email_to_use:
+                    try:
+                        email_res = send_email_otp(email_to_use, otp_code, nama_to_use, purpose="Reset Kata Sandi")
+                        print(f"[+] OTP Reset Password otomatis dikirimkan ke email {email_to_use}: {email_res}")
+                    except Exception as e_em:
+                        print(f"[!] Gagal auto-send OTP Reset ke email {email_to_use}: {e_em}")
+
+                is_email_success = isinstance(email_res, dict) and email_res.get('status') == 'ok' and email_res.get('method') in ('smtp_tls', 'gmail_cli')
+                is_any_delivered = is_meta_success or is_email_success
+
+                if is_meta_success and is_email_success:
+                    resp_msg = f"Kode OTP verifikasi telah dikirimkan ke WhatsApp +{phone_to_use} dan email {email_to_use}."
+                elif is_meta_success:
                     resp_msg = f"Kode OTP verifikasi telah dikirimkan ke WhatsApp +{phone_to_use}."
+                elif is_email_success:
+                    resp_msg = f"Kode OTP verifikasi telah dikirimkan ke email {email_to_use}."
                 elif phone_to_use:
-                    resp_msg = f"Kode OTP untuk +{phone_to_use} belum berhasil terkirim dari WhatsApp Meta. Silakan klik 'Sapa Bot WA' lalu 'Kirim Ulang WA', atau hubungi Client Coordinator."
+                    resp_msg = f"Kode OTP untuk +{phone_to_use} belum berhasil terkirim dari WhatsApp Meta. Silakan klik 'Sapa Bot WA' lalu 'Kirim Ulang WA', atau gunakan opsi 'Kirim ke Email'."
                 else:
                     resp_msg = f"Kode OTP telah diproses untuk email {email_to_use}."
 
@@ -3248,7 +3284,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "email": email_to_use,
                     "nama": nama_to_use,
                     "ttl": 300,
-                    "otp_delivered": is_meta_success
+                    "otp_delivered": is_any_delivered,
+                    "wa_delivered": is_meta_success,
+                    "email_delivered": is_email_success
                 })
                 return
             except Exception as e:

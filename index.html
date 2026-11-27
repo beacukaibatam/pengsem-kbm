@@ -3345,17 +3345,20 @@
                                 <button type="button" id="btnLandingRegResend" onclick="submitLandingRegisterOtp()" disabled style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; text-decoration:underline;">Kirim Ulang WA</button>
                             </div>
 
-                            <!-- BANTUAN MANUAL JIKA WA TIDAK MASUK (Buka Jendela 24 Jam Bot WA + CC) -->
+                            <!-- BANTUAN JIKA WA TIDAK MASUK (Buka Jendela 24 Jam Bot WA + Kirim Email + Petugas) -->
                             <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px; margin-bottom:16px; text-align:center;">
                                 <div style="font-size:0.74rem; color:#0369A1; font-weight:600; margin-bottom:7px;">
-                                    ⚠️ Tidak menerima kode di WhatsApp? Sapa Bot WA dulu lalu klik Kirim Ulang WA:
+                                    ⚠️ Belum menerima kode di WhatsApp? Pilih kirim ke Email atau sapa Bot WA:
                                 </div>
                                 <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                    <button type="button" id="btnLandingSendEmailOtp" onclick="submitLandingRegisterRequestEmailOtp()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                                        ✉️ Kirim ke Email
+                                    </button>
                                     <a href="https://wa.me/6285144901346?text=Halo%20Bot%20PENGSEM%20KBM" target="_blank" rel="noopener" style="background:#16A34A; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
                                         💬 Sapa Bot WA
                                     </a>
-                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnLandingSendEmailOtp" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
-                                        📞 Client Coordinator
+                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" style="background:#475569; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        📞 Petugas
                                     </a>
                                 </div>
                             </div>
@@ -3417,17 +3420,20 @@
                                 <button type="button" id="btnForgotResend" onclick="submitForgotPasswordRequestOtp()" disabled style="background:none; border:none; color:#005FAC; font-weight:700; cursor:pointer; text-decoration:underline;">Kirim Ulang WA</button>
                             </div>
 
-                            <!-- Bantuan Manual (Buka Jendela 24 Jam Bot WA + CC) -->
+                            <!-- Bantuan (Buka Jendela 24 Jam Bot WA + Kirim Email + Petugas) -->
                             <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:9px 12px; margin-bottom:16px; text-align:center;">
                                 <div style="font-size:0.72rem; color:#0369A1; font-weight:600; margin-bottom:6px;">
-                                    ⚠️ Tidak menerima kode di WhatsApp? Sapa Bot WA dulu lalu klik Kirim Ulang WA:
+                                    ⚠️ Belum menerima kode di WhatsApp? Pilih kirim ke Email atau sapa Bot WA:
                                 </div>
                                 <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                    <button type="button" id="btnForgotSendEmailOtp" onclick="submitForgotPasswordRequestEmailOtp()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                                        ✉️ Kirim ke Email
+                                    </button>
                                     <a href="https://wa.me/6285144901346?text=Halo%20Bot%20PENGSEM%20KBM" target="_blank" rel="noopener" style="background:#16A34A; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
                                         💬 Sapa Bot WA
                                     </a>
-                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" id="btnForgotEmailFallback" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
-                                        📞 Client Coordinator
+                                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener" style="background:#475569; color:#FFFFFF; border:none; border-radius:6px; padding:7px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-decoration:none;">
+                                        📞 Petugas
                                     </a>
                                 </div>
                             </div>
@@ -12764,7 +12770,11 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
                     // Kode OTP verifikasi pendaftaran
                     document.getElementById('landingRegOtpCode').value = '';
                     if (data.otp_delivered === false) {
-                        showLandingAlert(`⚠️ Pengiriman WhatsApp sedang mengalami gangguan. Silakan coba "Kirim Ulang WA" sesaat lagi, atau hubungi Client Coordinator di 0851-5814-8448 untuk verifikasi manual.`, 'error');
+                        showLandingAlert(`⚠️ Pengiriman WhatsApp sedang mengalami gangguan. Silakan klik tombol "✉️ Kirim ke Email" di bawah, atau coba "Kirim Ulang WA".`, 'error');
+                    } else if (data.email_delivered && data.wa_delivered) {
+                        showLandingAlert(`Kode OTP 6-Digit telah dikirimkan ke WhatsApp (+${data.phone}) dan Email (${data.email}). Silakan periksa pesan masuk Anda.`, 'success');
+                    } else if (data.email_delivered) {
+                        showLandingAlert(`Kode OTP 6-Digit telah dikirimkan ke Email: ${data.email}. Silakan periksa kotak masuk email Anda.`, 'success');
                     } else {
                         showLandingAlert(`Kode OTP 6-Digit telah dikirimkan ke WhatsApp: +${data.phone}. Silakan periksa pesan masuk WhatsApp Anda.`, 'success');
                     }
@@ -12779,6 +12789,57 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Kirim Kode OTP WhatsApp';
+            }
+        }
+
+        async function submitLandingRegisterRequestEmailOtp() {
+            let phone = landingPendingPhone || '';
+            try { phone = phone || sessionStorage.getItem('kbm_reg_pending_phone') || ''; } catch (e) {}
+            if (!phone) {
+                phone = (document.getElementById('landingRegPhone')?.value || '').trim();
+            }
+            let email = landingPendingEmail || '';
+            try { email = email || sessionStorage.getItem('kbm_reg_pending_email') || ''; } catch (e) {}
+            if (!email) {
+                email = (document.getElementById('landingRegEmail')?.value || '').trim();
+            }
+
+            if (!phone) {
+                showLandingAlert('Nomor WhatsApp pendaftaran tidak ditemukan. Harap ulangi proses registrasi.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnLandingSendEmailOtp');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Mengirim...';
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/auth/request-email-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, email })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'ok') {
+                    showLandingAlert(`✉️ ${data.message || 'Kode OTP telah dikirimkan ke email Anda.'}`, 'success');
+                    if (data.email) {
+                        const targetEl = document.getElementById('landingRegEmailTarget');
+                        if (targetEl) targetEl.textContent = data.email;
+                        const noticeEl = document.getElementById('landingRegEmailNotice');
+                        if (noticeEl) noticeEl.style.display = 'block';
+                    }
+                } else {
+                    showLandingAlert(data.message || 'Gagal mengirimkan OTP ke email.', 'error');
+                }
+            } catch (e) {
+                showLandingAlert('Terjadi kesalahan pengiriman email: ' + e.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '✉️ Kirim ke Email';
+                }
             }
         }
 
@@ -12999,6 +13060,42 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Kirim Kode OTP Verifikasi ➔';
+            }
+        }
+
+        async function submitForgotPasswordRequestEmailOtp() {
+            const key = forgotPendingKey || '';
+            const email = forgotPendingEmail || '';
+            if (!key) {
+                showLandingAlert('Sesi lupa kata sandi tidak ditemukan. Silakan masukkan nomor WA/email kembali.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnForgotSendEmailOtp');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Mengirim...';
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/auth/reset-password-request-email-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, email })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'ok') {
+                    showLandingAlert(`✉️ ${data.message || 'Kode OTP reset kata sandi telah dikirimkan ke email Anda.'}`, 'success');
+                } else {
+                    showLandingAlert(data.message || 'Gagal mengirimkan OTP reset ke email.', 'error');
+                }
+            } catch (e) {
+                showLandingAlert('Terjadi kesalahan pengiriman email: ' + e.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '✉️ Kirim ke Email';
+                }
             }
         }
 
