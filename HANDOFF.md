@@ -77,6 +77,20 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Transisi Bilah Stepper ke `position: fixed` (Diam Total Sejak Pixel Scroll Ke-0 Tanpa Fase Berjalan)** (Antigravity — 27 Nov 2026 20:25 WIB)
+  1. **Akar Masalah Fase Berjalan Sticky**:
+     - `position: sticky` secara native tetap bergerak 1:1 bersama dokumen sampai batas `top` tercapai (scroll awal puluhan piksel). Pengguna menghendaki stepper diam total permanen persis seperti `.app-header`.
+  2. **Implementasi `position: fixed` & Kompensasi Dokumen**:
+     - `.stepper-flat-bar` diubah menjadi `position: fixed; top: var(--header-height, 86px); left: 0; width: 100%; z-index: 950; box-sizing: border-box;`.
+     - Ditambahkan variabel dinamis `--stepper-height: 72px;` yang diukur otomatis oleh `updateHeaderHeight()` & `syncHeaderHeight()` menggunakan `Math.round(rect.bottom)` untuk presisi subpixel.
+     - Ditambahkan kompensasi padding konten formulir: `#viewFormulir .main-container { padding-top: calc(var(--stepper-height, 72px) + 14px) !important; }` (dan versi mobile dengan `calc(var(--stepper-height, 68px) + 10px)`). Konten form (judul "Tahap 1...", bilah 4 tahap, dsb.) tidak ketiban/tertutup sama sekali saat `scrollY = 0`.
+     - Di mobile (`@media (max-width: 768px)`), stepper menempel rapi pada `top: calc(var(--header-height, 55px) - 2px) !important;` dengan padding ringkas (`6px 8px`) dan `min-width: 0 !important;` pada kotak stepper agar seluruh Step 1, 2, dan 3 muat proporsional tanpa terpotong di tepi kanan.
+  3. **Verifikasi Visual Empiris di Browser Lokal (Playwright Browser Subagent)**:
+     - **Desktop (`1354x877`)**: Di `scrollY = 0`, header bottom `79.77px`, stepper `y = 80px` (gap `0.23px` / visual flush 0px), `#page-1` mulai di `y = 165px` (clearance `14.38px`, nol overlap). Di scroll `49px` & `450px`, stepper **DIAM TOTAL 0px pergerakan** (`y = 80px`), konten meluncur mulus di bawahnya.
+     - **Mobile (`390x844`)**: Di `scrollY = 0`, `50px`, dan `300px`, stepper **DIAM TOTAL 0px pergerakan** di `y = 53px` (tucked 2px di bawah bottom gold border header 55px) dengan **ZERO GAP (0px celah) & ZERO PEEKING**! Konten form mulai di `y = 201px` (clearance aman), meluncur mulus di bawah stepper.
+     - Screenshot tersimpan: `fixed_stepper_desktop_scroll0.png`, `fixed_stepper_desktop_scroll50.png`, `fixed_stepper_desktop_scroll450.png`, `fixed_stepper_mobile_scroll0.png`, `fixed_stepper_mobile_scroll50.png`, `fixed_stepper_mobile_scroll300.png`.
+  4. **Kepatuhan Protokol**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, JS syntax valid (`node --check`).
+
 - **Bilah Stepper Sticky di Bawah Header & Gambar Pratinjau Dokumen Mengisi Penuh Horizontal Tanpa Celah Abu-Abu** (Antigravity — 27 Nov 2026 20:00 WIB)
   1. **Bilah Stepper Sticky (`.stepper-flat-bar`)**:
      - Ditambahkan class CSS `.stepper-flat-bar` dengan `position: sticky; top: var(--header-height, 86px); z-index: 950; background: #FFFFFF; border-bottom: 1.5px solid #E2E8F0; box-shadow: 0 2px 6px rgba(0,0,0,0.05);`.
