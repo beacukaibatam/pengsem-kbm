@@ -1221,6 +1221,24 @@
             color: #475569;
         }
 
+        .popup-btn-cancel {
+            flex: 1;
+            padding: 12px 20px;
+            background: #F1F5F9;
+            color: #334155;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 2;
+        }
+        .popup-btn-cancel:hover {
+            background: #E2E8F0;
+        }
+
     
         /* ================= UNIFIED PORTAL NAVIGATION (FLAT & MINIMALIST) ================= */
         .portal-nav-bar {
@@ -4464,6 +4482,26 @@
     </div>
 
     <!-- ================= MODERN POPUP: OOOOPS! KETIDAKSESUAIAN NAMA ================= -->
+    <!-- ================= POPUP KONFIRMASI KELUAR DARI PORTAL ================= -->
+    <div class="modern-popup-overlay" id="modalLogoutConfirm">
+        <div class="modern-popup-card">
+            <div class="popup-icon-circle success">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </div>
+            <h3 class="popup-title-success" style="font-size:1.2rem;">Keluar dari Portal?</h3>
+            <p class="popup-desc">Apakah Anda yakin ingin keluar dari sesi portal?</p>
+
+            <div style="display:flex; gap:10px; width:100%;">
+                <button type="button" class="popup-btn-cancel" onclick="closeLogoutConfirmModal()">Batal</button>
+                <button type="button" class="popup-btn-success" style="flex:1;" onclick="confirmLogoutAction()">Ya, Keluar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modern-popup-overlay" id="modalNamaMismatch">
         <div class="modern-popup-card">
             <button type="button" class="popup-close-btn" onclick="closeNamaMismatchModal()" title="Tutup">&times;</button>
@@ -12511,8 +12549,18 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
         }
 
         // ================= 4. LOGOUT =================
-        async function handleLogout() {
-            if (!confirm('Apakah Anda yakin ingin keluar dari sesi portal?')) return;
+        function handleLogout() {
+            const modal = document.getElementById('modalLogoutConfirm');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeLogoutConfirmModal() {
+            const modal = document.getElementById('modalLogoutConfirm');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function confirmLogoutAction() {
+            closeLogoutConfirmModal();
             document.body.classList.add('landing-page');
             document.body.style.removeProperty('padding-top');
             document.body.style.paddingTop = '0px';
