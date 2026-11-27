@@ -130,6 +130,28 @@
             box-sizing: border-box !important;
         }
 
+        .btn-logout-header {
+            background: rgba(255, 255, 255, 0.08);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: inherit;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-logout-header:hover {
+            background: #EF4444;
+            border-color: #EF4444;
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+        }
+
         .header-brand-left, .header-brand-right {
             display: flex;
             flex-direction: column;
@@ -2678,20 +2700,20 @@
                 </div>
             </div>
 
-            <!-- SISI KANAN ATAS: Profil Pengguna Aktif (Nama, NIK/NIP, Nomor WA) & Tombol Keluar Flat Solid -->
-            <div id="headerUserProfile" style="display:flex; align-items:center; gap:14px; flex-shrink:0;">
+            <!-- SISI KANAN ATAS: Profil Pengguna Aktif & Tombol Keluar Simple -->
+            <div id="headerUserProfile" style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
                 <div id="headerUserInfoBox" style="display:flex; flex-direction:column; text-align:right; align-items:flex-end;">
                     <div id="headerUserNama" style="font-size:0.86rem; font-weight:800; color:#FFFFFF; line-height:1.2;">Memuat profil...</div>
-                    <div id="headerUserDetail" class="header-user-detail" style="font-size:0.72rem; color:#BAE6FD; font-weight:600; line-height:1.2; margin-top:2px;">Sesi Terverifikasi</div>
-                    <span id="headerRoleBadge" style="display:inline-block; font-size:0.66rem; font-weight:800; padding:2px 8px; border-radius:4px; margin-top:3px; text-transform:uppercase; letter-spacing:0.3px;">Petugas</span>
+                    <div id="headerUserDetail" style="display:none;"></div>
+                    <span id="headerRoleBadge" style="display:inline-block; font-size:0.66rem; font-weight:800; padding:2px 8px; border-radius:4px; margin-top:3px; text-transform:uppercase; letter-spacing:0.3px;">PEMOHON</span>
                 </div>
-                <button type="button" id="btnLogoutPortal" onclick="handleLogout()" style="background:#EF4444; color:#FFFFFF; border:none; border-radius:8px; padding:7px 14px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:background 0.2s;" onmouseover="this.style.background='#DC2626'" onmouseout="this.style.background='#EF4444'" title="Keluar dari Portal">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <button type="button" id="btnLogoutPortal" class="btn-logout-header" onclick="handleLogout()" title="Keluar dari Portal">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                         <polyline points="16 17 21 12 16 7"></polyline>
                         <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
-                    Keluar
+                    <span>Keluar</span>
                 </button>
             </div>
         </div>
@@ -7867,7 +7889,7 @@
                 el.classList.remove('input-error');
                 document.getElementById('tagNikAuto').style.display = 'inline-flex';
                 const headerDet = document.getElementById('headerUserDetail');
-                if (headerDet) {
+                if (headerDet && headerDet.style.display !== 'none' && headerDet.innerText) {
                     headerDet.innerText = headerDet.innerText.replace(/NIK:\s*[^•]+/, 'NIK: ' + data.nik + ' ');
                 }
             }
@@ -11770,9 +11792,8 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
 
             if (role === 'pemohon') {
                 namaEl.innerText = user.nama || 'Wajib Pajak Pemohon';
-                let cleanPhone = String(user.phone || '-').replace(/^\+/, '');
-                if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.substring(1);
-                detailEl.innerText = 'NIK: ' + (user.nik || '-') + ' • WA: +' + cleanPhone;
+                detailEl.style.display = 'none';
+                detailEl.innerText = '';
                 if (badgeEl) {
                     badgeEl.innerText = 'PEMOHON';
                     badgeEl.style.background = '#059669';
@@ -11781,6 +11802,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             } else if (ROLE_DEFINITIONS[role]) {
                 const rDef = ROLE_DEFINITIONS[role];
                 namaEl.innerText = user.nama || rDef.title;
+                detailEl.style.display = 'block';
                 detailEl.innerText = (user.nip ? 'NIP: ' + user.nip + ' • ' : '') + rDef.desc;
                 if (badgeEl) {
                     badgeEl.innerText = rDef.badge;
@@ -11789,6 +11811,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
                 }
             } else {
                 namaEl.innerText = user.nama || 'Petugas Bea Cukai';
+                detailEl.style.display = 'block';
                 detailEl.innerText = 'NIP: ' + (user.nip || '-') + ' • Petugas Pabean';
                 if (badgeEl) {
                     badgeEl.innerText = 'PETUGAS PABEAN';
