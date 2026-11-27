@@ -1221,6 +1221,43 @@
             color: #475569;
         }
 
+        /* Modal Konfirmasi Logout: tombol warna khusus (bukan dari .popup-btn-success/error
+           supaya tidak ikut mempengaruhi modal mismatch/format lain yang memakai class sama) */
+        .btn-logout-cancel {
+            flex: 1;
+            padding: 12px 20px;
+            background: #005FAC;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 95, 172, 0.30);
+            transition: all 0.2s ease;
+        }
+        .btn-logout-cancel:hover {
+            background: #004B8C;
+            transform: translateY(-1px);
+        }
+        .btn-logout-yes {
+            flex: 1;
+            padding: 12px 20px;
+            background: #B91C1C;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35);
+            transition: all 0.2s ease;
+        }
+        .btn-logout-yes:hover {
+            background: #991B1B;
+            transform: translateY(-1px);
+        }
+
     
         /* ================= UNIFIED PORTAL NAVIGATION (FLAT & MINIMALIST) ================= */
         .portal-nav-bar {
@@ -4467,18 +4504,18 @@
     <!-- ================= POPUP KONFIRMASI KELUAR DARI PORTAL ================= -->
     <div class="modern-popup-overlay" id="modalLogoutConfirm">
         <div class="modern-popup-card">
-            <div class="popup-icon-circle error">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <div class="popup-icon-circle" style="border:2.5px solid #0F172A; color:#0F172A; box-shadow:none;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
             </div>
-            <h3 class="popup-title-error" style="font-size:1.2rem; margin-bottom:20px;">Yakin?</h3>
+            <h3 style="font-size:1.2rem; margin:0 0 20px 0; font-weight:800; color:#0F172A; letter-spacing:-0.3px;">Lanjutkan Keluar?</h3>
 
             <div style="display:flex; gap:10px; width:100%;">
-                <button type="button" class="popup-btn-success" style="flex:1;" onclick="closeLogoutConfirmModal()">Batal</button>
-                <button type="button" class="popup-btn-error" style="flex:1;" onclick="confirmLogoutAction()">Ya</button>
+                <button type="button" class="btn-logout-cancel" onclick="closeLogoutConfirmModal()">Batal</button>
+                <button type="button" class="btn-logout-yes" onclick="confirmLogoutAction()">Ya</button>
             </div>
         </div>
     </div>
