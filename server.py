@@ -68,27 +68,39 @@ try:
 except Exception:
     pytesseract = None
 
-# Vision AI (Google Gemini Multimodal API)
+# Vision AI (Google Gemini Multimodal API — mendukung multi-key auto-failover)
 import urllib.request
 import urllib.error
 
 def get_gemini_api_keys():
-    """Mendukung multi-key rotation (kunci dipisah koma, titik-koma, atau spasi),
-    dan fallback dari GEMINI_API_KEYS / GEMINI_BACKUP_KEY / GOOGLE_API_KEY."""
-    raw = (
-        os.environ.get('GEMINI_API_KEY', '') or
-        os.environ.get('GEMINI_API_KEYS', '') or
-        os.environ.get('GEMINI_BACKUP_KEY', '') or
-        os.environ.get('GOOGLE_API_KEY', '')
-    )
-    keys = [k.strip() for k in re.split(r'[,;\s]+', raw) if k.strip()]
-    return keys
+    """Mendukung multi-key auto-failover: menerima beberapa key dipisah koma/spasi di GEMINI_API_KEY
+    atau GEMINI_API_KEYS, serta env terpisah GEMINI_API_KEY_2..5 / GEMINI_BACKUP_KEY / GOOGLE_API_KEY."""
+    raw_keys = []
+    for env_name in (
+        'GEMINI_API_KEY', 'GEMINI_API_KEYS',
+        'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GEMINI_API_KEY_4', 'GEMINI_API_KEY_5',
+        'GEMINI_BACKUP_KEY', 'GOOGLE_API_KEY'
+    ):
+        val = (os.environ.get(env_name) or '').strip()
+        if val:
+            for part in re.split(r'[,;\s]+', val):
+                k = part.strip()
+                if k:
+                    raw_keys.append(k)
+    seen = set()
+    ordered = []
+    for k in raw_keys:
+        if k not in seen:
+            seen.add(k)
+            ordered.append(k)
+    return ordered
 
 GEMINI_API_KEYS = get_gemini_api_keys()
 GEMINI_API_KEY = GEMINI_API_KEYS[0] if GEMINI_API_KEYS else ''
+_GEMINI_KEY_COOLDOWN = {}  # key -> timestamp cooldown berakhir (saat 429/403)
 VISION_AI_ENABLED = bool(GEMINI_API_KEYS)
 if VISION_AI_ENABLED:
-    print(f"[+] Vision AI (Google Lens & Multimodal Neural Engine) Aktif dengan {len(GEMINI_API_KEYS)} API Key!")
+    print(f"[+] Vision AI (Google Gemini Multimodal Engine) Aktif dengan {len(GEMINI_API_KEYS)} API Key!")
 
 # QRCode Generator
 try:
@@ -1232,73 +1244,75 @@ def extract_with_vision_ai(image_bytes, target=''):
                 "TUGAS 2: " + prompt_text
             )
 
-        # 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite', DAN 'gemini-2.5-pro'
-        # SEMUA TERBUKTI mati (404 Not Found) saat diuji langsung ke API sungguhan (27 Nov 2026,
-        # 'gemini-2.5-pro' dikonfirmasi 404 belakangan via panggilan nyata saat audit pipeline crop)
-        # — berarti fallback chain ini SUDAH LAMA tidak pernah benar-benar jadi cadangan nyata (cuma
-        # 'gemini-2.5-flash' yang hidup). TIDAK ditambahkan model pengganti tebakan lain di sini
-        # karena tidak ada cara memverifikasi nama model yang valid tanpa kuota API yang masih
-        # tersedia (hasil pencarian web soal nama model Gemini terkini saling bertentangan/tidak
-        # bisa dipercaya). TINDAK LANJUT YANG DISARANKAN (belum dikerjakan): cek daftar model valid
-        # di https://ai.google.dev/gemini-api/docs/models dengan kuota yang masih tersedia, lalu isi
-        # ulang daftar ini dengan model cadangan yang SUDAH TERBUKTI jalan via tes langsung ke API.
-        candidate_models = ['gemini-2.5-flash']
-        api_keys = get_gemini_api_keys() or ([GEMINI_API_KEY] if GEMINI_API_KEY else [])
+        # Daftar model yang SUDAH DIVERIFIKASI LANGSUNG (HTTP 200 OK) via API Google Gemini (27 Nov 2026):
+        # - 'gemini-3-flash-preview' & 'gemini-3.1-flash-lite': verified 200 OK pada API key baru (AQ.*)
+        # - 'gemini-2.5-flash': verified 200 OK pada API key lama (AIzaSy*)
+        # ('gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro' semua 404/sunset)
+        candidate_models = ['gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-2.5-flash']
+        active_keys = get_gemini_api_keys() or ([GEMINI_API_KEY] if GEMINI_API_KEY else [])
+        if not active_keys:
+            return None, ""
 
-        # Retry-with-backoff KHUSUS untuk 429 (Too Many Requests / rate limit per-menit).
-        MAX_429_RETRY = 2
-        RETRY_DELAY_SECONDS = 3.5
+        now_ts = time.time()
+        # Urutkan: key yang tidak sedang cooldown dicoba lebih dulu; key cooldown tetap di akhir sebagai fallback terakhir
+        ready_keys = [k for k in active_keys if _GEMINI_KEY_COOLDOWN.get(k, 0) <= now_ts]
+        cooled_keys = [k for k in active_keys if _GEMINI_KEY_COOLDOWN.get(k, 0) > now_ts]
+        ordered_keys = ready_keys + cooled_keys
 
-        for api_key in api_keys:
-            key_hint = f"...{api_key[-6:]}" if len(api_key) >= 6 else "active-key"
+        payload_bytes = json.dumps({
+            "contents": [{
+                "parts": [{"text": prompt_text}] + image_parts
+            }],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": 0.1
+            }
+        }).encode('utf-8')
+
+        for key_idx, api_key in enumerate(ordered_keys, start=1):
+            key_hint = f"Key#{key_idx}(...{api_key[-6:]})" if len(api_key) >= 6 else f"Key#{key_idx}"
             for model_name in candidate_models:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-                payload = {
-                    "contents": [{
-                        "parts": [{"text": prompt_text}] + image_parts
-                    }],
-                    "generationConfig": {
-                        "responseMimeType": "application/json",
-                        "temperature": 0.1
-                    }
-                }
-                attempt = 0
-                while attempt <= MAX_429_RETRY:
-                    attempt += 1
-                    try:
-                        req = urllib.request.Request(
-                            url,
-                            data=json.dumps(payload).encode('utf-8'),
-                            headers={"Content-Type": "application/json"}
-                        )
-                        with urllib.request.urlopen(req, timeout=25) as resp:
-                            data = json.loads(resp.read().decode('utf-8'))
-                            candidate = data.get('candidates', [{}])[0]
-                            parts = candidate.get('content', {}).get('parts', [{}])
-                            out_text = parts[0].get('text', '{}')
-                            clean_text = out_text.strip()
-                            if '```' in clean_text:
-                                clean_text = re.sub(r'^```(?:json)?\s*', '', clean_text, flags=re.IGNORECASE)
-                                clean_text = re.sub(r'\s*```$', '', clean_text)
-                            s_idx = clean_text.find('{')
-                            e_idx = clean_text.rfind('}')
-                            if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
-                                clean_text = clean_text[s_idx:e_idx+1]
-                            parsed = json.loads(clean_text)
-                            if isinstance(parsed, list) and parsed:
-                                parsed = parsed[0]
-                            print(f"[+] Vision AI sukses menggunakan model: {model_name} (key: {key_hint})")
-                            return parsed, out_text
-                    except urllib.error.HTTPError as e_http:
-                        if e_http.code == 429 and attempt <= MAX_429_RETRY:
-                            print(f"[!] Vision AI Model {model_name} (key: {key_hint}) kena rate-limit (429), percobaan ke-{attempt}/{MAX_429_RETRY}, tunggu {RETRY_DELAY_SECONDS}s...")
-                            time.sleep(RETRY_DELAY_SECONDS)
-                            continue
-                        print(f"[!] Vision AI Model {model_name} (key: {key_hint}) HTTP {e_http.code}: {e_http.reason}, beralih kandidat...")
+                try:
+                    req = urllib.request.Request(
+                        url,
+                        data=payload_bytes,
+                        headers={"Content-Type": "application/json"}
+                    )
+                    with urllib.request.urlopen(req, timeout=25) as resp:
+                        data = json.loads(resp.read().decode('utf-8'))
+                        candidate = data.get('candidates', [{}])[0]
+                        parts = candidate.get('content', {}).get('parts', [{}])
+                        out_text = parts[0].get('text', '{}')
+                        clean_text = out_text.strip()
+                        if '```' in clean_text:
+                            clean_text = re.sub(r'^```(?:json)?\s*', '', clean_text, flags=re.IGNORECASE)
+                            clean_text = re.sub(r'\s*```$', '', clean_text)
+                        s_idx = clean_text.find('{')
+                        e_idx = clean_text.rfind('}')
+                        if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
+                            clean_text = clean_text[s_idx:e_idx+1]
+                        parsed = json.loads(clean_text)
+                        if isinstance(parsed, list) and parsed:
+                            parsed = parsed[0]
+                        _GEMINI_KEY_COOLDOWN.pop(api_key, None)
+                        print(f"[+] Vision AI sukses menggunakan model: {model_name} ({key_hint})")
+                        return parsed, out_text
+                except urllib.error.HTTPError as he:
+                    if he.code == 429:
+                        # Kuota/rate-limit habis pada key ini -> istirahatkan 120 detik & langsung pindah ke key berikutnya
+                        _GEMINI_KEY_COOLDOWN[api_key] = time.time() + 120
+                        print(f"[!] Vision AI {key_hint} ({model_name}) kena 429 (kuota/limit), otomatis pindah ke API key cadangan...")
                         break
-                    except Exception as e_model:
-                        print(f"[!] Vision AI Model {model_name} (key: {key_hint}) error: {e_model}, mencoba fallback berikutnya...")
+                    if he.code in (401, 403):
+                        _GEMINI_KEY_COOLDOWN[api_key] = time.time() + 300
+                        print(f"[!] Vision AI {key_hint} ditolak HTTP {he.code}, otomatis pindah ke API key cadangan...")
                         break
+                    print(f"[!] Vision AI {key_hint} model {model_name} HTTP {he.code}, mencoba model berikutnya...")
+                    continue
+                except Exception as e_model:
+                    print(f"[!] Vision AI {key_hint} model {model_name} error: {e_model}, mencoba fallback berikutnya...")
+                    continue
 
         return None, ""
     except Exception as e:
