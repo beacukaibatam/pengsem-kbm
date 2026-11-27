@@ -523,12 +523,15 @@
             min-width: 42px;
             text-align: center;
         }
-        .preview-box img, .car-photo-card img {
+        /* .preview-box img TIDAK dimasukkan di sini (lihat baris ~81 & ~438) — HARUS tetap
+           pointer-events:none, itu akar fix bug scroll trackpad macet. Klik-untuk-zoom pada
+           gambar dokumen dokumen dipakai via tombol kaca-pembesar (.preview-zoom-btn) saja. */
+        .car-photo-card img {
             cursor: zoom-in !important;
             pointer-events: auto !important;
             transition: transform 0.15s ease, filter 0.15s ease;
         }
-        .preview-box img:hover, .car-photo-card img:hover {
+        .car-photo-card img:hover {
             transform: scale(1.02);
             filter: brightness(1.04);
         }
@@ -5925,9 +5928,12 @@
                 }
             });
 
-            // Klik langsung pada gambar preview (.preview-box img atau .car-photo-card img) membuka lightbox
+            // Klik langsung pada gambar foto kendaraan (.car-photo-card img) membuka lightbox.
+            // SENGAJA TIDAK termasuk .preview-box img (dokumen KTP/NPWP/STNK/BPKB) — gambar itu
+            // WAJIB tetap pointer-events:none (lihat catatan di CSS) supaya tidak mengulang bug
+            // scroll trackpad macet; aksesnya lewat tombol kaca-pembesar (.preview-zoom-btn) saja.
             document.addEventListener('click', function(e) {
-                const img = e.target.closest('.preview-box img, .car-photo-card img');
+                const img = e.target.closest('.car-photo-card img');
                 if (img && img.src && !img.src.endsWith('/') && img.src !== window.location.href && img.style.display !== 'none') {
                     openImageLightbox(img.src, img.id);
                 }
