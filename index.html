@@ -4094,12 +4094,17 @@
                     <input type="text" id="kbm_merek" class="form-input" placeholder="Contoh: DAIHATSU AYLA 1.0 M MT" oninput="syncValues()">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="kbm_tahun_warna">
-                        Tahun &amp; Warna
+                    <label class="form-label" for="kbm_tahun">
+                        Tahun Pembuatan
                         <span class="tag-auto" id="tagTahunWarnaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
                     </label>
-                    <input type="text" id="kbm_tahun_warna" class="form-input" placeholder="Contoh: 2014 / HITAM METALIK" oninput="syncValues()">
+                    <input type="text" id="kbm_tahun" class="form-input mono" placeholder="Contoh: 2014" inputmode="numeric" maxlength="4" oninput="syncValues()">
                 </div>
+                <div class="form-group">
+                    <label class="form-label" for="kbm_warna">Warna Kendaraan</label>
+                    <input type="text" id="kbm_warna" class="form-input" placeholder="Contoh: HITAM METALIK" oninput="syncValues()">
+                </div>
+                <input type="hidden" id="kbm_tahun_warna" value="">
                 <div class="form-group">
                     <label class="form-label" for="kbm_norangka">
                         Nomor Rangka (VIN)
@@ -5009,6 +5014,18 @@
                             <div style="color:var(--text-muted); font-size:0.70rem;">Nomor Rangka</div>
                             <div class="mono" style="font-size:0.74rem; font-weight:700;" id="dNoRangka">-</div>
                         </div>
+                        <div>
+                            <div style="color:var(--text-muted); font-size:0.70rem;">Nomor Mesin</div>
+                            <div class="mono" style="font-size:0.74rem; font-weight:700;" id="dNoMesin">-</div>
+                        </div>
+                        <div>
+                            <div style="color:var(--text-muted); font-size:0.70rem;">Nomor STNK</div>
+                            <div class="mono" style="font-size:0.74rem; font-weight:700;" id="dNoStnk">-</div>
+                        </div>
+                        <div>
+                            <div style="color:var(--text-muted); font-size:0.70rem;">Nomor BPKB / Surat Leasing</div>
+                            <div class="mono" style="font-size:0.74rem; font-weight:700;" id="dNoBpkb">-</div>
+                        </div>
                         <div style="grid-column: span 2;">
                             <div style="color:var(--text-muted); font-size:0.70rem;">Pelabuhan Tujuan &amp; Keperluan</div>
                             <div id="dTujuanKeperluan" style="font-weight:700;">-</div>
@@ -5405,7 +5422,8 @@
                 checkField('kbm_nostnk', 'Nomor STNK Kendaraan');
                 checkField('kbm_nobpkb', 'Nomor BPKB / Surat Leasing');
                 checkField('kbm_merek', 'Merek & Tipe Kendaraan');
-                checkField('kbm_tahun_warna', 'Tahun Pembuatan & Warna Kendaraan');
+                checkField('kbm_tahun', 'Tahun Pembuatan Kendaraan');
+                checkField('kbm_warna', 'Warna Kendaraan');
                 checkField('kbm_norangka', 'Nomor Rangka Kendaraan (VIN)');
                 checkField('kbm_nomesin', 'Nomor Mesin Kendaraan');
 
@@ -6117,7 +6135,7 @@
             if (!files || files.length === 0) return;
 
             // Reset field sebelum pemindaian baru
-            ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'pemohon_alamat', 'kbm_nopol', 'kbm_nostnk', 'kbm_nobpkb', 'kbm_merek', 'kbm_tahun_warna', 'kbm_norangka', 'kbm_nomesin', 'kbm_njkb'].forEach(id => {
+            ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'pemohon_alamat', 'kbm_nopol', 'kbm_nostnk', 'kbm_nobpkb', 'kbm_merek', 'kbm_tahun_warna', 'kbm_tahun', 'kbm_warna', 'kbm_norangka', 'kbm_nomesin', 'kbm_njkb'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
@@ -6315,19 +6333,7 @@
                 document.getElementById('kbm_merek').classList.add('filled');
                 document.getElementById('tagMerekAuto').style.display = 'inline-flex';
             }
-            if (data.tahun || data.warna || data.tahun_warna) {
-                let tw = data.tahun_warna || '';
-                if (!tw) {
-                    const t = data.tahun || '';
-                    const w = data.warna || '';
-                    tw = (t && w) ? `${t} / ${w}` : (t || w);
-                }
-                if (tw) {
-                    document.getElementById('kbm_tahun_warna').value = tw;
-                    document.getElementById('kbm_tahun_warna').classList.add('filled');
-                    document.getElementById('tagTahunWarnaAuto').style.display = 'inline-flex';
-                }
-            }
+            applyTahunWarnaFromOcr(data, false);
             if (data.no_rangka || data.norangka) {
                 document.getElementById('kbm_norangka').value = data.no_rangka || data.norangka;
                 document.getElementById('kbm_norangka').classList.add('filled');
@@ -6657,38 +6663,53 @@
             const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf');
 
             const onImageReady = function(rawImageDataUrl, rawPdfDataUrlForOcr) {
-                // Jalankan Auto-Crop Cerdas untuk memotong latar/meja/lingkungan luar
-                autoCropDocument(rawImageDataUrl, target, function(croppedDataUrl) {
-                    // Validasi Warna pada gambar yang sudah dicrop
-                    validateDocumentColor(croppedDataUrl, function(res) {
+                const isMainOrExtra = mainTargets.includes(target) || isOwnershipExtra;
+
+                if (isMainOrExtra) {
+                    // PENTING: dokumen utama (KTP/NPWP/BPKB/STNK) TIDAK dipotong di klien lebih
+                    // dulu lagi di sini. Gambar ASLI (utuh dengan latar) dikirim langsung ke
+                    // runRealOCR() -> server, supaya OpenCV perspective warp & Gemini Vision
+                    // doc_bbox punya konteks penuh foto untuk mendeteksi 4 sudut kartu secara
+                    // akurat. Memotong di klien dulu (heuristik kecerahan, axis-aligned saja,
+                    // tidak tahan rotasi) lalu membiarkan server memotong ULANG di atas hasil
+                    // potongan yang sudah janggal itu adalah sebab utama hasil akhir "mereng"/
+                    // miring & teks salah baca yang dilaporkan user — lihat resolveBestCrop()
+                    // yang sekarang menjamin HANYA SATU metode crop yang dipakai, tidak ditumpuk.
+                    validateDocumentColor(rawImageDataUrl, function(res) {
                         if (!res.isColor) {
                             showColorRejectionAlert(docLabels[target] || (isOwnershipExtra ? 'Lembar Tambahan Dokumen Kepemilikan' : 'Dokumen'), target);
                             return;
                         }
+                        runRealOCR(target, rawImageDataUrl, rawPdfDataUrlForOcr || null);
+                    });
+                    return;
+                }
 
-                        // Jika dokumen utama (KTP, NPWP, BPKB, STNK 1 & 2) atau halaman tambahan BPKB/Leasing, jalankan OCR & update preview
-                        if (mainTargets.includes(target) || isOwnershipExtra) {
-                            runRealOCR(target, croppedDataUrl, rawPdfDataUrlForOcr || null);
-                        } else {
-                            // Dokumen pendukung
-                            supportingDocsUploaded[target] = true;
-                            const previewMap = {
-                                'bukuNikah': { box: 'previewBukuNikahBox', img: 'imgBukuNikahPreview' },
-                                'ktpPasangan': { box: 'previewKtpPasanganBox', img: 'imgKtpPasanganPreview' },
-                                'kwitansi': { box: 'previewKwitansiBox', img: 'imgKwitansiPreview' },
-                                'ktpPenjual': { box: 'previewKtpPenjualBox', img: 'imgKtpPenjualPreview' },
-                                'suratSewa': { box: 'previewSuratSewaBox', img: 'imgSuratSewaPreview' },
-                                'ktpRental': { box: 'previewKtpRentalBox', img: 'imgKtpRentalPreview' },
-                                'suratKuasa': { box: 'previewSuratKuasaBox', img: 'imgSuratKuasaPreview' }
-                            };
-                            const p = previewMap[target];
-                            if (p) {
-                                const box = document.getElementById(p.box);
-                                const img = document.getElementById(p.img);
-                                if (box && img) {
-                                    img.src = croppedDataUrl;
-                                    box.style.display = 'block';
-                                }
+                // Dokumen pendukung (buku nikah, kwitansi, dll.) — tidak ada proses crop server
+                // untuk jenis ini, tetap pakai auto-crop heuristik klien seperti sebelumnya.
+                autoCropDocument(rawImageDataUrl, target, function(croppedDataUrl) {
+                    validateDocumentColor(croppedDataUrl, function(res) {
+                        if (!res.isColor) {
+                            showColorRejectionAlert(docLabels[target] || 'Dokumen', target);
+                            return;
+                        }
+                        supportingDocsUploaded[target] = true;
+                        const previewMap = {
+                            'bukuNikah': { box: 'previewBukuNikahBox', img: 'imgBukuNikahPreview' },
+                            'ktpPasangan': { box: 'previewKtpPasanganBox', img: 'imgKtpPasanganPreview' },
+                            'kwitansi': { box: 'previewKwitansiBox', img: 'imgKwitansiPreview' },
+                            'ktpPenjual': { box: 'previewKtpPenjualBox', img: 'imgKtpPenjualPreview' },
+                            'suratSewa': { box: 'previewSuratSewaBox', img: 'imgSuratSewaPreview' },
+                            'ktpRental': { box: 'previewKtpRentalBox', img: 'imgKtpRentalPreview' },
+                            'suratKuasa': { box: 'previewSuratKuasaBox', img: 'imgSuratKuasaPreview' }
+                        };
+                        const p = previewMap[target];
+                        if (p) {
+                            const box = document.getElementById(p.box);
+                            const img = document.getElementById(p.img);
+                            if (box && img) {
+                                img.src = croppedDataUrl;
+                                box.style.display = 'block';
                             }
                         }
                     });
@@ -7015,8 +7036,13 @@
             if (ocrToken) ocrHeaders['Authorization'] = 'Bearer ' + ocrToken;
 
             let serverCroppedImage = null;
+            let serverDocBbox = null;
 
-            // Percobaan 1 & Auto-Retry 1x jika server sedang cold start (Render bangun) atau transient network error
+            // Percobaan 1 & Auto-Retry 1x — HANYA untuk error transient (server cold start/sibuk
+            // 429/5xx, atau gagal jaringan). Kalau server merespons 200 tapi field OCR kosong,
+            // itu BUKAN error transient — mengulang panggilan Vision AI yang sama pada gambar
+            // yang sama tidak akan mengubah hasilnya, hanya membuang kuota 2x untuk setiap unggahan
+            // yang memang tidak terbaca. Jadi retry dihentikan (break), bukan diulang (continue).
             for (let attempt = 1; attempt <= 2; attempt++) {
                 try {
                     const resp = await fetch(`${API_BASE_URL}/api/ocr`, {
@@ -7029,6 +7055,9 @@
                         if (data && data.cropped_image) {
                             serverCroppedImage = data.cropped_image;
                         }
+                        if (data && data.doc_bbox) {
+                            serverDocBbox = data.doc_bbox;
+                        }
                         // Jika server mendeteksi mismatch dokumen, langsung teruskan responsnya tanpa fallback lokal
                         if (data && data.document_mismatch) {
                             return data;
@@ -7037,12 +7066,17 @@
                         if (data.status === 'ok' && hasFields) {
                             return data;
                         }
+                        // Respons sukses tapi tidak ada field terbaca -> lanjut ke fallback lokal, jangan diulang.
+                        break;
                     } else if (resp.status === 429 || resp.status >= 500) {
                         if (attempt === 1) {
                             console.warn(`[OCR] Server sedang sibuk/cold start (${resp.status}), mencoba ulang otomatis dalam 1.8 detik...`);
                             await new Promise(r => setTimeout(r, 1800));
                             continue;
                         }
+                    } else {
+                        // Error klien lain (4xx selain 429, mis. 400/401) — tidak akan berubah kalau diulang.
+                        break;
                     }
                 } catch (e) {
                     console.warn(`[OCR] Percobaan ${attempt} gagal menghubungi API /api/ocr:`, e);
@@ -7084,12 +7118,12 @@
                     } else if ((target === 'ownership' || target === 'bpkb') && typeof parseBpkbTextRobust === 'function') {
                         clientParsed = parseBpkbTextRobust(rawText);
                     }
-                    return { status: 'ok', text: rawText, parsed: clientParsed, cropped_image: serverCroppedImage };
+                    return { status: 'ok', text: rawText, parsed: clientParsed, cropped_image: serverCroppedImage, doc_bbox: serverDocBbox };
                 } catch (tErr) {
                     console.warn('Client-side Tesseract error:', tErr);
                 }
             }
-            return { status: 'failed', text: '', parsed: {}, cropped_image: serverCroppedImage };
+            return { status: 'failed', text: '', parsed: {}, cropped_image: serverCroppedImage, doc_bbox: serverDocBbox };
         }
 
         // Auto-crop presisi berbasis bounding box [ymin, xmin, ymax, xmax] (0..1000) dari Vision AI
@@ -7129,6 +7163,25 @@
             });
         }
 
+        // Pilih HANYA SATU hasil potong terbaik yang tersedia (tidak pernah ditumpuk/di-crop ganda —
+        // crop ganda terbukti sebab utama hasil potongan jadi miring/"mereng"):
+        //   1) `cropped_image` dari server (OpenCV 4-corner perspective warp) — paling akurat,
+        //      tahan rotasi/kartu miring, prioritas utama.
+        //   2) `doc_bbox` dari Gemini Vision AI (bounding box) — dipotong di klien via
+        //      cropImageByNormalizedBbox, dipakai kalau (1) tidak tersedia.
+        //   3) Fallback TERAKHIR saja: autoCropDocument() heuristik kecerahan/Otsu di klien,
+        //      dijalankan pada gambar ASLI (bukan pada hasil (1)/(2)) — hanya dipakai kalau server
+        //      sama sekali tidak mengembalikan hasil crop apapun (mis. offline/Vision AI gagal total).
+        async function resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, target) {
+            if (rawPdfUrlForOcr) return null;
+            if (ocrRes && ocrRes.cropped_image) return ocrRes.cropped_image;
+            if (ocrRes && ocrRes.doc_bbox) {
+                const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                if (aiCropped) return aiCropped;
+            }
+            return await new Promise((resolve) => autoCropDocument(imgUrl, target, resolve));
+        }
+
         async function runRealOCR(target, imgUrl, rawPdfUrlForOcr = null) {
             const ocrPayloadUrl = rawPdfUrlForOcr || imgUrl;
 
@@ -7156,15 +7209,10 @@
                         uploadedKtpDataUrl = null;
                         return;
                     }
-                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
-                        uploadedKtpDataUrl = ocrRes.cropped_image;
-                        if (img) img.src = ocrRes.cropped_image;
-                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
-                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
-                        if (aiCropped) {
-                            uploadedKtpDataUrl = aiCropped;
-                            if (img) img.src = aiCropped;
-                        }
+                    const bestCroppedKtp = await resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, target);
+                    if (bestCroppedKtp) {
+                        uploadedKtpDataUrl = bestCroppedKtp;
+                        if (img) img.src = bestCroppedKtp;
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
@@ -7222,15 +7270,10 @@
                         uploadedNpwpDataUrl = null;
                         return;
                     }
-                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
-                        uploadedNpwpDataUrl = ocrRes.cropped_image;
-                        if (img) img.src = ocrRes.cropped_image;
-                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
-                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
-                        if (aiCropped) {
-                            uploadedNpwpDataUrl = aiCropped;
-                            if (img) img.src = aiCropped;
-                        }
+                    const bestCroppedNpwp = await resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, target);
+                    if (bestCroppedNpwp) {
+                        uploadedNpwpDataUrl = bestCroppedNpwp;
+                        if (img) img.src = bestCroppedNpwp;
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
@@ -7305,15 +7348,10 @@
                         if (isOwnershipPrimary) { uploadedOwnershipDataUrl = null; } else { delete ownershipExtraPages[target]; }
                         return;
                     }
-                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
-                        if (isOwnershipPrimary) { uploadedOwnershipDataUrl = ocrRes.cropped_image; } else { ownershipExtraPages[target] = ocrRes.cropped_image; }
-                        if (img) img.src = ocrRes.cropped_image;
-                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
-                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
-                        if (aiCropped) {
-                            if (isOwnershipPrimary) { uploadedOwnershipDataUrl = aiCropped; } else { ownershipExtraPages[target] = aiCropped; }
-                            if (img) img.src = aiCropped;
-                        }
+                    const bestCroppedOwnership = await resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, target);
+                    if (bestCroppedOwnership) {
+                        if (isOwnershipPrimary) { uploadedOwnershipDataUrl = bestCroppedOwnership; } else { ownershipExtraPages[target] = bestCroppedOwnership; }
+                        if (img) img.src = bestCroppedOwnership;
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
@@ -7402,15 +7440,10 @@
                         uploadedStnkDataUrl = null;
                         return;
                     }
-                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
-                        uploadedStnkDataUrl = ocrRes.cropped_image;
-                        if (img) img.src = ocrRes.cropped_image;
-                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
-                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
-                        if (aiCropped) {
-                            uploadedStnkDataUrl = aiCropped;
-                            if (img) img.src = aiCropped;
-                        }
+                    const bestCroppedStnk = await resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, target);
+                    if (bestCroppedStnk) {
+                        uploadedStnkDataUrl = bestCroppedStnk;
+                        if (img) img.src = bestCroppedStnk;
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
@@ -7471,15 +7504,10 @@
                         if (ph) ph.style.display = 'flex';
                         return;
                     }
-                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
-                        if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = ocrRes.cropped_image;
-                        if (img) img.src = ocrRes.cropped_image;
-                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
-                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
-                        if (aiCropped) {
-                            if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = aiCropped;
-                            if (img) img.src = aiCropped;
-                        }
+                    const bestCroppedStnk2 = await resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, target);
+                    if (bestCroppedStnk2) {
+                        if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = bestCroppedStnk2;
+                        if (img) img.src = bestCroppedStnk2;
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     // Validasi sidik jari teks di sisi klien (Anti-Mismatch 100% Offline)
@@ -7732,6 +7760,34 @@
             if (parts.length > 0) res.alamat = parts.join(', ');
 
             return res;
+        }
+
+        // Isi field Tahun Pembuatan & Warna Kendaraan dari hasil OCR (dipakai bersama oleh
+        // applyStnkData/applyBpkbData/applyLeasingData). Menangani format lama `tahun_warna`
+        // gabungan ("2014 / HITAM") dengan memecahnya jadi 2 field terpisah. TIDAK PERNAH
+        // mengisi nilai contoh/tebakan kalau data memang tidak ada — field dibiarkan kosong
+        // untuk diisi manual oleh pemohon/petugas.
+        function applyTahunWarnaFromOcr(data, onlyIfEmpty) {
+            let t = String(data.tahun || '').trim();
+            let w = String(data.warna || '').trim();
+            if ((!t || !w) && data.tahun_warna) {
+                const parts = String(data.tahun_warna).split('/');
+                if (!t) t = (parts[0] || '').trim();
+                if (!w && parts.length > 1) w = parts.slice(1).join('/').trim();
+            }
+            const elT = document.getElementById('kbm_tahun');
+            const elW = document.getElementById('kbm_warna');
+            if (t && elT && (!onlyIfEmpty || !elT.value)) {
+                elT.value = t;
+                elT.classList.add('filled');
+                const tag = document.getElementById('tagTahunWarnaAuto');
+                if (tag) tag.style.display = 'inline-flex';
+            }
+            if (w && elW && (!onlyIfEmpty || !elW.value)) {
+                elW.value = w;
+                elW.classList.add('filled');
+            }
+            syncValues();
         }
 
         function applyKtpData(data) {
@@ -8259,19 +8315,7 @@
                     document.getElementById('tagMerekAuto').style.display = 'inline-flex';
                 }
             }
-            if (data.tahun || data.warna || data.tahun_warna) {
-                let tw = data.tahun_warna || '';
-                if (!tw) {
-                    const t = data.tahun || '';
-                    const w = data.warna || '';
-                    tw = (t && w) ? (t + ' / ' + w) : (t || w);
-                }
-                if (tw && !document.getElementById('kbm_tahun_warna').value) {
-                    document.getElementById('kbm_tahun_warna').value = tw;
-                    document.getElementById('kbm_tahun_warna').classList.add('filled');
-                    document.getElementById('tagTahunWarnaAuto').style.display = 'inline-flex';
-                }
-            }
+            applyTahunWarnaFromOcr(data, true);
             reconcileVehicleData();
             checkOwnershipNameMatch();
         }
@@ -8493,10 +8537,14 @@
                 document.getElementById('kbm_nopol').classList.add('filled');
                 document.getElementById('tagNopolAuto').style.display = 'inline-flex';
             }
-            const valStnk = data.nostnk || data.no_stnk || '15213051.H';
-            document.getElementById('kbm_nostnk').value = valStnk;
-            document.getElementById('kbm_nostnk').classList.add('filled');
-            document.getElementById('tagStnkAuto').style.display = 'inline-flex';
+            // JANGAN PERNAH isi dengan nilai contoh/palsu kalau OCR tidak mendeteksi apapun —
+            // field dibiarkan kosong untuk diisi manual, bukan ditimpa data fiktif yang terlihat asli.
+            const valStnk = data.nostnk || data.no_stnk || '';
+            if (valStnk) {
+                document.getElementById('kbm_nostnk').value = valStnk;
+                document.getElementById('kbm_nostnk').classList.add('filled');
+                document.getElementById('tagStnkAuto').style.display = 'inline-flex';
+            }
 
             if (data.merek || data.merk) {
                 const val = (data.merek || data.merk) + (data.type && !(data.merek||'').includes(data.type) ? ' ' + data.type : '');
@@ -8504,31 +8552,21 @@
                 document.getElementById('kbm_merek').classList.add('filled');
                 document.getElementById('tagMerekAuto').style.display = 'inline-flex';
             }
-            if (data.tahun || data.warna || data.tahun_warna) {
-                let tw = data.tahun_warna || '';
-                if (!tw) {
-                    const t = data.tahun || '';
-                    const w = data.warna || '';
-                    tw = (t && w) ? (t + ' / ' + w) : (t || w);
-                }
-                if (!tw) tw = '2014 / HITAM METALIK';
-                document.getElementById('kbm_tahun_warna').value = tw;
-                document.getElementById('kbm_tahun_warna').classList.add('filled');
-                document.getElementById('tagTahunWarnaAuto').style.display = 'inline-flex';
-            }
+            applyTahunWarnaFromOcr(data, false);
 
-            if (!document.getElementById('kbm_nobpkb').value) {
-                document.getElementById('kbm_nobpkb').value = 'L-03014164';
-                document.getElementById('kbm_nobpkb').classList.add('filled');
-                document.getElementById('tagBpkbAuto').style.display = 'inline-flex';
-            }
+            // CATATAN: No. BPKB TIDAK PERNAH diisi otomatis dari dokumen STNK — BPKB adalah
+            // dokumen terpisah dengan nomor sendiri yang tidak tercantum di STNK sama sekali.
+            // (Field ini sebelumnya ditimpa nilai contoh palsu 'L-03014164' kalau kosong — DIHAPUS,
+            // itu data fiktif yang bisa lolos tanpa disadari ke permohonan resmi.)
 
-            // Hitung NJKB & Jaminan PPN 11%
+            // Hitung NJKB & Jaminan PPN 11% — HANYA jika tahun pembuatan benar-benar terdeteksi/terisi,
+            // jangan menebak tahun dengan angka contoh kalau datanya memang belum ada.
             let njkbVal = data.njkb;
             if (!njkbVal) {
-                const yr = (data.tahun_warna || data.tahun || '').match(/\d{4}/);
-                const yrNum = yr ? yr[0] : '2014';
-                njkbVal = lookupNjkbBapenda(data.merek || data.merk || document.getElementById('kbm_merek').value, yrNum);
+                const yr = (data.tahun || document.getElementById('kbm_tahun').value || '').match(/\d{4}/);
+                if (yr) {
+                    njkbVal = lookupNjkbBapenda(data.merek || data.merk || document.getElementById('kbm_merek').value, yr[0]);
+                }
             }
 
             if (njkbVal) {
@@ -9028,6 +9066,18 @@
             const tglKeluar = document.getElementById('tgl_keluar').value;
             const tglKembali = document.getElementById('tgl_kembali').value;
 
+            // Rekonstruksi field tersembunyi kbm_tahun_warna dari 2 input terpisah
+            // (Tahun Pembuatan + Warna Kendaraan) supaya kode lama yang masih membaca
+            // kbm_tahun_warna (cross-validation, PDF, dll.) tetap jalan tanpa diubah.
+            const tahunEl = document.getElementById('kbm_tahun');
+            const warnaEl = document.getElementById('kbm_warna');
+            const tahunWarnaHiddenEl = document.getElementById('kbm_tahun_warna');
+            if (tahunEl && warnaEl && tahunWarnaHiddenEl) {
+                const tV = tahunEl.value.trim();
+                const wV = warnaEl.value.trim();
+                tahunWarnaHiddenEl.value = (tV && wV) ? (tV + ' / ' + wV) : (tV || wV);
+            }
+
             document.getElementById('sumNama').innerText = nama || '-';
             document.getElementById('sumNik').innerText = nik || '-';
             document.getElementById('sumNopol').innerText = nopol || '-';
@@ -9339,6 +9389,11 @@
                 no_wa_pemohon: (document.getElementById('pemohon_telp')?.value || user.phone || '').trim(),
                 nopol: (document.getElementById('kbm_nopol')?.value || 'BP - (Menunggu STNK)').trim(),
                 merek_tipe: (document.getElementById('kbm_merek')?.value || 'Kendaraan Bermotor').trim(),
+                no_stnk: (document.getElementById('kbm_nostnk')?.value || '').trim(),
+                no_bpkb: (document.getElementById('kbm_nobpkb')?.value || '').trim(),
+                no_rangka: (document.getElementById('kbm_norangka')?.value || '').trim(),
+                no_mesin: (document.getElementById('kbm_nomesin')?.value || '').trim(),
+                tahun_warna: (document.getElementById('kbm_tahun_warna')?.value || '').trim(),
                 pelabuhan_tujuan: (document.getElementById('rute_tujuan')?.value || 'Kuala Tungkal (Jambi)').trim(),
                 sumber: 'PORTAL_WEB',
                 status: 'BERKAS_LENGKAP',
@@ -9946,6 +10001,9 @@
             document.getElementById('dMerek').innerText = item.merek_tipe || '-';
             document.getElementById('dTahunWarna').innerText = item.tahun_warna || '-';
             document.getElementById('dNoRangka').innerText = item.no_rangka || '-';
+            if (document.getElementById('dNoMesin')) document.getElementById('dNoMesin').innerText = item.no_mesin || '-';
+            if (document.getElementById('dNoStnk')) document.getElementById('dNoStnk').innerText = item.no_stnk || '-';
+            if (document.getElementById('dNoBpkb')) document.getElementById('dNoBpkb').innerText = item.no_bpkb || '-';
             document.getElementById('dTujuanKeperluan').innerText = (item.pelabuhan_tujuan || '-') + ' • ' + (item.keperluan || '-');
 
             if (document.getElementById('dNoNadine')) document.getElementById('dNoNadine').innerText = item.no_nadine || '-';

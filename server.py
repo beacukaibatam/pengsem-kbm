@@ -3452,6 +3452,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "nomor_berbeda": body.get("nomor_berbeda", False),
                     "nopol": body.get("nopol", "BP - (Menunggu STNK)"),
                     "merek_tipe": body.get("merek_tipe", "Sedang Diproses"),
+                    "no_stnk": body.get("no_stnk", ""),
+                    "no_bpkb": body.get("no_bpkb", ""),
+                    "no_rangka": body.get("no_rangka", ""),
+                    "no_mesin": body.get("no_mesin", ""),
+                    "tahun_warna": body.get("tahun_warna", ""),
                     "pelabuhan_tujuan": body.get("pelabuhan_tujuan", "Kuala Tungkal (Jambi)"),
                     "status": "MENUNGGU_VERIFIKASI_DOKUMEN",
                     "sumber": sumber,
@@ -3898,7 +3903,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-Length', str(len(err_data)))
                 self.end_headers()
                 self.wfile.write(err_data)
-                # ================= NADINE KEMENKEU ENDPOINTS =================
+            # WAJIB return di sini — tanpa ini eksekusi jatuh ke blok `if self.path == ...`
+            # berikutnya (NADINE dst.), tidak ada yang cocok, lalu fallback 404 "Endpoint not
+            # found" ikut ditulis ke koneksi keep-alive YANG SAMA setelah respons 200/500 di
+            # atas sudah terkirim — merusak alur respons HTTP (terbukti di log: setiap panggilan
+            # /api/ocr selalu diikuti baris "code 404, message Endpoint not found").
+            return
+        # ================= NADINE KEMENKEU ENDPOINTS =================
         if self.path == '/api/nadine/config':
             token, sess = get_session_from_request(self)
             if not sess or sess.get('role') not in ('frontdesk', 'loket', 'adminutama'):
