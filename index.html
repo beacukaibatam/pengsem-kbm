@@ -6427,6 +6427,43 @@
             return { text: '', parsed: {} };
         }
 
+        // Auto-crop presisi berbasis bounding box [ymin, xmin, ymax, xmax] (0..1000) dari Vision AI
+        // Mengatasi kegagalan crop lokal pada latar bermotif/berkontras tinggi (mis. karpet belang)
+        function cropImageByNormalizedBbox(dataUrl, bbox) {
+            return new Promise((resolve) => {
+                if (!dataUrl || !Array.isArray(bbox) || bbox.length !== 4) return resolve(null);
+                const [ymin, xmin, ymax, xmax] = bbox.map(Number);
+                if (![ymin, xmin, ymax, xmax].every(Number.isFinite) || ymax <= ymin || xmax <= xmin) return resolve(null);
+                const im = new Image();
+                im.onload = () => {
+                    try {
+                        const nw = im.naturalWidth || im.width;
+                        const nh = im.naturalHeight || im.height;
+                        if (nw < 80 || nh < 80) return resolve(null);
+                        // Tambah margin tipis 1% agar sudut kartu tidak terpotong
+                        const pad = 10;
+                        const x1 = Math.max(0, Math.floor(((xmin - pad) / 1000) * nw));
+                        const y1 = Math.max(0, Math.floor(((ymin - pad) / 1000) * nh));
+                        const x2 = Math.min(nw, Math.ceil(((xmax + pad) / 1000) * nw));
+                        const y2 = Math.min(nh, Math.ceil(((ymax + pad) / 1000) * nh));
+                        const cw = x2 - x1;
+                        const ch = y2 - y1;
+                        if (cw < 40 || ch < 40) return resolve(null);
+                        const c = document.createElement('canvas');
+                        c.width = cw;
+                        c.height = ch;
+                        const ctx = c.getContext('2d');
+                        ctx.drawImage(im, x1, y1, cw, ch, 0, 0, cw, ch);
+                        resolve(c.toDataURL('image/jpeg', 0.92));
+                    } catch (e) {
+                        resolve(null);
+                    }
+                };
+                im.onerror = () => resolve(null);
+                im.src = dataUrl;
+            });
+        }
+
         async function runRealOCR(target, imgUrl, rawPdfUrlForOcr = null) {
             const ocrPayloadUrl = rawPdfUrlForOcr || imgUrl;
 
@@ -6453,6 +6490,13 @@
                         if (ph) ph.style.display = 'flex';
                         uploadedKtpDataUrl = null;
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            uploadedKtpDataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
@@ -6498,6 +6542,13 @@
                         if (ph) ph.style.display = 'flex';
                         uploadedNpwpDataUrl = null;
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            uploadedNpwpDataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
@@ -6560,6 +6611,13 @@
                         if (ph) ph.style.display = 'flex';
                         if (isOwnershipPrimary) { uploadedOwnershipDataUrl = null; } else { delete ownershipExtraPages[target]; }
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            if (isOwnershipPrimary) { uploadedOwnershipDataUrl = aiCropped; } else { ownershipExtraPages[target] = aiCropped; }
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
@@ -6631,6 +6689,13 @@
                         uploadedStnkDataUrl = null;
                         return;
                     }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            uploadedStnkDataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
+                    }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
                     const clientParsed = parseStnkTextRobust(rawText);
@@ -6678,6 +6743,13 @@
                         if (img) { img.style.display = 'none'; img.src = ''; }
                         if (ph) ph.style.display = 'flex';
                         return;
+                    }
+                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                        const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
+                        if (aiCropped) {
+                            if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = aiCropped;
+                            if (img) img.src = aiCropped;
+                        }
                     }
                     const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
                     const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};

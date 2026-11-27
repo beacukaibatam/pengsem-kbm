@@ -870,13 +870,18 @@ def extract_with_vision_ai(image_bytes, target=''):
         # yang memang diaudit kecocokannya (lihat _VALID_DOC_TYPES_BY_TARGET).
         if target in _VALID_DOC_TYPES_BY_TARGET:
             prompt_text = (
-                "TUGAS 1 (WAJIB dijawab lebih dulu, JANGAN dilewati): amati gambar ini dan tentukan jenis "
+                "TUGAS 1A (WAJIB dijawab lebih dulu, JANGAN dilewati): amati gambar ini dan tentukan jenis "
                 "dokumen yang BENAR-BENAR terlihat — independen dari jenis dokumen yang diminta untuk "
                 "diekstrak di TUGAS 2 di bawah. Isi kunci JSON jenis_dokumen_terdeteksi dengan SATU nilai "
                 "ini yang paling sesuai: \"KTP\", \"NPWP\", \"STNK\", \"BPKB\", \"SURAT_LEASING\", \"LAINNYA\". "
                 "Contoh: kalau gambar yang diberikan ternyata adalah STNK padahal TUGAS 2 memintamu "
                 "mengekstrak data KTP, tetap isi jenis_dokumen_terdeteksi dengan \"STNK\" (jujur sesuai "
                 "gambar), JANGAN dipaksakan menjadi \"KTP\".\n\n"
+                "TUGAS 1B (WAJIB untuk auto-crop presisi): tentukan kotak batas ketat (bounding box) HANYA "
+                "untuk fisik kartu/lembar dokumennya saja (BUANG seluruh latar belakang seperti karpet, "
+                "meja, lantai, atau tangan). Isi kunci JSON doc_bbox berupa array 4 bilangan bulat "
+                "[ymin, xmin, ymax, xmax] dalam skala 0 sampai 1000 (0 = tepi atas/kiri gambar, "
+                "1000 = tepi bawah/kanan gambar).\n\n"
                 "TUGAS 2: " + prompt_text
             )
 
@@ -3246,6 +3251,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 extracted_text, parsed_data = process_ocr(raw_bytes, target, engine)
                 is_mismatch, detected_doc_type = check_document_type_mismatch(target, parsed_data)
 
+                # Validasi doc_bbox [ymin, xmin, ymax, xmax] skala 0..1000 dari Vision AI untuk auto-crop presisi
+                valid_doc_bbox = None
+                if isinstance(parsed_data, dict):
+                    raw_bbox = parsed_data.get('doc_bbox')
+                    if isinstance(raw_bbox, (list, tuple)) and len(raw_bbox) == 4:
+                        try:
+                            ymin, xmin, ymax, xmax = [int(round(float(v))) for v in raw_bbox]
+                            ymin = max(0, min(1000, ymin))
+                            xmin = max(0, min(1000, xmin))
+                            ymax = max(0, min(1000, ymax))
+                            xmax = max(0, min(1000, xmax))
+                            bw = xmax - xmin
+                            bh = ymax - ymin
+                            area_ratio = (bw * bh) / 1000000.0
+                            # Hanya terapkan crop jika kotak valid (>= 12% lebar/tinggi) dan benar-benar membuang background (< 96% area)
+                            if bw >= 120 and bh >= 120 and 0.03 <= area_ratio <= 0.96:
+                                valid_doc_bbox = [ymin, xmin, ymax, xmax]
+                        except Exception:
+                            valid_doc_bbox = None
+
                 response_data = json.dumps({
                     'status': 'ok',
                     'target': target,
@@ -3253,7 +3278,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'text': extracted_text,
                     'parsed': parsed_data,
                     'document_mismatch': is_mismatch,
-                    'detected_document_type': detected_doc_type
+                    'detected_document_type': detected_doc_type,
+                    'doc_bbox': valid_doc_bbox
                 }).encode('utf-8')
                 
                 self.send_response(200)
