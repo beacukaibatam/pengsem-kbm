@@ -825,6 +825,120 @@ def _optimize_image_for_vision(image_bytes, max_dim=1600):
         pass
     return image_bytes, _detect_image_mime(image_bytes)
 
+def _order_points_4(pts):
+    rect = np.zeros((4, 2), dtype='float32')
+    s = pts.sum(axis=1)
+    rect[0] = pts[np.argmin(s)] # TL
+    rect[2] = pts[np.argmax(s)] # BR
+    diff = np.diff(pts, axis=1)
+    rect[1] = pts[np.argmin(diff)] # TR
+    rect[3] = pts[np.argmax(diff)] # BL
+    return rect
+
+def auto_warp_document_opencv(image_bytes, target=''):
+    """Mendeteksi 4 sudut poligon kartu/dokumen via kontur OpenCV dan melakukan
+    transformasi perspektif (perspective warp) ke rasio standar (1.585 untuk KTP/NPWP,
+    proporsional untuk STNK/BPKB). Mengembalikan (warped_bytes, data_url) atau (image_bytes, None)."""
+    try:
+        if not image_bytes or image_bytes.startswith(b'%PDF'):
+            return image_bytes, None
+        img_np = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(img_np, cv2.IMREAD_COLOR)
+        if img is None:
+            return image_bytes, None
+
+        orig_h, orig_w = img.shape[:2]
+        if orig_h < 150 or orig_w < 150:
+            return image_bytes, None
+
+        # Standar rasio aspek ID Card (KTP/NPWP 85.6mm x 54mm = 1.585)
+        target_ratio = 1.585 if target in ('ktp', 'npwp') else (1.85 if target in ('stnk', 'stnk_1', 'stnk_2') else None)
+
+        # Scale down for fast robust edge & contour analysis (max dim 600)
+        max_dim = 600
+        scale = min(1.0, max_dim / float(max(orig_h, orig_w)))
+        sw, sh = int(round(orig_w * scale)), int(round(orig_h * scale))
+        resized = cv2.resize(img, (sw, sh), interpolation=cv2.INTER_AREA)
+
+        gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        edges = cv2.Canny(blurred, 35, 120)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+        closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+
+        cnts, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not cnts:
+            return image_bytes, None
+
+        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+        img_area = float(sw * sh)
+        card_contour_pts = None
+
+        for c in cnts[:5]:
+            area = cv2.contourArea(c)
+            # Kartu harus setidaknya 10% dan maksimal 95% dari total frame
+            if area < (img_area * 0.10) or area > (img_area * 0.96):
+                continue
+            peri = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.03 * peri, True)
+            if len(approx) == 4:
+                card_contour_pts = approx.reshape(4, 2)
+                break
+            else:
+                # Minimum area oriented bounding box
+                rect = cv2.minAreaRect(c)
+                box = cv2.boxPoints(rect)
+                bw, bh = rect[1]
+                if min(bw, bh) > 0:
+                    ar = max(bw, bh) / min(bw, bh)
+                    if 1.1 <= ar <= 2.8: # rasio kartu wajar
+                        card_contour_pts = box
+                        break
+
+        if card_contour_pts is None:
+            return image_bytes, None
+
+        # Skalakan kembali 4 titik sudut ke dimensi gambar asli
+        pts_orig = card_contour_pts / scale
+        rect = _order_points_4(pts_orig)
+        (tl, tr, br, bl) = rect
+
+        widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+        widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+        maxWidth = max(int(widthA), int(widthB))
+
+        heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+        heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+        maxHeight = max(int(heightA), int(heightB))
+
+        if maxWidth < 120 or maxHeight < 80:
+            return image_bytes, None
+
+        if target_ratio:
+            if maxWidth < maxHeight:
+                maxWidth, maxHeight = maxHeight, maxWidth
+            maxHeight = int(round(maxWidth / target_ratio))
+
+        dst = np.array([
+            [0, 0],
+            [maxWidth - 1, 0],
+            [maxWidth - 1, maxHeight - 1],
+            [0, maxHeight - 1]
+        ], dtype='float32')
+
+        M = cv2.getPerspectiveTransform(rect, dst)
+        warped = cv2.warpPerspective(img, M, (maxWidth, maxHeight), flags=cv2.INTER_LANCZOS4)
+
+        success, enc = cv2.imencode('.jpg', warped, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
+        if success:
+            warped_bytes = enc.tobytes()
+            b64_url = 'data:image/jpeg;base64,' + base64.b64encode(warped_bytes).decode('utf-8')
+            print(f"[+] Auto-Warp OpenCV Sukses ({target}): {orig_w}x{orig_h} -> {maxWidth}x{maxHeight} (Rasio: {maxWidth/maxHeight:.3f})")
+            return warped_bytes, b64_url
+    except Exception as e:
+        print(f"[!] auto_warp_document_opencv error: {e}")
+    return image_bytes, None
+
 def extract_with_vision_ai(image_bytes, target=''):
     """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini (mendukung multi-halaman PDF BPKB).
     Dilengkapi multi-key rotation, multi-model candidate fallback, auto-retry pada HTTP 429, dan pre-scaling."""
@@ -966,7 +1080,15 @@ def extract_with_vision_ai(image_bytes, target=''):
                             candidate = data.get('candidates', [{}])[0]
                             parts = candidate.get('content', {}).get('parts', [{}])
                             out_text = parts[0].get('text', '{}')
-                            parsed = json.loads(out_text)
+                            clean_text = out_text.strip()
+                            if '```' in clean_text:
+                                clean_text = re.sub(r'^```(?:json)?\s*', '', clean_text, flags=re.IGNORECASE)
+                                clean_text = re.sub(r'\s*```$', '', clean_text)
+                            s_idx = clean_text.find('{')
+                            e_idx = clean_text.rfind('}')
+                            if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
+                                clean_text = clean_text[s_idx:e_idx+1]
+                            parsed = json.loads(clean_text)
                             if isinstance(parsed, list) and parsed:
                                 parsed = parsed[0]
                             print(f"[+] Vision AI sukses menggunakan model: {model_name} (key: {key_hint})")
@@ -3538,7 +3660,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(response_data)
                     return
 
-                extracted_text, parsed_data = process_ocr(raw_bytes, target, engine)
+                # Deteksi 4 sudut poligon & transformasi perspektif (Perspective Warp) via OpenCV
+                warped_bytes, cropped_image_url = auto_warp_document_opencv(raw_bytes, target)
+                input_for_ocr = warped_bytes if cropped_image_url else raw_bytes
+
+                extracted_text, parsed_data = process_ocr(input_for_ocr, target, engine)
                 is_mismatch, detected_doc_type = check_document_type_mismatch(target, parsed_data)
 
                 # Validasi doc_bbox [ymin, xmin, ymax, xmax] skala 0..1000 dari Vision AI untuk auto-crop presisi
@@ -3561,15 +3687,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         except Exception:
                             valid_doc_bbox = None
 
+                has_valid_fields = isinstance(parsed_data, dict) and any(
+                    str(v).strip() for k, v in parsed_data.items()
+                    if k not in ('doc_bbox', 'jenis_dokumen_terdeteksi', '_error')
+                )
+
                 response_data = json.dumps({
-                    'status': 'ok',
+                    'status': 'ok' if (has_valid_fields or cropped_image_url) else 'failed',
                     'target': target,
                     'engine_used': 'vision_ai' if engine in ('vision', 'auto') and VISION_AI_ENABLED else 'easyocr_local',
                     'text': extracted_text,
-                    'parsed': parsed_data,
+                    'parsed': parsed_data if has_valid_fields else {},
                     'document_mismatch': is_mismatch,
                     'detected_document_type': detected_doc_type,
-                    'doc_bbox': valid_doc_bbox
+                    'doc_bbox': valid_doc_bbox,
+                    'cropped_image': cropped_image_url
                 }).encode('utf-8')
                 
                 self.send_response(200)

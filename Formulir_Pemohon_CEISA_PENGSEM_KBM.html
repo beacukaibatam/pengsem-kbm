@@ -6267,9 +6267,9 @@
                     return callback(imageDataUrl);
                 }
 
-                // Offscreen analysis canvas
+                // Analisis kontur & batas kartu pada kanvas offscreen
                 const scanCanvas = document.createElement('canvas');
-                const maxDim = 400;
+                const maxDim = 450;
                 const scale = Math.min(1.0, maxDim / Math.max(origW, origH));
                 const sw = Math.round(origW * scale);
                 const sh = Math.round(origH * scale);
@@ -6281,231 +6281,128 @@
                 const imgData = sctx.getImageData(0, 0, sw, sh);
                 const d = imgData.data;
 
-                // 1. Ambil sampel warna background di 4 pojok sudut terluar (top-left, top-right, bot-left, bot-right)
-                const cornerSize = Math.max(3, Math.round(Math.min(sw, sh) * 0.08));
-                let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
-                
-                function sampleCorner(startX, startY) {
-                    for (let cy = 0; cy < cornerSize; cy++) {
-                        for (let cx = 0; cx < cornerSize; cx++) {
-                            const idx = ((startY + cy) * sw + (startX + cx)) * 4;
-                            bgR += d[idx];
-                            bgG += d[idx + 1];
-                            bgB += d[idx + 2];
-                            bgCount++;
+                // Hitung magnitudo gradien (Sobel tepi) dan perbedaan warna/kromatisitas
+                const edgeMap = new Uint8Array(sw * sh);
+                const isIdCard = (targetDoc === 'ktp' || targetDoc === 'npwp');
+
+                for (let y = 1; y < sh - 1; y++) {
+                    for (let x = 1; x < sw - 1; x++) {
+                        const p = (y * sw + x) * 4;
+                        const r = d[p], g = d[p + 1], b = d[p + 2];
+
+                        // Gradient Sobel sederhana
+                        const pL = (y * sw + (x - 1)) * 4;
+                        const pR = (y * sw + (x + 1)) * 4;
+                        const pU = ((y - 1) * sw + x) * 4;
+                        const pD = ((y + 1) * sw + x) * 4;
+
+                        const gx = Math.abs(d[pR] - d[pL]) + Math.abs(d[pR+1] - d[pL+1]) + Math.abs(d[pR+2] - d[pL+2]);
+                        const gy = Math.abs(d[pD] - d[pU]) + Math.abs(d[pD+1] - d[pU+1]) + Math.abs(d[pD+2] - d[pU+2]);
+                        const grad = (gx + gy) / 3;
+
+                        // Deteksi warna kartu spesifik
+                        let cardColorMatch = false;
+                        if (targetDoc === 'ktp') {
+                            // KTP: biru/cyan khas (B > R + 8 && G > R - 8)
+                            cardColorMatch = (b > r + 8) && (g > r - 8);
+                        } else if (targetDoc === 'npwp') {
+                            // NPWP: kuning/emas di atas atau kartu terang
+                            cardColorMatch = ((r > b + 18) && (g > b + 8)) || ((r + g + b) > 520);
+                        } else {
+                            cardColorMatch = ((r + g + b) > 380);
+                        }
+
+                        if (grad > 30 || cardColorMatch) {
+                            edgeMap[y * sw + x] = 1;
                         }
                     }
                 }
-                sampleCorner(0, 0); // TL
-                sampleCorner(sw - cornerSize, 0); // TR
-                sampleCorner(0, sh - cornerSize); // BL
-                sampleCorner(sw - cornerSize, sh - cornerSize); // BR
 
-                bgR = Math.round(bgR / bgCount);
-                bgG = Math.round(bgG / bgCount);
-                bgB = Math.round(bgB / bgCount);
+                // Inward scanning dari 4 sisi untuk menemukan batas tepi fisik kartu
+                const marginX = Math.max(2, Math.round(sw * 0.02));
+                const marginY = Math.max(2, Math.round(sh * 0.02));
+                const minCardWidth = Math.round(sw * 0.28);
+                const minCardHeight = Math.round(sh * 0.20);
 
-                // Variansi background
-                let bgVar = 0;
-                function sampleCornerVar(startX, startY) {
-                    for (let cy = 0; cy < cornerSize; cy++) {
-                        for (let cx = 0; cx < cornerSize; cx++) {
-                            const idx = ((startY + cy) * sw + (startX + cx)) * 4;
-                            const dr = d[idx] - bgR;
-                            const dg = d[idx + 1] - bgG;
-                            const db = d[idx + 2] - bgB;
-                            bgVar += (dr * dr + dg * dg + db * db);
-                        }
+                // Scan Top
+                let top = marginY;
+                while (top < sh - minCardHeight) {
+                    let edgeHits = 0;
+                    for (let x = marginX; x < sw - marginX; x++) {
+                        if (edgeMap[top * sw + x]) edgeHits++;
                     }
-                }
-                sampleCornerVar(0, 0);
-                sampleCornerVar(sw - cornerSize, 0);
-                sampleCornerVar(0, sh - cornerSize);
-                sampleCornerVar(sw - cornerSize, sh - cornerSize);
-
-                const bgStd = Math.sqrt(bgVar / bgCount);
-                const bgLum = 0.299 * bgR + 0.587 * bgG + 0.114 * bgB;
-                const distThresh = Math.max(22, bgStd * 1.35);
-
-                // 1b. Deteksi latar BERTEKSTUR/tidak rata (karpet, kain, meja bercorak, dsb).
-                // Latar semacam ini membuat deteksi tepi (Sobel) & jarak-warna di atas jadi tidak
-                // akurat (motif teksturnya sendiri terbaca sebagai "tepi dokumen"), sehingga kotak
-                // dokumen yang terdeteksi bisa melebar ke hampir seluruh frame. Kartu identitas
-                // (KTP/NPWP/dsb.) hampir selalu jauh lebih TERANG daripada latar bertekstur semacam
-                // itu, jadi dipakai strategi cadangan berbasis kecerahan (ambang Otsu & flood-fill)
-                // yang terbukti jauh lebih tahan terhadap tekstur latar dibanding deteksi tepi/warna di atas.
-                const useBrightnessFallback = (bgStd > 12);
-                let brightThresh = 255;
-                if (useBrightnessFallback) {
-                    const histogram = new Uint32Array(256);
-                    for (let i = 0; i < d.length; i += 4) {
-                        const lum = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
-                        histogram[lum]++;
-                    }
-                    const totalPixels = sw * sh;
-                    let sumAll = 0;
-                    for (let i = 0; i < 256; i++) sumAll += i * histogram[i];
-                    let sumB = 0, wB = 0, varMax = -1, otsuT = 127;
-                    for (let t = 0; t < 256; t++) {
-                        wB += histogram[t];
-                        if (wB === 0) continue;
-                        const wF = totalPixels - wB;
-                        if (wF === 0) break;
-                        sumB += t * histogram[t];
-                        const mB = sumB / wB, mF = (sumAll - sumB) / wF;
-                        const varBetween = wB * wF * (mB - mF) * (mB - mF);
-                        if (varBetween > varMax) { varMax = varBetween; otsuT = t; }
-                    }
-                    brightThresh = otsuT;
-                    console.log(`[Auto-Crop] Latar bertekstur terdeteksi (bgStd=${bgStd.toFixed(1)}, bgLum=${bgLum.toFixed(0)}) — pakai mode kecerahan, ambang Otsu=${brightThresh}`);
+                    if (edgeHits > (sw - 2 * marginX) * 0.22) break;
+                    top++;
                 }
 
-                let top, bottom, left, right;
-
-                if (useBrightnessFallback) {
-                    // 2a. Mode kecerahan: latar bertekstur kontras-tinggi (mis. karpet motif
-                    // dalmatian/kotak-kotak hitam-putih) punya bercak TERANG yang tersebar di
-                    // seluruh frame, bukan cuma "noise" tipis — proyeksi baris/kolom global di
-                    // atas gagal total untuk kasus ini karena bercak terang di background ikut
-                    // kehitung sebagai "ada dokumen" di hampir semua baris/kolom, sehingga kotak
-                    // yang terdeteksi melebar ke seluruh frame (tidak ter-crop sama sekali).
-                    // Diganti pendekatan connected-component: tandai piksel terang (di atas ambang
-                    // Otsu), lebarkan 1px (dilasi) supaya celah kecil akibat teks/foto di kartu
-                    // tidak memutus area, lalu flood-fill HANYA dari area terang yang terhubung ke
-                    // tengah frame (dokumen hampir selalu diposisikan di tengah saat difoto) —
-                    // bercak terang terpisah di background (tidak terhubung ke tengah) otomatis
-                    // terabaikan karena bukan bagian dari komponen yang sama.
-                    const mask = new Uint8Array(sw * sh);
-                    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-                        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-                        mask[p] = (lum > brightThresh) ? 1 : 0;
+                // Scan Bottom
+                let bottom = sh - 1 - marginY;
+                while (bottom > top + minCardHeight) {
+                    let edgeHits = 0;
+                    for (let x = marginX; x < sw - marginX; x++) {
+                        if (edgeMap[bottom * sw + x]) edgeHits++;
                     }
-                    // Dilasi 1px (4-connectivity) untuk menjembatani celah kecil (teks/foto gelap di kartu)
-                    const dilated = new Uint8Array(sw * sh);
-                    for (let y = 0; y < sh; y++) {
-                        for (let x = 0; x < sw; x++) {
-                            const p = y * sw + x;
-                            if (mask[p]) { dilated[p] = 1; continue; }
-                            const up = (y > 0) && mask[p - sw];
-                            const down = (y < sh - 1) && mask[p + sw];
-                            const lft = (x > 0) && mask[p - 1];
-                            const rgt = (x < sw - 1) && mask[p + 1];
-                            dilated[p] = (up || down || lft || rgt) ? 1 : 0;
-                        }
+                    if (edgeHits > (sw - 2 * marginX) * 0.22) break;
+                    bottom--;
+                }
+
+                // Scan Left
+                let left = marginX;
+                while (left < sw - minCardWidth) {
+                    let edgeHits = 0;
+                    for (let y = top; y <= bottom; y++) {
+                        if (edgeMap[y * sw + left]) edgeHits++;
                     }
+                    if (edgeHits > (bottom - top) * 0.22) break;
+                    left++;
+                }
 
-                    // Cari titik awal flood-fill: tengah frame, atau spiral cari piksel terang terdekat
-                    function findSeed() {
-                        const cx = Math.floor(sw / 2), cy = Math.floor(sh / 2);
-                        if (dilated[cy * sw + cx]) return [cx, cy];
-                        const maxR = Math.floor(Math.min(sw, sh) * 0.35);
-                        for (let r = 1; r <= maxR; r++) {
-                            for (let dy = -r; dy <= r; dy++) {
-                                for (let dx = -r; dx <= r; dx++) {
-                                    if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-                                    const px = cx + dx, py = cy + dy;
-                                    if (px < 0 || px >= sw || py < 0 || py >= sh) continue;
-                                    if (dilated[py * sw + px]) return [px, py];
-                                }
-                            }
-                        }
-                        return null;
+                // Scan Right
+                let right = sw - 1 - marginX;
+                while (right > left + minCardWidth) {
+                    let edgeHits = 0;
+                    for (let y = top; y <= bottom; y++) {
+                        if (edgeMap[y * sw + right]) edgeHits++;
                     }
-                    const seed = findSeed();
-
-                    if (!seed) {
-                        console.log(`[Auto-Crop] Mode kecerahan: tidak ditemukan area terang di sekitar tengah frame untuk ${targetDoc}, lewati crop.`);
-                        return callback(imageDataUrl);
-                    }
-
-                    // Flood-fill iteratif (stack) dari seed, lacak bounding box area yang terhubung
-                    const visited = new Uint8Array(sw * sh);
-                    const stack = [seed[1] * sw + seed[0]];
-                    visited[stack[0]] = 1;
-                    let minX = seed[0], maxX = seed[0], minY = seed[1], maxY = seed[1];
-                    while (stack.length) {
-                        const p = stack.pop();
-                        const x = p % sw, y = (p / sw) | 0;
-                        if (x < minX) minX = x; if (x > maxX) maxX = x;
-                        if (y < minY) minY = y; if (y > maxY) maxY = y;
-                        if (x > 0 && !visited[p - 1] && dilated[p - 1]) { visited[p - 1] = 1; stack.push(p - 1); }
-                        if (x < sw - 1 && !visited[p + 1] && dilated[p + 1]) { visited[p + 1] = 1; stack.push(p + 1); }
-                        if (y > 0 && !visited[p - sw] && dilated[p - sw]) { visited[p - sw] = 1; stack.push(p - sw); }
-                        if (y < sh - 1 && !visited[p + sw] && dilated[p + sw]) { visited[p + sw] = 1; stack.push(p + sw); }
-                    }
-                    top = minY; bottom = maxY; left = minX; right = maxX;
-                    console.log(`[Auto-Crop] Mode kecerahan ${targetDoc}: komponen terhubung dari tengah = kotak (${left},${top})-(${right},${bottom}) dari frame ${sw}x${sh}`);
-                } else {
-                    // 2b. Mode normal: scan energi tepi & perbedaan warna terhadap background
-                    const rowScores = new Float32Array(sh);
-                    const colScores = new Float32Array(sw);
-
-                    for (let y = 1; y < sh - 1; y++) {
-                        for (let x = 1; x < sw - 1; x++) {
-                            const idx = (y * sw + x) * 4;
-                            const r = d[idx], g = d[idx + 1], b = d[idx + 2];
-
-                            // Jarak warna dari background
-                            const dist = Math.sqrt((r - bgR)**2 + (g - bgG)**2 + (b - bgB)**2);
-
-                            // Gradient tepi (Sobel filter sederhana)
-                            const idxL = (y * sw + (x - 1)) * 4;
-                            const idxR = (y * sw + (x + 1)) * 4;
-                            const idxU = ((y - 1) * sw + x) * 4;
-                            const idxD = ((y + 1) * sw + x) * 4;
-                            const gradX = Math.abs(d[idxR] - d[idxL]) + Math.abs(d[idxR+1] - d[idxL+1]) + Math.abs(d[idxR+2] - d[idxL+2]);
-                            const gradY = Math.abs(d[idxD] - d[idxU]) + Math.abs(d[idxD+1] - d[idxU+1]) + Math.abs(d[idxD+2] - d[idxU+2]);
-                            const edgeScore = (gradX + gradY) / 3;
-
-                            // Pixel adalah bagian dari dokumen jika berbeda dari background atau memiliki tepi kuat
-                            const isDocPixel = (dist > distThresh) || (edgeScore > 35);
-                            if (isDocPixel) {
-                                rowScores[y] += 1;
-                                colScores[x] += 1;
-                            }
-                        }
-                    }
-
-                    // 3. Tentukan batas dokumen (Threshold minimal 12% lebar/tinggi baris/kolom)
-                    const minRowScore = Math.max(3, sw * 0.12);
-                    const minColScore = Math.max(3, sh * 0.12);
-
-                    top = 0;
-                    while (top < sh && rowScores[top] < minRowScore) top++;
-
-                    bottom = sh - 1;
-                    while (bottom > top && rowScores[bottom] < minRowScore) bottom--;
-
-                    left = 0;
-                    while (left < sw && colScores[left] < minColScore) left++;
-
-                    right = sw - 1;
-                    while (right > left && colScores[right] < minColScore) right--;
+                    if (edgeHits > (bottom - top) * 0.22) break;
+                    right--;
                 }
 
                 const cropW_scan = right - left;
                 const cropH_scan = bottom - top;
 
-                // Cek apakah ada cropping yang signifikan (dokumen terdeteksi dengan background sekelilingnya)
-                const hasMarginX = (left > sw * 0.02) || (right < sw * 0.98);
-                const hasMarginY = (top > sh * 0.02) || (bottom < sh * 0.98);
+                // Validasi bahwa kotak kartu membuang setidaknya margin background luar
+                const hasCroppableMargin = (left > marginX || top > marginY || right < sw - 1 - marginX || bottom < sh - 1 - marginY);
 
-                if (cropW_scan < sw * 0.20 || cropH_scan < sh * 0.20 || (!hasMarginX && !hasMarginY)) {
-                    console.log(`[Auto-Crop] Dokumen ${targetDoc} sudah mengisi penuh frame tanpa background luar.`);
+                if (!hasCroppableMargin || cropW_scan < minCardWidth || cropH_scan < minCardHeight) {
+                    console.log(`[Auto-Crop] Scan kontur tepi tidak memerlukan pemotongan drastis.`);
                     return callback(imageDataUrl);
                 }
 
-                // Beri padding mikro 1.5% agar teks di sudut/tepi kartu tidak terpangkas
-                const padX = Math.round(cropW_scan * 0.015);
-                const padY = Math.round(cropH_scan * 0.015);
+                // Sesuaikan rasio aspek kartu standar (1.585:1 untuk KTP/NPWP)
+                let cLeft = left, cTop = top, cRight = right, cBottom = bottom;
+                const currentRatio = cropW_scan / cropH_scan;
 
-                const cLeft = Math.max(0, left - padX);
-                const cTop = Math.max(0, top - padY);
-                const cRight = Math.min(sw, right + padX);
-                const cBottom = Math.min(sh, bottom + padY);
+                if (isIdCard && currentRatio > 0.5) {
+                    if (currentRatio < 1.35) {
+                        const desiredH = Math.round(cropW_scan / 1.585);
+                        if (desiredH < cropH_scan) {
+                            const diffH = cropH_scan - desiredH;
+                            cTop += Math.round(diffH / 2);
+                            cBottom -= Math.round(diffH / 2);
+                        }
+                    } else if (currentRatio > 1.85) {
+                        const desiredW = Math.round(cropH_scan * 1.585);
+                        if (desiredW < cropW_scan) {
+                            const diffW = cropW_scan - desiredW;
+                            cLeft += Math.round(diffW / 2);
+                            cRight -= Math.round(diffW / 2);
+                        }
+                    }
+                }
 
-                const origX = Math.round(cLeft / scale);
-                const origY = Math.round(cTop / scale);
+                const origX = Math.max(0, Math.round(cLeft / scale));
+                const origY = Math.max(0, Math.round(cTop / scale));
                 const origW_crop = Math.min(origW - origX, Math.round((cRight - cLeft) / scale));
                 const origH_crop = Math.min(origH - origY, Math.round((cBottom - cTop) / scale));
 
@@ -6513,7 +6410,7 @@
                     return callback(imageDataUrl);
                 }
 
-                // Render hasil potongan beresolusi tinggi (lossless quality 0.95)
+                // Render kartu yang sudah terpotong & lurus ke kanvas resolusi tinggi
                 const cropCanvas = document.createElement('canvas');
                 cropCanvas.width = origW_crop;
                 cropCanvas.height = origH_crop;
@@ -6523,7 +6420,7 @@
                 cctx.drawImage(img, origX, origY, origW_crop, origH_crop, 0, 0, origW_crop, origH_crop);
 
                 const croppedResult = cropCanvas.toDataURL('image/jpeg', 0.95);
-                console.log(`[Auto-Crop Sukses] ${targetDoc}: dari ${origW}x${origH} dipotong rapi menjadi ${origW_crop}x${origH_crop} (Latar belakang meja berhasil dipotong)`);
+                console.log(`[Auto-Crop 4-Corner Sukses] ${targetDoc}: dari ${origW}x${origH} dipotong rapi menjadi ${origW_crop}x${origH_crop} (Rasio: ${(origW_crop/origH_crop).toFixed(3)})`);
                 callback(croppedResult);
             };
             img.onerror = function() {
@@ -6948,6 +6845,8 @@
             const ocrHeaders = { 'Content-Type': 'application/json' };
             if (ocrToken) ocrHeaders['Authorization'] = 'Bearer ' + ocrToken;
 
+            let serverCroppedImage = null;
+
             // Percobaan 1 & Auto-Retry 1x jika server sedang cold start (Render bangun) atau transient network error
             for (let attempt = 1; attempt <= 2; attempt++) {
                 try {
@@ -6958,7 +6857,11 @@
                     });
                     if (resp.ok) {
                         const data = await resp.json();
-                        if (data.status === 'ok') {
+                        if (data && data.cropped_image) {
+                            serverCroppedImage = data.cropped_image;
+                        }
+                        const hasFields = data && data.parsed && Object.keys(data.parsed).some(k => k !== 'jenis_dokumen_terdeteksi' && k !== 'doc_bbox' && String(data.parsed[k]).trim().length > 0);
+                        if (data.status === 'ok' && hasFields) {
                             return data;
                         }
                     } else if (resp.status === 429 || resp.status >= 500) {
@@ -6978,10 +6881,11 @@
             }
 
             // Kloning Kemampuan Vision di Sisi Browser (24/7 Offline Fallback Engine via Tesseract.js & Heuristic Parser)
-            if (window.Tesseract && typeof imgUrl === 'string' && imgUrl.startsWith('data:image/')) {
+            const inputForClientOcr = serverCroppedImage || imgUrl;
+            if (window.Tesseract && typeof inputForClientOcr === 'string' && inputForClientOcr.startsWith('data:image/')) {
                 try {
                     console.log(`[OCR 24/7] Mengaktifkan mesin Vision lokal browser untuk target: ${target}...`);
-                    const res = await Tesseract.recognize(imgUrl, 'ind+eng');
+                    const res = await Tesseract.recognize(inputForClientOcr, 'ind+eng');
                     const rawText = res.data.text || '';
                     let clientParsed = {};
                     if (target === 'ktp' && typeof parseKtpTextRobust === 'function') {
@@ -6993,12 +6897,12 @@
                     } else if ((target === 'ownership' || target === 'bpkb') && typeof parseBpkbTextRobust === 'function') {
                         clientParsed = parseBpkbTextRobust(rawText);
                     }
-                    return { text: rawText, parsed: clientParsed };
+                    return { status: 'ok', text: rawText, parsed: clientParsed, cropped_image: serverCroppedImage };
                 } catch (tErr) {
                     console.warn('Client-side Tesseract error:', tErr);
                 }
             }
-            return { text: '', parsed: {} };
+            return { status: 'failed', text: '', parsed: {}, cropped_image: serverCroppedImage };
         }
 
         // Auto-crop presisi berbasis bounding box [ymin, xmin, ymax, xmax] (0..1000) dari Vision AI
@@ -7065,7 +6969,10 @@
                         uploadedKtpDataUrl = null;
                         return;
                     }
-                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
+                        uploadedKtpDataUrl = ocrRes.cropped_image;
+                        if (img) img.src = ocrRes.cropped_image;
+                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
                         const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
                         if (aiCropped) {
                             uploadedKtpDataUrl = aiCropped;
@@ -7117,7 +7024,10 @@
                         uploadedNpwpDataUrl = null;
                         return;
                     }
-                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
+                        uploadedNpwpDataUrl = ocrRes.cropped_image;
+                        if (img) img.src = ocrRes.cropped_image;
+                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
                         const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
                         if (aiCropped) {
                             uploadedNpwpDataUrl = aiCropped;
@@ -7186,7 +7096,10 @@
                         if (isOwnershipPrimary) { uploadedOwnershipDataUrl = null; } else { delete ownershipExtraPages[target]; }
                         return;
                     }
-                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
+                        if (isOwnershipPrimary) { uploadedOwnershipDataUrl = ocrRes.cropped_image; } else { ownershipExtraPages[target] = ocrRes.cropped_image; }
+                        if (img) img.src = ocrRes.cropped_image;
+                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
                         const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
                         if (aiCropped) {
                             if (isOwnershipPrimary) { uploadedOwnershipDataUrl = aiCropped; } else { ownershipExtraPages[target] = aiCropped; }
@@ -7263,7 +7176,10 @@
                         uploadedStnkDataUrl = null;
                         return;
                     }
-                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
+                        uploadedStnkDataUrl = ocrRes.cropped_image;
+                        if (img) img.src = ocrRes.cropped_image;
+                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
                         const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
                         if (aiCropped) {
                             uploadedStnkDataUrl = aiCropped;
@@ -7318,7 +7234,10 @@
                         if (ph) ph.style.display = 'flex';
                         return;
                     }
-                    if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
+                    if (ocrRes && ocrRes.cropped_image && !rawPdfUrlForOcr) {
+                        if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = ocrRes.cropped_image;
+                        if (img) img.src = ocrRes.cropped_image;
+                    } else if (ocrRes && ocrRes.doc_bbox && !rawPdfUrlForOcr) {
                         const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
                         if (aiCropped) {
                             if (typeof uploadedStnk2DataUrl !== 'undefined') uploadedStnk2DataUrl = aiCropped;
