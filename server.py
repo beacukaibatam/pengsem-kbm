@@ -1611,9 +1611,30 @@ def _is_pegawai(sess):
     return bool(sess) and sess.get('role') in PEGAWAI_ROLES
 
 def _pemohon_draft_identifier(sess):
-    """Kunci draf formulir Tahap 2 — SELALU dari identitas akun pemohon di sesi
-    login (NIK, fallback nomor WA/username), bukan dari body request, supaya satu
-    akun tidak bisa membaca/menimpa draf akun pemohon lain."""
+    """Kunci draf formulir Tahap 2 — SELALU dari identitas unik akun pemohon di sesi
+    login (User ID unik permanen, dinormalisasi nomor telepon/NIK/username), bukan
+    dari body request, supaya satu akun tidak bisa membaca/menimpa draf akun pemohon lain."""
+    sess_user = (sess or {}).get('user', {}) or {}
+    uid = str(sess_user.get('id', '')).strip()
+    if uid:
+        return f"pemohon:uid_{uid}"
+    
+    # Fallback normalisasi nomor telepon jika id tidak tersedia
+    phone = str(sess_user.get('phone', '')).strip().replace('+', '').replace('-', '').replace(' ', '')
+    if phone.startswith('0'):
+        phone = '62' + phone[1:]
+    if phone:
+        return f"pemohon:ph_{phone}"
+
+    nik = str(sess_user.get('nik', '')).strip().replace(' ', '').replace('-', '')
+    if nik:
+        return f"pemohon:nik_{nik}"
+
+    username = str(sess_user.get('username', '')).strip()
+    return f"pemohon:usr_{username}" if username else ''
+
+def _legacy_pemohon_draft_identifier(sess):
+    """Fallback ke kunci draf skema lama untuk kompatibilitas draf yang sudah tersimpan."""
     sess_user = (sess or {}).get('user', {}) or {}
     ident = str(sess_user.get('nik', '')).strip() or str(sess_user.get('phone', '')).strip() or str(sess_user.get('username', '')).strip()
     return f"pemohon:{ident}" if ident else ''
@@ -2500,6 +2521,40 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             identifier = _pemohon_draft_identifier(sess)
             draft = database.load_form_draft(identifier) if identifier else {}
+            # Fallback backward-compatible ke legacy identifier jika belum ada di key baru
+            if not draft and sess:
+                legacy_ident = _legacy_pemohon_draft_identifier(sess)
+                if legacy_ident and legacy_ident != identifier:
+                    draft = database.load_form_draft(legacy_ident)
+
+            # Anti-Kebocoran Server: Validasi bahwa draf benar milik akun yang sedang login
+            sess_user = (sess or {}).get('user', {}) or {}
+            sess_nama = str(sess_user.get('nama', '')).strip().upper()
+            sess_phone = str(sess_user.get('phone', '')).strip().replace('+', '').replace('-', '').replace(' ', '')
+            if sess_phone.startswith('0'):
+                sess_phone = '62' + sess_phone[1:]
+
+            if draft and isinstance(draft, dict):
+                # Periksa metadata saved_by jika ada
+                saved_by = draft.get('saved_by', {})
+                if saved_by and isinstance(saved_by, dict):
+                    saved_uid = str(saved_by.get('id', '')).strip()
+                    saved_phone = str(saved_by.get('phone', '')).strip().replace('+', '').replace('-', '').replace(' ', '')
+                    if saved_phone.startswith('0'):
+                        saved_phone = '62' + saved_phone[1:]
+                    cur_uid = str(sess_user.get('id', '')).strip()
+                    if (cur_uid and saved_uid and cur_uid != saved_uid) or (sess_phone and saved_phone and sess_phone != saved_phone):
+                        print(f"[!] [SECURITY ALERT] Menolak draf milik UID {saved_uid}/{saved_phone} yang diakses oleh UID {cur_uid}/{sess_phone}")
+                        draft = {}
+
+                # Periksa nama pemohon di draf fields vs nama akun login
+                draft_fields = draft.get('fields', {}) or {}
+                draft_nama = str(draft_fields.get('pemohon_nama', '')).strip().upper()
+                if sess_nama and draft_nama and len(sess_nama) >= 3 and len(draft_nama) >= 3:
+                    if sess_nama not in draft_nama and draft_nama not in sess_nama:
+                        print(f"[!] [SECURITY ALERT] Menolak draf karena nama pemohon bertolak belakang! Sesi: '{sess_nama}' vs Draf: '{draft_nama}'")
+                        draft = {}
+
             self._send_json_response({'status': 'ok', 'draft': draft})
             return
 
@@ -3530,12 +3585,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 body = json.loads(post_data.decode('utf-8'))
                 if body.get('clear'):
                     database.clear_form_draft(identifier)
+                    legacy_ident = _legacy_pemohon_draft_identifier(sess)
+                    if legacy_ident:
+                        database.clear_form_draft(legacy_ident)
                     self._send_json_response({'status': 'ok', 'cleared': True})
                     return
                 patch = body.get('patch')
                 if not isinstance(patch, dict):
                     self._send_json_error(400, 'Format draf tidak valid.')
                     return
+
+                # Lampirkan metadata kepemilikan akun ke draf secara otomatis
+                sess_user = (sess or {}).get('user', {}) or {}
+                patch['saved_by'] = {
+                    'id': sess_user.get('id', ''),
+                    'nama': sess_user.get('nama', ''),
+                    'phone': sess_user.get('phone', ''),
+                    'saved_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+
                 database.save_form_draft(identifier, patch)
                 self._send_json_response({'status': 'ok', 'updated_at': datetime.datetime.now().isoformat()})
             except Exception as e:
@@ -3667,6 +3735,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 # relevan lagi, hapus supaya tidak menumpuk selamanya di tabel.
                 try:
                     database.clear_form_draft(_pemohon_draft_identifier(sess))
+                    legacy_ident = _legacy_pemohon_draft_identifier(sess)
+                    if legacy_ident:
+                        database.clear_form_draft(legacy_ident)
                 except Exception:
                     pass
                 resp = json.dumps({"status": "success", "data": new_record}).encode('utf-8')

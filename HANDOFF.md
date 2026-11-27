@@ -77,6 +77,37 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Remediasi Kebocoran Data PII Antar Akun Pemohon & Tombol Hapus Foto Dokumen** (Antigravity — 27 Nov 2026 23:30 WIB)
+  1. **Investigasi Akar Masalah Pasti (100% Terbukti Empiris)**:
+     - **Akar Frontend**: Mekanisme logout sebelumnya (`confirmLogoutAction()`, `forceIdleLogout()`, `applyUnauthenticatedUI()`) HANYA menghapus token dari `localStorage` dan mereset session header, tetapi **SAMA SEKALI TIDAK** membersihkan input formulir di DOM, elemen `<img id="imgKtpPreview">`, variabel memori `uploadedKtpDataUrl`, `docOcrStore.ktp`, maupun status kartu.
+     - Begitu pengguna logout dari akun A (M. Ridwansyah) lalu login sebagai akun B (Sri Astuti) di tab/browser yang sama tanpa hard reload:
+       - Akun Sri Astuti baru mendaftar via WhatsApp sehingga profil akunnya memiliki `nik: ""`.
+       - Karena `user.nik` kosong, baris `if (user.nik) el.value = user.nik;` di `applyUserRoleUI()` dievaluasi `false`, sehingga field `#pemohon_nik` **TIDAK PERNAH DITIMPA** dan tetap memuat NIK `1801071710940002` milik Ridwansyah!
+       - Demikian pula `#imgKtpPreview` dan `docOcrStore.ktp` tetap menyimpan foto KTP asli dan data OCR Ridwansyah.
+       - Dalam 1.5 detik pasca login Sri Astuti, timer autosave (`_runAutosave()`) otomatis mengoleksi seluruh isi formulir dan menembakkannya ke `/api/permohonan/draft-save` dengan token Sri Astuti. Akibatnya, draf akun Sri Astuti di server ikut terkontaminasi foto KTP dan NIK Ridwansyah.
+     - **Akar Backend**: Kunci draf `_pemohon_draft_identifier()` sebelumnya memakai `nik or phone or username` tanpa User ID (`id`) unik permanen, dan tidak menyertakan verifikasi identitas `saved_by` saat pemohon memuat draf via `/api/permohonan/draft-load`.
+  2. **Perbaikan Kode & Penegakan Keamanan Multi-Lapis**:
+     - **Frontend**: Dibuat fungsi pembersihan total `resetAllFormDataAndState()` yang membersihkan seluruh field formulir, menghapus atribut `src` dan menyembunyikan seluruh `img` pratinjau, memulihkan placeholder `phKtp`, `phNpwp`, dst., mereset badge ke 'Menunggu Unggah', dan mengosongkan variabel memori JS (`uploadedKtpDataUrl`, `docOcrStore`). Fungsi ini dieksekusi secara wajib pada:
+       1) `confirmLogoutAction()` (saat pemohon klik Keluar).
+       2) `forceIdleLogout()` (saat timeout sesi 15 menit).
+       3) `applyUnauthenticatedUI()` (saat state unauthenticated aktif).
+       4) Awal pemanggilan `applyUserRoleUI('pemohon', ...)` (sebelum data akun pemohon baru diterapkan).
+     - **Frontend Shield**: Pada `restoreFormDraft()`, ditambahkan validasi silang identitas. Jika draf memuat nama pemohon atau nomor telepon yang bertolak belakang dengan akun yang sedang login, pemulihan draf DITOLAK seketika (`console.warn('[SECURITY] Draf ditolak...')`).
+     - **Backend Shield**: `_pemohon_draft_identifier()` kini mengunci draf berdasarkan User ID unik permanen (`pemohon:uid_<id>`). Endpoint `/api/permohonan/draft-save` melampirkan metadata `saved_by` (ID, Nama, No WA sesi). Endpoint `/api/permohonan/draft-load` memverifikasi kesesuaian User ID / Nama pemohon sebelum mengembalikan draf.
+  3. **Fitur Tombol Hapus Foto Pratinjau Dokumen (`.preview-delete-btn`)**:
+     - Ditambahkan tombol tempat sampah mengambang (`.preview-delete-btn`) di sudut kanan atas seluruh kotak pratinjau (`#previewKtpBox`, `#previewNpwpBox`, `#previewOwnershipBox`, `#previewOwnership2Box`, `#previewOwnership3Box`, `#previewStnkBox`, `#previewStnk2Box`, dan leasing dinamis).
+     - Menggunakan `MutationObserver` + event listener `load` pada elemen `img` agar tombol hanya tampil otomatis saat berkas foto ada, dan tersembunyi saat kotak kosong.
+     - Diberi `pointer-events: auto` dan `event.stopPropagation()` terpisah dari area klik-untuk-ganti.
+     - Fungsi `removeUploadedDoc(target)`: mengosongkan `src`, menghapus atribut gambar, menampilkan kembali placeholder `"Klik di sini untuk unggah..."`, mereset badge status ke `"Menunggu Unggah"`, mengosongkan store OCR target terkait, dan men-trigger `_runAutosave()` agar penghapusan tersimpan bersih ke database server (mencegah kebangkitan foto).
+  4. **Verifikasi Empiris Penuh**:
+     - Pengujian komprehensif via script Playwright (`test_account_isolation_and_delete.py`):
+       - Skenario pergantian akun: Login Pemohon A (Ridwansyah) + KTP -> Logout -> Verifikasi DOM 100% bersih -> Login Pemohon B (Sri Astuti) -> Terbukti NIK kosong, foto KTP kosong, placeholder aktif, 0% kebocoran.
+       - Skenario tombol hapus: Unggah KTP, NPWP, BPKB, STNK -> Klik tombol hapus pada masing-masing kotak -> Terbukti gambar terhapus, placeholder aktif, badge 'Menunggu Unggah', tombol hapus kembali sembunyi.
+       - Tangkapan layar bukti pengujian: `test_pemohon_a_with_ktp.png`, `test_pemohon_b_clean_no_leak.png`, `test_pemohon_b_uploaded_ktp_with_delete_btn.png`, `test_pemohon_b_after_delete_ktp.png`, `test_all_boxes_deleted_clean.png`.
+     - `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+     - `python3 -m py_compile server.py database.py` = LOLOS.
+     - Sintaks inline JS lolos verifikasi `node --check` = LOLOS.
+
 - **Penghilangan Banner Notifikasi Draf Dipulihkan (`#draftRestoredBanner`)** (Antigravity — 27 Nov 2026 22:30 WIB)
   1. **Permintaan Pengguna**:
      - Menghapus banner: *"Draf berkas yang sudah Anda isi/koreksi sebelumnya berhasil dipulihkan dari penyimpanan server."* karena user tidak ingin notifikasi ini ditampilkan lagi.
