@@ -523,6 +523,15 @@
             min-width: 42px;
             text-align: center;
         }
+        .preview-box img, .car-photo-card img {
+            cursor: zoom-in !important;
+            pointer-events: auto !important;
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+        .preview-box img:hover, .car-photo-card img:hover {
+            transform: scale(1.02);
+            filter: brightness(1.04);
+        }
         .image-lightbox-viewport {
             overflow: auto;
             width: 90vw;
@@ -532,6 +541,12 @@
             justify-content: center;
             border-radius: 10px;
             background: rgba(0,0,0,0.2);
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .image-lightbox-viewport.is-dragging {
+            cursor: grabbing !important;
         }
         .image-lightbox-viewport img {
             object-fit: contain;
@@ -5748,9 +5763,52 @@
             if (vp) { vp.scrollLeft = 0; vp.scrollTop = 0; }
         }
 
-        // Tombol kaca pembesar kecil di sudut .preview-box (satu-satunya elemen pointer-events:auto
-        // di dalamnya) sebagai pemicu lightbox — SENGAJA tidak memakai onclick di <img> itu sendiri
-        // supaya tidak perlu mengubah pointer-events gambar (lihat catatan di CSS .preview-box img).
+        // Drag-to-pan interaktif pada viewport lightbox saat gambar dizoom
+        (function() {
+            let isDragging = false;
+            let startX, startY, scrollLeft, scrollTop;
+
+            document.addEventListener('mousedown', function(e) {
+                const vp = document.getElementById('lightboxViewport');
+                if (!vp || lightboxCropMode || e.button !== 0) return;
+                if (!vp.contains(e.target)) return;
+                isDragging = true;
+                vp.classList.add('is-dragging');
+                startX = e.pageX - vp.offsetLeft;
+                startY = e.pageY - vp.offsetTop;
+                scrollLeft = vp.scrollLeft;
+                scrollTop = vp.scrollTop;
+            });
+
+            window.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const vp = document.getElementById('lightboxViewport');
+                if (!vp) return;
+                e.preventDefault();
+                const x = e.pageX - vp.offsetLeft;
+                const y = e.pageY - vp.offsetTop;
+                vp.scrollLeft = scrollLeft - (x - startX);
+                vp.scrollTop = scrollTop - (y - startY);
+            });
+
+            window.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    const vp = document.getElementById('lightboxViewport');
+                    if (vp) vp.classList.remove('is-dragging');
+                }
+            });
+
+            // Klik langsung pada gambar preview (.preview-box img atau .car-photo-card img) membuka lightbox
+            document.addEventListener('click', function(e) {
+                const img = e.target.closest('.preview-box img, .car-photo-card img');
+                if (img && img.src && !img.src.endsWith('/') && img.src !== window.location.href && img.style.display !== 'none') {
+                    openImageLightbox(img.src, img.id);
+                }
+            });
+        })();
+
+        // Tombol kaca pembesar kecil di sudut .preview-box sebagai pemicu lightbox tambahan
         function attachZoomButtonTo(previewBoxEl) {
             if (!previewBoxEl || previewBoxEl.querySelector('.preview-zoom-btn')) return;
             const img = previewBoxEl.querySelector('img');
@@ -6274,9 +6332,9 @@
                 // akurat (motif teksturnya sendiri terbaca sebagai "tepi dokumen"), sehingga kotak
                 // dokumen yang terdeteksi bisa melebar ke hampir seluruh frame. Kartu identitas
                 // (KTP/NPWP/dsb.) hampir selalu jauh lebih TERANG daripada latar bertekstur semacam
-                // itu, jadi dipakai strategi cadangan berbasis kecerahan (ambang Otsu) yang terbukti
-                // jauh lebih tahan terhadap tekstur latar dibanding deteksi tepi/warna di atas.
-                const useBrightnessFallback = (bgStd > 12) && (bgLum < 170);
+                // itu, jadi dipakai strategi cadangan berbasis kecerahan (ambang Otsu & flood-fill)
+                // yang terbukti jauh lebih tahan terhadap tekstur latar dibanding deteksi tepi/warna di atas.
+                const useBrightnessFallback = (bgStd > 12);
                 let brightThresh = 255;
                 if (useBrightnessFallback) {
                     const histogram = new Uint32Array(256);
@@ -6885,29 +6943,57 @@
         }
 
         async function fetchOCR(target, imgUrl) {
-            try {
-                let ocrToken = '';
-                try { ocrToken = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
-                const ocrHeaders = { 'Content-Type': 'application/json' };
-                if (ocrToken) ocrHeaders['Authorization'] = 'Bearer ' + ocrToken;
-                const resp = await fetch(`${API_BASE_URL}/api/ocr`, {
-                    method: 'POST',
-                    headers: ocrHeaders,
-                    body: JSON.stringify({ target: target, image: imgUrl, engine: 'auto' })
-                });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    if (data.status === 'ok') {
-                        return data;
+            let ocrToken = '';
+            try { ocrToken = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+            const ocrHeaders = { 'Content-Type': 'application/json' };
+            if (ocrToken) ocrHeaders['Authorization'] = 'Bearer ' + ocrToken;
+
+            // Percobaan 1 & Auto-Retry 1x jika server sedang cold start (Render bangun) atau transient network error
+            for (let attempt = 1; attempt <= 2; attempt++) {
+                try {
+                    const resp = await fetch(`${API_BASE_URL}/api/ocr`, {
+                        method: 'POST',
+                        headers: ocrHeaders,
+                        body: JSON.stringify({ target: target, image: imgUrl, engine: 'auto' })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.status === 'ok') {
+                            return data;
+                        }
+                    } else if (resp.status === 429 || resp.status >= 500) {
+                        if (attempt === 1) {
+                            console.warn(`[OCR] Server sedang sibuk/cold start (${resp.status}), mencoba ulang otomatis dalam 1.8 detik...`);
+                            await new Promise(r => setTimeout(r, 1800));
+                            continue;
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`[OCR] Percobaan ${attempt} gagal menghubungi API /api/ocr:`, e);
+                    if (attempt === 1) {
+                        await new Promise(r => setTimeout(r, 1800));
+                        continue;
                     }
                 }
-            } catch (e) {
-                console.warn('API /api/ocr not reachable, fallback to client-side OCR:', e);
             }
+
+            // Kloning Kemampuan Vision di Sisi Browser (24/7 Offline Fallback Engine via Tesseract.js & Heuristic Parser)
             if (window.Tesseract && typeof imgUrl === 'string' && imgUrl.startsWith('data:image/')) {
                 try {
+                    console.log(`[OCR 24/7] Mengaktifkan mesin Vision lokal browser untuk target: ${target}...`);
                     const res = await Tesseract.recognize(imgUrl, 'ind+eng');
-                    return { text: res.data.text || '', parsed: {} };
+                    const rawText = res.data.text || '';
+                    let clientParsed = {};
+                    if (target === 'ktp' && typeof parseKtpTextRobust === 'function') {
+                        clientParsed = parseKtpTextRobust(rawText);
+                    } else if (target === 'npwp' && typeof parseNpwpTextRobust === 'function') {
+                        clientParsed = parseNpwpTextRobust(rawText);
+                    } else if ((target === 'stnk' || target === 'stnk_1' || target === 'stnk_2') && typeof parseStnkTextRobust === 'function') {
+                        clientParsed = parseStnkTextRobust(rawText);
+                    } else if ((target === 'ownership' || target === 'bpkb') && typeof parseBpkbTextRobust === 'function') {
+                        clientParsed = parseBpkbTextRobust(rawText);
+                    }
+                    return { text: rawText, parsed: clientParsed };
                 } catch (tErr) {
                     console.warn('Client-side Tesseract error:', tErr);
                 }

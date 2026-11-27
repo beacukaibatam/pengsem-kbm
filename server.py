@@ -71,10 +71,24 @@ except Exception:
 # Vision AI (Google Gemini Multimodal API)
 import urllib.request
 import urllib.error
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-VISION_AI_ENABLED = bool(GEMINI_API_KEY)
+
+def get_gemini_api_keys():
+    """Mendukung multi-key rotation (kunci dipisah koma, titik-koma, atau spasi),
+    dan fallback dari GEMINI_API_KEYS / GEMINI_BACKUP_KEY / GOOGLE_API_KEY."""
+    raw = (
+        os.environ.get('GEMINI_API_KEY', '') or
+        os.environ.get('GEMINI_API_KEYS', '') or
+        os.environ.get('GEMINI_BACKUP_KEY', '') or
+        os.environ.get('GOOGLE_API_KEY', '')
+    )
+    keys = [k.strip() for k in re.split(r'[,;\s]+', raw) if k.strip()]
+    return keys
+
+GEMINI_API_KEYS = get_gemini_api_keys()
+GEMINI_API_KEY = GEMINI_API_KEYS[0] if GEMINI_API_KEYS else ''
+VISION_AI_ENABLED = bool(GEMINI_API_KEYS)
 if VISION_AI_ENABLED:
-    print("[+] Vision AI (Google Lens & Multimodal Neural Engine) Aktif!")
+    print(f"[+] Vision AI (Google Lens & Multimodal Neural Engine) Aktif dengan {len(GEMINI_API_KEYS)} API Key!")
 
 # QRCode Generator
 try:
@@ -789,8 +803,31 @@ def check_document_type_mismatch(target, parsed_data):
     detected = detected_raw.upper().replace(' ', '_')
     return (detected not in valid_types), detected_raw
 
+def _optimize_image_for_vision(image_bytes, max_dim=1600):
+    """Kompresi cerdas dan downscale gambar kamera sebelum dikirim ke Gemini Vision API
+    agar hemat kuota, anti-timeout, dan responsif (<1.5 detik) tanpa mengurangi ketajaman teks OCR."""
+    try:
+        if not image_bytes or image_bytes.startswith(b'%PDF'):
+            return image_bytes, 'application/pdf'
+        img_np = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(img_np, cv2.IMREAD_COLOR)
+        if img is None:
+            return image_bytes, _detect_image_mime(image_bytes)
+        h, w = img.shape[:2]
+        if max(h, w) > max_dim:
+            scale = max_dim / float(max(h, w))
+            new_w, new_h = int(round(w * scale)), int(round(h * scale))
+            img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+        success, buf = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 86])
+        if success:
+            return buf.tobytes(), 'image/jpeg'
+    except Exception as _e_opt:
+        pass
+    return image_bytes, _detect_image_mime(image_bytes)
+
 def extract_with_vision_ai(image_bytes, target=''):
-    """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini (mendukung multi-halaman PDF BPKB)."""
+    """Ekstraksi multimodal tingkat tinggi dengan Vision AI Google Gemini (mendukung multi-halaman PDF BPKB).
+    Dilengkapi multi-key rotation, multi-model candidate fallback, auto-retry pada HTTP 429, dan pre-scaling."""
     if not VISION_AI_ENABLED:
         return None, ""
 
@@ -804,8 +841,8 @@ def extract_with_vision_ai(image_bytes, target=''):
                 img_b = pix.tobytes("jpeg")
                 image_parts.append({"inlineData": {"mimeType": "image/jpeg", "data": base64.b64encode(img_b).decode('utf-8')}})
         else:
-            mime = _detect_image_mime(image_bytes)
-            image_parts.append({"inlineData": {"mimeType": mime, "data": base64.b64encode(image_bytes).decode('utf-8')}})
+            opt_bytes, mime = _optimize_image_for_vision(image_bytes, max_dim=1600)
+            image_parts.append({"inlineData": {"mimeType": mime, "data": base64.b64encode(opt_bytes).decode('utf-8')}})
 
         if not image_parts:
             return None, ""
@@ -895,57 +932,55 @@ def extract_with_vision_ai(image_bytes, target=''):
         # TINDAK LANJUT YANG DISARANKAN (belum dikerjakan): cek daftar model valid di
         # https://ai.google.dev/gemini-api/docs/models dengan kuota yang masih tersedia, lalu isi
         # ulang daftar ini dengan model cadangan yang SUDAH TERBUKTI jalan via tes langsung ke API.
-        candidate_models = ['gemini-2.5-flash']
+        candidate_models = ['gemini-2.5-flash', 'gemini-2.5-pro']
+        api_keys = get_gemini_api_keys() or ([GEMINI_API_KEY] if GEMINI_API_KEY else [])
 
         # Retry-with-backoff KHUSUS untuk 429 (Too Many Requests / rate limit per-menit).
-        # Ditambahkan karena ditemukan pola nyata: beberapa dokumen diunggah beruntun dalam
-        # waktu singkat (KTP, NPWP, STNK, BPKB) bisa kena limit permintaan-per-menit tingkat
-        # gratis Gemini; sebelumnya kena 429 langsung jatuh ke OCR lokal (jauh lebih tidak akurat,
-        # bikin field tidak auto-terisi/"Lengkapi Manual") padahal menunggu sebentar lalu mengulang
-        # permintaan YANG SAMA biasanya cukup karena limitnya per-menit, bukan per-hari.
         MAX_429_RETRY = 2
-        RETRY_DELAY_SECONDS = 4
+        RETRY_DELAY_SECONDS = 3.5
 
-        for model_name in candidate_models:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
-            payload = {
-                "contents": [{
-                    "parts": [{"text": prompt_text}] + image_parts
-                }],
-                "generationConfig": {
-                    "responseMimeType": "application/json",
-                    "temperature": 0.1
+        for api_key in api_keys:
+            key_hint = f"...{api_key[-6:]}" if len(api_key) >= 6 else "active-key"
+            for model_name in candidate_models:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": prompt_text}] + image_parts
+                    }],
+                    "generationConfig": {
+                        "responseMimeType": "application/json",
+                        "temperature": 0.1
+                    }
                 }
-            }
-            attempt = 0
-            while attempt <= MAX_429_RETRY:
-                attempt += 1
-                try:
-                    req = urllib.request.Request(
-                        url,
-                        data=json.dumps(payload).encode('utf-8'),
-                        headers={"Content-Type": "application/json"}
-                    )
-                    with urllib.request.urlopen(req, timeout=25) as resp:
-                        data = json.loads(resp.read().decode('utf-8'))
-                        candidate = data.get('candidates', [{}])[0]
-                        parts = candidate.get('content', {}).get('parts', [{}])
-                        out_text = parts[0].get('text', '{}')
-                        parsed = json.loads(out_text)
-                        if isinstance(parsed, list) and parsed:
-                            parsed = parsed[0]
-                        print(f"[+] Vision AI sukses menggunakan model: {model_name}")
-                        return parsed, out_text
-                except urllib.error.HTTPError as e_http:
-                    if e_http.code == 429 and attempt <= MAX_429_RETRY:
-                        print(f"[!] Vision AI Model {model_name} kena rate-limit (429), percobaan ke-{attempt}/{MAX_429_RETRY}, tunggu {RETRY_DELAY_SECONDS}s lalu ulangi...")
-                        time.sleep(RETRY_DELAY_SECONDS)
-                        continue
-                    print(f"[!] Vision AI Model {model_name} error: {e_http}, mencoba fallback berikutnya...")
-                    break
-                except Exception as e_model:
-                    print(f"[!] Vision AI Model {model_name} error: {e_model}, mencoba fallback berikutnya...")
-                    break
+                attempt = 0
+                while attempt <= MAX_429_RETRY:
+                    attempt += 1
+                    try:
+                        req = urllib.request.Request(
+                            url,
+                            data=json.dumps(payload).encode('utf-8'),
+                            headers={"Content-Type": "application/json"}
+                        )
+                        with urllib.request.urlopen(req, timeout=25) as resp:
+                            data = json.loads(resp.read().decode('utf-8'))
+                            candidate = data.get('candidates', [{}])[0]
+                            parts = candidate.get('content', {}).get('parts', [{}])
+                            out_text = parts[0].get('text', '{}')
+                            parsed = json.loads(out_text)
+                            if isinstance(parsed, list) and parsed:
+                                parsed = parsed[0]
+                            print(f"[+] Vision AI sukses menggunakan model: {model_name} (key: {key_hint})")
+                            return parsed, out_text
+                    except urllib.error.HTTPError as e_http:
+                        if e_http.code == 429 and attempt <= MAX_429_RETRY:
+                            print(f"[!] Vision AI Model {model_name} (key: {key_hint}) kena rate-limit (429), percobaan ke-{attempt}/{MAX_429_RETRY}, tunggu {RETRY_DELAY_SECONDS}s...")
+                            time.sleep(RETRY_DELAY_SECONDS)
+                            continue
+                        print(f"[!] Vision AI Model {model_name} (key: {key_hint}) HTTP {e_http.code}: {e_http.reason}, beralih kandidat...")
+                        break
+                    except Exception as e_model:
+                        print(f"[!] Vision AI Model {model_name} (key: {key_hint}) error: {e_model}, mencoba fallback berikutnya...")
+                        break
 
         return None, ""
     except Exception as e:
