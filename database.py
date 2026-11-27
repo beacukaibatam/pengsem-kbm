@@ -155,6 +155,18 @@ def init_db():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_actor ON activity_log(actor_username);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_action ON activity_log(action);')
 
+    # 5. Tabel Draf Formulir Pemohon — autosave Tahap 2 (Unggah Berkas) supaya
+    # data (termasuk hasil OCR & pratinjau gambar yang sudah dikoreksi) TIDAK HILANG
+    # kalau pemohon logout/login kembali sebelum submit akhir. Dikunci per identifier
+    # pemohon (NIK, fallback nomor WA) dari SESI LOGIN — bukan dari body request.
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS form_drafts (
+        pemohon_identifier TEXT PRIMARY KEY,
+        data_json TEXT NOT NULL,
+        updated_at TEXT
+    );
+    ''')
+
     conn.commit()
     conn.close()
     logger.info("Database SQLite WAL initialized at: %s", DATABASE_PATH)
@@ -738,6 +750,64 @@ def update_permohonan_status(pid, new_status, catatan='', updates=None):
     params.append(pid)
 
     cursor.execute(query, tuple(params))
+    conn.commit()
+    conn.close()
+    return True
+
+
+def load_form_draft(pemohon_identifier):
+    """Ambil draf formulir Tahap 2 (Unggah Berkas) milik satu pemohon. Mengembalikan
+    dict kosong kalau belum pernah menyimpan draf apa pun."""
+    if not pemohon_identifier:
+        return {}
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT data_json FROM form_drafts WHERE pemohon_identifier = ?", (pemohon_identifier,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row or not row[0]:
+        return {}
+    try:
+        return json.loads(row[0]) or {}
+    except Exception:
+        return {}
+
+
+def save_form_draft(pemohon_identifier, patch):
+    """Gabungkan (merge dangkal per-key) `patch` ke draf formulir pemohon yang sudah
+    tersimpan, lalu simpan. Dipanggil oleh autosave Tahap 2 — tiap panggilan hanya
+    membawa bagian yang baru saja diubah pemohon, bukan seluruh formulir."""
+    if not pemohon_identifier:
+        return False
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT data_json FROM form_drafts WHERE pemohon_identifier = ?", (pemohon_identifier,))
+    row = cursor.fetchone()
+    existing = {}
+    if row and row[0]:
+        try:
+            existing = json.loads(row[0]) or {}
+        except Exception:
+            existing = {}
+    existing.update(patch or {})
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    cursor.execute('''
+        INSERT INTO form_drafts (pemohon_identifier, data_json, updated_at) VALUES (?, ?, ?)
+        ON CONFLICT(pemohon_identifier) DO UPDATE SET data_json = excluded.data_json, updated_at = excluded.updated_at
+    ''', (pemohon_identifier, json.dumps(existing), now_str))
+    conn.commit()
+    conn.close()
+    return True
+
+
+def clear_form_draft(pemohon_identifier):
+    """Hapus draf formulir pemohon — dipanggil setelah submit akhir berhasil supaya
+    draf tidak menumpuk selamanya untuk permohonan yang sudah dikirim."""
+    if not pemohon_identifier:
+        return False
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM form_drafts WHERE pemohon_identifier = ?", (pemohon_identifier,))
     conn.commit()
     conn.close()
     return True

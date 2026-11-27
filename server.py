@@ -1442,6 +1442,7 @@ OTP_RATE_TRACKER = {}     # key: (ip, phone) -> list[timestamp]
 VERIFY_OTP_TRACKER = {}   # key: (ip, identifier) -> list[timestamp]
 RESET_PW_TRACKER = {}     # key: (ip, identifier) -> list[timestamp]
 OCR_RATE_TRACKER = {}     # key: (ip, session_token) -> list[timestamp]
+DRAFT_SAVE_RATE_TRACKER = {}  # key: (ip, session_token) -> list[timestamp] — autosave Tahap 2
 
 def _get_client_ip(handler):
     xff = handler.headers.get('X-Forwarded-For', '') if hasattr(handler, 'headers') and handler.headers else ''
@@ -1606,6 +1607,14 @@ STAGE_VISIBILITY_BY_ROLE = {
 
 def _is_pegawai(sess):
     return bool(sess) and sess.get('role') in PEGAWAI_ROLES
+
+def _pemohon_draft_identifier(sess):
+    """Kunci draf formulir Tahap 2 — SELALU dari identitas akun pemohon di sesi
+    login (NIK, fallback nomor WA/username), bukan dari body request, supaya satu
+    akun tidak bisa membaca/menimpa draf akun pemohon lain."""
+    sess_user = (sess or {}).get('user', {}) or {}
+    ident = str(sess_user.get('nik', '')).strip() or str(sess_user.get('phone', '')).strip() or str(sess_user.get('username', '')).strip()
+    return f"pemohon:{ident}" if ident else ''
 
 # NIP akun "Default Dinas" dari backdoor lama (sudah dihapus dari kode login).
 # Tetap didaftarkan di sini sebagai denylist permanen: meski record ini masih ada
@@ -2477,6 +2486,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 'database': 'connected (WAL)',
                 'timestamp': datetime.datetime.now().isoformat()
             })
+            return
+
+        # Draf Formulir Tahap 2 (Unggah Berkas) — dipanggil saat pemohon membuka
+        # halaman formulir, supaya data & pratinjau yang sudah di-autosave sebelumnya
+        # (termasuk sebelum sempat logout) bisa dipulihkan kembali.
+        if path == '/api/permohonan/draft-load':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'pemohon':
+                self._send_json_error(401, 'Sesi tidak valid. Silakan masuk kembali.')
+                return
+            identifier = _pemohon_draft_identifier(sess)
+            draft = database.load_form_draft(identifier) if identifier else {}
+            self._send_json_response({'status': 'ok', 'draft': draft})
             return
 
         # API Autentikasi: Cek Status Sesi Aktif Pengguna
@@ -3425,8 +3447,45 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._send_json_error(500, str(e))
                 return
+        # Autosave Draf Formulir Tahap 2 (Unggah Berkas) — dipanggil debounced dari
+        # frontend tiap kali pemohon selesai mengedit satu field/dokumen, supaya data
+        # (termasuk hasil OCR & pratinjau gambar yang sudah dikoreksi) tetap ada
+        # walau pemohon logout sebelum submit akhir. Body HANYA bagian yang berubah
+        # (`patch`), di-merge dangkal ke draf yang sudah tersimpan — bukan ditimpa utuh.
+        if self.path == '/api/permohonan/draft-save':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'pemohon':
+                self._send_json_error(401, 'Sesi tidak valid. Silakan masuk kembali.')
+                return
+            rl_key = (_get_client_ip(self), token)
+            if _is_rate_limited(DRAFT_SAVE_RATE_TRACKER, rl_key, max_attempts=60, window_seconds=120):
+                self._send_json_error(429, 'Terlalu sering menyimpan draf. Mohon tunggu sebentar.')
+                return
+            _record_rate_hit(DRAFT_SAVE_RATE_TRACKER, rl_key, window_seconds=120)
+            identifier = _pemohon_draft_identifier(sess)
+            if not identifier:
+                self._send_json_error(400, 'Identitas pemohon pada sesi tidak lengkap.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                if body.get('clear'):
+                    database.clear_form_draft(identifier)
+                    self._send_json_response({'status': 'ok', 'cleared': True})
+                    return
+                patch = body.get('patch')
+                if not isinstance(patch, dict):
+                    self._send_json_error(400, 'Format draf tidak valid.')
+                    return
+                database.save_form_draft(identifier, patch)
+                self._send_json_response({'status': 'ok', 'updated_at': datetime.datetime.now().isoformat()})
+            except Exception as e:
+                self._send_json_error(500, str(e))
+            return
+
         # Update Status Permohonan dari Dashboard Pegawai
-        
+
         # Tambah Permohonan Baru (dari Bot WhatsApp / Simulator Real)
         if self.path == '/api/permohonan/create':
             # Endpoint ini dulu TIDAK memverifikasi sesi sama sekali untuk semua nilai
@@ -3546,6 +3605,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 save_db_permohonan(db)
                 backup_sqlite_to_gdrive_async()
                 database.log_activity(new_record.get('no_wa_pemohon', '-'), 'pemohon', 'PERMOHONAN_DIKIRIM', detail=f"Nopol {new_record.get('nopol','-')}, sumber {sumber}, {len(new_record['archived_files'])} berkas diarsipkan", target_id=new_id)
+                # Permohonan sudah terkirim — draf Tahap 2 (Unggah Berkas) tidak
+                # relevan lagi, hapus supaya tidak menumpuk selamanya di tabel.
+                try:
+                    database.clear_form_draft(_pemohon_draft_identifier(sess))
+                except Exception:
+                    pass
                 resp = json.dumps({"status": "success", "data": new_record}).encode('utf-8')
                 self.send_response(200)
             except Exception as e:

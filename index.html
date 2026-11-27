@@ -389,6 +389,26 @@
             box-sizing: border-box;
         }
 
+        /* Akordeon Unggah Berkas (Opsi C — KTP/NPWP terbuka, BPKB/STNK hint lunak) */
+        .acc-chevron-btn svg { transform-origin: center; }
+        .acc-save-status {
+            font-size: 0.66rem;
+            font-weight: 800;
+            color: #059669;
+            white-space: nowrap;
+        }
+        .acc-lock-hint {
+            display: block;
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            color: #92400E;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 6px 9px;
+            border-radius: 7px;
+            margin: 0 0 8px 0;
+        }
+
         .scanner-btns {
             display: flex;
             gap: 8px;
@@ -3511,12 +3531,22 @@
                 </p>
             </div>
 
-            <!-- Area 4 Pemindai Dokumen Berdampingan (Unggah Satu per Satu) -->
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-bottom:12px; align-items:stretch;">
+            <!-- Pemberitahuan draf dipulihkan (muncul singkat setelah login bila ada draf tersimpan) -->
+            <div id="draftRestoredBanner" style="display:none; align-items:center; gap:8px; background:#EFF6FF; border:1.5px solid #BFDBFE; color:#1D4ED8; font-size:0.76rem; font-weight:700; padding:8px 12px; border-radius:8px; margin-bottom:10px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                Draf berkas yang sudah Anda isi/koreksi sebelumnya berhasil dipulihkan.
+            </div>
+
+            <!-- Area 4 Pemindai Dokumen — Akordeon (KTP & NPWP terbuka duluan; BPKB & STNK
+                 disarankan dilengkapi belakangan lewat accLockHint, bukan gate keras) -->
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;">
                 <!-- Scanner Card 1: KTP Pemohon -->
-                <div class="scanner-card" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
+                <div class="scanner-card acc-doc" id="accWrapKtp" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                         <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                            <button type="button" class="acc-chevron-btn" id="accChevronKtp" onclick="toggleAccordionDoc('Ktp')" title="Buka/tutup KTP" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#005FAC;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(90deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="4" width="18" height="16" rx="2"></rect>
                                 <circle cx="9" cy="10" r="2"></circle>
@@ -3527,6 +3557,7 @@
                             KTP Pemohon
                         </div>
                         <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="accSaveStatusKtp" class="acc-save-status"></span>
                             <span id="badgeKtpStatus" class="pabean-badge-waiting">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 Menunggu Unggah
@@ -3536,6 +3567,7 @@
                             </button>
                         </div>
                     </div>
+                    <div id="accBodyKtp" style="display:block;">
                     <!-- Sub-label KTP untuk kesimetrisan baris -->
                     <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; font-size:0.70rem; color:#64748B;">
                         Identitas Kependudukan Asli
@@ -3564,12 +3596,16 @@
                         </button>
                     </div>
                     <input type="file" id="fileKtpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ktp')">
+                    </div>
                 </div>
 
                 <!-- Scanner Card 2: NPWP Pemohon -->
-                <div class="scanner-card" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
+                <div class="scanner-card acc-doc" id="accWrapNpwp" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                         <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                            <button type="button" class="acc-chevron-btn" id="accChevronNpwp" onclick="toggleAccordionDoc('Npwp')" title="Buka/tutup NPWP" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#005FAC;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(90deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                                 <line x1="2" y1="10" x2="22" y2="10"></line>
@@ -3577,6 +3613,7 @@
                             NPWP Pemohon
                         </div>
                         <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="accSaveStatusNpwp" class="acc-save-status"></span>
                             <span id="badgeNpwpStatus" class="pabean-badge-waiting">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 Menunggu Unggah
@@ -3586,6 +3623,7 @@
                             </button>
                         </div>
                     </div>
+                    <div id="accBodyNpwp" style="display:block;">
                     <!-- Sub-label NPWP untuk kesimetrisan baris -->
                     <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; font-size:0.70rem; color:#64748B;">
                         Nomor Pokok Wajib Pajak
@@ -3614,12 +3652,16 @@
                         </button>
                     </div>
                     <input type="file" id="fileNpwpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'npwp')">
+                    </div>
                 </div>
 
                 <!-- Scanner Card 3: STNK (2 Lembar: STNK & TBPKP) -->
-                <div class="scanner-card" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
+                <div class="scanner-card acc-doc" id="accWrapStnk" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                         <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                            <button type="button" class="acc-chevron-btn" id="accChevronStnk" onclick="toggleAccordionDoc('Stnk')" title="Buka/tutup STNK" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#94A3B8;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(0deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -3629,6 +3671,7 @@
                             STNK (2 Lembar)
                         </div>
                         <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="accSaveStatusStnk" class="acc-save-status"></span>
                             <span id="badgeStnkStatus" class="pabean-badge-waiting">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 Menunggu Unggah
@@ -3638,6 +3681,8 @@
                             </button>
                         </div>
                     </div>
+                    <div id="accLockHintStnk" class="acc-lock-hint">🔒 Disarankan: lengkapi KTP &amp; NPWP dulu — Anda tetap bisa mengisi di sini kapan saja.</div>
+                    <div id="accBodyStnk" style="display:none;">
                     <!-- Sub-label STNK 2 Lembar -->
                     <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; font-size:0.68rem; color:#64748B;">
                         <span>Lbr 1: STNK • Lbr 2: TBPKP</span>
@@ -3681,12 +3726,16 @@
                     </div>
                     <input type="file" id="fileStnkInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk')">
                     <input type="file" id="fileStnk2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk_2')">
+                    </div>
                 </div>
 
                 <!-- Scanner Card 4: BPKB -->
-                <div class="scanner-card" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
+                <div class="scanner-card acc-doc" id="accWrapBpkb" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                         <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                            <button type="button" class="acc-chevron-btn" id="accChevronBpkb" onclick="toggleAccordionDoc('Bpkb')" title="Buka/tutup BPKB" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#94A3B8;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(0deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -3695,6 +3744,7 @@
                             BPKB
                         </div>
                         <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="accSaveStatusBpkb" class="acc-save-status"></span>
                             <span id="badgeOwnershipStatus" class="pabean-badge-waiting">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 Menunggu Unggah
@@ -3704,6 +3754,8 @@
                             </button>
                         </div>
                     </div>
+                    <div id="accLockHintBpkb" class="acc-lock-hint">🔒 Disarankan: lengkapi KTP &amp; NPWP dulu — Anda tetap bisa mengisi di sini kapan saja.</div>
+                    <div id="accBodyBpkb" style="display:none;">
                     <!-- Switcher Dokumen Kepemilikan (Tinggi pas 18px sejajar sub-label lainnya) -->
                     <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; gap:10px; font-size:0.70rem;">
                         <label style="cursor:pointer; display:flex; align-items:center; gap:3px; font-weight:700; color:#334155;">
@@ -3764,6 +3816,7 @@
                     <div id="leasingExtraWrap" style="display:none; margin-top:6px;">
                         <div id="leasingExtraSlotsContainer"></div>
                         <button type="button" id="btnAddLeasingPage" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:6px 8px; font-weight:700; font-size:0.70rem;" onclick="addLeasingExtraPage()">+ Tambah Foto Lembar Lain</button>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -5257,6 +5310,7 @@
                     section.classList.add('fade-in-section');
                 }
             }
+            if (typeof updateAccordionLockHints === 'function') updateAccordionLockHints();
         }
 
         // Auto-update header height for seamless sticky wizard bar
@@ -7018,6 +7072,178 @@
                     summaryBadge.style.background = '#EFF6FF';
                     summaryBadge.style.color = '#1D4ED8';
                 }
+            }
+
+            scheduleAutosave();
+        }
+
+        // ================= AKORDEON UNGGAH BERKAS (Opsi C: KTP/NPWP terbuka duluan,
+        // BPKB/STNK diberi hint lunak — bukan gate keras, pemohon tetap bebas membuka) =================
+        function toggleAccordionDoc(name) {
+            const body = document.getElementById('accBody' + name);
+            const chev = document.getElementById('accChevron' + name);
+            if (!body) return;
+            const isOpen = body.style.display !== 'none';
+            body.style.display = isOpen ? 'none' : 'block';
+            if (chev) {
+                chev.style.color = isOpen ? '#94A3B8' : '#005FAC';
+                const svg = chev.querySelector('svg');
+                if (svg) svg.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+            }
+        }
+
+        function updateAccordionLockHints() {
+            const identitasSiap = isKtpUploadedAndScanned && isNpwpUploadedAndScanned;
+            ['Stnk', 'Bpkb'].forEach(name => {
+                const hint = document.getElementById('accLockHint' + name);
+                if (hint) hint.style.display = identitasSiap ? 'none' : 'block';
+            });
+        }
+
+        // ================= DRAF FORMULIR TAHAP 2 (AUTOSAVE KE SERVER) =================
+        // User frustrasi: data Tahap 2 (KTP/NPWP/BPKB/STNK beserta koreksi manual &
+        // pratinjau gambar) hilang total kalau logout sebelum submit akhir, karena
+        // SEBELUM INI tidak pernah tersimpan ke backend sama sekali (hanya di memori
+        // browser). Fix: autosave debounced (1.5 detik setelah perubahan terakhir)
+        // ke /api/permohonan/draft-save, dipulihkan lagi via restoreFormDraft() saat
+        // pemohon membuka kembali halaman formulir (termasuk setelah login ulang).
+        let _draftAutosaveTimer = null;
+        let _draftRestoring = false;
+
+        function _collectDraftFieldsSnapshot() {
+            const ids = ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'pemohon_alamat', 'pemohon_telp',
+                'kbm_nopol', 'kbm_nostnk', 'kbm_nobpkb', 'kbm_norangka', 'kbm_nomesin', 'kbm_merek',
+                'kbm_tahun', 'kbm_warna', 'kbm_njkb'];
+            const out = {};
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.value) out[id] = el.value;
+            });
+            return out;
+        }
+
+        function _collectDraftImagesSnapshot() {
+            const imgIds = ['imgKtpPreview', 'imgNpwpPreview', 'imgStnkPreview', 'imgStnk2Preview',
+                'imgOwnershipPreview', 'imgOwnership2Preview', 'imgOwnership3Preview'];
+            const out = {};
+            imgIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.src && el.src.startsWith('data:')) out[id] = el.src;
+            });
+            return out;
+        }
+
+        function scheduleAutosave() {
+            if (_draftRestoring) return;
+            clearTimeout(_draftAutosaveTimer);
+            _draftAutosaveTimer = setTimeout(_runAutosave, 1500);
+        }
+
+        async function _runAutosave() {
+            try {
+                let token = '';
+                try { token = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+                if (!token) return;
+                const patch = {
+                    fields: _collectDraftFieldsSnapshot(),
+                    ocr: docOcrStore,
+                    images: _collectDraftImagesSnapshot()
+                };
+                const resp = await fetch(`${API_BASE_URL}/api/permohonan/draft-save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ patch })
+                });
+                if (resp.ok) _markAutosaved();
+            } catch (e) {
+                console.warn('[Autosave Draf] Gagal menyimpan:', e);
+            }
+        }
+
+        function _markAutosaved() {
+            const hasData = {
+                Ktp: !!(docOcrStore.ktp && Object.keys(docOcrStore.ktp).length),
+                Npwp: !!(docOcrStore.npwp && Object.keys(docOcrStore.npwp).length),
+                Stnk: !!((docOcrStore.stnk1 && Object.keys(docOcrStore.stnk1).length) || (docOcrStore.stnk2 && Object.keys(docOcrStore.stnk2).length)),
+                Bpkb: !!(docOcrStore.bpkb && Object.keys(docOcrStore.bpkb).length)
+            };
+            Object.keys(hasData).forEach(name => {
+                const el = document.getElementById('accSaveStatus' + name);
+                if (el) el.innerText = hasData[name] ? '✓ Tersimpan' : '';
+            });
+        }
+
+        async function restoreFormDraft() {
+            try {
+                let token = '';
+                try { token = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+                if (!token) return;
+                const resp = await fetch(`${API_BASE_URL}/api/permohonan/draft-load`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const draft = data.draft || {};
+                if (!draft || (!draft.fields && !draft.ocr && !draft.images)) return;
+
+                _draftRestoring = true;
+
+                if (draft.ocr) {
+                    Object.assign(docOcrStore.ktp, draft.ocr.ktp || {});
+                    Object.assign(docOcrStore.npwp, draft.ocr.npwp || {});
+                    Object.assign(docOcrStore.bpkb, draft.ocr.bpkb || {});
+                    Object.assign(docOcrStore.stnk1, draft.ocr.stnk1 || {});
+                    Object.assign(docOcrStore.stnk2, draft.ocr.stnk2 || {});
+                }
+
+                if (draft.fields) {
+                    Object.entries(draft.fields).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if (el && !el.value) {
+                            el.value = val;
+                            el.classList.add('filled');
+                        }
+                    });
+                }
+
+                if (draft.images) {
+                    Object.entries(draft.images).forEach(([id, src]) => {
+                        const el = document.getElementById(id);
+                        if (!el) return;
+                        el.src = src;
+                        el.style.display = 'block';
+                        const phId = id.replace('img', 'ph').replace('Preview', '');
+                        const ph = document.getElementById(phId);
+                        if (ph) ph.style.display = 'none';
+                    });
+                }
+
+                const targetsRestored = [];
+                if (draft.ocr && draft.ocr.ktp && Object.keys(draft.ocr.ktp).length) { isKtpUploadedAndScanned = true; targetsRestored.push('ktp'); }
+                if (draft.ocr && draft.ocr.npwp && Object.keys(draft.ocr.npwp).length) { isNpwpUploadedAndScanned = true; targetsRestored.push('npwp'); }
+                if (draft.ocr && draft.ocr.bpkb && Object.keys(draft.ocr.bpkb).length) targetsRestored.push('ownership');
+                if (draft.ocr && draft.ocr.stnk1 && Object.keys(draft.ocr.stnk1).length) targetsRestored.push('stnk');
+                if (draft.ocr && draft.ocr.stnk2 && Object.keys(draft.ocr.stnk2).length) targetsRestored.push('stnk_2');
+                targetsRestored.forEach(t => setDocCardState(t, 'ok', 'Draf dipulihkan dari penyimpanan sebelumnya.'));
+
+                checkAndRevealIdentitasSection();
+                renderCrossValidationPanel();
+                syncValues();
+                _markAutosaved();
+
+                const anyFieldsRestored = draft.fields && Object.keys(draft.fields).length > 0;
+                const anyImagesRestored = draft.images && Object.keys(draft.images).length > 0;
+                if (targetsRestored.length || anyFieldsRestored || anyImagesRestored) {
+                    const banner = document.getElementById('draftRestoredBanner');
+                    if (banner) {
+                        banner.style.display = 'flex';
+                        setTimeout(() => { banner.style.display = 'none'; }, 7000);
+                    }
+                }
+            } catch (e) {
+                console.warn('[Draf] Gagal memulihkan draf:', e);
+            } finally {
+                _draftRestoring = false;
             }
         }
 
@@ -9110,6 +9336,8 @@
 
             document.getElementById('mNama').innerText = nama || '-';
             document.getElementById('mNopol').innerText = nopol || '-';
+
+            if (typeof scheduleAutosave === 'function') scheduleAutosave();
         }
 
         function openPdfModal() {
@@ -12601,6 +12829,7 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
 
                 switchPortalView('formulir');
                 try { setStepActive(1); } catch(e){}
+                try { restoreFormDraft(); } catch(e){}
             } else {
                 // KONDISI 2: Sudah ada permohonan yang diajukan & selesai
                 // -> Formulir disembunyikan & dikunci, tab beralih menjadi 'Status Permohonan Saya'
