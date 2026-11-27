@@ -88,7 +88,12 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-            pointer-events: none;
+            /* pointer-events diaktifkan lagi (sebelumnya none) supaya gambar preview bisa diklik
+               untuk popup perbesar (lihat openImageLightbox). Dicatat: pointer-events:none TERBUKTI
+               TIDAK memperbaiki bug scroll trackpad macet (lihat HANDOFF.md), jadi mengaktifkannya
+               lagi tidak mengorbankan fix yang sebelumnya memang tidak bekerja. */
+            pointer-events: auto;
+            cursor: zoom-in;
         }
 
         h1, h2, h3, h4, .brand-text h1, .section-title, .form-label, .modal-header h3 {
@@ -436,6 +441,109 @@
             display: block;
             border-radius: 6px;
         }
+
+        /* Lightbox popup perbesar gambar pratinjau dokumen (KTP/NPWP/STNK/BPKB/dll) */
+        .image-lightbox-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.88);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .image-lightbox-overlay.active { display: flex; }
+        .image-lightbox-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 96vw;
+            max-height: 96vh;
+        }
+        .image-lightbox-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 999px;
+            padding: 6px 10px;
+            margin-bottom: 12px;
+        }
+        .image-lightbox-toolbar button {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+        .image-lightbox-toolbar button:hover { background: rgba(255,255,255,0.3); }
+        .image-lightbox-toolbar button.image-lightbox-close { background: rgba(220,38,38,0.75); }
+        .image-lightbox-toolbar button.image-lightbox-close:hover { background: rgba(220,38,38,0.95); }
+        .image-lightbox-toolbar span {
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-width: 42px;
+            text-align: center;
+        }
+        .image-lightbox-viewport {
+            overflow: auto;
+            width: 90vw;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.2);
+        }
+        .image-lightbox-viewport img {
+            object-fit: contain;
+            border-radius: 6px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            background: #fff;
+            display: block;
+        }
+        .image-lightbox-imgwrap {
+            position: relative;
+            display: inline-block;
+        }
+        .lightbox-crop-rect {
+            position: absolute;
+            border: 2px dashed #FACC15;
+            background: rgba(250, 204, 21, 0.12);
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+            cursor: move;
+        }
+        .lightbox-crop-handle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #FACC15;
+            border: 2px solid #fff;
+            border-radius: 50%;
+        }
+        .image-lightbox-apply-crop {
+            margin-top: 12px;
+            background: #16A34A;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 9px 20px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+        .image-lightbox-apply-crop:hover { background: #15803D; }
 
         /* Overlay Pemindai Dokumen */
         .laser-line {
@@ -3369,7 +3477,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img decoding="async" id="imgKtpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgKtpPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR KTP -->
                     <div id="snippetKtp" class="ocr-snippet-box">Menunggu berkas KTP diunggah...</div>
@@ -3419,7 +3527,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img decoding="async" id="imgNpwpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgNpwpPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR NPWP -->
                     <div id="snippetNpwp" class="ocr-snippet-box">Menunggu berkas NPWP diunggah...</div>
@@ -3473,7 +3581,7 @@
                                 <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 1</span>
                                 <span style="font-size:0.62rem; color:#94A3B8;">STNK</span>
                             </div>
-                            <img decoding="async" id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
+                            <img decoding="async" id="imgStnkPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
                         <div class="preview-box" id="previewStnk2Box" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0;">
                             <div class="laser-line" id="laserStnk2" style="display:none;">
@@ -3485,7 +3593,7 @@
                                 <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 2</span>
                                 <span style="font-size:0.62rem; color:#94A3B8;">TBPKP/Pajak</span>
                             </div>
-                            <img decoding="async" id="imgStnk2Preview" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
+                            <img decoding="async" id="imgStnk2Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
                         </div>
                     </div>
                     <!-- Cuplikan Data Hasil OCR STNK -->
@@ -3544,7 +3652,7 @@
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                             <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
                         </div>
-                        <img decoding="async" id="imgOwnershipPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                        <img decoding="async" id="imgOwnershipPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
                     </div>
                     <!-- Cuplikan Data Hasil OCR BPKB -->
                     <div id="snippetOwnership" class="ocr-snippet-box">Menunggu berkas BPKB diunggah...</div>
@@ -3564,7 +3672,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div class="preview-box" id="previewOwnership2Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                                 <span id="phOwnership2" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 2</span>
-                                <img decoding="async" id="imgOwnership2Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                <img decoding="async" id="imgOwnership2Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
                             <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership2Input').click()">Unggah Hal. 2</button>
                             <input type="file" id="fileOwnership2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_2')">
@@ -3572,7 +3680,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <div class="preview-box" id="previewOwnership3Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                                 <span id="phOwnership3" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 3</span>
-                                <img decoding="async" id="imgOwnership3Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                <img decoding="async" id="imgOwnership3Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
                             <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership3Input').click()">Unggah Hal. 3</button>
                             <input type="file" id="fileOwnership3Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_3')">
@@ -3773,7 +3881,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">1. Foto/Scan Buku Nikah / Kartu Keluarga (Wajib Berwarna)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Membuktikan hubungan perkawinan / keluarga yang sah.</div>
                             <div class="preview-box" id="previewBukuNikahBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
+                                <img decoding="async" id="imgBukuNikahPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Buku Nikah / KK">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('bukuNikah')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Buku Nikah / KK</button>
                             <input type="file" id="fileBukuNikahInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'bukuNikah')">
@@ -3783,7 +3891,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Asli (Suami / Istri)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">KTP pemilik kendaraan yang namanya tertera di STNK.</div>
                             <div class="preview-box" id="previewKtpPasanganBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
+                                <img decoding="async" id="imgKtpPasanganPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau KTP Pasangan">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPasangan')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Pasangan</button>
                             <input type="file" id="fileKtpPasanganInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPasangan')">
@@ -3813,7 +3921,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">1. Kwitansi / Surat Perjanjian Jual Beli (Bermeterai)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Menyatakan pengalihan hak kepemilikan kendaraan secara sah.</div>
                             <div class="preview-box" id="previewKwitansiBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKwitansiPreview" src="" alt="Pratinjau Kwitansi">
+                                <img decoding="async" id="imgKwitansiPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Kwitansi">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('kwitansi')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Kwitansi Jual Beli</button>
                             <input type="file" id="fileKwitansiInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'kwitansi')">
@@ -3823,7 +3931,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Lama / Penjual</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Fotokopi / scan KTP penjual sesuai nama pada STNK/BPKB.</div>
                             <div class="preview-box" id="previewKtpPenjualBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpPenjualPreview" src="" alt="Pratinjau KTP Penjual">
+                                <img decoding="async" id="imgKtpPenjualPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau KTP Penjual">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPenjual')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Penjual</button>
                             <input type="file" id="fileKtpPenjualInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPenjual')">
@@ -3853,7 +3961,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">1. Surat Perjanjian Sewa / Rekomendasi Resmi Rental (Bermeterai)</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Surat izin dari pemilik/perusahaan rental untuk membawa mobil keluar Batam.</div>
                             <div class="preview-box" id="previewSuratSewaBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgSuratSewaPreview" src="" alt="Pratinjau Surat Sewa">
+                                <img decoding="async" id="imgSuratSewaPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Surat Sewa">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratSewa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Sewa</button>
                             <input type="file" id="fileSuratSewaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratSewa')">
@@ -3863,7 +3971,7 @@
                             <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">2. KTP Pemilik / Penanggung Jawab Rental</div>
                             <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Identitas pemilik tertera pada STNK / penanggung jawab rental.</div>
                             <div class="preview-box" id="previewKtpRentalBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpRentalPreview" src="" alt="Pratinjau KTP Rental">
+                                <img decoding="async" id="imgKtpRentalPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau KTP Rental">
                             </div>
                             <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpRental')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Rental</button>
                             <input type="file" id="fileKtpRentalInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpRental')">
@@ -3891,7 +3999,7 @@
                         <div style="font-size:0.75rem; font-weight:700; color:#334155; margin-bottom:4px;">Surat Kuasa Khusus Bermeterai Rp 10.000</div>
                         <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">* Sesuai ketentuan IK, NPWP yang dilampirkan pemohon wajib NPWP Pemberi Kuasa.</div>
                         <div class="preview-box" id="previewSuratKuasaBox" style="display:none; height:100px; margin-bottom:6px;">
-                            <img decoding="async" id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
+                            <img decoding="async" id="imgSuratKuasaPreview" onclick="openImageLightbox(this.src, this.id)" src="" alt="Pratinjau Surat Kuasa">
                         </div>
                         <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratKuasa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Kuasa</button>
                         <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratKuasa')">
@@ -4339,6 +4447,33 @@
                 <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#FEF2F2" opacity="0.8"/>
                 <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#FEE2E2" opacity="0.9"/>
             </svg>
+        </div>
+    </div>
+
+    <!-- MODAL LIGHTBOX GAMBAR PRATINJAU (klik gambar KTP/NPWP/STNK/dll untuk perbesar) -->
+    <div id="imageLightboxOverlay" class="image-lightbox-overlay" onclick="closeImageLightbox()">
+        <div class="image-lightbox-content" onclick="event.stopPropagation()">
+            <div class="image-lightbox-toolbar">
+                <button type="button" onclick="lightboxZoom(0.8)" title="Perkecil">−</button>
+                <span id="lightboxZoomLabel">100%</span>
+                <button type="button" onclick="lightboxZoom(1.25)" title="Perbesar">+</button>
+                <button type="button" onclick="lightboxZoomReset()" title="Ukuran Awal">⤢</button>
+                <button type="button" id="lightboxCropToggleBtn" onclick="toggleLightboxCropMode()" title="Potong Manual">✂</button>
+                <button type="button" class="image-lightbox-close" onclick="closeImageLightbox()" title="Tutup">&times;</button>
+            </div>
+            <div id="lightboxCropHint" style="display:none; color:#fff; font-size:0.72rem; margin-bottom:8px; opacity:0.85;">Geser kotak/sudutnya untuk memilih area dokumen, lalu tekan "Terapkan Potongan".</div>
+            <div class="image-lightbox-viewport" id="lightboxViewport" onwheel="lightboxWheelZoom(event)">
+                <div class="image-lightbox-imgwrap" id="lightboxImgWrap">
+                    <img id="lightboxImg" src="" alt="Pratinjau Dokumen Diperbesar" draggable="false">
+                    <div id="lightboxCropRect" class="lightbox-crop-rect" style="display:none;">
+                        <div class="lightbox-crop-handle" data-dir="nw" style="top:-6px; left:-6px; cursor:nwse-resize;"></div>
+                        <div class="lightbox-crop-handle" data-dir="ne" style="top:-6px; right:-6px; cursor:nesw-resize;"></div>
+                        <div class="lightbox-crop-handle" data-dir="sw" style="bottom:-6px; left:-6px; cursor:nesw-resize;"></div>
+                        <div class="lightbox-crop-handle" data-dir="se" style="bottom:-6px; right:-6px; cursor:nwse-resize;"></div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="lightboxApplyCropBtn" class="image-lightbox-apply-crop" style="display:none;" onclick="applyLightboxCrop()">✓ Terapkan Potongan</button>
         </div>
     </div>
 
@@ -5356,7 +5491,7 @@
             wrap.innerHTML = `
                 <div class="preview-box" id="previewLeasing${idx}Box" style="flex:1; height:46px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                     <span style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Lembar ${idx + 1}</span>
-                    <img decoding="async" id="imgLeasing${idx}Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                    <img decoding="async" id="imgLeasing${idx}Preview" onclick="openImageLightbox(this.src, this.id)" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                 </div>
                 <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; white-space:nowrap;" onclick="document.getElementById('fileLeasing${idx}Input').click()">Unggah</button>
                 <button type="button" class="btn btn-secondary" style="border-radius:6px; padding:5px 8px; font-weight:700; font-size:0.66rem; color:#B91C1C;" onclick="removeLeasingExtraPage(${idx})" title="Hapus lembar ini">✕</button>
@@ -5489,6 +5624,228 @@
         function retryDocMismatchUpload() {
             closeDocMismatchModal();
             if (pendingMismatchDocTarget) pickFile(pendingMismatchDocTarget);
+        }
+
+        // ================= LIGHTBOX POPUP PERBESAR & POTONG MANUAL GAMBAR PRATINJAU =================
+        let lightboxScale = 1;
+        let lightboxBaseW = 0, lightboxBaseH = 0;
+        let lightboxSourceImgId = '';
+        let lightboxCropMode = false;
+        let lightboxCropDrag = null; // {mode:'move'|'nw'|'ne'|'sw'|'se', startX, startY, rect:{left,top,width,height}}
+        const LIGHTBOX_MIN_SCALE = 0.4, LIGHTBOX_MAX_SCALE = 6;
+        const LIGHTBOX_MIN_CROP_PX = 30;
+
+        function openImageLightbox(src, sourceImgId) {
+            if (!src) return; // placeholder kosong, jangan buka popup
+            const overlay = document.getElementById('imageLightboxOverlay');
+            const img = document.getElementById('lightboxImg');
+            if (!overlay || !img) return;
+            lightboxSourceImgId = sourceImgId || '';
+            exitLightboxCropMode();
+            img.onload = function() {
+                fitLightboxImageToViewport();
+            };
+            img.src = src;
+            overlay.classList.add('active');
+            document.addEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function fitLightboxImageToViewport() {
+            const img = document.getElementById('lightboxImg');
+            const vp = document.getElementById('lightboxViewport');
+            if (!img || !vp) return;
+            const maxW = vp.clientWidth * 0.96;
+            const maxH = vp.clientHeight * 0.96;
+            const natW = img.naturalWidth || maxW;
+            const natH = img.naturalHeight || maxH;
+            const fitScale = Math.min(maxW / natW, maxH / natH, 1);
+            lightboxBaseW = natW * fitScale;
+            lightboxBaseH = natH * fitScale;
+            lightboxScale = 1;
+            applyLightboxZoom();
+        }
+
+        function closeImageLightbox() {
+            const overlay = document.getElementById('imageLightboxOverlay');
+            if (overlay) overlay.classList.remove('active');
+            const img = document.getElementById('lightboxImg');
+            if (img) img.src = '';
+            exitLightboxCropMode();
+            lightboxSourceImgId = '';
+            document.removeEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function lightboxKeyHandler(e) {
+            if (e.key === 'Escape') closeImageLightbox();
+        }
+
+        function applyLightboxZoom() {
+            const img = document.getElementById('lightboxImg');
+            if (!img || !lightboxBaseW) return;
+            img.style.width = Math.round(lightboxBaseW * lightboxScale) + 'px';
+            img.style.height = Math.round(lightboxBaseH * lightboxScale) + 'px';
+            const label = document.getElementById('lightboxZoomLabel');
+            if (label) label.textContent = Math.round(lightboxScale * 100) + '%';
+        }
+
+        function lightboxZoom(factor) {
+            if (lightboxCropMode) return; // kunci zoom selama mode potong aktif agar kotak seleksi tidak salah posisi
+            lightboxScale = Math.min(LIGHTBOX_MAX_SCALE, Math.max(LIGHTBOX_MIN_SCALE, lightboxScale * factor));
+            applyLightboxZoom();
+        }
+
+        function lightboxWheelZoom(e) {
+            // Pinch-to-zoom trackpad (Ctrl/Cmd+wheel) atau Ctrl+scroll mouse biasa = zoom.
+            // Scroll dua-jari biasa (tanpa Ctrl) dibiarkan lewat natural untuk pan kiri/kanan/atas/bawah.
+            if (!e.ctrlKey && !e.metaKey) return;
+            e.preventDefault();
+            lightboxZoom(e.deltaY < 0 ? 1.08 : 0.93);
+        }
+
+        function lightboxZoomReset() {
+            lightboxScale = 1;
+            applyLightboxZoom();
+            const vp = document.getElementById('lightboxViewport');
+            if (vp) { vp.scrollLeft = 0; vp.scrollTop = 0; }
+        }
+
+        // ---- Mode potong manual (dipakai saat auto-crop tidak berhasil memotong rapi, mis. latar
+        // bercorak kontras tinggi yang tidak bisa dibedakan dari dokumen secara otomatis) ----
+        function toggleLightboxCropMode() {
+            if (lightboxCropMode) { exitLightboxCropMode(); return; }
+            if (!lightboxBaseW) return;
+            lightboxCropMode = true;
+            lightboxScale = 1; // kunci 100% selama crop supaya pemetaan koordinat sederhana & akurat
+            applyLightboxZoom();
+            const rect = document.getElementById('lightboxCropRect');
+            const hint = document.getElementById('lightboxCropHint');
+            const applyBtn = document.getElementById('lightboxApplyCropBtn');
+            const toggleBtn = document.getElementById('lightboxCropToggleBtn');
+            if (!rect) return;
+            const w = lightboxBaseW, h = lightboxBaseH;
+            const insetX = w * 0.12, insetY = h * 0.12;
+            rect.style.left = Math.round(insetX) + 'px';
+            rect.style.top = Math.round(insetY) + 'px';
+            rect.style.width = Math.round(w - insetX * 2) + 'px';
+            rect.style.height = Math.round(h - insetY * 2) + 'px';
+            rect.style.display = 'block';
+            if (hint) hint.style.display = 'block';
+            if (applyBtn) applyBtn.style.display = 'inline-block';
+            if (toggleBtn) toggleBtn.style.background = 'rgba(250,204,21,0.85)';
+            rect.onmousedown = lightboxCropRectMouseDown;
+            rect.querySelectorAll('.lightbox-crop-handle').forEach(function(h2) {
+                h2.onmousedown = lightboxCropHandleMouseDown;
+            });
+        }
+
+        function exitLightboxCropMode() {
+            lightboxCropMode = false;
+            lightboxCropDrag = null;
+            const rect = document.getElementById('lightboxCropRect');
+            const hint = document.getElementById('lightboxCropHint');
+            const applyBtn = document.getElementById('lightboxApplyCropBtn');
+            const toggleBtn = document.getElementById('lightboxCropToggleBtn');
+            if (rect) rect.style.display = 'none';
+            if (hint) hint.style.display = 'none';
+            if (applyBtn) applyBtn.style.display = 'none';
+            if (toggleBtn) toggleBtn.style.background = '';
+            document.removeEventListener('mousemove', lightboxCropMouseMove);
+            document.removeEventListener('mouseup', lightboxCropMouseUp);
+        }
+
+        function lightboxCropRectMouseDown(e) {
+            if (e.target.classList.contains('lightbox-crop-handle')) return;
+            e.preventDefault();
+            const rect = document.getElementById('lightboxCropRect');
+            lightboxCropDrag = {
+                mode: 'move', startX: e.clientX, startY: e.clientY,
+                rect: { left: parseFloat(rect.style.left), top: parseFloat(rect.style.top), width: parseFloat(rect.style.width), height: parseFloat(rect.style.height) }
+            };
+            document.addEventListener('mousemove', lightboxCropMouseMove);
+            document.addEventListener('mouseup', lightboxCropMouseUp);
+        }
+
+        function lightboxCropHandleMouseDown(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const rect = document.getElementById('lightboxCropRect');
+            lightboxCropDrag = {
+                mode: e.target.getAttribute('data-dir'), startX: e.clientX, startY: e.clientY,
+                rect: { left: parseFloat(rect.style.left), top: parseFloat(rect.style.top), width: parseFloat(rect.style.width), height: parseFloat(rect.style.height) }
+            };
+            document.addEventListener('mousemove', lightboxCropMouseMove);
+            document.addEventListener('mouseup', lightboxCropMouseUp);
+        }
+
+        function lightboxCropMouseMove(e) {
+            if (!lightboxCropDrag) return;
+            const rect = document.getElementById('lightboxCropRect');
+            if (!rect) return;
+            const dx = e.clientX - lightboxCropDrag.startX;
+            const dy = e.clientY - lightboxCropDrag.startY;
+            const r0 = lightboxCropDrag.rect;
+            const maxW = lightboxBaseW, maxH = lightboxBaseH;
+            let { left, top, width, height } = r0;
+
+            if (lightboxCropDrag.mode === 'move') {
+                left = Math.min(Math.max(0, r0.left + dx), maxW - r0.width);
+                top = Math.min(Math.max(0, r0.top + dy), maxH - r0.height);
+            } else {
+                if (lightboxCropDrag.mode.includes('n')) {
+                    top = Math.min(r0.top + dy, r0.top + r0.height - LIGHTBOX_MIN_CROP_PX);
+                    top = Math.max(0, top);
+                    height = (r0.top + r0.height) - top;
+                }
+                if (lightboxCropDrag.mode.includes('s')) {
+                    height = Math.min(r0.height + dy, maxH - r0.top);
+                    height = Math.max(LIGHTBOX_MIN_CROP_PX, height);
+                }
+                if (lightboxCropDrag.mode.includes('w')) {
+                    left = Math.min(r0.left + dx, r0.left + r0.width - LIGHTBOX_MIN_CROP_PX);
+                    left = Math.max(0, left);
+                    width = (r0.left + r0.width) - left;
+                }
+                if (lightboxCropDrag.mode.includes('e')) {
+                    width = Math.min(r0.width + dx, maxW - r0.left);
+                    width = Math.max(LIGHTBOX_MIN_CROP_PX, width);
+                }
+            }
+            rect.style.left = Math.round(left) + 'px';
+            rect.style.top = Math.round(top) + 'px';
+            rect.style.width = Math.round(width) + 'px';
+            rect.style.height = Math.round(height) + 'px';
+        }
+
+        function lightboxCropMouseUp() {
+            lightboxCropDrag = null;
+            document.removeEventListener('mousemove', lightboxCropMouseMove);
+            document.removeEventListener('mouseup', lightboxCropMouseUp);
+        }
+
+        function applyLightboxCrop() {
+            const img = document.getElementById('lightboxImg');
+            const rectEl = document.getElementById('lightboxCropRect');
+            if (!img || !rectEl || !lightboxBaseW) return;
+            const scaleToNatural = img.naturalWidth / lightboxBaseW;
+            const sx = parseFloat(rectEl.style.left) * scaleToNatural;
+            const sy = parseFloat(rectEl.style.top) * scaleToNatural;
+            const sw = parseFloat(rectEl.style.width) * scaleToNatural;
+            const sh = parseFloat(rectEl.style.height) * scaleToNatural;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(sw);
+            canvas.height = Math.round(sh);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+            if (lightboxSourceImgId) {
+                const sourceImg = document.getElementById(lightboxSourceImgId);
+                if (sourceImg) sourceImg.src = croppedDataUrl;
+            }
+            exitLightboxCropMode();
+            img.onload = function() { fitLightboxImageToViewport(); };
+            img.src = croppedDataUrl;
         }
 
         function triggerMasterFullsetUpload() {
@@ -5883,20 +6240,91 @@
                     console.log(`[Auto-Crop] Latar bertekstur terdeteksi (bgStd=${bgStd.toFixed(1)}, bgLum=${bgLum.toFixed(0)}) — pakai mode kecerahan, ambang Otsu=${brightThresh}`);
                 }
 
-                // 2. Scan energi tepi & perbedaan warna terhadap background (atau kecerahan jika mode cadangan aktif)
-                const rowScores = new Float32Array(sh);
-                const colScores = new Float32Array(sw);
+                let top, bottom, left, right;
 
-                for (let y = 1; y < sh - 1; y++) {
-                    for (let x = 1; x < sw - 1; x++) {
-                        const idx = (y * sw + x) * 4;
-                        const r = d[idx], g = d[idx + 1], b = d[idx + 2];
+                if (useBrightnessFallback) {
+                    // 2a. Mode kecerahan: latar bertekstur kontras-tinggi (mis. karpet motif
+                    // dalmatian/kotak-kotak hitam-putih) punya bercak TERANG yang tersebar di
+                    // seluruh frame, bukan cuma "noise" tipis — proyeksi baris/kolom global di
+                    // atas gagal total untuk kasus ini karena bercak terang di background ikut
+                    // kehitung sebagai "ada dokumen" di hampir semua baris/kolom, sehingga kotak
+                    // yang terdeteksi melebar ke seluruh frame (tidak ter-crop sama sekali).
+                    // Diganti pendekatan connected-component: tandai piksel terang (di atas ambang
+                    // Otsu), lebarkan 1px (dilasi) supaya celah kecil akibat teks/foto di kartu
+                    // tidak memutus area, lalu flood-fill HANYA dari area terang yang terhubung ke
+                    // tengah frame (dokumen hampir selalu diposisikan di tengah saat difoto) —
+                    // bercak terang terpisah di background (tidak terhubung ke tengah) otomatis
+                    // terabaikan karena bukan bagian dari komponen yang sama.
+                    const mask = new Uint8Array(sw * sh);
+                    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+                        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+                        mask[p] = (lum > brightThresh) ? 1 : 0;
+                    }
+                    // Dilasi 1px (4-connectivity) untuk menjembatani celah kecil (teks/foto gelap di kartu)
+                    const dilated = new Uint8Array(sw * sh);
+                    for (let y = 0; y < sh; y++) {
+                        for (let x = 0; x < sw; x++) {
+                            const p = y * sw + x;
+                            if (mask[p]) { dilated[p] = 1; continue; }
+                            const up = (y > 0) && mask[p - sw];
+                            const down = (y < sh - 1) && mask[p + sw];
+                            const lft = (x > 0) && mask[p - 1];
+                            const rgt = (x < sw - 1) && mask[p + 1];
+                            dilated[p] = (up || down || lft || rgt) ? 1 : 0;
+                        }
+                    }
 
-                        let isDocPixel;
-                        if (useBrightnessFallback) {
-                            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                            isDocPixel = lum > brightThresh;
-                        } else {
+                    // Cari titik awal flood-fill: tengah frame, atau spiral cari piksel terang terdekat
+                    function findSeed() {
+                        const cx = Math.floor(sw / 2), cy = Math.floor(sh / 2);
+                        if (dilated[cy * sw + cx]) return [cx, cy];
+                        const maxR = Math.floor(Math.min(sw, sh) * 0.35);
+                        for (let r = 1; r <= maxR; r++) {
+                            for (let dy = -r; dy <= r; dy++) {
+                                for (let dx = -r; dx <= r; dx++) {
+                                    if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+                                    const px = cx + dx, py = cy + dy;
+                                    if (px < 0 || px >= sw || py < 0 || py >= sh) continue;
+                                    if (dilated[py * sw + px]) return [px, py];
+                                }
+                            }
+                        }
+                        return null;
+                    }
+                    const seed = findSeed();
+
+                    if (!seed) {
+                        console.log(`[Auto-Crop] Mode kecerahan: tidak ditemukan area terang di sekitar tengah frame untuk ${targetDoc}, lewati crop.`);
+                        return callback(imageDataUrl);
+                    }
+
+                    // Flood-fill iteratif (stack) dari seed, lacak bounding box area yang terhubung
+                    const visited = new Uint8Array(sw * sh);
+                    const stack = [seed[1] * sw + seed[0]];
+                    visited[stack[0]] = 1;
+                    let minX = seed[0], maxX = seed[0], minY = seed[1], maxY = seed[1];
+                    while (stack.length) {
+                        const p = stack.pop();
+                        const x = p % sw, y = (p / sw) | 0;
+                        if (x < minX) minX = x; if (x > maxX) maxX = x;
+                        if (y < minY) minY = y; if (y > maxY) maxY = y;
+                        if (x > 0 && !visited[p - 1] && dilated[p - 1]) { visited[p - 1] = 1; stack.push(p - 1); }
+                        if (x < sw - 1 && !visited[p + 1] && dilated[p + 1]) { visited[p + 1] = 1; stack.push(p + 1); }
+                        if (y > 0 && !visited[p - sw] && dilated[p - sw]) { visited[p - sw] = 1; stack.push(p - sw); }
+                        if (y < sh - 1 && !visited[p + sw] && dilated[p + sw]) { visited[p + sw] = 1; stack.push(p + sw); }
+                    }
+                    top = minY; bottom = maxY; left = minX; right = maxX;
+                    console.log(`[Auto-Crop] Mode kecerahan ${targetDoc}: komponen terhubung dari tengah = kotak (${left},${top})-(${right},${bottom}) dari frame ${sw}x${sh}`);
+                } else {
+                    // 2b. Mode normal: scan energi tepi & perbedaan warna terhadap background
+                    const rowScores = new Float32Array(sh);
+                    const colScores = new Float32Array(sw);
+
+                    for (let y = 1; y < sh - 1; y++) {
+                        for (let x = 1; x < sw - 1; x++) {
+                            const idx = (y * sw + x) * 4;
+                            const r = d[idx], g = d[idx + 1], b = d[idx + 2];
+
                             // Jarak warna dari background
                             const dist = Math.sqrt((r - bgR)**2 + (g - bgG)**2 + (b - bgB)**2);
 
@@ -5910,30 +6338,30 @@
                             const edgeScore = (gradX + gradY) / 3;
 
                             // Pixel adalah bagian dari dokumen jika berbeda dari background atau memiliki tepi kuat
-                            isDocPixel = (dist > distThresh) || (edgeScore > 35);
-                        }
-                        if (isDocPixel) {
-                            rowScores[y] += 1;
-                            colScores[x] += 1;
+                            const isDocPixel = (dist > distThresh) || (edgeScore > 35);
+                            if (isDocPixel) {
+                                rowScores[y] += 1;
+                                colScores[x] += 1;
+                            }
                         }
                     }
+
+                    // 3. Tentukan batas dokumen (Threshold minimal 12% lebar/tinggi baris/kolom)
+                    const minRowScore = Math.max(3, sw * 0.12);
+                    const minColScore = Math.max(3, sh * 0.12);
+
+                    top = 0;
+                    while (top < sh && rowScores[top] < minRowScore) top++;
+
+                    bottom = sh - 1;
+                    while (bottom > top && rowScores[bottom] < minRowScore) bottom--;
+
+                    left = 0;
+                    while (left < sw && colScores[left] < minColScore) left++;
+
+                    right = sw - 1;
+                    while (right > left && colScores[right] < minColScore) right--;
                 }
-
-                // 3. Tentukan batas dokumen (Threshold minimal 12% lebar/tinggi baris/kolom)
-                const minRowScore = Math.max(3, sw * 0.12);
-                const minColScore = Math.max(3, sh * 0.12);
-
-                let top = 0;
-                while (top < sh && rowScores[top] < minRowScore) top++;
-
-                let bottom = sh - 1;
-                while (bottom > top && rowScores[bottom] < minRowScore) bottom--;
-
-                let left = 0;
-                while (left < sw && colScores[left] < minColScore) left++;
-
-                let right = sw - 1;
-                while (right > left && colScores[right] < minColScore) right--;
 
                 const cropW_scan = right - left;
                 const cropH_scan = bottom - top;

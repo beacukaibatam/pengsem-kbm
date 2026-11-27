@@ -892,6 +892,15 @@ def extract_with_vision_ai(image_bytes, target=''):
         # ulang daftar ini dengan model cadangan yang SUDAH TERBUKTI jalan via tes langsung ke API.
         candidate_models = ['gemini-2.5-flash']
 
+        # Retry-with-backoff KHUSUS untuk 429 (Too Many Requests / rate limit per-menit).
+        # Ditambahkan karena ditemukan pola nyata: beberapa dokumen diunggah beruntun dalam
+        # waktu singkat (KTP, NPWP, STNK, BPKB) bisa kena limit permintaan-per-menit tingkat
+        # gratis Gemini; sebelumnya kena 429 langsung jatuh ke OCR lokal (jauh lebih tidak akurat,
+        # bikin field tidak auto-terisi/"Lengkapi Manual") padahal menunggu sebentar lalu mengulang
+        # permintaan YANG SAMA biasanya cukup karena limitnya per-menit, bukan per-hari.
+        MAX_429_RETRY = 2
+        RETRY_DELAY_SECONDS = 4
+
         for model_name in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
             payload = {
@@ -903,25 +912,35 @@ def extract_with_vision_ai(image_bytes, target=''):
                     "temperature": 0.1
                 }
             }
-            try:
-                req = urllib.request.Request(
-                    url,
-                    data=json.dumps(payload).encode('utf-8'),
-                    headers={"Content-Type": "application/json"}
-                )
-                with urllib.request.urlopen(req, timeout=25) as resp:
-                    data = json.loads(resp.read().decode('utf-8'))
-                    candidate = data.get('candidates', [{}])[0]
-                    parts = candidate.get('content', {}).get('parts', [{}])
-                    out_text = parts[0].get('text', '{}')
-                    parsed = json.loads(out_text)
-                    if isinstance(parsed, list) and parsed:
-                        parsed = parsed[0]
-                    print(f"[+] Vision AI sukses menggunakan model: {model_name}")
-                    return parsed, out_text
-            except Exception as e_model:
-                print(f"[!] Vision AI Model {model_name} error: {e_model}, mencoba fallback berikutnya...")
-                continue
+            attempt = 0
+            while attempt <= MAX_429_RETRY:
+                attempt += 1
+                try:
+                    req = urllib.request.Request(
+                        url,
+                        data=json.dumps(payload).encode('utf-8'),
+                        headers={"Content-Type": "application/json"}
+                    )
+                    with urllib.request.urlopen(req, timeout=25) as resp:
+                        data = json.loads(resp.read().decode('utf-8'))
+                        candidate = data.get('candidates', [{}])[0]
+                        parts = candidate.get('content', {}).get('parts', [{}])
+                        out_text = parts[0].get('text', '{}')
+                        parsed = json.loads(out_text)
+                        if isinstance(parsed, list) and parsed:
+                            parsed = parsed[0]
+                        print(f"[+] Vision AI sukses menggunakan model: {model_name}")
+                        return parsed, out_text
+                except urllib.error.HTTPError as e_http:
+                    if e_http.code == 429 and attempt <= MAX_429_RETRY:
+                        print(f"[!] Vision AI Model {model_name} kena rate-limit (429), percobaan ke-{attempt}/{MAX_429_RETRY}, tunggu {RETRY_DELAY_SECONDS}s lalu ulangi...")
+                        time.sleep(RETRY_DELAY_SECONDS)
+                        continue
+                    print(f"[!] Vision AI Model {model_name} error: {e_http}, mencoba fallback berikutnya...")
+                    break
+                except Exception as e_model:
+                    print(f"[!] Vision AI Model {model_name} error: {e_model}, mencoba fallback berikutnya...")
+                    break
 
         return None, ""
     except Exception as e:
