@@ -1025,6 +1025,21 @@ def auto_warp_document_opencv(image_bytes, target=''):
         img_area = float(sw * sh)
         card_contour_pts = None
 
+        # Kartu asli yang difoto normal SELALU punya margin latar di sekelilingnya — kalau
+        # bounding box kontur menyentuh/nyaris menyentuh 2 atau lebih tepi frame, itu HAMPIR
+        # PASTI bukan kartu, melainkan latar bercak terang (karpet/meja) yang ikut ter-threshold
+        # jadi satu blob besar dengan kartu akibat morphological closing — terbukti empiris jadi
+        # sebab utama auto-crop "berhasil" tapi hasilnya masih nyaris 1 frame penuh (lihat
+        # HANDOFF.md). Kontur yang menyentuh >=2 tepi WAJIB ditolak di kedua strategi di bawah.
+        def _touches_frame_border(cnt, tol=6):
+            x, y, w, h = cv2.boundingRect(cnt)
+            touches = 0
+            if x <= tol: touches += 1
+            if y <= tol: touches += 1
+            if x + w >= sw - tol: touches += 1
+            if y + h >= sh - tol: touches += 1
+            return touches >= 2
+
         # Strategi 1: Bilateral Filter + Otsu Thresholding + Morph Closing (Sangat efektif untuk karpet bermotif)
         blurred_bilateral = cv2.bilateralFilter(gray, 9, 75, 75)
         _, thresh_otsu = cv2.threshold(blurred_bilateral, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -1036,7 +1051,7 @@ def auto_warp_document_opencv(image_bytes, target=''):
         if cnts_otsu:
             for c in cnts_otsu:
                 area = cv2.contourArea(c)
-                if (img_area * 0.08) <= area <= (img_area * 0.95):
+                if (img_area * 0.08) <= area <= (img_area * 0.95) and not _touches_frame_border(c):
                     rect = cv2.minAreaRect(c)
                     bw, bh = rect[1]
                     if min(bw, bh) > 0:
@@ -1056,7 +1071,7 @@ def auto_warp_document_opencv(image_bytes, target=''):
         if cnts_edge:
             for c in cnts_edge:
                 area = cv2.contourArea(c)
-                if (img_area * 0.08) <= area <= (img_area * 0.95):
+                if (img_area * 0.08) <= area <= (img_area * 0.95) and not _touches_frame_border(c):
                     rect = cv2.minAreaRect(c)
                     bw, bh = rect[1]
                     if min(bw, bh) > 0:
@@ -1073,6 +1088,10 @@ def auto_warp_document_opencv(image_bytes, target=''):
             card_contour_pts = candidates[0][1]
 
         if card_contour_pts is None:
+            # OpenCV tidak menemukan kontur kartu yang kredibel (semua kandidat ditolak atau
+            # menyentuh tepi frame) — JANGAN kembalikan gambar utuh berlabel "sukses". Kembalikan
+            # None supaya pipeline di /api/ocr jatuh ke fallback berikutnya (Gemini Vision doc_bbox,
+            # lalu heuristik klien), bukan diam-diam melaporkan crop yang sebenarnya gagal.
             return image_bytes, None
 
         # Skalakan kembali 4 titik sudut ke dimensi gambar asli
@@ -1213,17 +1232,17 @@ def extract_with_vision_ai(image_bytes, target=''):
                 "TUGAS 2: " + prompt_text
             )
 
-        # 'gemini-2.0-flash', 'gemini-1.5-flash', DAN 'gemini-2.5-flash-lite' SEMUA TERBUKTI mati
-        # (404 Not Found) saat diuji langsung ke API sungguhan 27 Nov 2026 — berarti fallback chain
-        # ini SUDAH LAMA tidak pernah benar-benar jadi cadangan nyata (cuma 'gemini-2.5-flash' yang
-        # hidup), dan baru ketahuan sekarang karena 'gemini-2.5-flash' kena rate-limit (429) saat
-        # pengujian sesi ini. TIDAK ditambahkan model pengganti tebakan lain di sini karena tidak ada
-        # cara memverifikasi nama model yang valid tanpa kuota API yang masih tersedia (hasil
-        # pencarian web soal nama model Gemini terkini saling bertentangan/tidak bisa dipercaya).
-        # TINDAK LANJUT YANG DISARANKAN (belum dikerjakan): cek daftar model valid di
-        # https://ai.google.dev/gemini-api/docs/models dengan kuota yang masih tersedia, lalu isi
+        # 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite', DAN 'gemini-2.5-pro'
+        # SEMUA TERBUKTI mati (404 Not Found) saat diuji langsung ke API sungguhan (27 Nov 2026,
+        # 'gemini-2.5-pro' dikonfirmasi 404 belakangan via panggilan nyata saat audit pipeline crop)
+        # — berarti fallback chain ini SUDAH LAMA tidak pernah benar-benar jadi cadangan nyata (cuma
+        # 'gemini-2.5-flash' yang hidup). TIDAK ditambahkan model pengganti tebakan lain di sini
+        # karena tidak ada cara memverifikasi nama model yang valid tanpa kuota API yang masih
+        # tersedia (hasil pencarian web soal nama model Gemini terkini saling bertentangan/tidak
+        # bisa dipercaya). TINDAK LANJUT YANG DISARANKAN (belum dikerjakan): cek daftar model valid
+        # di https://ai.google.dev/gemini-api/docs/models dengan kuota yang masih tersedia, lalu isi
         # ulang daftar ini dengan model cadangan yang SUDAH TERBUKTI jalan via tes langsung ke API.
-        candidate_models = ['gemini-2.5-flash', 'gemini-2.5-pro']
+        candidate_models = ['gemini-2.5-flash']
         api_keys = get_gemini_api_keys() or ([GEMINI_API_KEY] if GEMINI_API_KEY else [])
 
         # Retry-with-backoff KHUSUS untuk 429 (Too Many Requests / rate limit per-menit).
