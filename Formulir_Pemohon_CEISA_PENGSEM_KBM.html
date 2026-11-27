@@ -131,25 +131,33 @@
         }
 
         .btn-logout-header {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            min-height: 34px;
+            padding: 0;
             background: rgba(255, 255, 255, 0.08);
             color: #FFFFFF;
             border: 1px solid rgba(255, 255, 255, 0.22);
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 0.74rem;
-            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
             font-family: inherit;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
+            flex-shrink: 0;
         }
         .btn-logout-header:hover {
             background: #EF4444;
             border-color: #EF4444;
             color: #FFFFFF;
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+            transform: translateY(-1px);
+        }
+        .btn-logout-header:active {
+            transform: scale(0.95);
         }
 
         .header-brand-left, .header-brand-right {
@@ -1918,8 +1926,8 @@
             #headerUserNama { font-size: 0.70rem !important; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .header-user-detail { display: none !important; }
             #headerRoleBadge { font-size: 0.56rem !important; padding: 1px 6px !important; }
-            #btnLogoutPortal { padding: 6px 10px !important; font-size: 0 !important; }
-            #btnLogoutPortal svg { width: 16px !important; height: 16px !important; }
+            #btnLogoutPortal { width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; padding: 0 !important; }
+            #btnLogoutPortal svg { width: 15px !important; height: 15px !important; }
 
             .portal-nav-container { flex-wrap: wrap !important; padding: 6px 10px !important; gap: 6px !important; }
             .portal-tabs {
@@ -2707,13 +2715,12 @@
                     <div id="headerUserDetail" style="display:none;"></div>
                     <span id="headerRoleBadge" style="display:inline-block; font-size:0.66rem; font-weight:800; padding:2px 8px; border-radius:4px; margin-top:3px; text-transform:uppercase; letter-spacing:0.3px;">PEMOHON</span>
                 </div>
-                <button type="button" id="btnLogoutPortal" class="btn-logout-header" onclick="handleLogout()" title="Keluar dari Portal">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button type="button" id="btnLogoutPortal" class="btn-logout-header" onclick="handleLogout()" title="Keluar dari Portal" aria-label="Keluar dari Portal">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                         <polyline points="16 17 21 12 16 7"></polyline>
                         <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
-                    <span>Keluar</span>
                 </button>
             </div>
         </div>
