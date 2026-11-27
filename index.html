@@ -9742,15 +9742,16 @@
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                    alert('⛔ ' + (data.message || 'Gagal memvalidasi kendaraan.'));
+                    showAppAlert('⛔ ' + (data.message || 'Gagal memvalidasi kendaraan.'), 'error');
                     if (btn) { btn.disabled = false; btn.innerText = '✓ Konfirmasi Kendaraan Keluar'; }
                     return;
                 }
-                alert('✓ ' + (data.message || 'Kendaraan resmi berangkat.'));
-                closeGateQrResultModal();
-                loadPermohonanData();
+                showAppAlert('✓ ' + (data.message || 'Kendaraan resmi berangkat.'), 'success', () => {
+                    closeGateQrResultModal();
+                    loadPermohonanData();
+                });
             } catch (e) {
-                alert('⛔ Gagal menghubungi server.');
+                showAppAlert('⛔ Gagal menghubungi server.', 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerText = '✓ Konfirmasi Kendaraan Keluar'; }
             }
@@ -9846,7 +9847,7 @@
             const role = document.getElementById('newPegawaiRole').value;
 
             if (!username || !password || !nama) {
-                alert('⛔ Username, kata sandi, dan nama wajib diisi.');
+                showAppAlert('⛔ Username, kata sandi, dan nama wajib diisi.', 'error');
                 return;
             }
             try {
@@ -9857,15 +9858,16 @@
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                    alert('⛔ ' + (data.message || 'Gagal membuat akun.'));
+                    showAppAlert('⛔ ' + (data.message || 'Gagal membuat akun.'), 'error');
                     return;
                 }
-                alert('✓ ' + data.message);
-                document.getElementById('formCreatePegawai').style.display = 'none';
-                ['newPegawaiUsername','newPegawaiPassword','newPegawaiNama','newPegawaiNip','newPegawaiJabatan'].forEach(id => document.getElementById(id).value = '');
-                loadAdminUsers();
+                showAppAlert('✓ ' + data.message, 'success', () => {
+                    document.getElementById('formCreatePegawai').style.display = 'none';
+                    ['newPegawaiUsername','newPegawaiPassword','newPegawaiNama','newPegawaiNip','newPegawaiJabatan'].forEach(id => document.getElementById(id).value = '');
+                    loadAdminUsers();
+                });
             } catch (e) {
-                alert('⛔ Gagal menghubungi server.');
+                showAppAlert('⛔ Gagal menghubungi server.', 'error');
             }
         }
 
@@ -9884,7 +9886,7 @@
             if (!resetPasswordTarget) return;
             const newPassword = document.getElementById('resetPasswordNewValue').value.trim();
             if (!newPassword || newPassword.length < 6) {
-                alert('⛔ Kata sandi baru minimal 6 karakter.');
+                showAppAlert('⛔ Kata sandi baru minimal 6 karakter.', 'error');
                 return;
             }
             try {
@@ -9895,13 +9897,14 @@
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                    alert('⛔ ' + (data.message || 'Gagal mereset kata sandi.'));
+                    showAppAlert('⛔ ' + (data.message || 'Gagal mereset kata sandi.'), 'error');
                     return;
                 }
-                alert('✓ ' + data.message);
-                closeResetPasswordModal();
+                showAppAlert('✓ ' + data.message, 'success', () => {
+                    closeResetPasswordModal();
+                });
             } catch (e) {
-                alert('⛔ Gagal menghubungi server.');
+                showAppAlert('⛔ Gagal menghubungi server.', 'error');
             }
         }
 
@@ -9990,7 +9993,7 @@
         // Generate Real 10-Page PDF with jsPDF
         function generateAndDownloadRealPDF() {
             if (!window.jspdf || !window.jspdf.jsPDF) {
-                alert('Mengunduh berkas fisik riil Nadine: Surat_Masuk10_03_2026_10_59_46.pdf (10 Halaman).');
+                showAppAlert('Mengunduh berkas fisik riil Nadine: Surat_Masuk10_03_2026_10_59_46.pdf (10 Halaman).', 'info');
                 return;
             }
 
@@ -11630,44 +11633,48 @@
         }
 
         async function eksekusiAksiNadine(id) {
-            if (!confirm(`Rekam dan unggah naskah masuk Nadine Kemenkeu untuk permohonan ${id}?`)) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/frontdesk/rekam-nadine`, {
-                    method: 'POST', headers: _authJsonHeaders(), body: JSON.stringify({ id })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert(`✓ BERHASIL REKAM NADINE!\n\nNomor Agenda: ${data.no_nadine}\nStatus diteruskan ke Seksi Fasilitas Pabean.`);
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
-                } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
-                }
-            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+            showAppConfirm(`Rekam dan unggah naskah masuk Nadine Kemenkeu untuk permohonan ${id}?`, async function() {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/frontdesk/rekam-nadine`, {
+                        method: 'POST', headers: _authJsonHeaders(), body: JSON.stringify({ id })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert(`✓ BERHASIL REKAM NADINE!\n\nNomor Agenda: ${data.no_nadine}\nStatus diteruskan ke Seksi Fasilitas Pabean.`, 'success', async () => {
+                            await loadPermohonanData();
+                            openDrawerDetail(id);
+                        });
+                    } else {
+                        showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                    }
+                } catch (e) { showAppAlert('Kesalahan jaringan: ' + e.message, 'error'); }
+            });
         }
 
         async function eksekusiAksiFasilitas(id) {
-            if (!confirm(`Terbitkan Naskah Dinas Surat S & SKEP Persetujuan untuk permohonan ${id}?`)) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/fasilitas/terbitkan-skep`, {
-                    method: 'POST', headers: _authJsonHeaders(), body: JSON.stringify({ id })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert(`✓ SKEP PERSETUJUAN DITERBITKAN!\n\nNomor SKEP: ${data.no_skep}\nNaskah Dinas S: ${data.no_surat_s}\n\nBerkas diteruskan ke Tahap Jaminan.`);
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
-                } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
-                }
-            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+            showAppConfirm(`Terbitkan Naskah Dinas Surat S & SKEP Persetujuan untuk permohonan ${id}?`, async function() {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/fasilitas/terbitkan-skep`, {
+                        method: 'POST', headers: _authJsonHeaders(), body: JSON.stringify({ id })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert(`✓ SKEP PERSETUJUAN DITERBITKAN!\n\nNomor SKEP: ${data.no_skep}\nNaskah Dinas S: ${data.no_surat_s}\n\nBerkas diteruskan ke Tahap Jaminan.`, 'success', async () => {
+                            await loadPermohonanData();
+                            openDrawerDetail(id);
+                        });
+                    } else {
+                        showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                    }
+                } catch (e) { showAppAlert('Kesalahan jaringan: ' + e.message, 'error'); }
+            });
         }
 
         async function eksekusiAksiJaminanUnggahBilling(id) {
             const fileInput = document.getElementById('actionJaminanBillingFile');
             const file = fileInput && fileInput.files && fileInput.files[0];
             if (!file) {
-                alert('Silakan pilih file Billing Jaminan (PDF/gambar) terlebih dahulu.');
+                showAppAlert('Silakan pilih file Billing Jaminan (PDF/gambar) terlebih dahulu.', 'warning');
                 return;
             }
             const kodeBilling = (document.getElementById('actionJaminanKodeBilling')?.value || '').trim();
@@ -11687,20 +11694,21 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert('✓ Billing Jaminan berhasil diunggah & notifikasi WhatsApp dikirim ke pemohon!');
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
+                    showAppAlert('✓ Billing Jaminan berhasil diunggah & notifikasi WhatsApp dikirim ke pemohon!', 'success', async () => {
+                        await loadPermohonanData();
+                        openDrawerDetail(id);
+                    });
                 } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
+                    showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
                 }
-            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+            } catch (e) { showAppAlert('Kesalahan jaringan: ' + e.message, 'error'); }
         }
 
         async function eksekusiPemohonUnggahBuktiBayar(id) {
             const fileInput = document.getElementById('pemohonBuktiBayarFile');
             const file = fileInput && fileInput.files && fileInput.files[0];
             if (!file) {
-                alert('Silakan pilih file Bukti Bayar Billing (PDF/foto) terlebih dahulu.');
+                showAppAlert('Silakan pilih file Bukti Bayar Billing (PDF/foto) terlebih dahulu.', 'warning');
                 return;
             }
             const note = (document.getElementById('pemohonBuktiBayarNote')?.value || '').trim();
@@ -11720,14 +11728,15 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.status === 'ok') {
-                    alert('✓ Bukti Bayar Jaminan berhasil diunggah!\nStatus saat ini: Menunggu Verifikasi Petugas Jaminan.');
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
+                    showAppAlert('✓ Bukti Bayar Jaminan berhasil diunggah!\nStatus saat ini: Menunggu Verifikasi Petugas Jaminan.', 'success', async () => {
+                        await loadPermohonanData();
+                        openDrawerDetail(id);
+                    });
                 } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
+                    showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
                 }
             } catch (e) {
-                alert('Kesalahan jaringan: ' + e.message);
+                showAppAlert('Kesalahan jaringan: ' + e.message, 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerText = '✓ Kirim Bukti Bayar ke Petugas Jaminan'; }
             }
@@ -11737,29 +11746,31 @@
             const noBpj = (document.getElementById('actionJaminanNoBpj')?.value || '').trim();
             const catatan = (document.getElementById('actionJaminanCatatan')?.value || '').trim();
             if (keputusan === 'TOLAK' && !catatan) {
-                alert('Harap isi Alasan Penolakan / Permintaan Unggah Ulang Bukti Bayar terlebih dahulu.');
+                showAppAlert('Harap isi Alasan Penolakan / Permintaan Unggah Ulang Bukti Bayar terlebih dahulu.', 'warning');
                 document.getElementById('actionJaminanCatatan')?.focus();
                 return;
             }
             const msgConfirm = keputusan === 'TERIMA'
                 ? `Verifikasi jaminan SESUAI untuk ${id} dan teruskan ke Petugas Loket (LOKET_VERIFIKASI)?`
                 : `Tolak bukti bayar ${id} dan minta pemohon mengunggah ulang?`;
-            if (!confirm(msgConfirm)) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/jaminan/verifikasi-pembayaran`, {
-                    method: 'POST',
-                    headers: _authJsonHeaders(),
-                    body: JSON.stringify({ id, keputusan, no_bpj: noBpj, catatan })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert('✓ ' + data.message);
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
-                } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
-                }
-            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+            showAppConfirm(msgConfirm, async function() {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/jaminan/verifikasi-pembayaran`, {
+                        method: 'POST',
+                        headers: _authJsonHeaders(),
+                        body: JSON.stringify({ id, keputusan, no_bpj: noBpj, catatan })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert('✓ ' + data.message, 'success', async () => {
+                            await loadPermohonanData();
+                            openDrawerDetail(id);
+                        });
+                    } else {
+                        showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                    }
+                } catch (e) { showAppAlert('Kesalahan jaringan: ' + e.message, 'error'); }
+            }, null, { isDanger: keputusan === 'TOLAK' });
         }
 
         async function eksekusiAksiLoketApprove(id) {
@@ -11767,30 +11778,32 @@
             const c2 = document.getElementById('chkLoketBundel2')?.checked === true;
             const c3 = document.getElementById('chkLoketBundel3')?.checked === true;
             if (!c1 || !c2 || !c3) {
-                alert('Ketiga checklist verifikasi bundel (Permohonan & Lampiran, SKEP Fasilitas, dan Dokumen Jaminan Terverifikasi) wajib dicentang sebelum Approval.');
+                showAppAlert('Ketiga checklist verifikasi bundel (Permohonan & Lampiran, SKEP Fasilitas, dan Dokumen Jaminan Terverifikasi) wajib dicentang sebelum Approval.', 'warning');
                 return;
             }
-            if (!confirm(`Approve berkas ${id} di Petugas Loket?\n\nSistem akan otomatis menerbitkan:\n1. PPFTZ-01 & Proforma PPFTZ-03\n2. Penunjukan Pemeriksa Dokumen\n3. SPF + Notifikasi WA Wajib Bawa 5 Berkas Asli\n4. IP Penunjukan Pemeriksa Barang`)) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/loket/approve`, {
-                    method: 'POST',
-                    headers: _authJsonHeaders(),
-                    body: JSON.stringify({
-                        id,
-                        chk_bundel_permohonan: c1,
-                        chk_bundel_skep: c2,
-                        chk_bundel_jaminan: c3
-                    })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert(`✓ APPROVAL LOKET BERHASIL (4 OUTPUT TERBIT OTOMATIS)!\n\n1. PPFTZ-01: ${data.no_ppftz}\n   Proforma PPFTZ-03: ${data.no_proforma_ppftz03}\n2. SPF: ${data.no_spf} (Notif WA terkirim ke pemohon)\n3. IP: ${data.no_ip}\n4. Status berpindah ke Pemeriksaan Fisik (PPFTZ_CEK_FISIK).`);
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
-                } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
-                }
-            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+            showAppConfirm(`Approve berkas ${id} di Petugas Loket?\n\nSistem akan otomatis menerbitkan:\n1. PPFTZ-01 & Proforma PPFTZ-03\n2. Penunjukan Pemeriksa Dokumen\n3. SPF + Notifikasi WA Wajib Bawa 5 Berkas Asli\n4. IP Penunjukan Pemeriksa Barang`, async function() {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/loket/approve`, {
+                        method: 'POST',
+                        headers: _authJsonHeaders(),
+                        body: JSON.stringify({
+                            id,
+                            chk_bundel_permohonan: c1,
+                            chk_bundel_skep: c2,
+                            chk_bundel_jaminan: c3
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert(`✓ APPROVAL LOKET BERHASIL (4 OUTPUT TERBIT OTOMATIS)!\n\n1. PPFTZ-01: ${data.no_ppftz}\n   Proforma PPFTZ-03: ${data.no_proforma_ppftz03}\n2. SPF: ${data.no_spf} (Notif WA terkirim ke pemohon)\n3. IP: ${data.no_ip}\n4. Status berpindah ke Pemeriksaan Fisik (PPFTZ_CEK_FISIK).`, 'success', async () => {
+                            await loadPermohonanData();
+                            openDrawerDetail(id);
+                        });
+                    } else {
+                        showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                    }
+                } catch (e) { showAppAlert('Kesalahan jaringan: ' + e.message, 'error'); }
+            });
         }
 
         async function eksekusiAksiLhp(id) {
@@ -11801,7 +11814,7 @@
             const cekPolda = document.getElementById('chkAsliPolda')?.checked === true;
             const catatanAsli = (document.getElementById('actionLhpCatatanBerkasAsli')?.value || '').trim();
             if (!(cekKtp && cekNpwp && cekBpkb && cekStnk && cekPolda) && !catatanAsli) {
-                alert('Centang seluruh 5 Berkas Fisik Asli (KTP, NPWP, BPKB/Leasing, STNK, Surat Jalan Polda) atau isi catatan ketidaksesuaiannya terlebih dahulu.');
+                showAppAlert('Centang seluruh 5 Berkas Fisik Asli (KTP, NPWP, BPKB/Leasing, STNK, Surat Jalan Polda) atau isi catatan ketidaksesuaiannya terlebih dahulu.', 'warning');
                 return;
             }
 
@@ -11813,82 +11826,79 @@
             const fotoChecked = fotoIds.map(fid => document.getElementById(fid)?.checked === true);
             const fotoCount = fotoChecked.filter(Boolean).length;
             if (fotoCount < fotoIds.length) {
-                alert(`Baru ${fotoCount} dari 5 kategori foto wajib yang dicentang. Centang semua foto pemeriksaan sebelum menyimpan BAP & LHP.`);
+                showAppAlert(`Baru ${fotoCount} dari 5 kategori foto wajib yang dicentang. Centang semua foto pemeriksaan sebelum menyimpan BAP & LHP.`, 'warning');
                 return;
             }
-            if (!confirm(`Simpan BAP & LHP Pemeriksaan Fisik untuk agenda ${id}?`)) return;
-
-            const fieldFilesInput = document.getElementById('actionLhpFieldPhotos');
-            const fotoLapangan = [];
-            if (fieldFilesInput && fieldFilesInput.files && fieldFilesInput.files.length) {
-                for (const f of Array.from(fieldFilesInput.files).slice(0, 10)) {
-                    try {
-                        const du = await _readFileAsDataUrlPromise(f);
-                        fotoLapangan.push({ filename: f.name, data_url: du });
-                    } catch (e) {}
+            showAppConfirm(`Simpan BAP & LHP Pemeriksaan Fisik untuk agenda ${id}?`, async function() {
+                const fieldFilesInput = document.getElementById('actionLhpFieldPhotos');
+                const fotoLapangan = [];
+                if (fieldFilesInput && fieldFilesInput.files && fieldFilesInput.files.length) {
+                    for (const f of Array.from(fieldFilesInput.files).slice(0, 10)) {
+                        try {
+                            const du = await _readFileAsDataUrlPromise(f);
+                            fotoLapangan.push({ filename: f.name, data_url: du });
+                        } catch (e) {}
+                    }
                 }
-            }
 
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/rekam-lhp`, {
-                    method: 'POST',
-                    headers: _authJsonHeaders(),
-                    body: JSON.stringify({
-                        id,
-                        cek_ktp_asli: cekKtp,
-                        cek_npwp_asli: cekNpwp,
-                        cek_bpkb_asli: cekBpkb,
-                        cek_stnk_asli: cekStnk,
-                        cek_surat_jalan_polda: cekPolda,
-                        catatan_berkas_asli: catatanAsli,
-                        kesesuaian_rangka: rangka,
-                        kesesuaian_mesin: mesin,
-                        catatan_bap: catatanBap,
-                        catatan_fisik: catatan,
-                        foto_lapangan: fotoLapangan,
-                        foto_semua_sisi: fotoChecked[0],
-                        foto_depan_pemilik: fotoChecked[1],
-                        foto_no_rangka: fotoChecked[2],
-                        foto_no_mesin: fotoChecked[3],
-                        foto_lainnya: fotoChecked[4]
-                    })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert(`✓ BAP & LHP PEMERIKSAAN FISIK BERHASIL DIREKAM!\n\nNomor LHP: ${data.no_lhp}\nNomor BAP: ${data.no_bap || '-'}\nFoto lapangan diarsipkan: ${fotoLapangan.length} file.\n\nStatus diteruskan ke Pejabat Pemeriksa Dokumen (PFPD).`);
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
-                } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
-                }
-            } catch (e) { alert('Kesalahan jaringan: ' + e.message); }
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/rekam-lhp`, {
+                        method: 'POST',
+                        headers: _authJsonHeaders(),
+                        body: JSON.stringify({
+                            id,
+                            cek_ktp_asli: cekKtp,
+                            cek_npwp_asli: cekNpwp,
+                            cek_bpkb_asli: cekBpkb,
+                            cek_stnk_asli: cekStnk,
+                            cek_surat_jalan_polda: cekPolda,
+                            catatan_berkas_asli: catatanAsli,
+                            kesesuaian_rangka: rangka,
+                            kesesuaian_mesin: mesin,
+                            catatan_bap: catatanBap,
+                            catatan_fisik: catatan,
+                            foto_lapangan: fotoLapangan,
+                            foto_semua_sisi: fotoChecked[0],
+                            foto_depan_pemilik: fotoChecked[1],
+                            foto_no_rangka: fotoChecked[2],
+                            foto_no_mesin: fotoChecked[3],
+                            foto_lainnya: fotoChecked[4]
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert(`✓ BAP & LHP PEMERIKSAAN FISIK BERHASIL DIREKAM!\n\nNomor LHP: ${data.no_lhp}\nNomor BAP: ${data.no_bap || '-'}\nFoto lapangan diarsipkan: ${fotoLapangan.length} file.\n\nStatus diteruskan ke Pejabat Pemeriksa Dokumen (PFPD).`, 'success', async () => {
+                            await loadPermohonanData();
+                            openDrawerDetail(id);
+                        });
+                    } else {
+                        showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                    }
+                } catch (e) { showAppAlert('Kesalahan jaringan: ' + e.message, 'error'); }
+            });
         }
 
         async function eksekusiAksiSppb(id) {
-            if (!confirm(`Setujui dan terbitkan Dokumen SPPB untuk permohonan ${id}? Nomor resmi akan digenerate otomatis oleh sistem.`)) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/terbitkan-sppb`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert(`✓ DOKUMEN SPPB DITERBITKAN (SIMULASI LOKAL)!
-
-Nomor SPPB: ${data.no_sppb}
-
-⚠️ Nomor simulasi lokal, belum tersambung ke CEISA PPFTZ-01 resmi.
-
-Status diteruskan ke Petugas Gate Pelabuhan.`);
-                    await loadPermohonanData();
-                    openDrawerDetail(id);
-                } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
+            showAppConfirm(`Setujui dan terbitkan Dokumen SPPB untuk permohonan ${id}? Nomor resmi akan digenerate otomatis oleh sistem.`, async function() {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/terbitkan-sppb`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert(`✓ DOKUMEN SPPB DITERBITKAN (SIMULASI LOKAL)!\n\nNomor SPPB: ${data.no_sppb}\n\n⚠️ Nomor simulasi lokal, belum tersambung ke CEISA PPFTZ-01 resmi.\n\nStatus diteruskan ke Petugas Gate Pelabuhan.`, 'success', async () => {
+                            await loadPermohonanData();
+                            openDrawerDetail(id);
+                        });
+                    } else {
+                        showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                    }
+                } catch (e) {
+                    showAppAlert('Kesalahan jaringan: ' + e.message, 'error');
                 }
-            } catch (e) {
-                alert('Kesalahan jaringan: ' + e.message);
-            }
+            });
         }
 
         function closeDrawerDirect() {
@@ -11907,7 +11917,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             const reasonEl = document.getElementById('overrideReason');
             const reason = (reasonEl?.value || '').trim();
             if (!reason) {
-                alert('Alasan override wajib diisi untuk jejak audit sebelum status bisa diubah paksa.');
+                showAppAlert('Alasan override wajib diisi untuk jejak audit sebelum status bisa diubah paksa.', 'warning');
                 reasonEl?.focus();
                 return;
             }
@@ -11928,7 +11938,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
 
             closeDrawerDirect();
             await loadPermohonanData();
-            alert(`✓ Status Permohonan ${selectedPermohonanId} berhasil diperbarui menjadi ${newStatus}!\n\nAlasan tercatat: ${reason}`);
+            showAppAlert(`✓ Status Permohonan ${selectedPermohonanId} berhasil diperbarui menjadi ${newStatus}!\n\nAlasan tercatat: ${reason}`, 'success');
         }
 
         // ================= REAL 100% INTERACTIVE WHATSAPP BOT SIMULATOR =================
@@ -11946,13 +11956,14 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
 
         function promptChangeSenderNumber() {
             const current = simData.no_pengirim || '+62 812-7000-1234';
-            const val = prompt('Masukkan Nomor WhatsApp Pengirim Anda (nomor yang Anda pakai untuk chat):', current);
-            if (val && val.trim()) {
-                simData.no_pengirim = val.trim();
-                const el = document.getElementById('simSenderDisplay');
-                if (el) el.innerText = simData.no_pengirim;
-                resetSimulatorChat();
-            }
+            showAppPrompt('Masukkan Nomor WhatsApp Pengirim Anda (nomor yang Anda pakai untuk chat):', current, function(val) {
+                if (val && val.trim()) {
+                    simData.no_pengirim = val.trim();
+                    const el = document.getElementById('simSenderDisplay');
+                    if (el) el.innerText = simData.no_pengirim;
+                    resetSimulatorChat();
+                }
+            });
         }
 
         function openWhatsAppSimulator() {
@@ -13389,8 +13400,10 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             }
         }
 
-        // Safety fallback agar pemanggilan alert() tak sengaja dari library atau skrip luar tetap berpenampilan modal kustom
+        // Safety fallback agar pemanggilan alert/confirm/prompt tak sengaja dari library atau skrip luar tetap berpenampilan modal kustom
         window.alert = function(msg) { showAppAlert(msg); };
+        window.confirm = function(msg) { showAppAlert('Konfirmasi: ' + msg, 'warning'); return true; };
+        window.prompt = function(msg, def) { showAppPrompt(msg, def); return def || ''; };
 
         function handleLogout() {
             const modal = document.getElementById('modalLogoutConfirm');
@@ -13638,40 +13651,28 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             const item = allPermohonan.find(p => p.id === targetId);
             const namaPemohon = item ? item.nama_pemohon : 'Pemohon';
 
-            const konfirmasi = confirm(`Unggah dan Rekam Berkas Permohonan ke Nadine Kemenkeu?
-
-- No. Agenda: ${targetId}
-- Pengirim Eksternal: ${namaPemohon}
-- Perihal: Permohonan Pengeluaran Sementara Kendaraan Bermotor
-
-Pastikan berkas fisik & 1 PDF telah lengkap diverifikasi.`);
-            if (!konfirmasi) return;
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/nadine/upload-permohonan`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: targetId })
-                });
-                const data = await res.json();
-                if (res.ok && data.status === 'ok') {
-                    alert(`BERHASIL DIUNGGAH KE NADINE KEMENKEU!
-
-Nomor Naskah (NdId): ${data.nd_id}
-Pengirim Eksternal: ${data.pengirim_eksternal}
-Perihal: ${data.perihal}
-
-Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetujuan (SKEP).`);
-                    if (selectedPermohonanId === targetId) {
-                        closeDrawerDirect();
+            showAppConfirm(`Unggah dan Rekam Berkas Permohonan ke Nadine Kemenkeu?\n\n- No. Agenda: ${targetId}\n- Pengirim Eksternal: ${namaPemohon}\n- Perihal: Permohonan Pengeluaran Sementara Kendaraan Bermotor\n\nPastikan berkas fisik & 1 PDF telah lengkap diverifikasi.`, async function() {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/nadine/upload-permohonan`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: targetId })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert(`✓ BERHASIL DIUNGGAH KE NADINE KEMENKEU!\n\nNomor Naskah (NdId): ${data.nd_id}\nPengirim Eksternal: ${data.pengirim_eksternal}\nPerihal: ${data.perihal}\n\nStatus permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetujuan (SKEP).`, 'success', async () => {
+                            if (selectedPermohonanId === targetId) {
+                                closeDrawerDirect();
+                            }
+                            await loadPermohonanData();
+                        });
+                    } else {
+                        showAppAlert('Gagal mengunggah ke Nadine: ' + (data.message || 'Terjadi kesalahan internal.'), 'error');
                     }
-                    await loadPermohonanData();
-                } else {
-                    alert('Gagal mengunggah ke Nadine: ' + (data.message || 'Terjadi kesalahan internal.'));
+                } catch (err) {
+                    showAppAlert('Kesalahan jaringan: ' + err.message, 'error');
                 }
-            } catch (err) {
-                alert('Kesalahan jaringan: ' + err.message);
-            }
+            });
         }
 
 

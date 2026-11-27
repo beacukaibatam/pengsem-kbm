@@ -77,6 +77,26 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Tahap 3 Eliminasi Popup Browser: 100% Tuntas di Seluruh Dashboard Petugas & Admin** (Antigravity — 27 Nov 2026 21:15 WIB)
+  1. **Restrukturisasi Disiplin Pola Confirm Sync → Async Callback**:
+     - Mengubah 7 fungsi kunci yang sebelumnya memakai `if (!confirm(...)) return; <lanjutan>` menjadi async callback `showAppConfirm(message, async function() { <lanjutan> })`:
+       1. `eksekusiAksiNadine(id)`
+       2. `eksekusiAksiFasilitas(id)`
+       3. `eksekusiAksiJaminanVerifikasi(id, keputusan)`
+       4. `eksekusiAksiLoketApprove(id)`
+       5. `eksekusiAksiLhp(id)`
+       6. `eksekusiAksiSppb(id)`
+       7. `uploadPermohonanKeNadine(pid)`
+  2. **Refactor Alert & Prompt Dashboard Petugas**:
+     - Mengganti seluruh 25 pemanggilan `alert()` petugas menjadi `showAppAlert()` (Gate scanner QR pelabuhan, kelola akun admin & reset password, SKEP, Jaminan, Loket, Pemeriksaan Fisik, SPPB, & override admin).
+     - Mengganti `prompt()` nomor WA simulator dengan modal teks interaktif `showAppPrompt()`.
+     - Safety net: `window.alert`, `window.confirm`, dan `window.prompt` dipasangi hook pengaman.
+  3. **Verifikasi**:
+     - Audit teks: 0 kemunculan `alert(`, `confirm(`, `prompt(` di kode aplikasi `index.html`.
+     - Verifikasi empiris via Playwright: seluruh aksi modal (`showAppAlert`, `showAppConfirm` Ya/Batal, `showAppPrompt`) berhasil dipicu, ditutup, dan mengeksekusi callback dengan tepat tanpa memicu satu pun dialog bawaan browser (`native browser dialogs fired: 0`).
+     - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+     - Sintaks inline JS lolos validasi `node --check` tanpa error.
+
 - **Tahap 2 Eliminasi Popup Browser: Modal Kustom Generik & Refactor Area Pemohon** (Antigravity — 27 Nov 2026 21:10 WIB)
   1. **Infrastruktur Modal Generik Tanpa Popup Bawaan Browser**:
      - Dibangun 3 elemen modal terpadu di `index.html`: `#appAlertModal`, `#appConfirmModal`, dan `#appPromptModal`.

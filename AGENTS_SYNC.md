@@ -108,6 +108,7 @@
 
 | Waktu (WIB) | Agen Pelaksana | Berkas yang Dimodifikasi | Rincian Pembaruan | Status Deployment |
 |---|---|---|---|---|
+| 2026-11-27 21:15 | Antigravity | `index.html`, `Formulir_...html` | Tahap 3 Eliminasi Popup Bawaan Browser: 100% tuntas eliminasi alert(), confirm(), prompt() di seluruh Dashboard Petugas (Frontdesk/Nadine, SKEP Fasilitas, Jaminan Billing/Bukti Bayar, Loket Approval, Pemeriksaan Fisik BAP/LHP, SPPB, Gate Pelabuhan, Admin Override, & WA Settings). Restrukturisasi async callback konfirmasi berhasil. | Verified Browser (0-Diff) |
 | 2026-11-27 21:10 | Antigravity | `index.html`, `Formulir_...html` | Tahap 2 Eliminasi Popup Bawaan Browser: Buat modal generik showAppAlert, showAppConfirm, showAppPrompt (gaya flat .notif-popup-* tanpa alert() bawaan). Refactor 100% pemanggilan alert() di seluruh area Pemohon (validasi, OCR KTP/NPWP/STNK, kamera, draf PDF, e-meterai, submit final, & live chat). | Verified Browser (0-Diff) |
 | 2026-11-27 21:05 | Antigravity | `index.html`, `Formulir_...html` | Koreksi tuntas preview-box (rasio 1.58:1 & object-fit: contain !important): ganti pendekatan angka px (148px) yang memotong baris nama & status perkawinan KTP/NPWP di layout split-view lebar. Hapus inline height:XXXpx pada seluruh .preview-box, ganti aspect-ratio: 1.58 / 1. Diverifikasi foto KTP/NPWP asli utuh 100% di desktop & mobile. | Verified Browser (0-Diff) |
 | 2026-11-27 20:45 | Antigravity | `server.py` | Audit Remediasi Keamanan OTP Email: Tambah rate limit maks 3x/5 menit per nomor/key pada `/api/auth/request-email-otp` & `reset-password-request-email-otp` (HTTP 429 pada percobaan ke-4). Perbaiki anti-halusinasi `reset-password-request-email-otp`: hanya klaim sukses jika method in ('smtp_tls', 'gmail_cli'), jika fallback/gagal kirim pesan jujur 'Pengiriman email belum aktif...'. | Verified Empiris (0-Diff) |
@@ -290,3 +291,16 @@
   - **Refactor Area Pemohon**: Seluruh pemanggilan `alert()` asli di sisi pemohon (validasi dokumen warna, ketidaksesuaian slot unggah, fallback OCR KTP/NPWP/STNK, kamera, pengunduhan draf PDF formulir, validasi kelengkapan e-meterai asli, submit akhir kepabeanan, peringatan idle-timeout, hingga kirim chat operator) digantikan secara bersih dengan `showAppAlert()`.
   - **Safety Net**: Memasang `window.alert = function(msg) { showAppAlert(msg); }` agar pemanggilan luar tak terduga tidak pernah lagi memunculkan popup bawaan browser "beacukaibatam.github.io says".
   - **Verifikasi**: `diff -u` = 0, sintaks inline JS lolos `node --check`, dan diuji interaktif via Playwright (`test_app_alert_modal.png`).
+- [x] Poin 51 (Antigravity): **TAHAP 3: 100% ELIMINASI POPUP BROWSER DI SELURUH DASHBOARD PETUGAS & ADMIN**:
+  - **Restrukturisasi 7 Async Confirm**: Seluruh pola synchronous `if (!confirm(...)) return; <kode lanjutan>` direstrukturisasi secara disiplin menjadi pola callback asinkron `showAppConfirm(message, async function() { <kode lanjutan> })`:
+    1. `eksekusiAksiNadine(id)`: Rekam & unggah naskah masuk Nadine Frontdesk.
+    2. `eksekusiAksiFasilitas(id)`: Penerbitan Naskah Dinas Surat S & SKEP Persetujuan Fasilitas.
+    3. `eksekusiAksiJaminanVerifikasi(id, keputusan)`: Verifikasi setuju/tolak bukti bayar jaminan (lengkap dengan flag `isDanger` pada tombol tolak).
+    4. `eksekusiAksiLoketApprove(id)`: Approval loket penerbitan atomik 4 output kepabeanan (PPFTZ-01, Proforma PPFTZ-03, SPF, IP).
+    5. `eksekusiAksiLhp(id)`: Perekaman BAP & LHP Pemeriksaan Fisik beserta 5 arsip foto lapangan.
+    6. `eksekusiAksiSppb(id)`: Persetujuan dan penerbitan dokumen SPPB pengeluaran KBM.
+    7. `uploadPermohonanKeNadine(pid)`: Pengunggahan berkas permohonan ke Nadine Kemenkeu via detail drawer.
+  - **Refactor Seluruh Alert Petugas**: Mengganti 25 pemanggilan `alert()` di dashboard petugas menjadi `showAppAlert()` (Gate scanner QR, Admin tambah akun pegawai, Admin reset kata sandi, unduh naskah Nadine fisik, validasi form, dan Admin status override).
+  - **Refactor Prompt**: Mengganti `prompt()` pengaturan nomor WA simulator dengan modal interaktif `showAppPrompt()`.
+  - **Zero Browser Dialogs Guaranteed**: 0 pemanggilan `alert()`, `confirm()`, `prompt()` tersisa di `index.html`. Pengujian Playwright membuktikan dialog bawaan browser = 0 (`native browser dialogs fired: 0`).
+  - **Kepatuhan Protokol**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` valid.
