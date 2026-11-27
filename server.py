@@ -1313,6 +1313,53 @@ def _strip_password(user_dict):
         return user_dict
     return {k: v for k, v in user_dict.items() if k != 'password'}
 
+def _normalize_phone_id(raw_phone):
+    """Normalisasi nomor WhatsApp Indonesia ke format 628xxx untuk komparasi duplikasi yang akurat."""
+    s = str(raw_phone or '').strip().replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '').replace('.', '')
+    if not s or not s.isdigit():
+        return ''
+    if s.startswith('08'):
+        return '628' + s[2:]
+    if s.startswith('8'):
+        return '628' + s[1:]
+    if s.startswith('62'):
+        return s
+    return '62' + s.lstrip('0')
+
+def _find_duplicate_registration(users_data, phone='', email=''):
+    """Periksa apakah nomor WA atau email sudah terdaftar pada akun pemohon maupun pegawai."""
+    norm_phone = _normalize_phone_id(phone)
+    norm_email = str(email or '').strip().lower()
+    phone_exists = False
+    email_exists = False
+    all_users = (users_data.get('pemohon', []) if isinstance(users_data, dict) else []) + \
+                (users_data.get('pegawai', []) if isinstance(users_data, dict) else [])
+    for u in all_users:
+        if not isinstance(u, dict):
+            continue
+        if norm_phone:
+            u_phone = _normalize_phone_id(u.get('phone', ''))
+            u_uname_phone = _normalize_phone_id(u.get('username', ''))
+            if norm_phone in (u_phone, u_uname_phone):
+                phone_exists = True
+        if norm_email:
+            u_email = str(u.get('email', '') or '').strip().lower()
+            u_uname_email = str(u.get('username', '') or '').strip().lower()
+            if norm_email in (u_email, u_uname_email):
+                email_exists = True
+        if phone_exists and email_exists:
+            break
+    return phone_exists, email_exists
+
+def _duplicate_registration_message(phone_exists, email_exists):
+    if phone_exists and email_exists:
+        return "Nomor WhatsApp dan alamat email ini sudah terdaftar di sistem. Silakan langsung Masuk (Login) atau gunakan fitur Lupa Kata Sandi."
+    if phone_exists:
+        return "Nomor WhatsApp ini sudah terdaftar di sistem. Silakan langsung Masuk (Login) atau gunakan fitur Lupa Kata Sandi."
+    if email_exists:
+        return "Alamat email ini sudah terdaftar di sistem. Silakan gunakan alamat email lain atau langsung Masuk (Login) jika sudah memiliki akun."
+    return ""
+
 def load_db_otp():
     otps = {}
     if os.path.exists(DB_OTP_PATH):
@@ -2260,19 +2307,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_error(400, "Format alamat email tidak valid (contoh: nama@email.com).")
                     return
                 
-                # Cek jika pemohon sudah terdaftar di db_users.json
+                # Tolak registrasi jika nomor WA atau email sudah terdaftar di sistem
                 users = load_db_users()
-                existing_pemohon = None
-                for u in users.get('pemohon', []):
-                    if u.get('phone') == phone:
-                        existing_pemohon = u
-                        break
+                phone_exists, email_exists = _find_duplicate_registration(users, phone=phone, email=email)
+                if phone_exists or email_exists:
+                    dup_msg = _duplicate_registration_message(phone_exists, email_exists)
+                    database.log_activity(
+                        phone, 'pemohon', 'REGISTRASI_DITOLAK_DUPLIKAT',
+                        detail=f"Duplikat {'WA & Email' if (phone_exists and email_exists) else ('WA' if phone_exists else 'Email')} (phone={phone}, email={email})"
+                    )
+                    self._send_json_error(409, dup_msg)
+                    return
 
-                if not nama and existing_pemohon:
-                    nama = existing_pemohon.get('nama', 'PEMOHON TERDAFTAR')
-                    if not nik:
-                        nik = existing_pemohon.get('nik', '')
-                elif not nama:
+                if not nama:
                     nama = "PEMOHON KBM BATAM"
 
                 # Generate 6 digit angka acak
@@ -2349,6 +2396,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 target_email = req_email or otp_data.get('email', '')
                 if not target_email or '@' not in target_email:
                     self._send_json_error(400, "Alamat email tidak valid. Silakan masukkan alamat email yang benar.")
+                    return
+
+                # Tolak jika email tujuan atau nomor WA sudah terdaftar pada akun lain
+                phone_exists, email_exists = _find_duplicate_registration(load_db_users(), phone=phone, email=target_email)
+                if phone_exists or email_exists:
+                    dup_msg = _duplicate_registration_message(phone_exists, email_exists)
+                    database.log_activity(
+                        phone, 'pemohon', 'REGISTRASI_DITOLAK_DUPLIKAT',
+                        detail=f"Duplikat saat request-email-otp (phone={phone}, email={target_email})"
+                    )
+                    self._send_json_error(409, dup_msg)
                     return
 
                 otp_data['email'] = target_email
@@ -2435,42 +2493,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 except Exception:
                     pass
 
-                # Simpan / perbarui di db_users.json
+                # Tolak pembuatan akun jika nomor WA atau email sudah terdaftar (cegah race condition / timpa akun)
                 users = load_db_users()
-                pemohon_list = users.get('pemohon', [])
-                found_user = None
-                for u in pemohon_list:
-                    if u.get('phone') == phone or (otp_info.get('nik') and u.get('nik') == otp_info.get('nik')):
-                        found_user = u
-                        break
+                reg_email = str(otp_info.get('email', '') or '').strip().lower()
+                phone_exists, email_exists = _find_duplicate_registration(users, phone=phone, email=reg_email)
+                if phone_exists or email_exists:
+                    dup_msg = _duplicate_registration_message(phone_exists, email_exists)
+                    database.log_activity(
+                        phone, 'pemohon', 'REGISTRASI_DITOLAK_DUPLIKAT',
+                        detail=f"Duplikat saat verify-otp (phone={phone}, email={reg_email})"
+                    )
+                    self._send_json_error(409, dup_msg)
+                    return
 
+                # Simpan akun pemohon baru di db_users.json & SQLite
+                pemohon_list = users.get('pemohon', [])
                 user_pwd = str(body.get('password', '')).strip() or otp_info.get('password', '') or 'pemohon123'
                 now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                if not found_user:
-                    new_id = f"USR-PEMOHON-{str(len(pemohon_list) + 1).zfill(3)}"
-                    found_user = {
-                        "id": new_id,
-                        "nik": otp_info.get('nik', ''),
-                        "nama": otp_info.get('nama', 'PEMOHON TERVERIFIKASI'),
-                        "phone": phone,
-                        "email": otp_info.get('email', ''),
-                        "password": user_pwd,
-                        "status": "verified",
-                        "role": "pemohon",
-                        "registered_at": now_str
-                    }
-                    pemohon_list.append(found_user)
-                else:
-                    found_user['status'] = 'verified'
-                    if otp_info.get('nama'):
-                        found_user['nama'] = otp_info['nama']
-                    if otp_info.get('nik'):
-                        found_user['nik'] = otp_info['nik']
-                    if otp_info.get('email'):
-                        found_user['email'] = otp_info['email']
-                    if user_pwd:
-                        found_user['password'] = user_pwd
-                    found_user['updated_at'] = now_str
+                new_id = f"USR-PEMOHON-{str(len(pemohon_list) + 1).zfill(3)}"
+                found_user = {
+                    "id": new_id,
+                    "nik": otp_info.get('nik', ''),
+                    "nama": otp_info.get('nama', 'PEMOHON TERVERIFIKASI'),
+                    "phone": phone,
+                    "email": reg_email,
+                    "password": user_pwd,
+                    "status": "verified",
+                    "role": "pemohon",
+                    "registered_at": now_str
+                }
+                pemohon_list.append(found_user)
                 users['pemohon'] = pemohon_list
                 save_db_users(users)
 
