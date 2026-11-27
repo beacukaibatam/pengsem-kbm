@@ -77,6 +77,22 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Bilah Stepper Sticky di Bawah Header & Gambar Pratinjau Dokumen Mengisi Penuh Horizontal Tanpa Celah Abu-Abu** (Antigravity — 27 Nov 2026 20:00 WIB)
+  1. **Bilah Stepper Sticky (`.stepper-flat-bar`)**:
+     - Ditambahkan class CSS `.stepper-flat-bar` dengan `position: sticky; top: var(--header-height, 86px); z-index: 950; background: #FFFFFF; border-bottom: 1.5px solid #E2E8F0; box-shadow: 0 2px 6px rgba(0,0,0,0.05);`.
+     - Menggunakan variabel `--header-height` yang disinkronisasi dinamis oleh `updateHeaderHeight()` & `syncHeaderHeight()` dengan flag `'important'`.
+     - Diverifikasi di desktop: saat di-scroll 450px ke bawah, stepper bar menempel tepat di bawah header pada `y = 80px`, konten formulir meluncur mulus di bawahnya.
+     - Diverifikasi di mobile (viewport 390×844): di-scroll 400px ke bawah, stepper bar menempel presisi di bawah header kompak 55px pada `y = 55px` dengan ZERO GAP (celah 0px).
+  2. **Pratinjau Dokumen Mengisi Penuh Horizontal (`.preview-box img`)**:
+     - CSS bersama `.preview-box img` diubah menjadi `width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; display: block;` (duplikat rule di baris 573 dibersihkan).
+     - Menghilangkan ruang kosong abu-abu di samping kiri/kanan gambar: KTP, NPWP, BPKB 3 slot, dan STNK 2 slot mengisi kotak secara penuh horizontal dan rigid.
+     - Ditambahkan rule proteksi slot kosong: `.preview-box img:not([src]), .preview-box img[src=""], .preview-box img[style*="display: none"], .preview-box img[style*="display:none"] { display: none !important; }` sehingga slot yang belum terisi (seperti BPKB Hal. 2) tetap bersih dan tidak memunculkan ikon gambar pecah (*broken-image icon*).
+     - Ketinggian kotak KTP & NPWP diselaraskan ke `height: 148px` agar rasio kotak serasi dengan kartu ID (~1.6:1), menjaga seluruh teks penting (NIK, Nama, Foto, Tanda Tangan) tetap utuh terbaca.
+  3. **Kepatuhan Aturan Kritis**:
+     - Properti `pointer-events: none` pada `.preview-box img` TETAP 100% UTUH sesuai aturan kritis scroll trackpad macet.
+     - `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+     - Sintaks inline JS lolos `node --check`. Diverifikasi langsung di browser lokal via Playwright/browser subagent. Screenshots: `stepper_sticky_desktop.png`, `stepper_sticky_mobile_zero_gap.png`, `preview_bpkb_full_horizontal.png`, `preview_stnk_full_horizontal.png`.
+
 - **Implementasi Alur Opsi 1 (Wizard 4 Tahap, Split-Screen Unggah/Form, Patokan Terkunci & Klik Kotak Langsung)** (Antigravity — 27 Nov 2026 19:30 WIB)
   1. **Konsep & Arsitektur Opsi 1 Diterapkan**:
      - **Tahap 1 (KTP & NPWP)**: Identitas Pemohon disimpan sebagai **Patokan Terkunci (*Golden Record*)**. Sisi kiri: 2 kartu pemindai KTP & NPWP; sisi kanan: kolom teks identitas dan tombol simpan patokan. Tersimpan ke database (`form_drafts`), tahan logout & login kembali.

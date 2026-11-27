@@ -80,9 +80,12 @@
 
         .preview-box img {
             margin: 0 auto !important;
-            object-fit: contain !important;
-            max-width: 100%;
-            max-height: 100%;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            display: block;
+            border-radius: 6px;
             -webkit-user-drag: none;
             user-drag: none;
             -webkit-touch-callout: none;
@@ -94,6 +97,15 @@
                bisa dibuka di popup lightbox TANPA menyentuh pointer-events di sini, dipakai
                tombol kaca pembesar kecil terpisah (lihat .preview-zoom-btn & attachZoomButton). */
             pointer-events: none;
+        }
+
+        /* Jangan tampilkan elemen img jika belum ada sumber berkas atau berstatus display:none,
+           agar tidak memunculkan ikon gambar pecah (broken-image icon) di samping placeholder */
+        .preview-box img:not([src]),
+        .preview-box img[src=""],
+        .preview-box img[style*="display: none"],
+        .preview-box img[style*="display:none"] {
+            display: none !important;
         }
 
         h1, h2, h3, h4, .brand-text h1, .section-title, .form-label, .modal-header h3 {
@@ -570,12 +582,20 @@
             opacity: 0.60;
         }
 
-        .preview-box img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-            border-radius: 6px;
+        /* Wizard Stepper Flat Bar (Sticky menempel tepat di bawah app-header) */
+        .stepper-flat-bar {
+            background: #FFFFFF;
+            border-bottom: 1.5px solid #E2E8F0;
+            padding: 10px 24px;
+            position: sticky;
+            top: var(--header-height, 86px);
+            z-index: 950;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        @media (max-width: 768px) {
+            .stepper-flat-bar {
+                padding: 8px 12px !important;
+            }
         }
 
         /* Tombol kecil kaca pembesar di sudut kotak pratinjau, satu-satunya elemen dengan
@@ -2221,8 +2241,8 @@
             }
 
             /* ===== Header & Nav Portal Petugas/Pemohon (dashboard, bukan landing) — ringkas di HP ===== */
-            :root { --header-height: 120px !important; }
-            body:not(.landing-page) { padding-top: 130px !important; }
+            :root { --header-height: 55px; }
+            body:not(.landing-page) { padding-top: 65px !important; }
             .header-brand-group { gap: 8px !important; }
             .header-brand-group img { height: 26px !important; }
             .header-car-icon { display: none !important; }
@@ -3768,7 +3788,7 @@
     <div id="viewFormulir" style="display:none;">
 <!-- Wizard Progress Bar (Di Luar Header, Menempel / Stay saat Halaman Discroll) -->
     <!-- Bilah Pelacak Tahapan Flat 3 Langkah -->
-    <div class="stepper-flat-bar" style="background:#FFFFFF; border-bottom:1.5px solid #E2E8F0; padding:10px 24px; position:relative; z-index:90; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+    <div class="stepper-flat-bar">
         <div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
             <!-- Langkah 1: Data Pemohon (lengkap sejak Registrasi akun) -->
             <div id="stepBarBox1" style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#EFF6FF; border:1.5px solid #BFDBFE;">
@@ -3906,7 +3926,7 @@
                         <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
                             Identitas Kependudukan Asli (Wajib Berwarna)
                         </div>
-                        <div class="preview-box" id="previewKtpBox" onclick="pickFile('ktp')" title="Klik kotak ini untuk unggah atau ganti foto KTP" style="height:118px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                        <div class="preview-box" id="previewKtpBox" onclick="pickFile('ktp')" title="Klik kotak ini untuk unggah atau ganti foto KTP" style="height:148px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
                             <div class="laser-line" id="laserKtp" style="display:none;">
                                 <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                 <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
@@ -3917,7 +3937,7 @@
                                 <span style="font-size:0.74rem; font-weight:700; color:#005FAC;">Klik di sini untuk unggah foto KTP</span>
                                 <span style="font-size:0.66rem; color:#64748B;">Kamera HP, Galeri, atau File PDF</span>
                             </div>
-                            <img decoding="async" id="imgKtpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                            <img decoding="async" id="imgKtpPreview" src="" alt="" style="display:none;">
                             <span class="click-upload-hint" id="hintKtpBox" style="display:none;">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                                 Klik kotak untuk ganti KTP
@@ -3952,7 +3972,7 @@
                         <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
                             Nomor Pokok Wajib Pajak (15 digit lama atau 16 digit NIK Coretax)
                         </div>
-                        <div class="preview-box" id="previewNpwpBox" onclick="pickFile('npwp')" title="Klik kotak ini untuk unggah atau ganti foto NPWP" style="height:118px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                        <div class="preview-box" id="previewNpwpBox" onclick="pickFile('npwp')" title="Klik kotak ini untuk unggah atau ganti foto NPWP" style="height:148px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
                             <div class="laser-line" id="laserNpwp" style="display:none;">
                                 <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                 <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
@@ -3963,7 +3983,7 @@
                                 <span style="font-size:0.74rem; font-weight:700; color:#005FAC;">Klik di sini untuk unggah foto NPWP</span>
                                 <span style="font-size:0.66rem; color:#64748B;">Kamera HP, Galeri, atau File PDF</span>
                             </div>
-                            <img decoding="async" id="imgNpwpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                            <img decoding="async" id="imgNpwpPreview" src="" alt="" style="display:none;">
                             <span class="click-upload-hint" id="hintNpwpBox" style="display:none;">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                                 Klik kotak untuk ganti NPWP
@@ -4113,7 +4133,7 @@
                                         <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 1</span>
                                         <span style="font-size:0.60rem; color:#64748B;">Identitas</span>
                                     </div>
-                                    <img decoding="async" id="imgOwnershipPreview" src="" alt="BPKB Hal 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                    <img decoding="async" id="imgOwnershipPreview" src="" alt="BPKB Hal 1" style="display:none; border-radius:5px;">
                                     <span class="click-upload-hint" id="hintOwnershipBox" style="display:none; font-size:0.58rem; padding:1px 5px;">Ganti</span>
                                 </div>
                             </div>
@@ -4125,7 +4145,7 @@
                                         <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 2</span>
                                         <span style="font-size:0.60rem; color:#64748B;">Pendaftaran</span>
                                     </div>
-                                    <img decoding="async" id="imgOwnership2Preview" src="" alt="BPKB Hal 2" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                    <img decoding="async" id="imgOwnership2Preview" src="" alt="BPKB Hal 2" style="display:none; border-radius:5px;">
                                     <span class="click-upload-hint" id="hintOwnership2Box" style="display:none; font-size:0.58rem; padding:1px 5px;">Ganti</span>
                                 </div>
                             </div>
@@ -4137,7 +4157,7 @@
                                         <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 3</span>
                                         <span style="font-size:0.60rem; color:#64748B;">Kepemilikan</span>
                                     </div>
-                                    <img decoding="async" id="imgOwnership3Preview" src="" alt="BPKB Hal 3" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                    <img decoding="async" id="imgOwnership3Preview" src="" alt="BPKB Hal 3" style="display:none; border-radius:5px;">
                                     <span class="click-upload-hint" id="hintOwnership3Box" style="display:none; font-size:0.58rem; padding:1px 5px;">Ganti</span>
                                 </div>
                             </div>
@@ -4486,7 +4506,7 @@
                                     <span style="font-size:0.72rem; font-weight:700; color:#005FAC;">Lembar 1 (STNK)</span>
                                     <span style="font-size:0.62rem; color:#64748B;">Klik unggah</span>
                                 </div>
-                                <img decoding="async" id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                                <img decoding="async" id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; border-radius:6px;">
                                 <span class="click-upload-hint" id="hintStnkBox" style="display:none; font-size:0.62rem;">Ganti Lbr 1</span>
                             </div>
                             <!-- Lembar 2 -->
@@ -4501,7 +4521,7 @@
                                     <span style="font-size:0.72rem; font-weight:700; color:#005FAC;">Lembar 2 (TBPKP)</span>
                                     <span style="font-size:0.62rem; color:#64748B;">Klik unggah</span>
                                 </div>
-                                <img decoding="async" id="imgStnk2Preview" src="" alt="STNK Lembar 2" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                                <img decoding="async" id="imgStnk2Preview" src="" alt="STNK Lembar 2" style="display:none; border-radius:6px;">
                                 <span class="click-upload-hint" id="hintStnk2Box" style="display:none; font-size:0.62rem;">Ganti Lbr 2</span>
                             </div>
                         </div>
@@ -5639,7 +5659,7 @@
             if (header && header.style.display !== 'none') {
                 const h = header.offsetHeight;
                 if (h > 0) {
-                    document.documentElement.style.setProperty('--header-height', h + 'px');
+                    document.documentElement.style.setProperty('--header-height', h + 'px', 'important');
                     document.body.style.setProperty('padding-top', h + 'px', 'important');
                 }
             }
@@ -13322,7 +13342,7 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
                 const h = header.offsetHeight;
                 if (h > 0) {
                     document.body.style.setProperty('padding-top', (h + 16) + 'px', 'important');
-                    document.documentElement.style.setProperty('--header-height', h + 'px');
+                    document.documentElement.style.setProperty('--header-height', h + 'px', 'important');
                 }
             }
         }
