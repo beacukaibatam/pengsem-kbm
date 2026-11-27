@@ -2546,46 +2546,6 @@
         .kpi-border-teal { border-top: 4px solid #0284C7 !important; }
         .kpi-border-green { border-top: 4px solid #059669 !important; }
 
-        /* Floating Action Button WhatsApp Client Coordinator (Icon Murni Simple) */
-        .fab-wa-clean {
-            position: fixed !important;
-            bottom: 65px !important;
-            right: 20px !important;
-            width: 44px !important;
-            height: 44px !important;
-            border-radius: 50% !important;
-            background: #25D366 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-shadow: 0 4px 14px rgba(37, 211, 102, 0.40) !important;
-            z-index: 900 !important;
-            text-decoration: none !important;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
-            cursor: pointer !important;
-        }
-        .fab-wa-clean:hover {
-            transform: scale(1.10) translateY(-2px) !important;
-            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.50) !important;
-        }
-        @media (max-width: 768px) {
-            .fab-wa-clean {
-                bottom: 16px !important;
-                right: 16px !important;
-                width: 40px !important;
-                height: 40px !important;
-            }
-        }
-        /* FAB WA digeser ke atas supaya tidak tertutup footer bar (footer tidak tampil di landing-page) */
-        body:not(.landing-page) .fab-wa-clean {
-            bottom: calc(var(--footer-height, 40px) + 20px) !important;
-        }
-        @media (max-width: 768px) {
-            body:not(.landing-page) .fab-wa-clean {
-                bottom: calc(var(--footer-height, 40px) + 16px) !important;
-            }
-        }
-
         /* ================= FOOTER APLIKASI (FIXED / STICKY BOTTOM BAR) ================= */
         .app-footer-bar {
             position: fixed;
@@ -2600,7 +2560,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 12px;
             padding: 0 20px;
             box-sizing: border-box;
             z-index: 850;
@@ -2610,28 +2570,64 @@
         .app-footer-bar .footer-copyright {
             white-space: nowrap;
             opacity: 0.92;
+            letter-spacing: 0.2px;
         }
         .app-footer-bar .footer-contact {
             white-space: nowrap;
             color: #FFFFFF;
             text-decoration: none;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
+            padding: 3px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            border-radius: 999px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            font-size: 0.74rem;
         }
         .app-footer-bar .footer-contact:hover {
-            text-decoration: underline;
+            background: rgba(37, 211, 102, 0.20);
+            border-color: #25D366;
+            color: #FFFFFF;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35);
+            text-decoration: none;
+        }
+        .app-footer-bar .footer-contact svg {
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+            flex-shrink: 0;
+        }
+        .app-footer-bar .footer-contact .wa-footer-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .app-footer-bar .footer-contact .wa-footer-phone {
+            color: #A7F3D0;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .app-footer-bar .footer-contact:hover .wa-footer-phone {
+            color: #FFFFFF;
         }
         body.landing-page .app-footer-bar {
             display: none !important;
         }
         @media (max-width: 640px) {
             .app-footer-bar {
-                padding: 0 12px;
-                font-size: 0.66rem;
+                padding: 0 10px;
+                font-size: 0.68rem;
                 gap: 6px;
             }
-            .app-footer-bar .footer-contact svg { width: 11px; height: 11px; }
+            .app-footer-bar .footer-contact {
+                padding: 2px 8px;
+                font-size: 0.68rem;
+                gap: 5px;
+            }
+            .app-footer-bar .footer-contact svg { width: 12px; height: 12px; }
+            .app-footer-bar .footer-contact .wa-label-prefix { display: none; }
         }
 </style>
 </head>
@@ -3148,9 +3144,13 @@
                     </div>
                 </div>
 
-                <!-- Footer Hak Cipta -->
-                <div class="landing-footer-legal">
-                    © Bea Cukai Batam
+                <!-- Footer Hak Cipta & Hubungi Coordinator -->
+                <div class="landing-footer-legal" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <span>&copy; Bea Cukai Batam</span>
+                    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" style="color: #0284C7; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 700;" title="Hubungi Client Coordinator Bea Cukai Batam via WhatsApp (0851-5814-8448)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.173 8.173 0 0 1-5.82 2.42c-1.48 0-2.93-.39-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.32a8.194 8.194 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24m4.52 11.51c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.3"/></svg>
+                        <span>WhatsApp Client Coordinator</span>
+                    </a>
                 </div>
             </div>
 
@@ -13014,19 +13014,15 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
     <!-- Input unggah tersembunyi tunggal: klik langsung memicu dialog native HP (Kamera/Galeri/File/Cloud
          dalam satu langkah), tanpa modal kustom perantara. -->
     <input type="file" id="sourcePickerFile" accept="application/pdf,.pdf,image/jpeg,image/png,image/*" style="display:none;" onchange="handleDedicatedSourceSelected(event)">
-    <!-- ================= FLOATING ACTION BUTTON WHATSAPP (CLIENT COORDINATOR) ================= -->
-    <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="fab-wa-clean" title="Hubungi Client Coordinator Bea Cukai Batam (0851-5814-8448)">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF">
-            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.173 8.173 0 0 1-5.82 2.42c-1.48 0-2.93-.39-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.32a8.194 8.194 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24m4.52 11.51c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.3"/>
-        </svg>
-    </a>
-
     <!-- ================= FOOTER APLIKASI (FIXED / STICKY BOTTOM BAR, hanya tampil di luar halaman Masuk/Registrasi) ================= -->
     <footer class="app-footer-bar">
         <span class="footer-copyright">&copy; Bea Cukai Batam</span>
-        <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="footer-contact">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.173 8.173 0 0 1-5.82 2.42c-1.48 0-2.93-.39-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.32a8.194 8.194 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24m4.52 11.51c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.3"/></svg>
-            Informasi Lebih Lanjut Hub: 085158148448
+        <a href="https://wa.me/6285158148448" target="_blank" rel="noopener noreferrer" class="footer-contact" title="Hubungi Client Coordinator Bea Cukai Batam via WhatsApp (0851-5814-8448)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.27-2.42 5.82a8.173 8.173 0 0 1-5.82 2.42c-1.48 0-2.93-.39-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.32a8.194 8.194 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24m4.52 11.51c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.3"/></svg>
+            <span class="wa-footer-text">
+                <span class="wa-label-prefix">WhatsApp Client Coordinator:</span>
+                <strong class="wa-footer-phone">0851-5814-8448</strong>
+            </span>
         </a>
     </footer>
 </body>
