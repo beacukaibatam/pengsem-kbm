@@ -1221,41 +1221,69 @@
             color: #475569;
         }
 
-        /* Modal Konfirmasi Logout: tombol warna khusus (bukan dari .popup-btn-success/error
-           supaya tidak ikut mempengaruhi modal mismatch/format lain yang memakai class sama) */
+        /* Popover Konfirmasi Logout: muncul menempel di tombol keluar (bukan modal
+           tengah layar) — tombol warna khusus, bukan reuse .popup-btn-success/error
+           supaya tidak ikut mempengaruhi modal mismatch/format lain yang memakai class sama */
+        .logout-popover {
+            display: none;
+            position: fixed;
+            z-index: 100000;
+            background: #FFFFFF;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 14px;
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.04);
+            padding: 16px 16px;
+            width: 210px;
+            box-sizing: border-box;
+            animation: popupSpring 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .logout-popover-arrow {
+            position: absolute;
+            top: -7px;
+            right: 18px;
+            width: 14px;
+            height: 14px;
+            background: #FFFFFF;
+            border-left: 1.5px solid #E2E8F0;
+            border-top: 1.5px solid #E2E8F0;
+            transform: rotate(45deg);
+        }
+        .logout-popover-title {
+            font-size: 0.90rem;
+            font-weight: 800;
+            color: #0F172A;
+            text-align: center;
+            margin-bottom: 12px;
+        }
         .btn-logout-cancel {
             flex: 1;
-            padding: 12px 20px;
-            background: #005FAC;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 10px;
-            font-size: 0.95rem;
+            padding: 9px 12px;
+            background: #FFFFFF;
+            color: #334155;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 9px;
+            font-size: 0.86rem;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(0, 95, 172, 0.30);
             transition: all 0.2s ease;
         }
         .btn-logout-cancel:hover {
-            background: #004B8C;
-            transform: translateY(-1px);
+            background: #F1F5F9;
         }
         .btn-logout-yes {
             flex: 1;
-            padding: 12px 20px;
-            background: #B91C1C;
+            padding: 9px 12px;
+            background: #005FAC;
             color: #FFFFFF;
             border: none;
-            border-radius: 10px;
-            font-size: 0.95rem;
+            border-radius: 9px;
+            font-size: 0.86rem;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35);
             transition: all 0.2s ease;
         }
         .btn-logout-yes:hover {
-            background: #991B1B;
-            transform: translateY(-1px);
+            background: #004B8C;
         }
 
     
@@ -4502,21 +4530,12 @@
 
     <!-- ================= MODERN POPUP: OOOOPS! KETIDAKSESUAIAN NAMA ================= -->
     <!-- ================= POPUP KONFIRMASI KELUAR DARI PORTAL ================= -->
-    <div class="modern-popup-overlay" id="modalLogoutConfirm">
-        <div class="modern-popup-card">
-            <div class="popup-icon-circle" style="border:2.5px solid #0F172A; color:#0F172A; box-shadow:none;">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </div>
-            <h3 style="font-size:1.2rem; margin:0 0 20px 0; font-weight:800; color:#0F172A; letter-spacing:-0.3px;">Lanjutkan Keluar?</h3>
-
-            <div style="display:flex; gap:10px; width:100%;">
-                <button type="button" class="btn-logout-cancel" onclick="closeLogoutConfirmModal()">Batal</button>
-                <button type="button" class="btn-logout-yes" onclick="confirmLogoutAction()">Ya</button>
-            </div>
+    <div class="logout-popover" id="modalLogoutConfirm">
+        <div class="logout-popover-arrow"></div>
+        <div class="logout-popover-title">Lanjutkan Keluar?</div>
+        <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-logout-cancel" onclick="closeLogoutConfirmModal()">Batal</button>
+            <button type="button" class="btn-logout-yes" onclick="confirmLogoutAction()">Ya</button>
         </div>
     </div>
 
@@ -12569,13 +12588,28 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
         // ================= 4. LOGOUT =================
         function handleLogout() {
             const modal = document.getElementById('modalLogoutConfirm');
-            if (modal) modal.style.display = 'flex';
+            const btn = document.getElementById('btnLogoutPortal');
+            if (!modal || !btn) return;
+            const rect = btn.getBoundingClientRect();
+            modal.style.top = (rect.bottom + 10) + 'px';
+            modal.style.right = (window.innerWidth - rect.right) + 'px';
+            modal.style.left = 'auto';
+            modal.style.display = 'block';
         }
 
         function closeLogoutConfirmModal() {
             const modal = document.getElementById('modalLogoutConfirm');
             if (modal) modal.style.display = 'none';
         }
+
+        // Tutup popover konfirmasi logout kalau klik di luar popover/tombol keluar
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('modalLogoutConfirm');
+            const btn = document.getElementById('btnLogoutPortal');
+            if (!modal || modal.style.display === 'none') return;
+            if (modal.contains(e.target) || (btn && btn.contains(e.target))) return;
+            closeLogoutConfirmModal();
+        });
 
         async function confirmLogoutAction() {
             closeLogoutConfirmModal();
