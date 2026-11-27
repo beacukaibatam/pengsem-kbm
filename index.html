@@ -418,7 +418,7 @@
             height: 110px;
             margin: 6px 0 8px 0;
             border-radius: 8px;
-            overflow: hidden;
+            overflow: clip !important;
             border: 1.5px dashed #CBD5E1;
             box-shadow: none !important;
             background: #F8FAFC;
@@ -426,6 +426,7 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
+            pointer-events: none;
             transition: border-color 0.2s, background-color 0.2s;
         }
 
@@ -1771,9 +1772,10 @@
             overscroll-behavior-x: none !important;
         }
 
-        * {
-            overscroll-behavior-y: none;
-        }
+        /* JANGAN pasang `* { overscroll-behavior-y: none; }` secara global:
+           di Chromium/macOS trackpad, kombinasi `* { overscroll-behavior-y: none }`
+           dengan elemen `overflow: hidden` memutus scroll chaining ke `<html>`
+           sehingga scroll dua jari macet total di atas kotak preview gambar. */
 
         .sim-overlay, .drawer-panel, #operatorChatBody, #conversationListContainer {
             overscroll-behavior: contain !important;
@@ -2352,7 +2354,7 @@
             font-family: inherit;
             display: flex;
             align-items: center;
-            overflow: hidden;
+            overflow: clip;
             text-overflow: ellipsis;
             box-sizing: border-box;
             -webkit-touch-callout: none;
