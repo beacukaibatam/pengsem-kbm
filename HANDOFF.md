@@ -77,6 +77,16 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Penghilangan Banner Penjelasan Aturan Patokan Terkunci (Golden Record)** (Antigravity — 27 Nov 2026 21:50 WIB)
+  1. **Permintaan Pengguna**:
+     - Menghapus blok teks penjelasan: *"Aturan Patokan Terkunci (Golden Record) - Data KTP & NPWP yang disimpan akan menjadi patokan terkunci di database akun..."*.
+  2. **Implementasi & Efek**:
+     - Elemen kotak info berlatar biru halus di bawah kolom alamat domisili Batam pada `#page-1` dihapus tuntas.
+     - Sisi kanan formulir Tahap 1 menjadi lebih ringkas dan fokus langsung pada data isian serta tombol navigasi *"Simpan Patokan & Lanjut ke BPKB ➔"*.
+  3. **Verifikasi**:
+     - `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+     - Diverifikasi di browser lokal via Playwright (`clean_step1_no_golden_record_banner.png`).
+
 - **Tahap 3 Eliminasi Popup Browser: 100% Tuntas di Seluruh Dashboard Petugas & Admin** (Antigravity — 27 Nov 2026 21:15 WIB)
   1. **Restrukturisasi Disiplin Pola Confirm Sync → Async Callback**:
      - Mengubah 7 fungsi kunci yang sebelumnya memakai `if (!confirm(...)) return; <lanjutan>` menjadi async callback `showAppConfirm(message, async function() { <lanjutan> })`:

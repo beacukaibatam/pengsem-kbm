@@ -108,6 +108,7 @@
 
 | Waktu (WIB) | Agen Pelaksana | Berkas yang Dimodifikasi | Rincian Pembaruan | Status Deployment |
 |---|---|---|---|---|
+| 2026-11-27 21:50 | Antigravity | `index.html`, `Formulir_...html` | Hapus banner penjelasan 'Aturan Patokan Terkunci (Golden Record)' pada formulir Tahap 1 sesuai permintaan user agar tampilan kolom kanan identitas lebih bersih, lapang, dan ringkas. | Verified Browser (0-Diff) |
 | 2026-11-27 21:15 | Antigravity | `index.html`, `Formulir_...html` | Tahap 3 Eliminasi Popup Bawaan Browser: 100% tuntas eliminasi alert(), confirm(), prompt() di seluruh Dashboard Petugas (Frontdesk/Nadine, SKEP Fasilitas, Jaminan Billing/Bukti Bayar, Loket Approval, Pemeriksaan Fisik BAP/LHP, SPPB, Gate Pelabuhan, Admin Override, & WA Settings). Restrukturisasi async callback konfirmasi berhasil. | Verified Browser (0-Diff) |
 | 2026-11-27 21:10 | Antigravity | `index.html`, `Formulir_...html` | Tahap 2 Eliminasi Popup Bawaan Browser: Buat modal generik showAppAlert, showAppConfirm, showAppPrompt (gaya flat .notif-popup-* tanpa alert() bawaan). Refactor 100% pemanggilan alert() di seluruh area Pemohon (validasi, OCR KTP/NPWP/STNK, kamera, draf PDF, e-meterai, submit final, & live chat). | Verified Browser (0-Diff) |
 | 2026-11-27 21:05 | Antigravity | `index.html`, `Formulir_...html` | Koreksi tuntas preview-box (rasio 1.58:1 & object-fit: contain !important): ganti pendekatan angka px (148px) yang memotong baris nama & status perkawinan KTP/NPWP di layout split-view lebar. Hapus inline height:XXXpx pada seluruh .preview-box, ganti aspect-ratio: 1.58 / 1. Diverifikasi foto KTP/NPWP asli utuh 100% di desktop & mobile. | Verified Browser (0-Diff) |
@@ -304,3 +305,7 @@
   - **Refactor Prompt**: Mengganti `prompt()` pengaturan nomor WA simulator dengan modal interaktif `showAppPrompt()`.
   - **Zero Browser Dialogs Guaranteed**: 0 pemanggilan `alert()`, `confirm()`, `prompt()` tersisa di `index.html`. Pengujian Playwright membuktikan dialog bawaan browser = 0 (`native browser dialogs fired: 0`).
   - **Kepatuhan Protokol**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` valid.
+- [x] Poin 52 (Antigravity): **PENGHILANGAN BANNER PENJELASAN ATURAN PATOKAN TERKUNCI (GOLDEN RECORD)**:
+  - Menghapus blok banner informasi *"Aturan Patokan Terkunci (Golden Record)"* di bawah kolom isian alamat domisili pada formulir Tahap 1 (#page-1).
+  - Tampilan sisi kanan formulir identitas menjadi jauh lebih ringkas, lapang, dan langsung terhubung ke tombol aksi draf/simpan tanpa teks penjelasan panjang.
+  - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0. Diverifikasi via screenshot Playwright (`clean_step1_no_golden_record_banner.png`).
