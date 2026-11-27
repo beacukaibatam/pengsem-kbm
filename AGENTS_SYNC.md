@@ -108,6 +108,7 @@
 
 | Waktu (WIB) | Agen Pelaksana | Berkas yang Dimodifikasi | Rincian Pembaruan | Status Deployment |
 |---|---|---|---|---|
+| 2026-11-27 19:30 | Antigravity | `index.html`, `Formulir_...html`, `database.py` | Implementasi Alur Opsi 1 UI/UX: Wizard 4 Tahap (Tahap 1: KTP & NPWP Patokan Terkunci; Tahap 2: BPKB & Komparasi KTP; Tahap 3: STNK Lembar 1 & 2 & Komparasi Silang BPKB serta Perhitungan Otomatis PPN 11%; Tahap 4: 6 Foto Fisik Kendaraan, Rute/Jadwal, e-Meterai & Submit). Split-screen kiri unggah / kanan form & komparasi, klik kotak `.preview-box` langsung untuk memilih berkas tanpa tombol unggah terpisah, dan draf tersimpan tahan logout/login. | Verified Browser (0-Diff) |
 | 2026-11-26 08:35 | Antigravity | `index.html`, `server.py`, `db_users.json` | Implementasi RBAC 8 akun petugas & perbaikan proporsi form landing 0-scroll. | Verified Local (0-Diff) |
 | 2026-11-26 08:55 | Antigravity | `CLAUDE.md`, `AGENTS_SYNC.md` | Pembuatan protokol memori bersama Antigravity ⇄ Claude dan panduan sinkronisasi. | Done |
 | 2026-11-26 09:05 | Antigravity | `database.py`, `server.py` | Migrasi database JSON ke SQLite WAL terindeks, ThreadPoolExecutor, healthcheck `/api/health`, anti-OOM image resize max 1600px, & graceful fallback OTP Meta WA ke SMTP TLS. | Verified Local (200 OK) |

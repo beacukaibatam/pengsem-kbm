@@ -481,8 +481,93 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
-            pointer-events: none;
+            cursor: pointer;
+            pointer-events: auto;
             transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .preview-box:hover {
+            border-color: #005FAC;
+            background-color: #EFF6FF;
+        }
+
+        .click-upload-hint {
+            position: absolute;
+            left: 6px;
+            bottom: 6px;
+            background: rgba(0, 95, 172, 0.90);
+            color: #FFFFFF;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.88;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+            z-index: 2;
+        }
+
+        .preview-box:hover .click-upload-hint {
+            opacity: 1;
+        }
+
+        .split-screen-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: stretch;
+        }
+        @media (max-width: 900px) {
+            .split-screen-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .wizard-step-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1.5px solid #E2E8F0;
+            background: #F8FAFC;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .wizard-step-btn:hover {
+            border-color: #CBD5E1;
+            background: #F1F5F9;
+        }
+        .wizard-step-btn.active {
+            border-color: #005FAC !important;
+            background: #EFF6FF !important;
+            box-shadow: 0 1px 3px rgba(0,95,172,0.1);
+        }
+        .wizard-step-btn.active .wizard-step-title {
+            color: #005FAC !important;
+            font-weight: 800;
+        }
+        .wizard-step-btn.active .wizard-step-badge {
+            color: #005FAC !important;
+            font-weight: 800;
+        }
+        .wizard-step-btn.saved {
+            border-color: #A7F3D0;
+            background: #ECFDF5;
+        }
+        .wizard-step-btn.saved .wizard-step-title {
+            color: #065F46;
+        }
+        .wizard-step-btn.saved .wizard-step-badge {
+            color: #059669;
+            font-weight: 800;
+        }
+        .wizard-step-btn.locked {
+            opacity: 0.60;
         }
 
         .preview-box img {
@@ -3724,810 +3809,900 @@
 
     <div class="main-container">
 
-        <!-- ================= PAGE 1: BERKAS PERSYARATAN & IDENTITAS PEMOHON ================= -->
+        <!-- Pemberitahuan draf dipulihkan (muncul singkat setelah login bila ada draf tersimpan) -->
+        <div id="draftRestoredBanner" style="display:none; align-items:center; gap:8px; background:#EFF6FF; border:1.5px solid #BFDBFE; color:#1D4ED8; font-size:0.76rem; font-weight:700; padding:8px 12px; border-radius:8px; margin-bottom:12px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            Draf berkas yang sudah Anda isi/koreksi sebelumnya berhasil dipulihkan dari penyimpanan server.
+        </div>
+
+        <!-- Bilah Wizard 4 Tahap Pemohon (Opsi 1) -->
+        <div class="page-card" style="margin-bottom:12px; padding:8px 12px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
+                <button type="button" onclick="goToPage(1)" id="wizardStepBtn1" class="wizard-step-btn active">
+                    <div style="font-weight:800; font-size:0.80rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span class="wizard-step-title">1. KTP &amp; NPWP</span>
+                        <span id="wizardStepBadge1" class="wizard-step-badge">Aktif</span>
+                    </div>
+                    <div style="font-size:0.68rem; color:#64748B; margin-top:2px;">Identitas &amp; Patokan</div>
+                </button>
+                <button type="button" onclick="goToPage(2)" id="wizardStepBtn2" class="wizard-step-btn">
+                    <div style="font-weight:800; font-size:0.80rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span class="wizard-step-title">2. BPKB / Leasing</span>
+                        <span id="wizardStepBadge2" class="wizard-step-badge">Terkunci</span>
+                    </div>
+                    <div style="font-size:0.68rem; color:#64748B; margin-top:2px;">Komparasi ke KTP</div>
+                </button>
+                <button type="button" onclick="goToPage(3)" id="wizardStepBtn3" class="wizard-step-btn">
+                    <div style="font-weight:800; font-size:0.80rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span class="wizard-step-title">3. STNK (2 Lbr)</span>
+                        <span id="wizardStepBadge3" class="wizard-step-badge">Terkunci</span>
+                    </div>
+                    <div style="font-size:0.68rem; color:#64748B; margin-top:2px;">Komparasi ke BPKB &amp; PPN</div>
+                </button>
+                <button type="button" onclick="goToPage(4)" id="wizardStepBtn4" class="wizard-step-btn">
+                    <div style="font-weight:800; font-size:0.80rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span class="wizard-step-title">4. Foto &amp; Kirim</span>
+                        <span id="wizardStepBadge4" class="wizard-step-badge">Terkunci</span>
+                    </div>
+                    <div style="font-size:0.68rem; color:#64748B; margin-top:2px;">6 Foto, Rute &amp; e-Meterai</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pita Patokan Terkunci (Muncul di Tahap 2, 3, dan 4) -->
+        <div id="anchorBanner" style="display:none; align-items:center; justify-content:space-between; background:#ECFDF5; border:1.5px solid #A7F3D0; border-radius:8px; padding:8px 14px; margin-bottom:12px; font-size:0.76rem; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; color:#065F46; font-weight:700;">
+                <span style="background:#059669; color:#FFFFFF; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    PATOKAN TERKUNCI
+                </span>
+                <span id="anchorSummaryText">-</span>
+            </div>
+            <button type="button" onclick="goToPage(1)" class="btn btn-secondary" style="font-size:0.70rem; padding:3px 10px; border-color:#A7F3D0; color:#065F46; background:#FFFFFF;">Ubah di Tahap 1 ➔</button>
+        </div>
+
+        <!-- ================= PAGE 1: TAHAP 1 — KTP & NPWP (IDENTITAS & PATOKAN TERKUNCI) ================= -->
         <section class="page-card active" id="page-1" style="padding:16px 20px;">
-            <div class="page-header" style="margin-bottom:12px; padding-bottom:8px;">
-                <h2 style="font-size:1.0rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:8px; margin:0 0 3px 0;">
-                    <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
-                    Langkah 1: Unggah Berkas Persyaratan (KTP, NPWP, BPKB &amp; STNK) &amp; Identitas Pemohon
-                </h2>
-                <p style="font-size:0.76rem; color:#64748B; margin:0; line-height:1.35;">
-                    Silakan unggah dokumen persyaratan satu per satu melalui kotak pemindai di bawah ini. Sistem otomatis membaca data dari setiap berkas yang diunggah.
-                </p>
+            <div class="page-header" style="margin-bottom:12px; padding-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <h2 style="font-size:0.98rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:8px; margin:0 0 3px 0;">
+                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+                        Tahap 1: Unggah KTP &amp; NPWP — Identitas Pemohon &amp; Patokan Terkunci
+                    </h2>
+                    <p style="font-size:0.75rem; color:#64748B; margin:0; line-height:1.35;">
+                        Klik langsung pada kotak dokumen di sisi kiri untuk mengunggah atau mengganti foto. Periksa dan koreksi data identitas di sisi kanan, lalu simpan sebagai patokan terkunci.
+                    </p>
+                </div>
+                <span class="pabean-badge-waiting" style="font-size:0.72rem;">Tahap 1 dari 4</span>
             </div>
 
-            <!-- Pemberitahuan draf dipulihkan (muncul singkat setelah login bila ada draf tersimpan) -->
-            <div id="draftRestoredBanner" style="display:none; align-items:center; gap:8px; background:#EFF6FF; border:1.5px solid #BFDBFE; color:#1D4ED8; font-size:0.76rem; font-weight:700; padding:8px 12px; border-radius:8px; margin-bottom:10px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                Draf berkas yang sudah Anda isi/koreksi sebelumnya berhasil dipulihkan.
-            </div>
-
-            <!-- Area 4 Pemindai Dokumen — Akordeon (KTP & NPWP terbuka duluan; BPKB & STNK
-                 disarankan dilengkapi belakangan lewat accLockHint, bukan gate keras) -->
-            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;">
-                <!-- Scanner Card 1: KTP Pemohon -->
-                <div class="scanner-card acc-doc" id="accWrapKtp" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            <button type="button" class="acc-chevron-btn" id="accChevronKtp" onclick="toggleAccordionDoc('Ktp')" title="Buka/tutup KTP" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#005FAC;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(90deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </button>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                                <circle cx="9" cy="10" r="2"></circle>
-                                <line x1="15" y1="8" x2="17" y2="8"></line>
-                                <line x1="15" y1="12" x2="17" y2="12"></line>
-                                <line x1="7" y1="16" x2="17" y2="16"></line>
-                            </svg>
-                            KTP Pemohon
+            <div class="split-screen-grid">
+                <!-- SISI KIRI: Area Unggah KTP & NPWP (Klik Kotak Langsung) -->
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Scanner Card 1: KTP Pemohon -->
+                    <div class="scanner-card" id="accWrapKtp" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                                    <circle cx="9" cy="10" r="2"></circle>
+                                    <line x1="15" y1="8" x2="17" y2="8"></line>
+                                    <line x1="15" y1="12" x2="17" y2="12"></line>
+                                    <line x1="7" y1="16" x2="17" y2="16"></line>
+                                </svg>
+                                KTP Pemohon
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span id="accSaveStatusKtp" class="acc-save-status"></span>
+                                <span id="badgeKtpStatus" class="pabean-badge-waiting">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    Menunggu Unggah
+                                </span>
+                                <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('ktp')" title="Panduan Unggah KTP" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
+                                    <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                </button>
+                            </div>
                         </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span id="accSaveStatusKtp" class="acc-save-status"></span>
-                            <span id="badgeKtpStatus" class="pabean-badge-waiting">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                Menunggu Unggah
-                            </span>
-                            <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('ktp')" title="Panduan Unggah KTP" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
-                                <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                            </button>
+                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
+                            Identitas Kependudukan Asli (Wajib Berwarna)
                         </div>
-                    </div>
-                    <div id="accBodyKtp" style="display:block;">
-                    <!-- Sub-label KTP untuk kesimetrisan baris -->
-                    <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; font-size:0.70rem; color:#64748B;">
-                        Identitas Kependudukan Asli
-                    </div>
-                    <div class="preview-box" id="previewKtpBox" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0;">
-                        <div class="laser-line" id="laserKtp" style="display:none;">
-                            <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
-                            <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
-                            <div class="beam-opt1"></div>
-                        </div>
-                        <div id="phKtp" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#94A3B8;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
-                            <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
-                        </div>
-                        <img decoding="async" id="imgKtpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
-                    </div>
-                    <!-- Cuplikan Data Hasil OCR KTP -->
-                    <div id="snippetKtp" class="ocr-snippet-box">Menunggu berkas KTP diunggah...</div>
-                    <div class="scanner-btns" style="margin-top:auto;">
-                        <button type="button" class="btn btn-primary" id="btnUploadKtp" style="width:100%; justify-content:center; background:#005FAC; color:#FFFFFF; border:none; border-radius:7px; padding:8px 10px; font-weight:700; font-size:0.78rem;" onclick="pickFile('ktp')">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;">
-                                <line x1="12" y1="19" x2="12" y2="5"></line>
-                                <polyline points="5 12 12 5 19 12"></polyline>
-                            </svg>
-                            Unggah Berkas KTP
-                        </button>
-                    </div>
-                    <input type="file" id="fileKtpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ktp')">
-                    </div>
-                </div>
-
-                <!-- Scanner Card 2: NPWP Pemohon -->
-                <div class="scanner-card acc-doc" id="accWrapNpwp" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            <button type="button" class="acc-chevron-btn" id="accChevronNpwp" onclick="toggleAccordionDoc('Npwp')" title="Buka/tutup NPWP" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#005FAC;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(90deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </button>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                                <line x1="2" y1="10" x2="22" y2="10"></line>
-                            </svg>
-                            NPWP Pemohon
-                        </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span id="accSaveStatusNpwp" class="acc-save-status"></span>
-                            <span id="badgeNpwpStatus" class="pabean-badge-waiting">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                Menunggu Unggah
-                            </span>
-                            <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('npwp')" title="Panduan Unggah NPWP" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
-                                <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="accBodyNpwp" style="display:block;">
-                    <!-- Sub-label NPWP untuk kesimetrisan baris -->
-                    <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; font-size:0.70rem; color:#64748B;">
-                        Nomor Pokok Wajib Pajak
-                    </div>
-                    <div class="preview-box" id="previewNpwpBox" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0;">
-                        <div class="laser-line" id="laserNpwp" style="display:none;">
-                            <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
-                            <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
-                            <div class="beam-opt1"></div>
-                        </div>
-                        <div id="phNpwp" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#94A3B8;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                            <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
-                        </div>
-                        <img decoding="async" id="imgNpwpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
-                    </div>
-                    <!-- Cuplikan Data Hasil OCR NPWP -->
-                    <div id="snippetNpwp" class="ocr-snippet-box">Menunggu berkas NPWP diunggah...</div>
-                    <div class="scanner-btns" style="margin-top:auto;">
-                        <button type="button" class="btn btn-primary" id="btnUploadNpwp" style="width:100%; justify-content:center; background:#005FAC; color:#FFFFFF; border:none; border-radius:7px; padding:8px 10px; font-weight:700; font-size:0.78rem;" onclick="pickFile('npwp')">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;">
-                                <line x1="12" y1="19" x2="12" y2="5"></line>
-                                <polyline points="5 12 12 5 19 12"></polyline>
-                            </svg>
-                            Unggah Berkas NPWP
-                        </button>
-                    </div>
-                    <input type="file" id="fileNpwpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'npwp')">
-                    </div>
-                </div>
-
-                <!-- Scanner Card 3: STNK (2 Lembar: STNK & TBPKP) -->
-                <div class="scanner-card acc-doc" id="accWrapStnk" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            <button type="button" class="acc-chevron-btn" id="accChevronStnk" onclick="toggleAccordionDoc('Stnk')" title="Buka/tutup STNK" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#94A3B8;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(0deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </button>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                            </svg>
-                            STNK (2 Lembar)
-                        </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span id="accSaveStatusStnk" class="acc-save-status"></span>
-                            <span id="badgeStnkStatus" class="pabean-badge-waiting">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                Menunggu Unggah
-                            </span>
-                            <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('stnk')" title="Panduan Unggah STNK" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
-                                <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="accLockHintStnk" class="acc-lock-hint">🔒 Disarankan: lengkapi KTP &amp; NPWP dulu — Anda tetap bisa mengisi di sini kapan saja.</div>
-                    <div id="accBodyStnk" style="display:none;">
-                    <!-- Sub-label STNK 2 Lembar -->
-                    <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; font-size:0.68rem; color:#64748B;">
-                        <span>Lbr 1: STNK • Lbr 2: TBPKP</span>
-                        <span id="badgeStnk2Status" style="font-weight:700; color:#64748B;"></span>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:0 0 6px 0;">
-                        <div class="preview-box" id="previewStnkBox" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0;">
-                            <div class="laser-line" id="laserStnk" style="display:none;">
+                        <div class="preview-box" id="previewKtpBox" onclick="pickFile('ktp')" title="Klik kotak ini untuk unggah atau ganti foto KTP" style="height:118px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                            <div class="laser-line" id="laserKtp" style="display:none;">
                                 <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                 <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
                                 <div class="beam-opt1"></div>
                             </div>
-                            <div id="phStnk" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#94A3B8; text-align:center; padding:4px;">
-                                <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 1</span>
-                                <span style="font-size:0.62rem; color:#94A3B8;">STNK</span>
+                            <div id="phKtp" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#94A3B8; text-align:center; padding:8px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                <span style="font-size:0.74rem; font-weight:700; color:#005FAC;">Klik di sini untuk unggah foto KTP</span>
+                                <span style="font-size:0.66rem; color:#64748B;">Kamera HP, Galeri, atau File PDF</span>
                             </div>
-                            <img decoding="async" id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
+                            <img decoding="async" id="imgKtpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                            <span class="click-upload-hint" id="hintKtpBox" style="display:none;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                Klik kotak untuk ganti KTP
+                            </span>
                         </div>
-                        <div class="preview-box" id="previewStnk2Box" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0;">
-                            <div class="laser-line" id="laserStnk2" style="display:none;">
+                        <!-- Cuplikan Data Hasil OCR KTP -->
+                        <div id="snippetKtp" class="ocr-snippet-box">Menunggu berkas KTP diunggah...</div>
+                        <input type="file" id="fileKtpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ktp')">
+                    </div>
+
+                    <!-- Scanner Card 2: NPWP Pemohon -->
+                    <div class="scanner-card" id="accWrapNpwp" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                                </svg>
+                                NPWP Pemohon
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span id="accSaveStatusNpwp" class="acc-save-status"></span>
+                                <span id="badgeNpwpStatus" class="pabean-badge-waiting">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    Menunggu Unggah
+                                </span>
+                                <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('npwp')" title="Panduan Unggah NPWP" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
+                                    <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
+                            Nomor Pokok Wajib Pajak (15 digit lama atau 16 digit NIK Coretax)
+                        </div>
+                        <div class="preview-box" id="previewNpwpBox" onclick="pickFile('npwp')" title="Klik kotak ini untuk unggah atau ganti foto NPWP" style="height:118px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                            <div class="laser-line" id="laserNpwp" style="display:none;">
                                 <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                 <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
                                 <div class="beam-opt1"></div>
                             </div>
-                            <div id="phStnk2" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#94A3B8; text-align:center; padding:4px;">
-                                <span style="font-size:0.66rem; font-weight:700; color:#64748B;">Lembar 2</span>
-                                <span style="font-size:0.62rem; color:#94A3B8;">TBPKP/Pajak</span>
+                            <div id="phNpwp" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#94A3B8; text-align:center; padding:8px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                <span style="font-size:0.74rem; font-weight:700; color:#005FAC;">Klik di sini untuk unggah foto NPWP</span>
+                                <span style="font-size:0.66rem; color:#64748B;">Kamera HP, Galeri, atau File PDF</span>
                             </div>
-                            <img decoding="async" id="imgStnk2Preview" src="" alt="STNK Lembar 2 TBPKP" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px; margin:0 auto;">
-                        </div>
-                    </div>
-                    <!-- Cuplikan Data Hasil OCR STNK -->
-                    <div id="snippetStnk" class="ocr-snippet-box">Menunggu berkas STNK Lembar 1 &amp; 2 diunggah...</div>
-                    <div class="scanner-btns" style="margin-top:auto; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                        <button type="button" class="btn btn-primary" id="btnUploadStnk" style="width:100%; justify-content:center; background:#005FAC; color:#FFFFFF; border:none; border-radius:7px; padding:7px 6px; font-weight:700; font-size:0.72rem;" onclick="pickFile('stnk')">
-                            Unggah Lbr 1
-                        </button>
-                        <button type="button" class="btn btn-primary" id="btnUploadStnk2" style="width:100%; justify-content:center; background:#0284C7; color:#FFFFFF; border:none; border-radius:7px; padding:7px 6px; font-weight:700; font-size:0.72rem;" onclick="document.getElementById('fileStnk2Input').click()">
-                            Unggah Lbr 2
-                        </button>
-                    </div>
-                    <input type="file" id="fileStnkInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk')">
-                    <input type="file" id="fileStnk2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk_2')">
-                    </div>
-                </div>
-
-                <!-- Scanner Card 4: BPKB -->
-                <div class="scanner-card acc-doc" id="accWrapBpkb" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
-                            <button type="button" class="acc-chevron-btn" id="accChevronBpkb" onclick="toggleAccordionDoc('Bpkb')" title="Buka/tutup BPKB" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#94A3B8;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s; transform:rotate(0deg);"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </button>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                <polyline points="21 15 16 10 5 21"></polyline>
-                            </svg>
-                            BPKB
-                        </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span id="accSaveStatusBpkb" class="acc-save-status"></span>
-                            <span id="badgeOwnershipStatus" class="pabean-badge-waiting">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                Menunggu Unggah
+                            <img decoding="async" id="imgNpwpPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                            <span class="click-upload-hint" id="hintNpwpBox" style="display:none;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                Klik kotak untuk ganti NPWP
                             </span>
-                            <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('bpkb')" title="Panduan Unggah BPKB" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
-                                <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                            </button>
+                        </div>
+                        <!-- Cuplikan Data Hasil OCR NPWP -->
+                        <div id="snippetNpwp" class="ocr-snippet-box">Menunggu berkas NPWP diunggah...</div>
+                        <input type="file" id="fileNpwpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'npwp')">
+                    </div>
+                </div>
+
+                <!-- SISI KANAN: Form Identitas & Patokan Terkunci -->
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                    <div>
+                        <div style="border-bottom:1px solid #E2E8F0; padding-bottom:8px; margin-bottom:12px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                Data Identitas Pemohon (Hasil Scan KTP &amp; NPWP)
+                            </div>
+                            <div style="font-size:0.72rem; color:#64748B; margin-top:2px;">
+                                Periksa atau koreksi langsung kolom di bawah sebelum disimpan sebagai patokan terkunci.
+                            </div>
+                        </div>
+
+                        <div class="form-grid" style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label class="form-label" for="pemohon_nik">
+                                    NIK (16 Digit)
+                                    <span class="tag-auto" id="tagNikAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="pemohon_nik" class="form-input mono" placeholder="16 digit angka NIK" maxlength="16" oninput="syncValues()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="pemohon_npwp">
+                                    Nomor NPWP
+                                    <span class="tag-auto" id="tagNpwpAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="pemohon_npwp" class="form-input mono" placeholder="Masukkan 15/16 digit NPWP" oninput="syncValues()">
+                            </div>
+                            <div class="form-group full">
+                                <label class="form-label" for="pemohon_nama">
+                                    Nama Lengkap Sesuai KTP
+                                    <span class="tag-auto" id="tagNamaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="pemohon_nama" class="form-input" placeholder="Nama lengkap pemohon sesuai KTP" style="text-transform:uppercase;" oninput="this.value = this.value.toUpperCase(); syncValues();">
+                            </div>
+                            <div class="form-group full">
+                                <label class="form-label" for="pemohon_telp">No. WhatsApp / HP Aktif</label>
+                                <input type="text" id="pemohon_telp" class="form-input mono" placeholder="Contoh: 0812xxxxxxxx" oninput="syncValues()">
+                            </div>
+                            <div class="form-group full">
+                                <label class="form-label" for="pemohon_alamat">
+                                    Alamat Domisili KTP di Batam
+                                    <span class="tag-auto" id="tagAlamatAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="pemohon_alamat" class="form-input" placeholder="Alamat lengkap tempat tinggal di Batam" oninput="syncValues()">
+                            </div>
+                        </div>
+
+                        <!-- Info Aturan Patokan Terkunci -->
+                        <div style="background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:8px; padding:10px 12px; font-size:0.74rem; color:#1E3A8A; line-height:1.45;">
+                            <div style="font-weight:800; display:flex; align-items:center; gap:6px; margin-bottom:4px; color:#005FAC;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.6"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                Aturan Patokan Terkunci (Golden Record)
+                            </div>
+                            <div style="color:#334155;">
+                                Data KTP &amp; NPWP yang disimpan akan menjadi patokan terkunci di database akun (tetap utuh saat logout &amp; login kembali). Dokumen BPKB dan STNK selanjutnya <strong>tidak akan menimpa</strong> data identitas ini, melainkan dikomparasikan terhadap patokan ini sebagai pengingat keserasian.
+                            </div>
                         </div>
                     </div>
-                    <div id="accLockHintBpkb" class="acc-lock-hint">🔒 Disarankan: lengkapi KTP &amp; NPWP dulu — Anda tetap bisa mengisi di sini kapan saja.</div>
-                    <div id="accBodyBpkb" style="display:none;">
-                    <!-- Switcher Dokumen Kepemilikan (Tinggi pas 18px sejajar sub-label lainnya) -->
-                    <div style="height:18px; margin-bottom:6px; display:flex; align-items:center; gap:10px; font-size:0.70rem;">
-                        <label style="cursor:pointer; display:flex; align-items:center; gap:3px; font-weight:700; color:#334155;">
-                            <input type="radio" name="optOwnershipDoc" id="optDocBpkb" value="bpkb" checked onchange="switchOwnershipDocType('bpkb')">
-                            <span>BPKB (Lunas)</span>
-                        </label>
-                        <label style="cursor:pointer; display:flex; align-items:center; gap:3px; font-weight:700; color:#334155;">
-                            <input type="radio" name="optOwnershipDoc" id="optDocLeasing" value="leasing" onchange="switchOwnershipDocType('leasing')">
-                            <span>Leasing (Kredit)</span>
-                        </label>
-                    </div>
-                    <div class="preview-box" id="previewOwnershipBox" style="height:110px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0;">
-                        <div class="laser-line" id="laserOwnership" style="display:none;">
-                            <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
-                            <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
-                            <div class="beam-opt1"></div>
-                        </div>
-                        <div id="phOwnership" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#94A3B8;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                            <span style="font-size:0.72rem; font-weight:600; color:#94A3B8;">Belum ada berkas</span>
-                        </div>
-                        <img decoding="async" id="imgOwnershipPreview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
-                    </div>
-                    <!-- Cuplikan Data Hasil OCR BPKB -->
-                    <div id="snippetOwnership" class="ocr-snippet-box">Menunggu berkas BPKB diunggah...</div>
-                    <div class="scanner-btns" style="margin-top:auto;">
-                        <button type="button" class="btn btn-primary" id="btnUploadOwnership" style="width:100%; justify-content:center; background:#005FAC; color:#FFFFFF; border:none; border-radius:7px; padding:8px 10px; font-weight:700; font-size:0.78rem;" onclick="pickFile('ownership')">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;">
-                                <line x1="12" y1="19" x2="12" y2="5"></line>
-                                <polyline points="5 12 12 5 19 12"></polyline>
-                            </svg>
-                            <span id="lblUploadOwnershipHal1">Unggah BPKB (Hal. 1)</span>
+
+                    <!-- Navigasi Bawah Tahap 1 -->
+                    <div class="nav-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                        <button type="button" class="btn btn-secondary" onclick="manualSaveDraft()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+                            Simpan Draf
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveStep1AndContinue()">
+                            Simpan Patokan &amp; Lanjut ke BPKB ➔
                         </button>
                     </div>
-                    <input type="file" id="fileOwnershipInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership')">
-
-                    <!-- Slot Tambahan BPKB: Hal. 2 & 3 (tampil hanya saat mode BPKB) -->
-                    <div id="bpkbExtraSlots" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <div class="preview-box" id="previewOwnership2Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
-                                <span id="phOwnership2" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 2</span>
-                                <img decoding="async" id="imgOwnership2Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
-                            </div>
-                            <button type="button" class="btn btn-secondary" id="btnUploadOwnership2" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership2Input').click()">Unggah Hal. 2</button>
-                            <input type="file" id="fileOwnership2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_2')">
-                        </div>
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <div class="preview-box" id="previewOwnership3Box" style="height:60px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
-                                <span id="phOwnership3" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 3</span>
-                                <img decoding="async" id="imgOwnership3Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
-                            </div>
-                            <button type="button" class="btn btn-secondary" id="btnUploadOwnership3" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership3Input').click()">Unggah Hal. 3</button>
-                            <input type="file" id="fileOwnership3Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_3')">
-                        </div>
-                    </div>
-
-                    <!-- Slot Dinamis Leasing: tambah foto sesuai jumlah lembar surat (tampil hanya saat mode Leasing) -->
-                    <div id="leasingExtraWrap" style="display:none; margin-top:6px;">
-                        <div id="leasingExtraSlotsContainer"></div>
-                        <button type="button" id="btnAddLeasingPage" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:6px 8px; font-weight:700; font-size:0.70rem;" onclick="addLeasingExtraPage()">+ Tambah Foto Lembar Lain</button>
-                    </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Panel Validasi Silang Menyeluruh (KTP vs NPWP vs BPKB vs STNK Lembar 1 & 2) + Indikasi CKD/CBU -->
-            <div id="crossValidationPanel" style="display:none; background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:10px; padding:14px 16px; margin-top:12px; margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
-                    <div style="font-size:0.86rem; font-weight:800; color:#0F172A;">
-                        🔍 Validasi Silang Antar-Dokumen (KTP • NPWP • BPKB • STNK 1 &amp; 2)
-                    </div>
-                    <span id="crossValSummaryBadge" style="font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; background:#EFF6FF; color:#1D4ED8;">Menunggu Dokumen</span>
-                </div>
-                <div id="cbuWarningBanner" style="display:none; background:#FEF2F2; border:2px solid #EF4444; border-radius:8px; padding:10px 14px; margin-bottom:10px; color:#991B1B; font-size:0.78rem; line-height:1.45;"></div>
-                <div id="crossValGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:8px; font-size:0.74rem;"></div>
-            </div>
-
-            <!-- Bagian Kolom Form Identitas (Selalu Dapat Diisi & Dikoreksi Manual) -->
-            <div id="sectionFormIdentitas" style="display:block; margin-top:14px;">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label" for="pemohon_nik">
-                            NIK (16 Digit)
-                            <span class="tag-auto" id="tagNikAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                        </label>
-                        <input type="text" id="pemohon_nik" class="form-input mono" placeholder="16 digit angka NIK" maxlength="16" oninput="syncValues()">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="pemohon_nama">
-                            Nama Lengkap Sesuai KTP
-                            <span class="tag-auto" id="tagNamaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                        </label>
-                        <input type="text" id="pemohon_nama" class="form-input" placeholder="Nama lengkap pemohon" style="text-transform:uppercase;" oninput="this.value = this.value.toUpperCase(); syncValues();">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="pemohon_npwp">
-                            Nomor NPWP
-                            <span class="tag-auto" id="tagNpwpAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                        </label>
-                        <input type="text" id="pemohon_npwp" class="form-input mono" placeholder="Masukkan 15/16 digit NPWP" oninput="syncValues()">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="pemohon_telp">No. WhatsApp / HP Aktif</label>
-                        <input type="text" id="pemohon_telp" class="form-input mono" placeholder="Contoh: 0812xxxxxxxx" oninput="syncValues()">
-                    </div>
-                    <div class="form-group full">
-                        <label class="form-label" for="pemohon_alamat">
-                            Alamat Domisili KTP di Batam
-                            <span class="tag-auto" id="tagAlamatAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                        </label>
-                        <input type="text" id="pemohon_alamat" class="form-input" placeholder="Alamat lengkap tempat tinggal di Batam" oninput="syncValues()">
-                    </div>
-                </div>
-
-                <!-- Navigasi Bawah Page 1 -->
-                <div class="nav-actions">
-                    <div></div>
-                    <button type="button" class="btn btn-primary" onclick="goToPage(2)">Lanjut ke Data Kendaraan &amp; PPN ➔</button>
                 </div>
             </div>
         </section>
 
-        <!-- ================= PAGE 2: BPKB, STNK & PPN ================= -->
-        <section class="page-card" id="page-2">
-            <div class="page-header">
-                <h2><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg> Langkah 2: Dokumen Kendaraan (BPKB &amp; STNK) &amp; Jaminan PPN 11%</h2>
-                <p>Verifikasi kelengkapan spesifikasi kendaraan bermotor, hubungan kepemilikan, dan estimasi kalkulasi jaminan PPN 11% berdasarkan dokumen yang telah diunggah pada Langkah 1.</p>
+        <!-- ================= PAGE 2: TAHAP 2 — BPKB / LEASING (KOMPARASI KE PATOKAN KTP) ================= -->
+        <section class="page-card" id="page-2" style="padding:16px 20px;">
+            <div class="page-header" style="margin-bottom:12px; padding-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <h2 style="font-size:0.98rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:8px; margin:0 0 3px 0;">
+                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                        Tahap 2: Dokumen Kepemilikan (BPKB 3 Halaman / Leasing) &amp; Komparasi Patokan
+                    </h2>
+                    <p style="font-size:0.75rem; color:#64748B; margin:0; line-height:1.35;">
+                        Klik langsung pada kotak halaman di sisi kiri untuk mengunggah foto. Hasil pembacaan dibandingkan terhadap Patokan KTP yang sudah Anda simpan.
+                    </p>
+                </div>
+                <span class="pabean-badge-waiting" style="font-size:0.72rem;">Tahap 2 dari 4</span>
             </div>
 
-            <!-- Status Berkas Kendaraan dari Langkah 1 -->
-            <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:var(--radius-md); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:30px; height:30px; border-radius:50%; background:#DCFCE7; display:flex; align-items:center; justify-content:center; color:#166534; font-weight:800; font-size:14px;">
-                        ✓
+            <div class="split-screen-grid">
+                <!-- SISI KIRI: Unggah BPKB / Leasing + Hubungan Kepemilikan -->
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Scanner Card BPKB -->
+                    <div class="scanner-card" id="accWrapBpkb" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; min-height:24px;">
+                            <!-- Switcher BPKB vs Leasing -->
+                            <div style="display:flex; align-items:center; gap:10px; font-size:0.74rem;">
+                                <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:700; color:#0F172A;">
+                                    <input type="radio" name="optOwnershipDoc" id="optDocBpkb" value="bpkb" checked onchange="switchOwnershipDocType('bpkb')">
+                                    <span>BPKB (Lunas)</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:700; color:#64748B;">
+                                    <input type="radio" name="optOwnershipDoc" id="optDocLeasing" value="leasing" onchange="switchOwnershipDocType('leasing')">
+                                    <span>Surat Leasing (Kredit)</span>
+                                </label>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span id="accSaveStatusBpkb" class="acc-save-status"></span>
+                                <span id="badgeOwnershipStatus" class="pabean-badge-waiting">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    Menunggu Unggah
+                                </span>
+                                <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('bpkb')" title="Panduan Unggah BPKB" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
+                                    <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Deskripsi dinamis BPKB / Leasing -->
+                        <div id="descOwnershipDoc" style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
+                            Unggah foto/scan 3 lembar BPKB asli (Wajib Berwarna): Hal. 1 Identitas Kendaraan, Hal. 2 Pendaftaran Pertama, Hal. 3 Penyerahan Kepemilikan.
+                        </div>
+
+                        <!-- 3 Slot BPKB Klik Langsung -->
+                        <div id="bpkbThreeSlotsWrap" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:6px;">
+                            <!-- Hal 1 -->
+                            <div style="display:flex; flex-direction:column; gap:3px;">
+                                <div class="preview-box" id="previewOwnershipBox" onclick="pickFile('ownership')" title="Klik kotak ini untuk unggah BPKB Hal. 1" style="height:100px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                    <div class="laser-line" id="laserOwnership" style="display:none;">
+                                        <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
+                                        <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
+                                        <div class="beam-opt1"></div>
+                                    </div>
+                                    <div id="phOwnership" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#94A3B8; text-align:center; padding:4px;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                        <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 1</span>
+                                        <span style="font-size:0.60rem; color:#64748B;">Identitas</span>
+                                    </div>
+                                    <img decoding="async" id="imgOwnershipPreview" src="" alt="BPKB Hal 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                    <span class="click-upload-hint" id="hintOwnershipBox" style="display:none; font-size:0.58rem; padding:1px 5px;">Ganti</span>
+                                </div>
+                            </div>
+                            <!-- Hal 2 -->
+                            <div style="display:flex; flex-direction:column; gap:3px;">
+                                <div class="preview-box" id="previewOwnership2Box" onclick="document.getElementById('fileOwnership2Input').click()" title="Klik kotak ini untuk unggah BPKB Hal. 2" style="height:100px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                    <div id="phOwnership2" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#94A3B8; text-align:center; padding:4px;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                        <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 2</span>
+                                        <span style="font-size:0.60rem; color:#64748B;">Pendaftaran</span>
+                                    </div>
+                                    <img decoding="async" id="imgOwnership2Preview" src="" alt="BPKB Hal 2" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                    <span class="click-upload-hint" id="hintOwnership2Box" style="display:none; font-size:0.58rem; padding:1px 5px;">Ganti</span>
+                                </div>
+                            </div>
+                            <!-- Hal 3 -->
+                            <div style="display:flex; flex-direction:column; gap:3px;">
+                                <div class="preview-box" id="previewOwnership3Box" onclick="document.getElementById('fileOwnership3Input').click()" title="Klik kotak ini untuk unggah BPKB Hal. 3" style="height:100px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                    <div id="phOwnership3" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#94A3B8; text-align:center; padding:4px;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                        <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 3</span>
+                                        <span style="font-size:0.60rem; color:#64748B;">Kepemilikan</span>
+                                    </div>
+                                    <img decoding="async" id="imgOwnership3Preview" src="" alt="BPKB Hal 3" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
+                                    <span class="click-upload-hint" id="hintOwnership3Box" style="display:none; font-size:0.58rem; padding:1px 5px;">Ganti</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden File Inputs -->
+                        <input type="file" id="fileOwnershipInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership')">
+                        <input type="file" id="fileOwnership2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_2')">
+                        <input type="file" id="fileOwnership3Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_3')">
+
+                        <!-- Mode Leasing: Slot Dinamis -->
+                        <div id="leasingExtraWrap" style="display:none; margin-bottom:6px;">
+                            <div id="leasingExtraSlotsContainer"></div>
+                            <button type="button" id="btnAddLeasingPage" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:6px 8px; font-weight:700; font-size:0.70rem;" onclick="addLeasingExtraPage()">+ Tambah Foto Lembar Lain</button>
+                        </div>
+
+                        <!-- Cuplikan Data Hasil OCR BPKB -->
+                        <div id="snippetOwnership" class="ocr-snippet-box">Menunggu berkas BPKB diunggah...</div>
                     </div>
+
+                    <!-- Panel Hubungan Kepemilikan (Sesuai IK 001/KPUB.02/2025) -->
+                    <div class="scanner-card" style="background:#F8FAFC; border:1px solid var(--border); border-radius:var(--radius-md); padding:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                            <div>
+                                <div style="font-weight:800; font-size:0.86rem; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
+                                    <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                                    Status Hubungan Kepemilikan Kendaraan
+                                </div>
+                                <div style="font-size:0.70rem; color:var(--text-muted); margin-top:2px;">
+                                    Sesuai <strong>IK No: 001/KPUB.02/2025</strong>, prinsipnya seluruh dokumen atas 1 nama yang sama.
+                                </div>
+                            </div>
+                            <span id="badgeKesesuaianNama" style="font-size:0.68rem; background:#DCFCE7; color:#166534; font-weight:800; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                                ✓ Nama Sesuai (Prinsip 1 Nama)
+                            </span>
+                        </div>
+
+                        <!-- Pilihan Radio / Segmented Options -->
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:6px; margin-bottom:10px;">
+                            <label style="cursor:pointer; background:#FFFFFF; border:2px solid #005FAC; border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptMilikSendiri">
+                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanSendiri" value="milik_sendiri" checked onchange="onSwitchStatusKepemilikan('milik_sendiri')">
+                                <div>
+                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Mobil Milik Sendiri</div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted);">Nama Pemohon = Nama BPKB</div>
+                                </div>
+                            </label>
+
+                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptKeluarga">
+                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanKeluarga" value="keluarga" onchange="onSwitchStatusKepemilikan('keluarga')">
+                                <div>
+                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Hubungan Keluarga</div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted);">Suami/Istri/Orang Tua/Anak</div>
+                                </div>
+                            </label>
+
+                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptJualBeli">
+                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanJualBeli" value="jual_beli" onchange="onSwitchStatusKepemilikan('jual_beli')">
+                                <div>
+                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Beli Belum Balik Nama</div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted);">Ada Kwitansi Jual Beli Asli</div>
+                                </div>
+                            </label>
+
+                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptSewa">
+                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanSewa" value="sewa" onchange="onSwitchStatusKepemilikan('sewa')">
+                                <div>
+                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Mobil Sewa / Rental</div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted);">Izin Sewa Rental Resmi</div>
+                                </div>
+                            </label>
+
+                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptKuasa">
+                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanKuasa" value="kuasa" onchange="onSwitchStatusKepemilikan('kuasa')">
+                                <div>
+                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Surat Kuasa</div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted);">Surat Kuasa Bermeterai</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Bagian Dinamis 1: Hubungan Keluarga -->
+                        <div id="subSectionKeluarga" style="display:none; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:10px; margin-bottom:8px;">
+                            <div style="font-weight:700; font-size:0.78rem; color:#1E40AF; margin-bottom:6px;">
+                                Bukti Legalitas Hubungan Keluarga (Suami-Istri / Orang Tua-Anak):
+                            </div>
+                            <div class="form-grid" style="margin-bottom:8px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="kel_nama_pemilik">Nama Pemilik Tertera di BPKB/STNK</label>
+                                    <input type="text" id="kel_nama_pemilik" class="form-input" placeholder="Contoh: Nama Suami / Istri sesuai BPKB">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="kel_hubungan">Hubungan Pemohon dengan Pemilik</label>
+                                    <select id="kel_hubungan" class="form-input">
+                                        <option value="Istri Sah (Nama di STNK Suami)">Istri Sah (BPKB atas nama Suami)</option>
+                                        <option value="Suami Sah (Nama di STNK Istri)">Suami Sah (BPKB atas nama Istri)</option>
+                                        <option value="Anak Kandung (Nama di STNK Orang Tua)">Anak Kandung (BPKB atas nama Orang Tua)</option>
+                                        <option value="Orang Tua (Nama di STNK Anak)">Orang Tua (BPKB atas nama Anak)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
+                                <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:8px;">
+                                    <div style="font-size:0.72rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">1. Buku Nikah / Kartu Keluarga</div>
+                                    <div class="preview-box" id="previewBukuNikahBox" onclick="openUploadSourceModal('bukuNikah')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                        <img decoding="async" id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('bukuNikah')">Pilih Berkas Buku Nikah / KK</button>
+                                    <input type="file" id="fileBukuNikahInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'bukuNikah')">
+                                </div>
+                                <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:8px;">
+                                    <div style="font-size:0.72rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">2. KTP Pemilik Asli (Suami / Istri)</div>
+                                    <div class="preview-box" id="previewKtpPasanganBox" onclick="openUploadSourceModal('ktpPasangan')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                        <img decoding="async" id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('ktpPasangan')">Pilih Berkas KTP Pasangan</button>
+                                    <input type="file" id="fileKtpPasanganInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPasangan')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bagian Dinamis 2: Beli Belum Balik Nama -->
+                        <div id="subSectionJualBeli" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px; margin-bottom:8px;">
+                            <div style="font-weight:700; font-size:0.78rem; color:#92400E; margin-bottom:6px;">
+                                Bukti Transaksi Jual Beli (IK 001/KPUB.02/2025 Bagian 5.a.2.e):
+                            </div>
+                            <div class="form-grid" style="margin-bottom:8px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="jb_nama_penjual">Nama Penjual / Pemilik di BPKB</label>
+                                    <input type="text" id="jb_nama_penjual" class="form-input" placeholder="Nama pemilik lama sesuai BPKB">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="jb_tgl_transaksi">Perkiraan Tanggal Transaksi</label>
+                                    <input type="date" id="jb_tgl_transaksi" class="form-input">
+                                </div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
+                                <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:6px; padding:8px;">
+                                    <div style="font-size:0.72rem; font-weight:700; color:#92400E; margin-bottom:4px;">1. Kwitansi Jual Beli (Bermeterai)</div>
+                                    <div class="preview-box" id="previewKwitansiBox" onclick="openUploadSourceModal('kwitansi')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                        <img decoding="async" id="imgKwitansiPreview" src="" alt="Pratinjau Kwitansi">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('kwitansi')">Pilih Berkas Kwitansi</button>
+                                    <input type="file" id="fileKwitansiInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'kwitansi')">
+                                </div>
+                                <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:6px; padding:8px;">
+                                    <div style="font-size:0.72rem; font-weight:700; color:#92400E; margin-bottom:4px;">2. KTP Pemilik Lama / Penjual</div>
+                                    <div class="preview-box" id="previewKtpPenjualBox" onclick="openUploadSourceModal('ktpPenjual')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                        <img decoding="async" id="imgKtpPenjualPreview" src="" alt="Pratinjau KTP Penjual">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('ktpPenjual')">Pilih Berkas KTP Penjual</button>
+                                    <input type="file" id="fileKtpPenjualInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPenjual')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bagian Dinamis 3: Mobil Sewa / Rental -->
+                        <div id="subSectionSewa" style="display:none; background:#F5F3FF; border:1px solid #DDD6FE; border-radius:6px; padding:10px; margin-bottom:8px;">
+                            <div style="font-weight:700; font-size:0.78rem; color:#6D28D9; margin-bottom:6px;">
+                                Bukti Perjanjian Sewa Kendaraan (IK 001/KPUB.02/2025 Bagian 10.b.4):
+                            </div>
+                            <div class="form-grid" style="margin-bottom:8px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="sewa_nama_rental">Nama Perusahaan Rental / Pemilik Mobil</label>
+                                    <input type="text" id="sewa_nama_rental" class="form-input" placeholder="Contoh: CV. Batam Jaya Rental / Nama Pemilik">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="sewa_durasi">Jangka Waktu Sewa (Maks 45 Hari)</label>
+                                    <input type="text" id="sewa_durasi" class="form-input" placeholder="Contoh: 14 Hari (1 s.d. 14 Des 2026)">
+                                </div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
+                                <div style="background:#FFFFFF; border:1px solid #C4B5FD; border-radius:6px; padding:8px;">
+                                    <div style="font-size:0.72rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">1. Surat Perjanjian Sewa (Bermeterai)</div>
+                                    <div class="preview-box" id="previewSuratSewaBox" onclick="openUploadSourceModal('suratSewa')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                        <img decoding="async" id="imgSuratSewaPreview" src="" alt="Pratinjau Surat Sewa">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('suratSewa')">Pilih Berkas Surat Sewa</button>
+                                    <input type="file" id="fileSuratSewaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratSewa')">
+                                </div>
+                                <div style="background:#FFFFFF; border:1px solid #C4B5FD; border-radius:6px; padding:8px;">
+                                    <div style="font-size:0.72rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">2. KTP Penanggung Jawab Rental</div>
+                                    <div class="preview-box" id="previewKtpRentalBox" onclick="openUploadSourceModal('ktpRental')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                        <img decoding="async" id="imgKtpRentalPreview" src="" alt="Pratinjau KTP Rental">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('ktpRental')">Pilih Berkas KTP Rental</button>
+                                    <input type="file" id="fileKtpRentalInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpRental')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bagian Dinamis 4: Dikuasakan -->
+                        <div id="subSectionKuasa" style="display:none; background:#F8FAFC; border:1px solid #CBD5E1; border-radius:6px; padding:10px; margin-bottom:8px;">
+                            <div style="font-weight:700; font-size:0.78rem; color:#334155; margin-bottom:6px;">
+                                Surat Kuasa Khusus Pengurusan (IK 001/KPUB.02/2025 Bagian 10.b.4 &amp; 10.g.2):
+                            </div>
+                            <div class="form-grid" style="margin-bottom:8px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="kuasa_nama_pemberi">Nama Pemberi Kuasa (Sesuai BPKB)</label>
+                                    <input type="text" id="kuasa_nama_pemberi" class="form-input" placeholder="Nama pemilik sah pemberi kuasa">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="kuasa_nomor_surat">Nomor / Tanggal Surat Kuasa</label>
+                                    <input type="text" id="kuasa_nomor_surat" class="form-input" placeholder="Contoh: SK-01/X/2026">
+                                </div>
+                            </div>
+                            <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; padding:8px;">
+                                <div style="font-size:0.72rem; font-weight:700; color:#334155; margin-bottom:4px;">Surat Kuasa Khusus Bermeterai Rp 10.000</div>
+                                <div class="preview-box" id="previewSuratKuasaBox" onclick="openUploadSourceModal('suratKuasa')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                    <img decoding="async" id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
+                                </div>
+                                <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('suratKuasa')">Pilih Berkas Surat Kuasa</button>
+                                <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratKuasa')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SISI KANAN: Pengingat Komparasi Live BPKB vs Patokan KTP & Form Data BPKB -->
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
-                        <div style="font-weight:700; font-size:0.86rem; color:#166534;">
-                            Berkas Kendaraan (BPKB &amp; STNK) Terpadu Telah Terunggah &amp; Tervalidasi
+                        <!-- Kotak Pengingat Komparasi Live: BPKB vs Patokan KTP -->
+                        <div id="bpkbComparisonBox" style="border:1.5px solid #E2E8F0; background:#F8FAFC; border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+                            <div style="font-size:0.75rem; color:#64748B;">
+                                Menunggu berkas BPKB diunggah untuk komparasi nama terhadap Patokan KTP...
+                            </div>
                         </div>
-                        <div style="font-size:0.72rem; color:#15803D;">
-                            Data nomor polisi, BPKB, nomor rangka, nomor mesin, dan NJKB berhasil diekstrak otomatis dari Langkah 1.
+
+                        <div style="border-bottom:1px solid #E2E8F0; padding-bottom:6px; margin-bottom:10px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg>
+                                Data Kendaraan Bermotor (BPKB)
+                            </div>
+                            <div style="font-size:0.70rem; color:#64748B; margin-top:2px;">
+                                Data terisi otomatis dari hasil scan BPKB. Anda dapat mengoreksi langsung bila perlu.
+                            </div>
                         </div>
+
+                        <div class="form-grid" style="margin-bottom:10px;">
+                            <div class="form-group full">
+                                <label class="form-label" for="kbm_nobpkb">
+                                    Nomor BPKB / Surat Leasing
+                                    <span class="tag-auto" id="tagBpkbAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="kbm_nobpkb" class="form-input mono" placeholder="Nomor BPKB atau Surat Leasing" oninput="syncValues()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="kbm_nopol">
+                                    Nomor Polisi (Plat BP)
+                                    <span class="tag-auto" id="tagNopolAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="kbm_nopol" class="form-input mono" placeholder="Contoh: BP 1517 HH" oninput="syncValues()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="kbm_merek">
+                                    Merek &amp; Model
+                                    <span class="tag-auto" id="tagMerekAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="kbm_merek" class="form-input" placeholder="Contoh: DAIHATSU AYLA 1.0 M MT" oninput="syncValues()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="kbm_norangka">
+                                    Nomor Rangka (VIN)
+                                    <span class="tag-auto" id="tagRangkaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="kbm_norangka" class="form-input mono" placeholder="17 digit nomor rangka" oninput="syncValues()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="kbm_nomesin">
+                                    Nomor Mesin
+                                    <span class="tag-auto" id="tagMesinAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="kbm_nomesin" class="form-input mono" placeholder="Nomor mesin kendaraan" oninput="syncValues()">
+                            </div>
+                        </div>
+
+                        <!-- CBU Warning Banner -->
+                        <div id="cbuWarningBanner" style="display:none; background:#FEF2F2; border:2px solid #EF4444; border-radius:8px; padding:10px 14px; margin-bottom:10px; color:#991B1B; font-size:0.75rem; line-height:1.45;"></div>
+                    </div>
+
+                    <!-- Navigasi Bawah Tahap 2 -->
+                    <div class="nav-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                        <button type="button" class="btn btn-secondary" onclick="goToPage(1)">
+                            ⬅ Kembali ke KTP
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveStep2AndContinue()">
+                            Simpan BPKB &amp; Lanjut ke STNK ➔
+                        </button>
                     </div>
                 </div>
-                <button type="button" class="btn btn-outline" style="font-size:0.74rem; padding:4px 12px;" onclick="goToPage(1)">
-                    Periksa / Ganti Berkas di Langkah 1 ➔
-                </button>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 3: TAHAP 3 — STNK 2 LEMBAR (KOMPARASI KE PATOKAN BPKB, NJKB & PPN) ================= -->
+        <section class="page-card" id="page-3" style="padding:16px 20px;">
+            <div class="page-header" style="margin-bottom:12px; padding-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <h2 style="font-size:0.98rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:8px; margin:0 0 3px 0;">
+                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                        Tahap 3: Unggah STNK (Lembar 1 &amp; 2) — Komparasi ke BPKB &amp; Jaminan PPN
+                    </h2>
+                    <p style="font-size:0.75rem; color:#64748B; margin:0; line-height:1.35;">
+                        Klik langsung pada kotak STNK Lembar 1 dan Lembar 2 untuk mengunggah. Sistem mencocokkan data nomor polisi, rangka, dan mesin dengan data BPKB yang sudah tersimpan.
+                    </p>
+                </div>
+                <span class="pabean-badge-waiting" style="font-size:0.72rem;">Tahap 3 dari 4</span>
             </div>
 
-            <!-- Panel Hubungan Kepemilikan Kendaraan (Sesuai IK 001/KPUB.02/2025) -->
-            <div class="scanner-card" style="margin-bottom:18px; background:#F8FAFC; border:1px solid var(--border); border-radius:var(--radius-md); padding:16px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+            <div class="split-screen-grid">
+                <!-- SISI KIRI: Unggah STNK Lembar 1 & 2 (Klik Kotak Langsung) -->
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="scanner-card" id="accWrapStnk" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                STNK (2 Lembar: STNK &amp; TBPKP)
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span id="accSaveStatusStnk" class="acc-save-status"></span>
+                                <span id="badgeStnkStatus" class="pabean-badge-waiting">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    Menunggu Unggah
+                                </span>
+                                <button type="button" class="btn-doc-guide" onclick="openDocGuideModal('stnk')" title="Panduan Unggah STNK" style="background:none; border:none; cursor:pointer; color:#64748B; padding:2px;">
+                                    <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
+                            Lembar 1: STNK • Lembar 2: TBPKP / Pajak Daerah (Wajib Berwarna)
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
+                            <!-- Lembar 1 -->
+                            <div class="preview-box" id="previewStnkBox" onclick="pickFile('stnk')" title="Klik kotak ini untuk unggah STNK Lembar 1" style="height:115px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                <div class="laser-line" id="laserStnk" style="display:none;">
+                                    <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
+                                    <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
+                                    <div class="beam-opt1"></div>
+                                </div>
+                                <div id="phStnk" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#94A3B8; text-align:center; padding:4px;">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                    <span style="font-size:0.72rem; font-weight:700; color:#005FAC;">Lembar 1 (STNK)</span>
+                                    <span style="font-size:0.62rem; color:#64748B;">Klik unggah</span>
+                                </div>
+                                <img decoding="async" id="imgStnkPreview" src="" alt="STNK Lembar 1" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                                <span class="click-upload-hint" id="hintStnkBox" style="display:none; font-size:0.62rem;">Ganti Lbr 1</span>
+                            </div>
+                            <!-- Lembar 2 -->
+                            <div class="preview-box" id="previewStnk2Box" onclick="document.getElementById('fileStnk2Input').click()" title="Klik kotak ini untuk unggah STNK Lembar 2 (TBPKP/Pajak)" style="height:115px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                <div class="laser-line" id="laserStnk2" style="display:none;">
+                                    <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
+                                    <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
+                                    <div class="beam-opt1"></div>
+                                </div>
+                                <div id="phStnk2" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#94A3B8; text-align:center; padding:4px;">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                    <span style="font-size:0.72rem; font-weight:700; color:#005FAC;">Lembar 2 (TBPKP)</span>
+                                    <span style="font-size:0.62rem; color:#64748B;">Klik unggah</span>
+                                </div>
+                                <img decoding="async" id="imgStnk2Preview" src="" alt="STNK Lembar 2" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:6px;">
+                                <span class="click-upload-hint" id="hintStnk2Box" style="display:none; font-size:0.62rem;">Ganti Lbr 2</span>
+                            </div>
+                        </div>
+
+                        <!-- Cuplikan Data Hasil OCR STNK -->
+                        <div id="snippetStnk" class="ocr-snippet-box">Menunggu berkas STNK Lembar 1 &amp; 2 diunggah...</div>
+
+                        <input type="file" id="fileStnkInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk')">
+                        <input type="file" id="fileStnk2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk_2')">
+                    </div>
+
+                    <!-- Panel Validasi Silang Detail Antar-Dokumen -->
+                    <div id="crossValidationPanel" style="display:none; background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:10px; padding:12px; margin-top:2px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                            <div style="font-size:0.80rem; font-weight:800; color:#0F172A;">
+                                🔍 Detail Validasi Silang (KTP • NPWP • BPKB • STNK)
+                            </div>
+                            <span id="crossValSummaryBadge" style="font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:20px; background:#EFF6FF; color:#1D4ED8;">Menunggu Dokumen</span>
+                        </div>
+                        <div id="crossValGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:6px; font-size:0.72rem;"></div>
+                    </div>
+                </div>
+
+                <!-- SISI KANAN: Hasil Komparasi STNK vs BPKB & Form Pajak/NJKB -->
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
-                        <div style="font-weight:800; font-size:0.92rem; color:var(--text-dark); display:flex; align-items:center; gap:8px;">
-                            <svg class="flat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                            Status Hubungan Kepemilikan Kendaraan
+                        <!-- Box Komparasi Live STNK vs Patokan BPKB -->
+                        <div id="stnkComparisonBox" style="border:1.5px solid #E2E8F0; background:#F8FAFC; border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+                            <div style="font-size:0.75rem; color:#64748B;">
+                                Menunggu berkas STNK Lembar 1 &amp; 2 diunggah untuk komparasi silang terhadap BPKB...
+                            </div>
                         </div>
-                        <div style="font-size:0.74rem; color:var(--text-muted); margin-top:2px;">
-                            Sesuai <strong>Instruksi Kerja No: 001/KPUB.02/2025</strong>, pada prinsipnya seluruh dokumen atas 1 nama yang sama. Jika terdapat perbedaan nama antara pemohon dan berkas kendaraan, lampirkan dokumen pembuktian di bawah ini.
-                        </div>
-                    </div>
-                    <span id="badgeKesesuaianNama" style="font-size:0.68rem; background:#DCFCE7; color:#166534; font-weight:800; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                        ✓ Nama Sesuai (Prinsip 1 Nama)
-                    </span>
-                </div>
 
-                <!-- Pilihan Radio / Segmented Options -->
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px; margin-bottom:14px;">
-                    <label style="cursor:pointer; background:#FFFFFF; border:2px solid #005FAC; border-radius:6px; padding:10px; display:flex; align-items:flex-start; gap:8px;" id="lblOptMilikSendiri">
-                        <input type="radio" name="optStatusKepemilikan" id="optKepemilikanSendiri" value="milik_sendiri" checked onchange="onSwitchStatusKepemilikan('milik_sendiri')">
-                        <div>
-                            <div style="font-weight:700; font-size:0.80rem; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
-                                <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#005FAC;"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                                Mobil Milik Sendiri
+                        <div style="border-bottom:1px solid #E2E8F0; padding-bottom:6px; margin-bottom:10px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                Data STNK &amp; Ketetapan Pajak Daerah
                             </div>
-                            <div style="font-size:0.68rem; color:var(--text-muted);">Nama Pemohon = Nama BPKB &amp; STNK</div>
                         </div>
-                    </label>
 
-                    <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:10px; display:flex; align-items:flex-start; gap:8px;" id="lblOptKeluarga">
-                        <input type="radio" name="optStatusKepemilikan" id="optKepemilikanKeluarga" value="keluarga" onchange="onSwitchStatusKepemilikan('keluarga')">
-                        <div>
-                            <div style="font-weight:700; font-size:0.80rem; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
-                                <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#475569;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                                Hubungan Keluarga
+                        <div class="form-grid" style="margin-bottom:10px;">
+                            <div class="form-group full">
+                                <label class="form-label" for="kbm_nostnk">
+                                    Nomor STNK
+                                    <span class="tag-auto" id="tagStnkAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="kbm_nostnk" class="form-input mono" placeholder="Contoh: 15213051.H" oninput="syncValues()">
                             </div>
-                            <div style="font-size:0.68rem; color:var(--text-muted);">Suami / Istri / Orang Tua / Anak</div>
+                            <div class="form-group">
+                                <label class="form-label" for="kbm_tahun">
+                                    Tahun Pembuatan
+                                    <span class="tag-auto" id="tagTahunWarnaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
+                                </label>
+                                <input type="text" id="kbm_tahun" class="form-input mono" placeholder="Contoh: 2014" inputmode="numeric" maxlength="4" oninput="syncValues()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="kbm_warna">Warna Kendaraan</label>
+                                <input type="text" id="kbm_warna" class="form-input" placeholder="Contoh: HITAM METALIK" oninput="syncValues()">
+                            </div>
+                            <input type="hidden" id="kbm_tahun_warna" value="">
+                            <div class="form-group full">
+                                <label class="form-label" for="kbm_njkb">
+                                    Nilai Jual Kendaraan Bermotor (NJKB Bapenda Kepri)
+                                    <span class="tag-auto" id="tagNjkbAuto" style="display:none;">Terisi Otomatis dari STNK / Bapenda</span>
+                                </label>
+                                <div style="position:relative;">
+                                    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight:700; color:var(--text-muted); font-size:0.85rem;">Rp</span>
+                                    <input type="text" id="kbm_njkb" class="form-input mono" style="padding-left:36px; font-weight:700; color:var(--primary);" placeholder="Contoh: 58.000.000 (Terisi otomatis dari STNK atau ketik untuk sesuaikan)" oninput="onNjkbManualInput()">
+                                </div>
+                                <div style="font-size:0.68rem; color:#64748B; margin-top:3px;">
+                                    * DPP NJKB dihitung sesuai tipe spesifik &amp; tahun mobil berdasarkan Surat Ketetapan Pajak Daerah STNK / Database Bapenda Kepri.
+                                </div>
+                            </div>
                         </div>
-                    </label>
 
-                    <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:10px; display:flex; align-items:flex-start; gap:8px;" id="lblOptJualBeli">
-                        <input type="radio" name="optStatusKepemilikan" id="optKepemilikanJualBeli" value="jual_beli" onchange="onSwitchStatusKepemilikan('jual_beli')">
-                        <div>
-                            <div style="font-weight:700; font-size:0.80rem; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
-                                <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#475569;"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                                Beli Belum Balik Nama
+                        <!-- Banner PPN 11% -->
+                        <div class="ppn-banner" style="margin-bottom:10px;">
+                            <div class="desc">
+                                <strong>Jaminan PPN 11% (PMK 34/2021 jo. UU HPP):</strong><br>
+                                DPP Nilai Jual (NJKB Bapenda): <span id="lblNjkbInfo">Menunggu data STNK</span> (Fasilitas PPN Tidak Dipungut dengan Jaminan Tunai/Bank Garansi).
                             </div>
-                            <div style="font-size:0.68rem; color:var(--text-muted);">Ada Surat / Kwitansi Jual-Beli Asli</div>
+                            <div class="amount" id="valJaminanPpn">Rp 0</div>
                         </div>
-                    </label>
+                    </div>
 
-                    <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:10px; display:flex; align-items:flex-start; gap:8px;" id="lblOptSewa">
-                        <input type="radio" name="optStatusKepemilikan" id="optKepemilikanSewa" value="sewa" onchange="onSwitchStatusKepemilikan('sewa')">
-                        <div>
-                            <div style="font-weight:700; font-size:0.80rem; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
-                                <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#475569;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
-                                Mobil Sewa / Rental
-                            </div>
-                            <div style="font-size:0.68rem; color:var(--text-muted);">Ada Perjanjian Sewa / Izin Rental</div>
-                        </div>
-                    </label>
-
-                    <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:10px; display:flex; align-items:flex-start; gap:8px;" id="lblOptKuasa">
-                        <input type="radio" name="optStatusKepemilikan" id="optKepemilikanKuasa" value="kuasa" onchange="onSwitchStatusKepemilikan('kuasa')">
-                        <div>
-                            <div style="font-weight:700; font-size:0.80rem; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
-                                <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#475569;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                Surat Kuasa
-                            </div>
-                            <div style="font-size:0.68rem; color:var(--text-muted);">Ada Surat Kuasa Bermeterai Resmi</div>
-                        </div>
-                    </label>
-                </div>
-
-                <!-- Bagian Dinamis 1: Hubungan Keluarga (Suami/Istri/dll) -->
-                <div id="subSectionKeluarga" style="display:none; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:700; font-size:0.82rem; color:#1E40AF; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                        Bukti Legalitas Hubungan Keluarga (Suami-Istri / Orang Tua-Anak):
-                    </div>
-                    <div class="form-grid" style="margin-bottom:10px;">
-                        <div class="form-group">
-                            <label class="form-label" for="kel_nama_pemilik">Nama Pemilik Tertera di STNK/BPKB</label>
-                            <input type="text" id="kel_nama_pemilik" class="form-input" placeholder="Contoh: Nama Suami / Istri sesuai STNK">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="kel_hubungan">Hubungan Pemohon dengan Pemilik Kendaraan</label>
-                            <select id="kel_hubungan" class="form-input">
-                                <option value="Istri Sah (Nama di STNK Suami)">Istri Sah (STNK atas nama Suami)</option>
-                                <option value="Suami Sah (Nama di STNK Istri)">Suami Sah (STNK atas nama Istri)</option>
-                                <option value="Anak Kandung (Nama di STNK Orang Tua)">Anak Kandung (STNK atas nama Orang Tua)</option>
-                                <option value="Orang Tua (Nama di STNK Anak)">Orang Tua (STNK atas nama Anak)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px;">
-                        <!-- Dok 1: Buku Nikah / KK -->
-                        <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                            <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">1. Foto/Scan Buku Nikah / Kartu Keluarga (Wajib Berwarna)</div>
-                            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Membuktikan hubungan perkawinan / keluarga yang sah.</div>
-                            <div class="preview-box" id="previewBukuNikahBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
-                            </div>
-                            <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('bukuNikah')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Buku Nikah / KK</button>
-                            <input type="file" id="fileBukuNikahInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'bukuNikah')">
-                        </div>
-                        <!-- Dok 2: KTP Pemilik Asli -->
-                        <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                            <div style="font-size:0.75rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Asli (Suami / Istri)</div>
-                            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">KTP pemilik kendaraan yang namanya tertera di STNK.</div>
-                            <div class="preview-box" id="previewKtpPasanganBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
-                            </div>
-                            <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPasangan')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Pasangan</button>
-                            <input type="file" id="fileKtpPasanganInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPasangan')">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bagian Dinamis 2: Beli Belum Balik Nama -->
-                <div id="subSectionJualBeli" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:700; font-size:0.82rem; color:#92400E; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                        Bukti Transaksi Jual Beli (IK 001/KPUB.02/2025 Bagian 5.a.2.e):
-                    </div>
-                    <div class="form-grid" style="margin-bottom:10px;">
-                        <div class="form-group">
-                            <label class="form-label" for="jb_nama_penjual">Nama Penjual / Pemilik Tertera di STNK</label>
-                            <input type="text" id="jb_nama_penjual" class="form-input" placeholder="Nama pemilik lama yang tertera di STNK">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="jb_tgl_transaksi">Perkiraan Tanggal Transaksi Jual Beli</label>
-                            <input type="date" id="jb_tgl_transaksi" class="form-input">
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px;">
-                        <!-- Dok 1: Kwitansi Jual Beli -->
-                        <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:6px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                            <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">1. Kwitansi / Surat Perjanjian Jual Beli (Bermeterai)</div>
-                            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Menyatakan pengalihan hak kepemilikan kendaraan secara sah.</div>
-                            <div class="preview-box" id="previewKwitansiBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKwitansiPreview" src="" alt="Pratinjau Kwitansi">
-                            </div>
-                            <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('kwitansi')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Kwitansi Jual Beli</button>
-                            <input type="file" id="fileKwitansiInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'kwitansi')">
-                        </div>
-                        <!-- Dok 2: KTP Penjual -->
-                        <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:6px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                            <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-bottom:4px;">2. Foto/Scan KTP Pemilik Lama / Penjual</div>
-                            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Fotokopi / scan KTP penjual sesuai nama pada STNK/BPKB.</div>
-                            <div class="preview-box" id="previewKtpPenjualBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpPenjualPreview" src="" alt="Pratinjau KTP Penjual">
-                            </div>
-                            <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpPenjual')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Penjual</button>
-                            <input type="file" id="fileKtpPenjualInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPenjual')">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bagian Dinamis 3: Mobil Sewa / Rental -->
-                <div id="subSectionSewa" style="display:none; background:#F5F3FF; border:1px solid #DDD6FE; border-radius:6px; padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:700; font-size:0.82rem; color:#6D28D9; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
-                        Bukti Perjanjian Sewa Kendaraan (IK 001/KPUB.02/2025 Bagian 10.b.4):
-                    </div>
-                    <div class="form-grid" style="margin-bottom:10px;">
-                        <div class="form-group">
-                            <label class="form-label" for="sewa_nama_rental">Nama Perusahaan Rental / Pemilik Mobil</label>
-                            <input type="text" id="sewa_nama_rental" class="form-input" placeholder="Contoh: CV. Batam Jaya Rental / Nama Pemilik">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="sewa_durasi">Jangka Waktu Sewa (Maks 45 Hari)</label>
-                            <input type="text" id="sewa_durasi" class="form-input" placeholder="Contoh: 14 Hari (1 s.d. 14 Des 2026)">
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px;">
-                        <!-- Dok 1: Surat Perjanjian Sewa -->
-                        <div style="background:#FFFFFF; border:1px solid #C4B5FD; border-radius:6px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                            <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">1. Surat Perjanjian Sewa / Rekomendasi Resmi Rental (Bermeterai)</div>
-                            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Surat izin dari pemilik/perusahaan rental untuk membawa mobil keluar Batam.</div>
-                            <div class="preview-box" id="previewSuratSewaBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgSuratSewaPreview" src="" alt="Pratinjau Surat Sewa">
-                            </div>
-                            <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratSewa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Sewa</button>
-                            <input type="file" id="fileSuratSewaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratSewa')">
-                        </div>
-                        <!-- Dok 2: KTP Pemilik Rental -->
-                        <div style="background:#FFFFFF; border:1px solid #C4B5FD; border-radius:6px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; height:100%; box-sizing:border-box;">
-                            <div style="font-size:0.75rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">2. KTP Pemilik / Penanggung Jawab Rental</div>
-                            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">Identitas pemilik tertera pada STNK / penanggung jawab rental.</div>
-                            <div class="preview-box" id="previewKtpRentalBox" style="display:none; height:100px; margin-bottom:6px;">
-                                <img decoding="async" id="imgKtpRentalPreview" src="" alt="Pratinjau KTP Rental">
-                            </div>
-                            <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('ktpRental')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas KTP Rental</button>
-                            <input type="file" id="fileKtpRentalInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpRental')">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bagian Dinamis 4: Dikuasakan -->
-                <div id="subSectionKuasa" style="display:none; background:#F8FAFC; border:1px solid #CBD5E1; border-radius:6px; padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:700; font-size:0.82rem; color:#334155; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Surat Kuasa Khusus Pengurusan (IK 001/KPUB.02/2025 Bagian 10.b.4 &amp; 10.g.2):
-                    </div>
-                    <div class="form-grid" style="margin-bottom:10px;">
-                        <div class="form-group">
-                            <label class="form-label" for="kuasa_nama_pemberi">Nama Pemberi Kuasa (Sesuai STNK/BPKB)</label>
-                            <input type="text" id="kuasa_nama_pemberi" class="form-input" placeholder="Nama pemilik sah pemberi kuasa">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="kuasa_nomor_surat">Nomor / Tanggal Surat Kuasa</label>
-                            <input type="text" id="kuasa_nomor_surat" class="form-input" placeholder="Contoh: SK-01/X/2026">
-                        </div>
-                    </div>
-                    <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; padding:10px;">
-                        <div style="font-size:0.75rem; font-weight:700; color:#334155; margin-bottom:4px;">Surat Kuasa Khusus Bermeterai Rp 10.000</div>
-                        <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px;">* Sesuai ketentuan IK, NPWP yang dilampirkan pemohon wajib NPWP Pemberi Kuasa.</div>
-                        <div class="preview-box" id="previewSuratKuasaBox" style="display:none; height:100px; margin-bottom:6px;">
-                            <img decoding="async" id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
-                        </div>
-                        <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.72rem; margin-top:auto;" onclick="openUploadSourceModal('suratKuasa')"><svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Pilih Berkas Surat Kuasa</button>
-                        <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratKuasa')">
+                    <!-- Navigasi Bawah Tahap 3 -->
+                    <div class="nav-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                        <button type="button" class="btn btn-secondary" onclick="goToPage(2)">
+                            ⬅ Kembali ke BPKB
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveStep3AndContinue()">
+                            Simpan STNK &amp; Lanjut ke Foto &amp; Rute ➔
+                        </button>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- Form Kendaraan Bersih Tanpa Nilai Awal Hardcoded -->
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label" for="kbm_nopol">
-                        Nomor Polisi (Plat BP)
-                        <span class="tag-auto" id="tagNopolAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                    </label>
-                    <input type="text" id="kbm_nopol" class="form-input mono" placeholder="Contoh: BP 1517 HH" oninput="syncValues()">
+        <!-- ================= PAGE 4: TAHAP 4 — 6 FOTO KENDARAAN, RUTE & KIRIM PERMOHONAN ================= -->
+        <section class="page-card" id="page-4" style="padding:16px 20px;">
+            <div class="page-header" style="margin-bottom:12px; padding-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <h2 style="font-size:0.98rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:8px; margin:0 0 3px 0;">
+                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        Tahap 4: Foto Fisik Kendaraan, Rute Tujuan &amp; Kirim Permohonan
+                    </h2>
+                    <p style="font-size:0.75rem; color:#64748B; margin:0; line-height:1.35;">
+                        Lengkapi 6 foto fisik kendaraan, tentukan rute pelabuhan tujuan di TLDDP, lalu unduh draf permohonan dan bubuhkan e-meterai sah sebelum mengirim permohonan.
+                    </p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="kbm_nostnk">
-                        Nomor STNK
-                        <span class="tag-auto" id="tagStnkAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                    </label>
-                    <input type="text" id="kbm_nostnk" class="form-input mono" placeholder="Contoh: 15213051.H" oninput="syncValues()">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="kbm_nobpkb">
-                        Nomor BPKB / Surat Leasing
-                        <span class="tag-auto" id="tagBpkbAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                    </label>
-                    <input type="text" id="kbm_nobpkb" class="form-input mono" placeholder="Nomor BPKB atau Surat Leasing" oninput="syncValues()">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="kbm_merek">
-                        Merek &amp; Model
-                        <span class="tag-auto" id="tagMerekAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                    </label>
-                    <input type="text" id="kbm_merek" class="form-input" placeholder="Contoh: DAIHATSU AYLA 1.0 M MT" oninput="syncValues()">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="kbm_tahun">
-                        Tahun Pembuatan
-                        <span class="tag-auto" id="tagTahunWarnaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                    </label>
-                    <input type="text" id="kbm_tahun" class="form-input mono" placeholder="Contoh: 2014" inputmode="numeric" maxlength="4" oninput="syncValues()">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="kbm_warna">Warna Kendaraan</label>
-                    <input type="text" id="kbm_warna" class="form-input" placeholder="Contoh: HITAM METALIK" oninput="syncValues()">
-                </div>
-                <input type="hidden" id="kbm_tahun_warna" value="">
-                <div class="form-group">
-                    <label class="form-label" for="kbm_norangka">
-                        Nomor Rangka (VIN)
-                        <span class="tag-auto" id="tagRangkaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                    </label>
-                    <input type="text" id="kbm_norangka" class="form-input mono" placeholder="17 digit nomor rangka" oninput="syncValues()">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="kbm_nomesin">
-                        Nomor Mesin
-                        <span class="tag-auto" id="tagMesinAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
-                    </label>
-                    <input type="text" id="kbm_nomesin" class="form-input mono" placeholder="Nomor mesin kendaraan" oninput="syncValues()">
-                </div>
-                <div class="form-group" style="grid-column: span 2;">
-                    <label class="form-label" for="kbm_njkb">
-                        Nilai Jual Kendaraan Bermotor (NJKB Bapenda Kepri)
-                        <span class="tag-auto" id="tagNjkbAuto" style="display:none;">Terisi Otomatis dari STNK / Bapenda</span>
-                    </label>
-                    <div style="position:relative;">
-                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight:700; color:var(--text-muted); font-size:0.85rem;">Rp</span>
-                        <input type="text" id="kbm_njkb" class="form-input mono" style="padding-left:36px; font-weight:700; color:var(--primary);" placeholder="Contoh: 58.000.000 (Terisi otomatis dari STNK atau ketik untuk sesuaikan)" oninput="onNjkbManualInput()">
-                    </div>
-                    <div style="font-size:0.70rem; color:var(--text-muted); margin-top:4px;">
-                        * DPP NJKB dihitung sesuai tipe spesifik &amp; tahun mobil berdasarkan Surat Ketetapan Pajak Daerah STNK / Database Bapenda Kepri.
-                    </div>
-                </div>
+                <span class="pabean-badge-ok" style="font-size:0.72rem;">Tahap 4 dari 4</span>
             </div>
 
-            <!-- Banner PPN 11% -->
-            <div class="ppn-banner">
-                <div class="desc">
-                    <strong>Jaminan PPN 11% (PMK 34/2021 jo. UU HPP):</strong><br>
-                    DPP Nilai Jual (NJKB Bapenda): <span id="lblNjkbInfo">Menunggu data STNK</span> (Fasilitas PPN Tidak Dipungut dengan Jaminan Tunai/Bank Garansi).
-                </div>
-                <div class="amount" id="valJaminanPpn">Rp 0</div>
-            </div>
-
-            
-            <!-- Panel Foto Fisik Kendaraan & Gesekan Rangka/Mesin (Kiriman Pemohon) -->
-            <div style="background:#F8FAFC; border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; margin-top:18px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <!-- Panel 6 Foto Fisik Kendaraan & Cek Fisik Lapangan -->
+            <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:10px; padding:14px; margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
                     <div>
-                        <div style="font-weight:800; font-size:0.85rem; color:var(--text-dark);">
-                            <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Fisik Kendaraan &amp; Cek Fisik Lapangan (Kiriman Pemohon / WA)
+                        <div style="font-weight:800; font-size:0.86rem; color:#0F172A;">
+                            📸 6 Foto Fisik Kendaraan &amp; Nomor Fisik (Klik Kotak untuk Unggah)
                         </div>
-                        <div style="font-size:0.72rem; color:var(--text-muted);">
-                            Foto kondisi kendaraan dan gesekan fisik yang dikirimkan pemohon ke loket frontdesk.
+                        <div style="font-size:0.72rem; color:#64748B;">
+                            Klik langsung pada masing-masing kotak foto atau gunakan tombol unggah sekaligus.
                         </div>
                     </div>
                     <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 10px;" onclick="document.getElementById('multiCarPhotosInput').click()">
-                        <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Unggah Sekaligus (Multi-Foto)
+                        <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Unggah Sekaligus (Multi-Foto)
                     </button>
                     <input type="file" id="multiCarPhotosInput" accept="image/*" multiple style="display:none;" onchange="handleCarPhotosUpload(event)">
                 </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:10px;">
-                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(0)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phDepan" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">1. Foto Sisi Depan</div>
-                        <img id="imgPhDepan" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:8px;">
+                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(0)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
+                        <div id="phDepan" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Sisi Depan</div>
+                        <img id="imgPhDepan" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
                     </div>
-                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(2)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phKanan" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">2. Foto Samping Kanan</div>
-                        <img id="imgPhKanan" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(2)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
+                        <div id="phKanan" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Samping Kanan</div>
+                        <img id="imgPhKanan" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
                     </div>
-                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(3)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phKiri" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">3. Foto Samping Kiri</div>
-                        <img id="imgPhKiri" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(3)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
+                        <div id="phKiri" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Samping Kiri</div>
+                        <img id="imgPhKiri" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
                     </div>
-                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(1)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phBelakang" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">4. Foto Sisi Belakang</div>
-                        <img id="imgPhBelakang" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(1)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
+                        <div id="phBelakang" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Sisi Belakang</div>
+                        <img id="imgPhBelakang" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
                     </div>
-                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(4)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phRangka" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">5. Foto Nomor Rangka</div>
-                        <img id="imgPhRangka" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(4)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
+                        <div id="phRangka" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ No. Rangka Fisik</div>
+                        <img id="imgPhRangka" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
                     </div>
-                    <div class="car-photo-card" onclick="triggerSingleCarPhoto(5)" style="background:#FFF; border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; cursor:pointer;">
-                        <div id="phMesin" style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">6. Foto Nomor Mesin</div>
-                        <img id="imgPhMesin" style="display:none; width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:6px;">
+                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(5)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
+                        <div id="phMesin" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ No. Mesin Fisik</div>
+                        <img id="imgPhMesin" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
                     </div>
                 </div>
             </div>
 
-
-            <!-- Navigasi Bawah Page 2 -->
-            <div class="nav-actions">
-                <button type="button" class="btn btn-secondary" onclick="goToPage(1)">⬅ Kembali</button>
-                <button type="button" class="btn btn-primary" onclick="goToPage(3)">Lanjut ke Rute &amp; Jadwal ➔</button>
-            </div>
-        </section>
-
-        <!-- ================= PAGE 3: RUTE & JADWAL ================= -->
-        <section class="page-card" id="page-3">
-            <div class="page-header">
-                <h2><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Langkah 3: Rute Perjalanan &amp; Periode Pengeluaran</h2>
-                <p>Tentukan pelabuhan tujuan di TLDDP dan batas waktu wajib pemasukan kembali ke Kawasan Bebas Batam.</p>
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">Pelabuhan Pemuatan (Asal di Batam)</label>
-                    <input type="text" class="form-input" value="Pelabuhan ASDP Telaga Punggur, Batam" readonly>
+            <!-- Form Rute & Jadwal -->
+            <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; margin-bottom:14px;">
+                <div style="font-weight:800; font-size:0.86rem; color:#0F172A; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Rute Perjalanan &amp; Periode Pengeluaran Sementara
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="rute_tujuan">Pelabuhan Tujuan Bongkar (TLDDP)</label>
-                    <input type="text" id="rute_tujuan" class="form-input" placeholder="Contoh: Pelabuhan Sei Pakning / Buton / Mengkapan" oninput="syncValues()">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Pelabuhan Pemuatan (Asal di Batam)</label>
+                        <input type="text" class="form-input" value="Pelabuhan ASDP Telaga Punggur, Batam" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="rute_tujuan">Pelabuhan Tujuan Bongkar (TLDDP)</label>
+                        <input type="text" id="rute_tujuan" class="form-input" placeholder="Contoh: Pelabuhan Sei Pakning / Buton / Mengkapan" oninput="syncValues()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tgl_keluar">Tanggal Keluar Batam</label>
+                        <input type="date" id="tgl_keluar" class="form-input" oninput="syncValues()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tgl_kembali">Tanggal Wajib Kembali (Maks 45 Hari)</label>
+                        <input type="date" id="tgl_kembali" class="form-input" oninput="syncValues()">
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label" for="keperluan">Keperluan Pengeluaran Sementara</label>
+                        <input type="text" id="keperluan" class="form-input" placeholder="Contoh: Mudik dan Libur Hari Raya Idul Fitri 1447 H ke Sumatera Barat / Riau" oninput="syncValues()">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="tgl_keluar">Tanggal Keluar Batam</label>
-                    <input type="date" id="tgl_keluar" class="form-input" oninput="syncValues()">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="tgl_kembali">Tanggal Wajib Kembali (Maks 45 Hari)</label>
-                    <input type="date" id="tgl_kembali" class="form-input" oninput="syncValues()">
-                </div>
-                <div class="form-group full">
-                    <label class="form-label" for="keperluan">Keperluan Pengeluaran Sementara</label>
-                    <input type="text" id="keperluan" class="form-input" placeholder="Contoh: Mudik dan Libur Hari Raya Idul Fitri 1447 H ke Sumatera Barat / Riau" oninput="syncValues()">
-                </div>
-            </div>
-
-            <div class="nav-actions">
-                <button type="button" class="btn btn-secondary" onclick="goToPage(2)">⬅ Kembali</button>
-                <button type="button" class="btn btn-primary" onclick="goToPage(4)">Lanjut ke Ringkasan &amp; Audit ➔</button>
-            </div>
-        </section>
-
-        <!-- ================= PAGE 4: RINGKASAN & FULLSET PDF ================= -->
-        <section class="page-card" id="page-4">
-            <div class="page-header">
-                <h2><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg> Langkah 4: Ringkasan Pengajuan &amp; Validasi Loket Frontdesk</h2>
-                <p>Tinjau kesesuaian berkas. Petugas loket melakukan ACC untuk menerbitkan 1 bundel PDF resmi Nadine.</p>
             </div>
 
             <!-- Tabel Ringkasan Data -->
-            <div style="background:#F8FAFC; border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
-                <div style="font-weight:800; font-size:0.85rem; margin-bottom:10px; color:var(--primary);">
+            <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:10px; padding:14px; margin-bottom:14px;">
+                <div style="font-weight:800; font-size:0.85rem; margin-bottom:10px; color:#005FAC;">
                     DATA PENGAJUAN PENGELUARAN SEMENTARA:
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; font-size:0.75rem;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px; font-size:0.75rem;">
                     <div><strong>Nama Pemohon:</strong> <span id="sumNama">-</span></div>
                     <div><strong>NIK:</strong> <span id="sumNik">-</span></div>
                     <div><strong>Kendaraan:</strong> <span id="sumKbm">-</span></div>
                     <div><strong>Nomor Polisi:</strong> <span id="sumNopol">-</span></div>
                     <div><strong>Nomor Rangka:</strong> <span id="sumRangka">-</span></div>
                     <div><strong>Jaminan PPN 11%:</strong> <span id="sumJaminan" style="color:#B45309; font-weight:800;">Rp 0</span></div>
-                    <div><strong>Rute:</strong> <span id="sumRute">Telaga Punggur &rarr; -</span></div>
+                    <div><strong>Rute:</strong> <span id="sumRute">Telaga Punggur → -</span></div>
                     <div><strong>Periode:</strong> <span id="sumPeriode">-</span></div>
                 </div>
             </div>
@@ -4597,25 +4772,22 @@
                 </div>
             </div>
 
-            <!-- Tombol Pemohon -->
+            <!-- Tombol Pemohon Submit Box -->
             <div id="pemohonSubmitBox" style="margin-bottom:16px;">
-                <button type="button" class="btn btn-primary" style="padding:12px 18px; font-size:0.85rem;" onclick="showSuccessModal('Success!', 'Permohonan pengeluaran KBM berhasil dikirim ke sistem CEISA! Silakan tunjukkan berkas fisik kepada Petugas Loket di Pelabuhan Telaga Punggur.', 'Continue', () => window.location.reload())">
-                    <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Kirim Permohonan Pengeluaran KBM
+                <button type="button" class="btn btn-primary" style="padding:12px 18px; font-size:0.85rem;" onclick="openPdfModal()">
+                    <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Unduh Draf &amp; Unggah Dokumen Bermeterai ➔
                 </button>
             </div>
 
-            <div class="nav-actions">
-                <button type="button" class="btn btn-secondary" onclick="goToPage(3)">⬅ Kembali</button>
+            <!-- Navigasi Bawah Tahap 4 -->
+            <div class="nav-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-secondary" onclick="goToPage(3)">⬅ Kembali ke STNK</button>
                 <div></div>
             </div>
         </section>
 
     </div>
-
-    
-    
-    
-    </div> <!-- /viewFormulir -->
+        </div> <!-- /viewFormulir -->
 
 <!-- ================= POPUP NOTIFIKASI: SUCCESS (BERHASIL) ================= -->
     <div class="notif-popup-overlay" id="modalSuccess">
@@ -5540,18 +5712,191 @@
             if (modal) modal.style.display = 'none';
         }
 
+        let maxUnlockedPage = 1;
+
+        function updateWizardNav(activePage) {
+            maxUnlockedPage = Math.max(maxUnlockedPage, activePage);
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById('wizardStepBtn' + i);
+                const badge = document.getElementById('wizardStepBadge' + i);
+                if (!btn || !badge) continue;
+                btn.classList.remove('active', 'saved', 'locked');
+                if (i === activePage) {
+                    btn.classList.add('active');
+                    badge.innerText = 'Aktif';
+                } else if (i < activePage || i < maxUnlockedPage) {
+                    btn.classList.add('saved');
+                    badge.innerText = 'Tersimpan';
+                } else {
+                    btn.classList.add('locked');
+                    badge.innerText = 'Terkunci';
+                }
+            }
+        }
+
+        function updateAnchorBanner(activePage) {
+            const banner = document.getElementById('anchorBanner');
+            const textEl = document.getElementById('anchorSummaryText');
+            if (!banner || !textEl) return;
+            if (activePage > 1) {
+                const nama = (document.getElementById('pemohon_nama')?.value || '').trim();
+                const nik = (document.getElementById('pemohon_nik')?.value || '').trim();
+                const npwp = (document.getElementById('pemohon_npwp')?.value || '').trim();
+                textEl.innerText = `${nama || '-'} • NIK ${nik || '-'} • NPWP ${npwp || '-'}`;
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function updateBpkbComparison() {
+            const box = document.getElementById('bpkbComparisonBox');
+            if (!box) return;
+            const pemohonNama = (document.getElementById('pemohon_nama')?.value || '').trim().toUpperCase();
+            const bpkbNama = (extractedBPKB?.nama_pemilik || '').trim().toUpperCase();
+
+            if (!bpkbNama) {
+                box.innerHTML = `<div style="font-size:0.75rem; color:#64748B;">Menunggu berkas BPKB diunggah untuk komparasi nama terhadap Patokan KTP...</div>`;
+                box.style.background = '#F8FAFC';
+                box.style.borderColor = '#E2E8F0';
+                return;
+            }
+
+            const normPemohon = pemohonNama.replace(/[^A-Z]/g, '');
+            const normBpkb = bpkbNama.replace(/[^A-Z]/g, '');
+            const isMatch = normPemohon === normBpkb || normPemohon.includes(normBpkb) || normBpkb.includes(normPemohon);
+
+            if (isMatch) {
+                box.style.background = '#ECFDF5';
+                box.style.borderColor = '#A7F3D0';
+                box.innerHTML = `
+                    <div style="font-weight:800; font-size:0.80rem; color:#059669; display:flex; align-items:center; gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Nama Pemilik BPKB Cocok 100% dengan Patokan KTP (${escapeHtml(pemohonNama)})
+                    </div>
+                    <div style="font-size:0.72rem; color:#065F46; margin-top:2px;">
+                        Prinsip 1 nama terpenuhi. Data kendaraan serasi dengan identitas pemohon yang sudah disimpan.
+                    </div>`;
+            } else {
+                box.style.background = '#FEF3C7';
+                box.style.borderColor = '#FCD34D';
+                box.innerHTML = `
+                    <div style="font-weight:800; font-size:0.80rem; color:#92400E; display:flex; align-items:center; gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        Pengingat Komparasi: Nama di BPKB Berbeda dengan Patokan KTP Terkunci
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; font-size:0.72rem;">
+                        <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; padding:6px 8px;">
+                            <div style="color:#64748B; font-size:0.65rem;">Patokan KTP (Terkunci)</div>
+                            <div style="font-weight:800; color:#0F172A;">${escapeHtml(pemohonNama || '-')}</div>
+                        </div>
+                        <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:6px; padding:6px 8px;">
+                            <div style="color:#64748B; font-size:0.65rem;">Hasil Baca BPKB</div>
+                            <div style="font-weight:800; color:#92400E;">${escapeHtml(bpkbNama)}</div>
+                        </div>
+                    </div>
+                    <div style="font-size:0.70rem; color:#78350F; margin-top:6px; line-height:1.4;">
+                        Data KTP tetap aman terkunci (tidak tertimpa). Sesuai <strong>IK 001/KPUB.02/2025</strong>, jika kendaraan atas nama keluarga / belum balik nama / rental / kuasa, pastikan Anda memilih <strong>Status Hubungan Kepemilikan</strong> di sisi kiri dan melampirkan berkas pembuktian.
+                    </div>`;
+            }
+        }
+
+        function updateStnkComparison() {
+            const box = document.getElementById('stnkComparisonBox');
+            if (!box) return;
+            const bpkbNopol = (document.getElementById('kbm_nopol')?.value || '').trim().toUpperCase();
+            const bpkbRangka = (document.getElementById('kbm_norangka')?.value || '').trim().toUpperCase();
+            const bpkbMesin = (document.getElementById('kbm_nomesin')?.value || '').trim().toUpperCase();
+
+            const stnkNopol = (extractedSTNK?.no_polisi || extractedSTNK?.nopol || '').trim().toUpperCase();
+            const stnkRangka = (extractedSTNK?.no_rangka || extractedSTNK?.norangka || '').trim().toUpperCase();
+            const stnkMesin = (extractedSTNK?.no_mesin || extractedSTNK?.nomesin || '').trim().toUpperCase();
+
+            if (!stnkNopol && !stnkRangka && !stnkMesin) {
+                box.innerHTML = `<div style="font-size:0.75rem; color:#64748B;">Menunggu berkas STNK Lembar 1 &amp; 2 diunggah untuk komparasi silang terhadap BPKB...</div>`;
+                box.style.background = '#F8FAFC';
+                box.style.borderColor = '#E2E8F0';
+                return;
+            }
+
+            const nopolMatch = !stnkNopol || !bpkbNopol || (stnkNopol.replace(/\s+/g,'') === bpkbNopol.replace(/\s+/g,''));
+            const rangkaMatch = !stnkRangka || !bpkbRangka || (stnkRangka.replace(/[^A-Z0-9]/g,'') === bpkbRangka.replace(/[^A-Z0-9]/g,''));
+            const mesinMatch = !stnkMesin || !bpkbMesin || (stnkMesin.replace(/[^A-Z0-9]/g,'') === bpkbMesin.replace(/[^A-Z0-9]/g,''));
+
+            const allMatch = nopolMatch && rangkaMatch && mesinMatch;
+
+            box.style.background = allMatch ? '#ECFDF5' : '#FEF3C7';
+            box.style.borderColor = allMatch ? '#A7F3D0' : '#FCD34D';
+
+            function renderItem(label, valBpkb, valStnk, match) {
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:#FFFFFF; border:1px solid ${match ? '#A7F3D0' : '#FCD34D'}; border-radius:6px; font-size:0.72rem;">
+                        <div>
+                            <span style="color:#64748B;">${label}:</span>
+                            <strong style="color:#0F172A; margin-left:4px;" class="mono">${escapeHtml(valStnk || valBpkb || '-')}</strong>
+                        </div>
+                        <span style="font-weight:800; color:${match ? '#059669' : '#B45309'};">${match ? '✓ Cocok dgn BPKB' : '⚠️ Beda dgn BPKB'}</span>
+                    </div>`;
+            }
+
+            box.innerHTML = `
+                <div style="font-weight:800; font-size:0.80rem; color:${allMatch ? '#059669' : '#92400E'}; margin-bottom:6px;">
+                    ${allMatch ? '✓ Validasi Silang: STNK Serasi dengan Patokan BPKB' : '⚠️ Validasi Silang: Terdapat Perbedaan STNK vs BPKB'}
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    ${renderItem('Nomor Polisi', bpkbNopol, stnkNopol, nopolMatch)}
+                    ${renderItem('Nomor Rangka', bpkbRangka, stnkRangka, rangkaMatch)}
+                    ${renderItem('Nomor Mesin', bpkbMesin, stnkMesin, mesinMatch)}
+                </div>`;
+        }
+
+        function manualSaveDraft() {
+            _runAutosave();
+            showSuccessModal('Draf Tersimpan', 'Data formulir dan berkas berhasil disimpan ke database server. Data tetap utuh jika Anda keluar (logout) dan masuk kembali.', 'Lanjutkan');
+        }
+
+        function saveStep1AndContinue() {
+            const res = validateStep(1);
+            if (!res.isValid) {
+                showValidationModal(res.missing, res.firstId, 1, res.stepTitle);
+                return;
+            }
+            _runAutosave();
+            goToPage(2);
+        }
+
+        function saveStep2AndContinue() {
+            const res = validateStep(2);
+            if (!res.isValid) {
+                showValidationModal(res.missing, res.firstId, 2, res.stepTitle);
+                return;
+            }
+            _runAutosave();
+            goToPage(3);
+        }
+
+        function saveStep3AndContinue() {
+            const res = validateStep(3);
+            if (!res.isValid) {
+                showValidationModal(res.missing, res.firstId, 3, res.stepTitle);
+                return;
+            }
+            _runAutosave();
+            goToPage(4);
+        }
+
         function setStepActive(pageNum) {
             currentPage = pageNum;
-            for (let i = 1; i <= 3; i++) {
+            for (let i = 1; i <= 4; i++) {
                 const pageEl = document.getElementById('page-' + i);
                 if (pageEl) pageEl.classList.toggle('active', i === pageNum);
             }
-            // Formulir pemohon cuma punya 3 halaman (page-1..3) yang dipetakan ke Tahap 2 & 3
-            // di bilah stepper (Tahap 1 "Data Pemohon" sudah lengkap sejak Registrasi akun, di luar
-            // wizard ini). Perbarui tampilan Tahap 2 & 3 supaya benar-benar mengikuti progres asli,
-            // bukan status statis yang selalu sama untuk semua pemohon.
-            renderStepBarStatus(2, pageNum <= 2 ? 'active' : 'done');
-            renderStepBarStatus(3, pageNum >= 3 ? 'active' : 'pending');
+            updateWizardNav(pageNum);
+            updateAnchorBanner(pageNum);
+            if (pageNum === 2) updateBpkbComparison();
+            if (pageNum === 3) updateStnkComparison();
+            renderStepBarStatus(2, pageNum <= 3 ? 'active' : 'done');
+            renderStepBarStatus(3, pageNum >= 4 ? 'active' : 'pending');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             syncValues();
         }
@@ -5616,12 +5961,22 @@
 
             if (stepNum === 1) {
                 if (!isKtpUploadedAndScanned) {
-                    missing.push('Unggah & Pindai Dokumen KTP Asli Pemohon');
-                    if (!firstId) firstId = 'fileKtpInput';
+                    const img = document.getElementById('imgKtpPreview');
+                    if (!img || !img.src || img.style.display === 'none') {
+                        missing.push('Unggah & Pindai Dokumen KTP Asli Pemohon');
+                        if (!firstId) firstId = 'previewKtpBox';
+                    } else {
+                        isKtpUploadedAndScanned = true;
+                    }
                 }
                 if (!isNpwpUploadedAndScanned) {
-                    missing.push('Unggah & Pindai Dokumen Kartu NPWP Pemohon');
-                    if (!firstId) firstId = 'fileNpwpInput';
+                    const img = document.getElementById('imgNpwpPreview');
+                    if (!img || !img.src || img.style.display === 'none') {
+                        missing.push('Unggah & Pindai Dokumen Kartu NPWP Pemohon');
+                        if (!firstId) firstId = 'previewNpwpBox';
+                    } else {
+                        isNpwpUploadedAndScanned = true;
+                    }
                 }
                 checkField('pemohon_nik', 'Nomor Induk Kependudukan (NIK 16 Digit)');
                 checkField('pemohon_nama', 'Nama Lengkap Pemohon Sesuai KTP');
@@ -5629,18 +5984,15 @@
                 checkField('pemohon_telp', 'Nomor WhatsApp / HP Aktif Pemohon');
                 checkField('pemohon_alamat', 'Alamat Domisili KTP di Batam');
 
-                return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Langkah 1: Identitas & KTP' };
+                return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Tahap 1: Identitas & KTP/NPWP' };
             }
 
             if (stepNum === 2) {
-                checkField('kbm_nopol', 'Nomor Polisi / Plat Kendaraan (BP)');
-                checkField('kbm_nostnk', 'Nomor STNK Kendaraan');
                 checkField('kbm_nobpkb', 'Nomor BPKB / Surat Leasing');
-                checkField('kbm_merek', 'Merek & Tipe Kendaraan');
-                checkField('kbm_tahun', 'Tahun Pembuatan Kendaraan');
-                checkField('kbm_warna', 'Warna Kendaraan');
+                checkField('kbm_nopol', 'Nomor Polisi / Plat Kendaraan (BP)');
                 checkField('kbm_norangka', 'Nomor Rangka Kendaraan (VIN)');
                 checkField('kbm_nomesin', 'Nomor Mesin Kendaraan');
+                checkField('kbm_merek', 'Merek & Tipe Kendaraan');
 
                 // Validasi Dokumen Pendukung Berdasarkan Status Hubungan Kepemilikan (IK 001/KPUB.02/2025)
                 if (currentStatusKepemilikan === 'keluarga') {
@@ -5665,15 +6017,22 @@
                     }
                 }
 
-                return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Langkah 2: Dokumen Kendaraan & Jaminan PPN' };
+                return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Tahap 2: BPKB & Dokumen Kepemilikan' };
             }
 
             if (stepNum === 3) {
+                checkField('kbm_nostnk', 'Nomor STNK Kendaraan');
+                checkField('kbm_tahun', 'Tahun Pembuatan Kendaraan');
+                checkField('kbm_warna', 'Warna Kendaraan');
+                return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Tahap 3: STNK & Pajak Daerah' };
+            }
+
+            if (stepNum === 4) {
                 checkField('rute_tujuan', 'Pelabuhan / Kota Tujuan Pengeluaran');
                 checkField('tgl_keluar', 'Tanggal Keluar dari Kawasan Bebas Batam');
                 checkField('tgl_kembali', 'Tanggal Masuk Kembali ke Batam');
                 checkField('keperluan', 'Keperluan / Tujuan Pengeluaran Sementara');
-                return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Langkah 3: Rute & Jadwal' };
+                return { isValid: missing.length === 0, missing, firstId, stepTitle: 'Tahap 4: Rute & Foto Kendaraan' };
             }
 
             return { isValid: true, missing: [], firstId: null, stepTitle: '' };
@@ -5681,21 +6040,18 @@
 
         // Multi-Page Wizard Navigation dengan Validasi Berjenjang
         function goToPage(pageNum) {
-            // Bersihkan error style lama
             document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
 
-            // Jika melompat maju, periksa setiap langkah sebelumnya secara berurutan
             if (pageNum > currentPage) {
                 for (let s = 1; s < pageNum; s++) {
                     const res = validateStep(s);
                     if (!res.isValid) {
                         showValidationModal(res.missing, res.firstId, s, res.stepTitle);
-                        return; // Blokir! Tidak bisa lanjut jika langkah sebelumnya belum selesai
+                        return;
                     }
                 }
             }
 
-            // Izinkan navigasi jika valid atau mundur
             setStepActive(pageNum);
         }
 
@@ -7042,6 +7398,20 @@
                 snipEl.innerText = snippetText;
             }
 
+            const hintMap = {
+                ktp: 'hintKtpBox',
+                npwp: 'hintNpwpBox',
+                ownership: 'hintOwnershipBox',
+                ownership_2: 'hintOwnership2Box',
+                ownership_3: 'hintOwnership3Box',
+                stnk: 'hintStnkBox',
+                stnk_2: 'hintStnk2Box'
+            };
+            const hintEl = document.getElementById(hintMap[target]);
+            if (hintEl) {
+                hintEl.style.display = (state === 'ok' || state === 'manual') ? 'inline-flex' : 'none';
+            }
+
             if (state === 'ok' || state === 'manual') {
                 const bInfo = btnMap[target];
                 const btnEl = bInfo ? document.getElementById(bInfo.id) : null;
@@ -7134,7 +7504,7 @@
                 {
                     label: 'Merek & Tipe (BPKB • STNK 1 • STNK 2)',
                     entries: [
-                        ['BPKB', [b.merk, b.type].filter(Boolean).join(' ')],
+                        ['BPKB', document.getElementById('kbm_merek')?.value || [b.merk, b.type].filter(Boolean).join(' ')],
                         ['STNK 1', [s1.merk, s1.type].filter(Boolean).join(' ')],
                         ['STNK 2', [s2.merk, s2.type].filter(Boolean).join(' ')]
                     ]
@@ -7257,7 +7627,8 @@
         function _collectDraftFieldsSnapshot() {
             const ids = ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'pemohon_alamat', 'pemohon_telp',
                 'kbm_nopol', 'kbm_nostnk', 'kbm_nobpkb', 'kbm_norangka', 'kbm_nomesin', 'kbm_merek',
-                'kbm_tahun', 'kbm_warna', 'kbm_njkb'];
+                'kbm_tahun', 'kbm_warna', 'kbm_njkb',
+                'rute_tujuan', 'tgl_keluar', 'tgl_kembali', 'keperluan'];
             const out = {};
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -9470,7 +9841,7 @@
             document.getElementById('sumNopol').innerText = nopol || '-';
             document.getElementById('sumRangka').innerText = rangka || '-';
             document.getElementById('sumKbm').innerText = merek || '-';
-            document.getElementById('sumRute').innerText = rute ? ('Telaga Punggur &rarr; ' + rute) : 'Telaga Punggur &rarr; -';
+            document.getElementById('sumRute').innerText = rute ? ('Telaga Punggur → ' + rute) : 'Telaga Punggur → -';
             
             if (tglKeluar && tglKembali) {
                 document.getElementById('sumPeriode').innerText = tglKeluar + ' s.d. ' + tglKembali;
