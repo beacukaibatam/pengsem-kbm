@@ -216,3 +216,7 @@
   - Mengubah pill badge kontak footer (`.footer-contact`) menjadi format baru: `Butuh Bantuan? [icon whatsapp] 0851-4490-1346 / Client Coordinator (tulisan Coordinator bertumpuk di bawah kata Client, ukuran kecil 0.52rem) [icon whatsapp] 0851-5814-8448` dengan link interaktif mandiri untuk masing-masing nomor (Layanan WhatsApp Official Bea Cukai `0851-4490-1346` dan Client Coordinator `0851-5814-8448`).
   - Menambahkan animasi salju turun eksklusif hanya di dalam area `<header class="app-header">` via native Canvas (`headerSnowCanvas`) berkinerja tinggi, halus 60fps, responsif otomatis saat resize jendela, dengan `pointer-events: none` dan `overflow: hidden` pada header sehingga tidak pernah keluar/tumpah ke body aplikasi ataupun mengganggu interaksi tombol/logo.
   - Sinkronisasi 100% (zero-diff) `index.html` dan `Formulir_Pemohon_CEISA_PENGSEM_KBM.html`.
+- [x] Poin 37 (Antigravity): **PENYEDERHANAAN HEADER (ELIMINASI LOGO KEMENKEU, LOGO BC, & IKON MOBIL) & PENYESUAIAN BADGE "PEMOHON"**:
+  - Menghilangkan logo Kemenkeu, logo Bea Cukai, garis pembatas, serta ilustrasi ikon mobil mudik dari header utama aplikasi sehingga tampilan judul portal `PENGSEM KBM BATAM` & subteks layanan tampil lebih bersih, lapang, dan terfokus.
+  - Mengubah teks badge role profil di header dari `PEMOHON KBM` menjadi `PEMOHON` (`badgeEl.innerText = 'PEMOHON'`).
+  - Sinkronisasi 100% (zero-diff) `index.html` dan `Formulir_Pemohon_CEISA_PENGSEM_KBM.html`.
