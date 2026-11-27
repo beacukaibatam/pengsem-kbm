@@ -108,6 +108,7 @@
 
 | Waktu (WIB) | Agen Pelaksana | Berkas yang Dimodifikasi | Rincian Pembaruan | Status Deployment |
 |---|---|---|---|---|
+| 2026-11-27 21:05 | Antigravity | `index.html`, `Formulir_...html` | Koreksi tuntas preview-box (rasio 1.58:1 & object-fit: contain !important): ganti pendekatan angka px (148px) yang memotong baris nama & status perkawinan KTP/NPWP di layout split-view lebar. Hapus inline height:XXXpx pada seluruh .preview-box, ganti aspect-ratio: 1.58 / 1. Diverifikasi foto KTP/NPWP asli utuh 100% di desktop & mobile. | Verified Browser (0-Diff) |
 | 2026-11-27 20:45 | Antigravity | `server.py` | Audit Remediasi Keamanan OTP Email: Tambah rate limit maks 3x/5 menit per nomor/key pada `/api/auth/request-email-otp` & `reset-password-request-email-otp` (HTTP 429 pada percobaan ke-4). Perbaiki anti-halusinasi `reset-password-request-email-otp`: hanya klaim sukses jika method in ('smtp_tls', 'gmail_cli'), jika fallback/gagal kirim pesan jujur 'Pengiriman email belum aktif...'. | Verified Empiris (0-Diff) |
 | 2026-11-27 20:25 | Antigravity | `index.html`, `Formulir_...html` | Transisi bilah stepper (.stepper-flat-bar) ke position: fixed (diam total sejak scroll pixel ke-0 tanpa fase berjalan). Kompensasi padding formulir via --stepper-height dinamis pada #viewFormulir .main-container. Zero gap & zero peeking di desktop & mobile, tipografi kompak responsif. | Verified Browser (0-Diff) |
 | 2026-11-27 20:00 | Antigravity | `index.html`, `Formulir_...html` | 1. Bilah stepper (.stepper-flat-bar) dijadikan position: sticky tepat di bawah app-header via top: var(--header-height, 86px) z-index: 950 (zero-gap di desktop & mobile).<br>2. Gambar dokumen (.preview-box img) dijadikan width:100% height:100% object-fit:cover mengisi penuh horizontal tanpa ruang abu-abu samping.<br>3. Proteksi broken-image icon pada slot kosong via selector img:not([src]), img[src=""], img[style*="display:none"] display:none !important.<br>4. Ketinggian kotak KTP/NPWP diselaraskan ke 148px (rasio ~1.6:1 kartu ID aman dari crop teks).<br>5. pointer-events: none pada .preview-box img tetap 100% utuh. | Verified Browser (0-Diff) |
@@ -269,3 +270,16 @@
   - **Verifikasi Empiris**:
     - Pengujian 4 kali panggilan berturut-turut pada kedua endpoint menghasilkan HTTP 200 (dengan pesan fallback jujur dan `email_sent: False`) pada panggilan 1–3, dan tepat mengembalikan HTTP 429 pada panggilan ke-4.
     - Kepatuhan protokol: `python3 -m py_compile server.py` lolos tanpa error, `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+- [x] Poin 49 (Antigravity): **KOREKSI TUNTAS PEMOTONGAN GAMBAR PREVIEW-BOX DOKUMEN (ASPECT RATIO 1.58:1 & OBJECT-FIT: CONTAIN)**:
+  - **Latar Belakang Koreksi**: Koreksi atas fix 148px sebelumnya yang belum tuntas karena lebar kolom kiri split-view responsif (~561px) menghasilkan rasio 3.76:1. Ketika dipadukan dengan `object-fit: cover !important`, lebih dari 50% bidang kartu ID terpotong vertikal ("Nama" terpotong di atas, "Status Perkawinan" terpotong di bawah).
+  - **Ganti Pendekatan**:
+    - `.preview-box img` diubah dari `object-fit: cover !important` menjadi `object-fit: contain !important` (prioritas keutuhan dokumen 100%).
+    - `.preview-box` diubah dari `height: 110px` menjadi `aspect-ratio: 1.58 / 1`.
+    - Hapus seluruh inline `height:XXXpx` pada: `previewKtpBox` (148px), `previewNpwpBox` (148px), `previewOwnershipBox/2/3` (100px), 7 dokumen pendukung `previewBukuNikahBox` dkk (80px), `previewStnkBox/Stnk2Box` (115px), dan `previewLeasing${idx}Box` (46px), digantikan dengan `aspect-ratio: 1.58 / 1`.
+    - Properti `pointer-events: none` pada `.preview-box img` tetap 100% utuh.
+  - **Verifikasi Visual Empiris**:
+    - Diuji langsung dengan dokumen KTP & NPWP asli (`KTP_Nen_Salim.jpg` & `NPWP_Nen_Salim.jpg`).
+    - Desktop: Kotak KTP `561×359px` (rasio `1.56:1`), gambar kartu utuh 100% tanpa ada baris teks terpotong.
+    - Mobile (`390×844`): Kotak KTP `298×191px` (rasio `1.56:1`), gambar kartu utuh 100%.
+    - Screenshot tersimpan: `before_ktp_box.png`, `before_npwp_box.png`, `after_ktp_box.png`, `after_npwp_box.png`, `after_preview_box_desktop.png`, `after_preview_box_mobile.png`.
+    - `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.

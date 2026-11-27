@@ -77,6 +77,21 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Koreksi Tuntas Pemotongan Gambar Preview-Box Dokumen (Rasio 1.58:1 & Object-Fit: Contain)** (Antigravity — 27 Nov 2026 21:05 WIB)
+  1. **Latar Belakang & Akar Masalah**:
+     - Koreksi eksplisit atas fix `height: 148px` sebelumnya yang belum tuntas. Pada layout split-view responsif, lebar kolom kiri (~561px) membuat rasio kotak menjadi 3.76:1 (jauh dari rasio kartu ID standar 1.58:1). Akibatnya, `object-fit: cover !important` memangkas lebih dari 50% bidang vertikal dokumen (baris "Nama" terpotong di atas, baris "Status Perkawinan" terpotong di bawah).
+  2. **Ganti Pendekatan (Rasio Asli & Keutuhan Penuh)**:
+     - `.preview-box img` diubah dari `object-fit: cover !important` menjadi `object-fit: contain !important` (prioritas: keutuhan dokumen 100%, bukan isi-penuh-tanpa-sisa).
+     - Aturan dasar `.preview-box` diubah dari `height: 110px` menjadi `aspect-ratio: 1.58 / 1`.
+     - Seluruh inline `height:XXXpx` pada dokumen dihapus dan diganti `aspect-ratio: 1.58 / 1`: `previewKtpBox` (148px), `previewNpwpBox` (148px), `previewOwnershipBox/2/3` (100px), 7 dokumen pendukung `previewBukuNikahBox` dkk (80px), `previewStnkBox/Stnk2Box` (115px), dan `previewLeasing${idx}Box` (46px).
+     - Aturan kritis `pointer-events: none` pada `.preview-box img` tetap 100% UTUH.
+  3. **Verifikasi Visual Empiris (Foto Asli Pemohon)**:
+     - Diuji langsung dengan file KTP & NPWP asli (`KTP_Nen_Salim.jpg` dan `NPWP_Nen_Salim.jpg`) di desktop (1280x900) dan mobile (390x844).
+     - Desktop: Kotak KTP `561×359px` (rasio `1.56:1`), seluruh kartu KTP & NPWP tampak utuh 100% dari header "PROVINSI..." sampai footer "BERLAKU HINGGA...".
+     - Mobile: Kotak KTP `298×191px` (rasio `1.56:1`), seluruh isi kartu utuh tanpa clipping.
+     - Bukti screenshot: `before_ktp_box.png`, `before_npwp_box.png`, `after_ktp_box.png`, `after_npwp_box.png`, `after_preview_box_desktop.png`, `after_preview_box_mobile.png`.
+     - Kepatuhan protokol: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+
 - **Audit Remediasi Keamanan OTP Email: Rate Limiting 3x/5m & Anti-Halusinasi Status Pengiriman** (Antigravity — 27 Nov 2026 20:45 WIB)
   1. **Latar Belakang & Akar Masalah**:
      - Menindaklanjuti audit atas commit `78fd5aa` (dual-delivery OTP WA + Email dinas): endpoint publik `/api/auth/request-email-otp` dan `/api/auth/reset-password-request-email-otp` belum memiliki rate limiter sehingga rentan dieksploitasi untuk spamming/kehabisan kuota email.

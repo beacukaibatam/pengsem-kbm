@@ -84,7 +84,7 @@
             margin: 0 auto !important;
             width: 100% !important;
             height: 100% !important;
-            object-fit: cover !important;
+            object-fit: contain !important;
             object-position: center !important;
             display: block;
             border-radius: 6px;
@@ -484,7 +484,7 @@
         .preview-box {
             position: relative;
             width: 100%;
-            height: 110px;
+            aspect-ratio: 1.58 / 1;
             margin: 6px 0 8px 0;
             border-radius: 8px;
             overflow: clip !important;
@@ -3977,7 +3977,7 @@
                         <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
                             Identitas Kependudukan Asli (Wajib Berwarna)
                         </div>
-                        <div class="preview-box" id="previewKtpBox" onclick="pickFile('ktp')" title="Klik kotak ini untuk unggah atau ganti foto KTP" style="height:148px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                        <div class="preview-box" id="previewKtpBox" onclick="pickFile('ktp')" title="Klik kotak ini untuk unggah atau ganti foto KTP" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
                             <div class="laser-line" id="laserKtp" style="display:none;">
                                 <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                 <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
@@ -4023,7 +4023,7 @@
                         <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
                             Nomor Pokok Wajib Pajak (15 digit lama atau 16 digit NIK Coretax)
                         </div>
-                        <div class="preview-box" id="previewNpwpBox" onclick="pickFile('npwp')" title="Klik kotak ini untuk unggah atau ganti foto NPWP" style="height:148px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                        <div class="preview-box" id="previewNpwpBox" onclick="pickFile('npwp')" title="Klik kotak ini untuk unggah atau ganti foto NPWP" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
                             <div class="laser-line" id="laserNpwp" style="display:none;">
                                 <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                 <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
@@ -4173,7 +4173,7 @@
                         <div id="bpkbThreeSlotsWrap" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:6px;">
                             <!-- Hal 1 -->
                             <div style="display:flex; flex-direction:column; gap:3px;">
-                                <div class="preview-box" id="previewOwnershipBox" onclick="pickFile('ownership')" title="Klik kotak ini untuk unggah BPKB Hal. 1" style="height:100px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                <div class="preview-box" id="previewOwnershipBox" onclick="pickFile('ownership')" title="Klik kotak ini untuk unggah BPKB Hal. 1" style="aspect-ratio:1.58/1; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                                     <div class="laser-line" id="laserOwnership" style="display:none;">
                                         <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                         <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
@@ -4190,7 +4190,7 @@
                             </div>
                             <!-- Hal 2 -->
                             <div style="display:flex; flex-direction:column; gap:3px;">
-                                <div class="preview-box" id="previewOwnership2Box" onclick="document.getElementById('fileOwnership2Input').click()" title="Klik kotak ini untuk unggah BPKB Hal. 2" style="height:100px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                <div class="preview-box" id="previewOwnership2Box" onclick="document.getElementById('fileOwnership2Input').click()" title="Klik kotak ini untuk unggah BPKB Hal. 2" style="aspect-ratio:1.58/1; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                                     <div id="phOwnership2" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#94A3B8; text-align:center; padding:4px;">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                                         <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 2</span>
@@ -4202,7 +4202,7 @@
                             </div>
                             <!-- Hal 3 -->
                             <div style="display:flex; flex-direction:column; gap:3px;">
-                                <div class="preview-box" id="previewOwnership3Box" onclick="document.getElementById('fileOwnership3Input').click()" title="Klik kotak ini untuk unggah BPKB Hal. 3" style="height:100px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                <div class="preview-box" id="previewOwnership3Box" onclick="document.getElementById('fileOwnership3Input').click()" title="Klik kotak ini untuk unggah BPKB Hal. 3" style="aspect-ratio:1.58/1; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                                     <div id="phOwnership3" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#94A3B8; text-align:center; padding:4px;">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                                         <span style="font-size:0.68rem; font-weight:700; color:#005FAC;">Hal. 3</span>
@@ -4312,7 +4312,7 @@
                             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
                                 <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:8px;">
                                     <div style="font-size:0.72rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">1. Buku Nikah / Kartu Keluarga</div>
-                                    <div class="preview-box" id="previewBukuNikahBox" onclick="openUploadSourceModal('bukuNikah')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                    <div class="preview-box" id="previewBukuNikahBox" onclick="openUploadSourceModal('bukuNikah')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
                                         <img decoding="async" id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
                                     </div>
                                     <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('bukuNikah')">Pilih Berkas Buku Nikah / KK</button>
@@ -4320,7 +4320,7 @@
                                 </div>
                                 <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:8px;">
                                     <div style="font-size:0.72rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">2. KTP Pemilik Asli (Suami / Istri)</div>
-                                    <div class="preview-box" id="previewKtpPasanganBox" onclick="openUploadSourceModal('ktpPasangan')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                    <div class="preview-box" id="previewKtpPasanganBox" onclick="openUploadSourceModal('ktpPasangan')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
                                         <img decoding="async" id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
                                     </div>
                                     <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('ktpPasangan')">Pilih Berkas KTP Pasangan</button>
@@ -4347,7 +4347,7 @@
                             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
                                 <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:6px; padding:8px;">
                                     <div style="font-size:0.72rem; font-weight:700; color:#92400E; margin-bottom:4px;">1. Kwitansi Jual Beli (Bermeterai)</div>
-                                    <div class="preview-box" id="previewKwitansiBox" onclick="openUploadSourceModal('kwitansi')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                    <div class="preview-box" id="previewKwitansiBox" onclick="openUploadSourceModal('kwitansi')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
                                         <img decoding="async" id="imgKwitansiPreview" src="" alt="Pratinjau Kwitansi">
                                     </div>
                                     <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('kwitansi')">Pilih Berkas Kwitansi</button>
@@ -4355,7 +4355,7 @@
                                 </div>
                                 <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:6px; padding:8px;">
                                     <div style="font-size:0.72rem; font-weight:700; color:#92400E; margin-bottom:4px;">2. KTP Pemilik Lama / Penjual</div>
-                                    <div class="preview-box" id="previewKtpPenjualBox" onclick="openUploadSourceModal('ktpPenjual')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                    <div class="preview-box" id="previewKtpPenjualBox" onclick="openUploadSourceModal('ktpPenjual')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
                                         <img decoding="async" id="imgKtpPenjualPreview" src="" alt="Pratinjau KTP Penjual">
                                     </div>
                                     <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('ktpPenjual')">Pilih Berkas KTP Penjual</button>
@@ -4382,7 +4382,7 @@
                             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
                                 <div style="background:#FFFFFF; border:1px solid #C4B5FD; border-radius:6px; padding:8px;">
                                     <div style="font-size:0.72rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">1. Surat Perjanjian Sewa (Bermeterai)</div>
-                                    <div class="preview-box" id="previewSuratSewaBox" onclick="openUploadSourceModal('suratSewa')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                    <div class="preview-box" id="previewSuratSewaBox" onclick="openUploadSourceModal('suratSewa')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
                                         <img decoding="async" id="imgSuratSewaPreview" src="" alt="Pratinjau Surat Sewa">
                                     </div>
                                     <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('suratSewa')">Pilih Berkas Surat Sewa</button>
@@ -4390,7 +4390,7 @@
                                 </div>
                                 <div style="background:#FFFFFF; border:1px solid #C4B5FD; border-radius:6px; padding:8px;">
                                     <div style="font-size:0.72rem; font-weight:700; color:#6D28D9; margin-bottom:4px;">2. KTP Penanggung Jawab Rental</div>
-                                    <div class="preview-box" id="previewKtpRentalBox" onclick="openUploadSourceModal('ktpRental')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                    <div class="preview-box" id="previewKtpRentalBox" onclick="openUploadSourceModal('ktpRental')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
                                         <img decoding="async" id="imgKtpRentalPreview" src="" alt="Pratinjau KTP Rental">
                                     </div>
                                     <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('ktpRental')">Pilih Berkas KTP Rental</button>
@@ -4416,7 +4416,7 @@
                             </div>
                             <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; padding:8px;">
                                 <div style="font-size:0.72rem; font-weight:700; color:#334155; margin-bottom:4px;">Surat Kuasa Khusus Bermeterai Rp 10.000</div>
-                                <div class="preview-box" id="previewSuratKuasaBox" onclick="openUploadSourceModal('suratKuasa')" style="display:none; height:80px; margin-bottom:4px; cursor:pointer;">
+                                <div class="preview-box" id="previewSuratKuasaBox" onclick="openUploadSourceModal('suratKuasa')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
                                     <img decoding="async" id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
                                 </div>
                                 <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('suratKuasa')">Pilih Berkas Surat Kuasa</button>
@@ -4546,7 +4546,7 @@
 
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
                             <!-- Lembar 1 -->
-                            <div class="preview-box" id="previewStnkBox" onclick="pickFile('stnk')" title="Klik kotak ini untuk unggah STNK Lembar 1" style="height:115px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                            <div class="preview-box" id="previewStnkBox" onclick="pickFile('stnk')" title="Klik kotak ini untuk unggah STNK Lembar 1" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                                 <div class="laser-line" id="laserStnk" style="display:none;">
                                     <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                     <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
@@ -4561,7 +4561,7 @@
                                 <span class="click-upload-hint" id="hintStnkBox" style="display:none; font-size:0.62rem;">Ganti Lbr 1</span>
                             </div>
                             <!-- Lembar 2 -->
-                            <div class="preview-box" id="previewStnk2Box" onclick="document.getElementById('fileStnk2Input').click()" title="Klik kotak ini untuk unggah STNK Lembar 2 (TBPKP/Pajak)" style="height:115px; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                            <div class="preview-box" id="previewStnk2Box" onclick="document.getElementById('fileStnk2Input').click()" title="Klik kotak ini untuk unggah STNK Lembar 2 (TBPKP/Pajak)" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                                 <div class="laser-line" id="laserStnk2" style="display:none;">
                                     <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
                                     <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
@@ -6213,7 +6213,7 @@
             wrap.id = 'leasingPageWrap' + idx;
             wrap.style.cssText = 'display:flex; align-items:center; gap:6px; margin-bottom:6px;';
             wrap.innerHTML = `
-                <div class="preview-box" id="previewLeasing${idx}Box" style="flex:1; height:46px; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
+                <div class="preview-box" id="previewLeasing${idx}Box" style="flex:1; aspect-ratio:1.58/1; border-radius:7px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; box-shadow:none !important; display:flex; align-items:center; justify-content:center;">
                     <span style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Lembar ${idx + 1}</span>
                     <img decoding="async" id="imgLeasing${idx}Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                 </div>
