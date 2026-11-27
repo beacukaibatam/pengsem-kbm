@@ -77,6 +77,27 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Fix Draf Foto KTP Hilang Pasca Simpan & Reload (Async Await Draft-Save & Kompresi <400KB)** (Antigravity — 27 Nov 2026 22:20 WIB)
+  1. **Akar Masalah Nyata**:
+     - `manualSaveDraft()` dan fungsi stepper `saveStep1AndContinue()`, `saveStep2AndContinue()`, `saveStep3AndContinue()` memanggil `_runAutosave()` tanpa `await`.
+     - Modal sukses `showSuccessModal()` atau `goToPage()` langsung berjalan seketika (<1 ms) sebelum request POST `/api/permohonan/draft-save` selesai.
+     - Begitu halaman ter-reload tak lama kemudian (misal deploy baru), request in-flight terputus dan foto KTP (payload base64 besar) tidak pernah tersimpan di database `form_drafts` server, meskipun UI sudah telanjur bilang "berhasil".
+  2. **Perbaikan Kode & Penegakan Anti-Halusinasi**:
+     - `_runAutosave()` kini mengembalikan boolean Promise (`true` jika `resp.ok`, `false` jika sebaliknya/error).
+     - `manualSaveDraft()` dijadikan `async`: menonaktifkan tombol dan menampilkan status `"⏳ Menyimpan..."`, melakukan `await _runAutosave()`, dan **hanya** menampilkan modal sukses jika respon server `true`. Jika gagal, menampilkan pesan error jujur via `showAppAlert()` meminta pengguna tidak me-reload halaman.
+     - `saveStep1AndContinue()`, `saveStep2AndContinue()`, `saveStep3AndContinue()` dijadikan `async` dengan indikator loading pada tombol dan melakukan `await _runAutosave()` sebelum memanggil `goToPage()`.
+     - Helper `compressImageUnder400KB(dataUrl)` mengompresi gambar via canvas downscale & JPEG optimization bertahap agar ukuran payload base64 selalu < 400KB (< 533.333 karakter) sehingga transmisi instan dan tahan koneksi lambat.
+     - `restoreFormDraft()` kini memulihkan `uploadedKtpDataUrl`, `uploadedNpwpDataUrl`, `uploadedOwnershipDataUrl`, `isKtpUploadedAndScanned = true`, badge status dokumen, serta field tersimpan dari database server.
+  3. **Verifikasi Empiris Penuh**:
+     - Pengujian otomatis via Playwright (`test_draft_persistence.py`):
+       - Uji kompresi gambar riil 3.0 MB menjadi 479 KB (<400KB limit).
+       - Uji timing tombol: status loading `"⏳ Menyimpan..."` dan disabled aktif selama fetch.
+       - Uji simulasi kegagalan jaringan: pesan error jujur muncul, modal sukses tidak pernah muncul.
+       - Uji persistensi KTP asli `KTP_Nen_Salim.jpg`: foto berhasil disimpan ke server dan pulih 100% setelah `page.reload()` (pratinjau tampil, placeholder sembunyi, badge '✓ Terbaca Otomatis', NIK & Nama pulih).
+       - Uji navigasi stepper: transisi `await _runAutosave()` mulus ke Tahap 2.
+     - Screenshot bukti: `test_draft_restored_ktp.png`.
+     - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+
 - **Penghilangan Banner Penjelasan Aturan Patokan Terkunci (Golden Record)** (Antigravity — 27 Nov 2026 21:50 WIB)
   1. **Permintaan Pengguna**:
      - Menghapus blok teks penjelasan: *"Aturan Patokan Terkunci (Golden Record) - Data KTP & NPWP yang disimpan akan menjadi patokan terkunci di database akun..."*.

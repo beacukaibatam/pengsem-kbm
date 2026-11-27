@@ -4099,7 +4099,7 @@
 
                     <!-- Navigasi Bawah Tahap 1 -->
                     <div class="nav-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
-                        <button type="button" class="btn btn-secondary" onclick="manualSaveDraft()">
+                        <button type="button" class="btn btn-secondary btn-save-draft" onclick="manualSaveDraft()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
                             Simpan Draf
                         </button>
@@ -5963,38 +5963,103 @@
                 </div>`;
         }
 
-        function manualSaveDraft() {
-            _runAutosave();
-            showSuccessModal('Draf Tersimpan', 'Data formulir dan berkas berhasil disimpan ke database server. Data tetap utuh jika Anda keluar (logout) dan masuk kembali.', 'Lanjutkan');
+        async function manualSaveDraft() {
+            const btns = document.querySelectorAll('.btn-save-draft, button[onclick*="manualSaveDraft"]');
+            const origTexts = [];
+            btns.forEach((b, idx) => {
+                origTexts[idx] = b.innerHTML;
+                b.disabled = true;
+                b.innerHTML = '<span style="display:inline-flex; align-items:center; gap:6px;">⏳ Menyimpan...</span>';
+            });
+            try {
+                const success = await _runAutosave();
+                if (success) {
+                    showSuccessModal('Draf Tersimpan', 'Data formulir dan berkas berhasil disimpan ke database server. Data tetap utuh jika Anda keluar (logout) dan masuk kembali.', 'Lanjutkan');
+                } else {
+                    showAppAlert('Gagal menyimpan draf ke database server. Mohon periksa koneksi internet Anda lalu coba lagi. JANGAN tutup atau muat ulang halaman sebelum draf berhasil disimpan.', 'error');
+                }
+            } catch (e) {
+                showAppAlert('Terjadi kesalahan saat menyimpan draf: ' + (e.message || e), 'error');
+            } finally {
+                btns.forEach((b, idx) => {
+                    b.disabled = false;
+                    b.innerHTML = origTexts[idx];
+                });
+            }
         }
 
-        function saveStep1AndContinue() {
+        async function saveStep1AndContinue(btn) {
             const res = validateStep(1);
             if (!res.isValid) {
                 showValidationModal(res.missing, res.firstId, 1, res.stepTitle);
                 return;
             }
-            _runAutosave();
+            const targetBtn = btn || (typeof event !== 'undefined' && event && event.currentTarget) || document.querySelector('button[onclick*="saveStep1AndContinue"]');
+            const origHtml = targetBtn ? targetBtn.innerHTML : '';
+            if (targetBtn) {
+                targetBtn.disabled = true;
+                targetBtn.innerHTML = '<span style="display:inline-flex; align-items:center; gap:6px;">⏳ Menyimpan...</span>';
+            }
+            try {
+                await _runAutosave();
+            } catch (e) {
+                console.warn('[saveStep1AndContinue] Autosave error:', e);
+            } finally {
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = origHtml;
+                }
+            }
             goToPage(2);
         }
 
-        function saveStep2AndContinue() {
+        async function saveStep2AndContinue(btn) {
             const res = validateStep(2);
             if (!res.isValid) {
                 showValidationModal(res.missing, res.firstId, 2, res.stepTitle);
                 return;
             }
-            _runAutosave();
+            const targetBtn = btn || (typeof event !== 'undefined' && event && event.currentTarget) || document.querySelector('button[onclick*="saveStep2AndContinue"]');
+            const origHtml = targetBtn ? targetBtn.innerHTML : '';
+            if (targetBtn) {
+                targetBtn.disabled = true;
+                targetBtn.innerHTML = '<span style="display:inline-flex; align-items:center; gap:6px;">⏳ Menyimpan...</span>';
+            }
+            try {
+                await _runAutosave();
+            } catch (e) {
+                console.warn('[saveStep2AndContinue] Autosave error:', e);
+            } finally {
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = origHtml;
+                }
+            }
             goToPage(3);
         }
 
-        function saveStep3AndContinue() {
+        async function saveStep3AndContinue(btn) {
             const res = validateStep(3);
             if (!res.isValid) {
                 showValidationModal(res.missing, res.firstId, 3, res.stepTitle);
                 return;
             }
-            _runAutosave();
+            const targetBtn = btn || (typeof event !== 'undefined' && event && event.currentTarget) || document.querySelector('button[onclick*="saveStep3AndContinue"]');
+            const origHtml = targetBtn ? targetBtn.innerHTML : '';
+            if (targetBtn) {
+                targetBtn.disabled = true;
+                targetBtn.innerHTML = '<span style="display:inline-flex; align-items:center; gap:6px;">⏳ Menyimpan...</span>';
+            }
+            try {
+                await _runAutosave();
+            } catch (e) {
+                console.warn('[saveStep3AndContinue] Autosave error:', e);
+            } finally {
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = origHtml;
+                }
+            }
             goToPage(4);
         }
 
@@ -6783,7 +6848,7 @@
             document.removeEventListener('mouseup', lightboxCropMouseUp);
         }
 
-        function applyLightboxCrop() {
+        async function applyLightboxCrop() {
             const img = document.getElementById('lightboxImg');
             const rectEl = document.getElementById('lightboxCropRect');
             if (!img || !rectEl || !lightboxBaseW) return;
@@ -6798,11 +6863,16 @@
             canvas.height = Math.round(sh);
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            const rawCroppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            const croppedDataUrl = await compressImageUnder400KB(rawCroppedDataUrl);
 
             if (lightboxSourceImgId) {
                 const sourceImg = document.getElementById(lightboxSourceImgId);
                 if (sourceImg) sourceImg.src = croppedDataUrl;
+                if (lightboxSourceImgId === 'imgKtpPreview') uploadedKtpDataUrl = croppedDataUrl;
+                if (lightboxSourceImgId === 'imgNpwpPreview') uploadedNpwpDataUrl = croppedDataUrl;
+                if (lightboxSourceImgId === 'imgOwnershipPreview') uploadedOwnershipDataUrl = croppedDataUrl;
+                scheduleAutosave();
             }
             exitLightboxCropMode();
             img.onload = function() { fitLightboxImageToViewport(); };
@@ -7288,6 +7358,57 @@
             img.src = imageDataUrl;
         }
 
+        // ================= KOMPRESI GAMBAR < 400KB (CANVAS DOWNSCALE & JPEG OPTIMIZATION) =================
+        async function compressImageUnder400KB(dataUrl) {
+            if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/') || dataUrl.length < 533333) {
+                return dataUrl; // < 400KB (panjang Base64 < ~533.333 karakter)
+            }
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.naturalWidth || img.width;
+                    let height = img.naturalHeight || img.height;
+                    const maxDim = 1600;
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let quality = 0.85;
+                    let result = canvas.toDataURL('image/jpeg', quality);
+                    while (result.length > 533333 && quality > 0.40) {
+                        quality -= 0.10;
+                        result = canvas.toDataURL('image/jpeg', quality);
+                    }
+                    if (result.length > 533333) {
+                        const canvas2 = document.createElement('canvas');
+                        canvas2.width = Math.round(width * 0.75);
+                        canvas2.height = Math.round(height * 0.75);
+                        const ctx2 = canvas2.getContext('2d');
+                        ctx2.fillStyle = '#FFFFFF';
+                        ctx2.fillRect(0, 0, canvas2.width, canvas2.height);
+                        ctx2.drawImage(img, 0, 0, canvas2.width, canvas2.height);
+                        result = canvas2.toDataURL('image/jpeg', 0.65);
+                    }
+                    resolve(result);
+                };
+                img.onerror = () => resolve(dataUrl);
+                img.src = dataUrl;
+            });
+        }
+
         // ================= PROSES PEMROSESAN DOKUMEN DENGAN AUTO-CROP & OCR =================
         function processSelectedDocument(file, target) {
             if (!file) return;
@@ -7346,8 +7467,9 @@
 
             const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf');
 
-            const onImageReady = function(rawImageDataUrl, rawPdfDataUrlForOcr) {
+            const onImageReady = async function(rawImageDataUrl, rawPdfDataUrlForOcr) {
                 const isMainOrExtra = mainTargets.includes(target) || isOwnershipExtra;
+                const safeImageDataUrl = (!isPdf && rawImageDataUrl) ? await compressImageUnder400KB(rawImageDataUrl) : rawImageDataUrl;
 
                 if (isMainOrExtra) {
                     // PENTING: dokumen utama (KTP/NPWP/BPKB/STNK) TIDAK dipotong di klien lebih
@@ -7359,24 +7481,25 @@
                     // potongan yang sudah janggal itu adalah sebab utama hasil akhir "mereng"/
                     // miring & teks salah baca yang dilaporkan user — lihat resolveBestCrop()
                     // yang sekarang menjamin HANYA SATU metode crop yang dipakai, tidak ditumpuk.
-                    validateDocumentColor(rawImageDataUrl, function(res) {
+                    validateDocumentColor(safeImageDataUrl, function(res) {
                         if (!res.isColor) {
                             showColorRejectionAlert(docLabels[target] || (isOwnershipExtra ? 'Lembar Tambahan Dokumen Kepemilikan' : 'Dokumen'), target);
                             return;
                         }
-                        runRealOCR(target, rawImageDataUrl, rawPdfDataUrlForOcr || null);
+                        runRealOCR(target, safeImageDataUrl, rawPdfDataUrlForOcr || null);
                     });
                     return;
                 }
 
                 // Dokumen pendukung (buku nikah, kwitansi, dll.) — tidak ada proses crop server
                 // untuk jenis ini, tetap pakai auto-crop heuristik klien seperti sebelumnya.
-                autoCropDocument(rawImageDataUrl, target, function(croppedDataUrl) {
-                    validateDocumentColor(croppedDataUrl, function(res) {
+                autoCropDocument(safeImageDataUrl, target, function(croppedDataUrl) {
+                    validateDocumentColor(croppedDataUrl, async function(res) {
                         if (!res.isColor) {
                             showColorRejectionAlert(docLabels[target] || 'Dokumen', target);
                             return;
                         }
+                        const finalDocUrl = await compressImageUnder400KB(croppedDataUrl);
                         supportingDocsUploaded[target] = true;
                         const previewMap = {
                             'bukuNikah': { box: 'previewBukuNikahBox', img: 'imgBukuNikahPreview' },
@@ -7392,7 +7515,7 @@
                             const box = document.getElementById(p.box);
                             const img = document.getElementById(p.img);
                             if (box && img) {
-                                img.src = croppedDataUrl;
+                                img.src = finalDocUrl;
                                 box.style.display = 'block';
                             }
                         }
@@ -7752,7 +7875,11 @@
 
         function _collectDraftImagesSnapshot() {
             const imgIds = ['imgKtpPreview', 'imgNpwpPreview', 'imgStnkPreview', 'imgStnk2Preview',
-                'imgOwnershipPreview', 'imgOwnership2Preview', 'imgOwnership3Preview'];
+                'imgOwnershipPreview', 'imgOwnership2Preview', 'imgOwnership3Preview',
+                'imgPhDepan', 'imgPhBelakang', 'imgPhKanan', 'imgPhKiri', 'imgPhRangka', 'imgPhMesin'];
+            for (let i = 1; i <= 10; i++) {
+                imgIds.push('imgLeasing' + i + 'Preview');
+            }
             const out = {};
             imgIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -7771,7 +7898,7 @@
             try {
                 let token = '';
                 try { token = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
-                if (!token) return;
+                if (!token) return false;
                 const patch = {
                     fields: _collectDraftFieldsSnapshot(),
                     ocr: docOcrStore,
@@ -7782,18 +7909,23 @@
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: JSON.stringify({ patch })
                 });
-                if (resp.ok) _markAutosaved();
+                if (resp.ok) {
+                    _markAutosaved();
+                    return true;
+                }
+                return false;
             } catch (e) {
                 console.warn('[Autosave Draf] Gagal menyimpan:', e);
+                return false;
             }
         }
 
         function _markAutosaved() {
             const hasData = {
-                Ktp: !!(docOcrStore.ktp && Object.keys(docOcrStore.ktp).length),
-                Npwp: !!(docOcrStore.npwp && Object.keys(docOcrStore.npwp).length),
+                Ktp: !!((docOcrStore.ktp && Object.keys(docOcrStore.ktp).length) || uploadedKtpDataUrl),
+                Npwp: !!((docOcrStore.npwp && Object.keys(docOcrStore.npwp).length) || uploadedNpwpDataUrl),
                 Stnk: !!((docOcrStore.stnk1 && Object.keys(docOcrStore.stnk1).length) || (docOcrStore.stnk2 && Object.keys(docOcrStore.stnk2).length)),
-                Bpkb: !!(docOcrStore.bpkb && Object.keys(docOcrStore.bpkb).length)
+                Bpkb: !!((docOcrStore.bpkb && Object.keys(docOcrStore.bpkb).length) || uploadedOwnershipDataUrl)
             };
             Object.keys(hasData).forEach(name => {
                 const el = document.getElementById('accSaveStatus' + name);
@@ -7827,7 +7959,7 @@
                 if (draft.fields) {
                     Object.entries(draft.fields).forEach(([id, val]) => {
                         const el = document.getElementById(id);
-                        if (el && !el.value) {
+                        if (el && val !== undefined && val !== null && val !== '') {
                             el.value = val;
                             el.classList.add('filled');
                         }
@@ -7842,17 +7974,53 @@
                         el.style.display = 'block';
                         const phId = id.replace('img', 'ph').replace('Preview', '');
                         const ph = document.getElementById(phId);
-                        if (ph) ph.style.display = 'none';
+                        if (ph) {
+                            if (id.startsWith('imgPh')) {
+                                ph.style.color = '#059669';
+                            } else {
+                                ph.style.display = 'none';
+                            }
+                        }
+                        const boxId = id.replace('img', 'preview').replace('Preview', 'Box');
+                        const box = document.getElementById(boxId);
+                        if (box) box.style.display = 'flex';
+                        if (id === 'imgKtpPreview') {
+                            uploadedKtpDataUrl = src;
+                            isKtpUploadedAndScanned = true;
+                        }
+                        if (id === 'imgNpwpPreview') {
+                            uploadedNpwpDataUrl = src;
+                            isNpwpUploadedAndScanned = true;
+                        }
+                        if (id === 'imgOwnershipPreview') {
+                            uploadedOwnershipDataUrl = src;
+                        }
+                        if (typeof carPhotoElements !== 'undefined' && Array.isArray(carPhotoElements)) {
+                            const carIdx = carPhotoElements.indexOf(id);
+                            if (carIdx !== -1 && typeof carPhotosData !== 'undefined') carPhotosData[carIdx] = src;
+                        }
                     });
                 }
 
                 const targetsRestored = [];
-                if (draft.ocr && draft.ocr.ktp && Object.keys(draft.ocr.ktp).length) { isKtpUploadedAndScanned = true; targetsRestored.push('ktp'); }
-                if (draft.ocr && draft.ocr.npwp && Object.keys(draft.ocr.npwp).length) { isNpwpUploadedAndScanned = true; targetsRestored.push('npwp'); }
-                if (draft.ocr && draft.ocr.bpkb && Object.keys(draft.ocr.bpkb).length) targetsRestored.push('ownership');
-                if (draft.ocr && draft.ocr.stnk1 && Object.keys(draft.ocr.stnk1).length) targetsRestored.push('stnk');
-                if (draft.ocr && draft.ocr.stnk2 && Object.keys(draft.ocr.stnk2).length) targetsRestored.push('stnk_2');
-                targetsRestored.forEach(t => setDocCardState(t, 'ok', 'Draf dipulihkan dari penyimpanan sebelumnya.'));
+                if ((draft.ocr && draft.ocr.ktp && Object.keys(draft.ocr.ktp).length) || (draft.images && draft.images.imgKtpPreview)) {
+                    isKtpUploadedAndScanned = true;
+                    targetsRestored.push('ktp');
+                }
+                if ((draft.ocr && draft.ocr.npwp && Object.keys(draft.ocr.npwp).length) || (draft.images && draft.images.imgNpwpPreview)) {
+                    isNpwpUploadedAndScanned = true;
+                    targetsRestored.push('npwp');
+                }
+                if ((draft.ocr && draft.ocr.bpkb && Object.keys(draft.ocr.bpkb).length) || (draft.images && draft.images.imgOwnershipPreview)) {
+                    targetsRestored.push('ownership');
+                }
+                if ((draft.ocr && draft.ocr.stnk1 && Object.keys(draft.ocr.stnk1).length) || (draft.images && draft.images.imgStnkPreview)) {
+                    targetsRestored.push('stnk');
+                }
+                if ((draft.ocr && draft.ocr.stnk2 && Object.keys(draft.ocr.stnk2).length) || (draft.images && draft.images.imgStnk2Preview)) {
+                    targetsRestored.push('stnk_2');
+                }
+                targetsRestored.forEach(t => setDocCardState(t, 'ok', 'Draf dipulihkan dari penyimpanan server.'));
 
                 checkAndRevealIdentitasSection();
                 renderCrossValidationPanel();
@@ -8045,12 +8213,19 @@
         //      sama sekali tidak mengembalikan hasil crop apapun (mis. offline/Vision AI gagal total).
         async function resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, target) {
             if (rawPdfUrlForOcr) return null;
-            if (ocrRes && ocrRes.cropped_image) return ocrRes.cropped_image;
-            if (ocrRes && ocrRes.doc_bbox) {
+            let bestCrop = null;
+            if (ocrRes && ocrRes.cropped_image) bestCrop = ocrRes.cropped_image;
+            else if (ocrRes && ocrRes.doc_bbox) {
                 const aiCropped = await cropImageByNormalizedBbox(imgUrl, ocrRes.doc_bbox);
-                if (aiCropped) return aiCropped;
+                if (aiCropped) bestCrop = aiCropped;
             }
-            return await new Promise((resolve) => autoCropDocument(imgUrl, target, resolve));
+            if (!bestCrop) {
+                bestCrop = await new Promise((resolve) => autoCropDocument(imgUrl, target, resolve));
+            }
+            if (bestCrop) {
+                return await compressImageUnder400KB(bestCrop);
+            }
+            return null;
         }
 
         async function runRealOCR(target, imgUrl, rawPdfUrlForOcr = null) {
@@ -10483,12 +10658,17 @@
             for (let i = 0; i < Math.min(files.length, 6); i++) {
                 const reader = new FileReader();
                 const idx = i;
-                reader.onload = function(e) {
-                    carPhotosData[idx] = e.target.result;
+                reader.onload = async function(e) {
+                    const compressed = await compressImageUnder400KB(e.target.result);
+                    carPhotosData[idx] = compressed;
                     const img = document.getElementById(carPhotoElements[idx]);
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    document.getElementById(carPhotoLabels[idx]).style.color = '#059669';
+                    if (img) {
+                        img.src = compressed;
+                        img.style.display = 'block';
+                    }
+                    const lbl = document.getElementById(carPhotoLabels[idx]);
+                    if (lbl) lbl.style.color = '#059669';
+                    scheduleAutosave();
                 };
                 reader.readAsDataURL(files[i]);
             }
@@ -10502,12 +10682,17 @@
                 const file = e.target.files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = function(ev) {
-                    carPhotosData[slotIndex] = ev.target.result;
+                reader.onload = async function(ev) {
+                    const compressed = await compressImageUnder400KB(ev.target.result);
+                    carPhotosData[slotIndex] = compressed;
                     const img = document.getElementById(carPhotoElements[slotIndex]);
-                    img.src = ev.target.result;
-                    img.style.display = 'block';
-                    document.getElementById(carPhotoLabels[slotIndex]).style.color = '#059669';
+                    if (img) {
+                        img.src = compressed;
+                        img.style.display = 'block';
+                    }
+                    const lbl = document.getElementById(carPhotoLabels[slotIndex]);
+                    if (lbl) lbl.style.color = '#059669';
+                    scheduleAutosave();
                 };
                 reader.readAsDataURL(file);
             };
