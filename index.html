@@ -12007,6 +12007,35 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
             if (conv) renderLiveChatMessages(conv);
         }
 
+        function formatLiveChatWibTime(rawTs) {
+            const raw = String(rawTs || '').trim();
+            if (!raw) return '';
+            if (/WIB$/i.test(raw)) return raw;
+            try {
+                let d = null;
+                if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/.test(raw)) {
+                    // Timestamp lama dari Render (UTC tanpa zona) -> konversi ke WIB (UTC+7)
+                    d = new Date(raw.replace(' ', 'T') + 'Z');
+                } else if (/^\d{10,13}$/.test(raw)) {
+                    const num = Number(raw);
+                    d = new Date(raw.length === 10 ? num * 1000 : num);
+                } else {
+                    d = new Date(raw);
+                }
+                if (d && !isNaN(d.getTime())) {
+                    const parts = new Intl.DateTimeFormat('en-CA', {
+                        timeZone: 'Asia/Jakarta',
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                        hour12: false
+                    }).formatToParts(d);
+                    const getP = (t) => (parts.find(p => p.type === t) || {}).value || '00';
+                    return `${getP('year')}-${getP('month')}-${getP('day')} ${getP('hour')}:${getP('minute')}:${getP('second')} WIB`;
+                }
+            } catch (_) {}
+            return raw;
+        }
+
         function renderLiveChatMessages(conv) {
             const nameEl = document.getElementById('activeChatName');
             const phoneEl = document.getElementById('activeChatPhone');
@@ -12030,7 +12059,7 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
                 const sender = String(m.sender || m.role || 'user').toLowerCase();
                 const isOut = (sender === 'officer' || sender === 'bot' || sender === 'admin');
                 const safeText = escapeHtml(m.text || '').replace(/\n/g, '<br>');
-                const ts = escapeHtml(m.time || m.timestamp || '');
+                const ts = escapeHtml(formatLiveChatWibTime(m.time || m.timestamp || ''));
                 const label = sender === 'officer' ? 'Petugas' : (sender === 'bot' ? 'Bot WA' : 'Pemohon/Masuk');
                 return `
                     <div style="align-self:${isOut ? 'flex-end' : 'flex-start'}; max-width:78%; background:${isOut ? '#DCFCE7' : '#FFFFFF'}; border:1px solid ${isOut ? '#86EFAC' : '#E2E8F0'}; border-radius:10px; padding:8px 12px; font-size:0.80rem; color:#0F172A;">

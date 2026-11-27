@@ -1448,14 +1448,19 @@ def save_db_chat(data):
         print('[!] Error saving db_chat:', e)
         return False
 
+def _now_wib_str():
+    """Mengembalikan waktu saat ini dalam WIB (UTC+7) format YYYY-MM-DD HH:MM:SS WIB."""
+    wib = datetime.timezone(datetime.timedelta(hours=7))
+    return datetime.datetime.now(wib).strftime('%Y-%m-%d %H:%M:%S WIB')
+
 def log_chat_message(phone, sender, text, name=None):
-    import datetime, time
-    clean_phone = phone.strip().replace('+', '').replace('-', '').replace(' ', '')
+    import time
+    clean_phone = _normalize_phone_id(phone) or str(phone or '').strip().replace('+', '').replace('-', '').replace(' ', '')
     if clean_phone.startswith('08'):
         clean_phone = '628' + clean_phone[2:]
     chats = load_db_chat()
-    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
+    now_str = _now_wib_str()
+
     if clean_phone not in chats:
         chats[clean_phone] = {
             'nama': name or f'Pemohon WA ({clean_phone})',
@@ -1463,9 +1468,9 @@ def log_chat_message(phone, sender, text, name=None):
             'updated_at': now_str,
             'messages': []
         }
-    if name and not chats[clean_phone].get('nama'):
+    if name and (not chats[clean_phone].get('nama') or str(chats[clean_phone].get('nama', '')).startswith('Pemohon WA (')):
         chats[clean_phone]['nama'] = name
-        
+
     chats[clean_phone]['updated_at'] = now_str
     chats[clean_phone]['messages'].append({
         'id': f'msg_{int(time.time()*1000)}',
@@ -1582,8 +1587,91 @@ def repair_remove_demo_seed_permohonan_once():
     except Exception as e:
         print('[!] Gagal menjalankan pembersihan data demo permohonan di JSON:', e)
 
-def send_whatsapp_meta_message(to_number, text, buttons=None):
-    """Mengirim pesan via Meta WhatsApp Cloud API resmi jika access token tersedia."""
+def get_wa_gateway_config():
+    """Membaca WA_GATEWAY_URL dan WA_GATEWAY_SECRET dari environment (fallback .env lokal)."""
+    gw_url = (os.environ.get('WA_GATEWAY_URL') or '').strip()
+    gw_secret = (os.environ.get('WA_GATEWAY_SECRET') or '').strip()
+    if not gw_url or not gw_secret:
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if '=' in line and not line.strip().startswith('#'):
+                            k, v = line.strip().split('=', 1)
+                            k, v = k.strip(), v.strip().strip('"').strip("'")
+                            if k == 'WA_GATEWAY_URL' and not gw_url:
+                                gw_url = v
+                            if k == 'WA_GATEWAY_SECRET' and not gw_secret:
+                                gw_secret = v
+            except Exception as e_env:
+                print("[!] Error reading .env for WA Gateway:", e_env)
+    return gw_url.rstrip('/'), gw_secret
+
+def send_whatsapp_via_gateway(to_number, text, log_chat=True):
+    """Kirim pesan WhatsApp melalui Self-Hosted Baileys Gateway (Mac Mini / Cloudflare Tunnel)."""
+    gw_url, gw_secret = get_wa_gateway_config()
+    if not gw_url:
+        return {"status": "error", "provider": "wa_gateway", "message": "WA_GATEWAY_URL belum dikonfigurasi."}
+    if not gw_secret:
+        return {"status": "error", "provider": "wa_gateway", "message": "WA_GATEWAY_SECRET belum dikonfigurasi di server."}
+
+    import urllib.request
+    endpoint = f"{gw_url}/send"
+    headers = {
+        "Content-Type": "application/json",
+        "X-WA-Gateway-Secret": gw_secret,
+        "User-Agent": "PENGSEM-KBM-Backend/1.0"
+    }
+    payload = {"to": str(to_number), "text": str(text)}
+    try:
+        req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            res_data = json.loads(resp.read().decode('utf-8'))
+            if isinstance(res_data, dict) and res_data.get('status') in ('ok', 'success'):
+                if log_chat:
+                    try:
+                        log_chat_message(to_number, 'bot', text)
+                    except Exception:
+                        pass
+                msg_id = res_data.get('message_id', '')
+                return {
+                    "status": "success",
+                    "provider": "wa_gateway",
+                    "message_id": msg_id,
+                    "messages": [{"id": msg_id}]
+                }
+            return {
+                "status": "error",
+                "provider": "wa_gateway",
+                "message": (res_data.get('message') if isinstance(res_data, dict) else None) or "Respon tidak valid dari WA Gateway."
+            }
+    except urllib.error.HTTPError as he:
+        err_msg = f"WA Gateway HTTP {he.code}"
+        try:
+            err_json = json.loads(he.read().decode('utf-8'))
+            if isinstance(err_json, dict) and err_json.get('message'):
+                err_msg = err_json['message']
+        except Exception:
+            pass
+        print(f"[!] WA Gateway HTTP Error {he.code}: {err_msg}")
+        return {"status": "error", "provider": "wa_gateway", "code": he.code, "message": err_msg}
+    except Exception as e:
+        print("[!] Error sending via WA Gateway:", e)
+        return {"status": "error", "provider": "wa_gateway", "message": f"Gagal menghubungi WA Gateway: {e}"}
+
+def send_whatsapp_meta_message(to_number, text, buttons=None, log_chat=True):
+    """Mengirim pesan WhatsApp: prioritas Self-Hosted WA Gateway jika WA_GATEWAY_URL terisi,
+    fallback ke Meta WhatsApp Cloud API resmi jika WA_GATEWAY_URL kosong."""
+    gw_url, _ = get_wa_gateway_config()
+    if gw_url:
+        msg_text = str(text or '')
+        if buttons and len(buttons) > 0:
+            opts = "\n".join(f"• {b.get('title', '')}" for b in buttons[:3] if b.get('title'))
+            if opts:
+                msg_text = f"{msg_text}\n\n{opts}"
+        return send_whatsapp_via_gateway(to_number, msg_text, log_chat=log_chat)
+
     token, phone_id = get_meta_credentials()
     if not token or not phone_id:
         print(f"[*] [WA Sandbox Log] to: {to_number} -> {text[:80]}... (Buttons: {buttons})")
@@ -1630,12 +1718,13 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
 
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             res_data = json.loads(resp.read().decode('utf-8'))
-            try:
-                log_chat_message(to_number, 'bot', text)
-            except Exception:
-                pass
+            if log_chat:
+                try:
+                    log_chat_message(to_number, 'bot', text)
+                except Exception:
+                    pass
             return res_data
     except urllib.error.HTTPError as he:
         err_body = ""
@@ -1652,9 +1741,13 @@ def send_whatsapp_meta_message(to_number, text, buttons=None):
         return {"status": "error", "message": str(e)}
 
 def send_whatsapp_otp_template(to_number, otp_code, fallback_text):
-    """Kirim OTP via Meta WhatsApp Authentication Template jika META_OTP_TEMPLATE_NAME disetel
-    (bebas aturan jendela 24 jam Meta). Jika belum disetel atau template gagal, otomatis fallback
-    ke pesan teks standar send_whatsapp_meta_message()."""
+    """Kirim OTP: prioritas Self-Hosted WA Gateway (bebas aturan 24 jam Meta) jika WA_GATEWAY_URL
+    terisi. Jika kosong, pakai Meta WhatsApp Authentication Template (bila META_OTP_TEMPLATE_NAME
+    disetel) lalu fallback ke pesan teks standar Meta."""
+    gw_url, _ = get_wa_gateway_config()
+    if gw_url:
+        return send_whatsapp_via_gateway(to_number, fallback_text)
+
     token, phone_id = get_meta_credentials()
     template_name = os.environ.get('META_OTP_TEMPLATE_NAME', '').strip()
     template_lang = os.environ.get('META_OTP_TEMPLATE_LANG', 'id').strip() or 'id'
@@ -2884,6 +2977,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             }, cookie_header="session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
             return
 
+        # Webhook Pesan Masuk dari Self-Hosted WhatsApp Gateway (Baileys Mac Mini)
+        if self.path == '/api/webhook/baileys':
+            import hmac
+            _, expected_secret = get_wa_gateway_config()
+            provided_secret = (self.headers.get('X-WA-Gateway-Secret') or '').strip()
+            if not expected_secret or not provided_secret or not hmac.compare_digest(provided_secret, expected_secret):
+                self._send_json_error(403, "Forbidden: X-WA-Gateway-Secret tidak valid atau belum dikonfigurasi.")
+                return
+
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                sender_phone = str(body.get('from') or body.get('phone') or '').strip()
+                text = str(body.get('text') or '').strip()
+                push_name = str(body.get('push_name') or body.get('name') or '').strip() or None
+                if not sender_phone or not text:
+                    self._send_json_error(400, "Parameter 'from' dan 'text' wajib diisi.")
+                    return
+
+                log_chat_message(sender_phone, 'user', text, name=push_name)
+                self._send_json_response({"status": "ok"})
+                return
+            except Exception as e:
+                self._send_json_error(500, f"Gagal memproses webhook Baileys: {e}")
+                return
+
         # Kirim Pesan Manual dari Petugas Operator WhatsApp Bea Cukai
         if self.path == '/api/wa/send':
             token, sess = get_session_from_request(self)
@@ -2899,23 +3019,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if to_num.startswith('08'):
                     to_num = '628' + to_num[2:]
                 text = body.get('text', '').strip()
-                
-                # Kirim ke Meta Cloud API resmi
-                meta_res = send_whatsapp_meta_message(to_num, text)
-                
-                # Catat ke log chat operator
+                if not to_num or not text:
+                    self._send_json_error(400, "Nomor tujuan dan isi pesan wajib diisi.")
+                    return
+
+                # Kirim via WA Gateway (prioritas) atau Meta Cloud API (fallback)
+                meta_res = send_whatsapp_meta_message(to_num, text, log_chat=False)
+                is_sent = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') in ('success', 'ok'))
+
+                if not is_sent:
+                    err_msg = (meta_res.get('message') if isinstance(meta_res, dict) else None) or "Pengiriman WhatsApp gagal. Pastikan WA Gateway Mac Mini aktif dan terhubung."
+                    self._send_json_error(502, err_msg)
+                    return
+
+                # Catat ke log chat operator hanya jika benar-benar terkirim
                 log_chat_message(to_num, 'officer', text, name=body.get('nama'))
-                
-                resp = json.dumps({'status': 'success', 'meta_response': meta_res}).encode('utf-8')
-                self.send_response(200)
+                self._send_json_response({'status': 'success', 'meta_response': meta_res})
+                return
             except Exception as e:
-                resp = json.dumps({'status': 'error', 'message': str(e)}).encode('utf-8')
-                self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(resp)))
-            self.end_headers()
-            self.wfile.write(resp)
-            return
+                self._send_json_error(500, str(e))
+                return
         # Update Status Permohonan dari Dashboard Pegawai
         
         # Tambah Permohonan Baru (dari Bot WhatsApp / Simulator Real)

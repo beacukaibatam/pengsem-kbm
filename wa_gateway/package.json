@@ -1,0 +1,16 @@
+{
+  "name": "pengsem-kbm-wa-gateway",
+  "version": "1.0.0",
+  "description": "Self-hosted WhatsApp Gateway (@whiskeysockets/baileys) untuk Layanan PENGSEM KBM Bea Cukai Batam",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.16",
+    "express": "^4.21.2",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
