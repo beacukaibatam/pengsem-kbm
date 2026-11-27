@@ -1286,6 +1286,145 @@
             background: #004B8C;
         }
 
+        /* ================= POPUP NOTIFIKASI SERAGAM (FLAT & COMPACT, GAYA LOGOUT POPOVER) =================
+           Class terpisah dari .modern-popup-card/.popup-btn-success/.popup-btn-error agar tidak
+           mengubah modal lain yang masih memakai class lama. */
+        .notif-popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(2px);
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .notif-popup-card {
+            position: relative;
+            background: #FFFFFF;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 14px;
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.04);
+            padding: 20px 20px 18px;
+            width: 100%;
+            max-width: 340px;
+            box-sizing: border-box;
+            text-align: center;
+            animation: popupSpring 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .notif-popup-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            line-height: 1;
+            color: #94A3B8;
+            cursor: pointer;
+            padding: 2px 4px;
+            transition: color 0.15s ease;
+        }
+        .notif-popup-close:hover {
+            color: #334155;
+        }
+        .notif-popup-title {
+            font-size: 0.96rem;
+            font-weight: 800;
+            color: #0F172A;
+            margin: 0 0 6px 0;
+            padding: 0 16px;
+        }
+        .notif-popup-title.is-danger {
+            color: #B91C1C;
+        }
+        .notif-popup-desc {
+            font-size: 0.82rem;
+            color: #475569;
+            line-height: 1.5;
+            margin: 0 0 14px 0;
+        }
+        .notif-popup-detail {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            width: 100%;
+            text-align: left;
+            box-sizing: border-box;
+            font-size: 0.78rem;
+            color: #334155;
+            line-height: 1.5;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+        .notif-popup-countdown {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #005FAC;
+            line-height: 1.1;
+            margin: 4px 0 2px;
+            font-variant-numeric: tabular-nums;
+        }
+        .notif-popup-countdown-unit {
+            font-size: 0.75rem;
+            color: #64748B;
+            margin-bottom: 16px;
+        }
+        .notif-popup-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .btn-notif-primary {
+            flex: 1;
+            padding: 9px 14px;
+            background: #005FAC;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 9px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.18s ease;
+        }
+        .btn-notif-primary:hover {
+            background: #004B8C;
+        }
+        .btn-notif-cancel {
+            flex: 1;
+            padding: 9px 14px;
+            background: #FFFFFF;
+            color: #334155;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 9px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.18s ease;
+        }
+        .btn-notif-cancel:hover {
+            background: #F1F5F9;
+        }
+        .btn-notif-danger {
+            flex: 1;
+            padding: 9px 14px;
+            background: #B91C1C;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 9px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.18s ease;
+        }
+        .btn-notif-danger:hover {
+            background: #991B1B;
+        }
+
     
         /* ================= UNIFIED PORTAL NAVIGATION (FLAT & MINIMALIST) ================= */
         .portal-nav-bar {
@@ -4477,58 +4616,37 @@
     
     </div> <!-- /viewFormulir -->
 
-<!-- ================= MODERN POPUP: SUCCESS (BERHASIL) ================= -->
-    <div class="modern-popup-overlay" id="modalSuccess">
-        <div class="modern-popup-card">
-            <button type="button" class="popup-close-btn" onclick="closeSuccessModal()" title="Tutup">&times;</button>
-            <div class="popup-icon-circle success">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+<!-- ================= POPUP NOTIFIKASI: SUCCESS (BERHASIL) ================= -->
+    <div class="notif-popup-overlay" id="modalSuccess">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeSuccessModal()" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title" id="successModalTitle">Berhasil</h3>
+            <p class="notif-popup-desc" id="successModalDesc">Data telah berhasil diproses. Silakan lanjutkan.</p>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-primary" id="successModalBtn" onclick="closeSuccessModal()">
+                    Lanjutkan
+                </button>
             </div>
-            <h3 class="popup-title-success" id="successModalTitle">Success!</h3>
-            <p class="popup-desc" id="successModalDesc">Just a few more steps left. Please go on.</p>
-            
-            <button type="button" class="popup-btn-success" id="successModalBtn" onclick="closeSuccessModal()">
-                Continue
-            </button>
-
-            <svg class="popup-wave-bg" viewBox="0 0 400 65" fill="none" preserveAspectRatio="none">
-                <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#EFF6FF" opacity="0.8"/>
-                <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#DBEAFE" opacity="0.9"/>
-            </svg>
         </div>
     </div>
 
-    <!-- ================= MODERN POPUP: OOOOPS! DATA KURANG / BELUM LENGKAP ================= -->
-    <div class="modern-popup-overlay" id="modalValidation">
-        <div class="modern-popup-card">
-            <button type="button" class="popup-close-btn" onclick="closeValidationModal()" title="Tutup">&times;</button>
-            <div class="popup-icon-circle error">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+    <!-- ================= POPUP NOTIFIKASI: DATA KURANG / BELUM LENGKAP ================= -->
+    <div class="notif-popup-overlay" id="modalValidation">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeValidationModal()" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title is-danger">Data Belum Lengkap</h3>
+            <p class="notif-popup-desc" id="validationDescText">Ada kolom wajib yang belum terisi lengkap:</p>
+            <div class="notif-popup-detail">
+                <ul id="validationMissingList" style="margin:0 0 0 16px; padding:0; font-size:0.78rem; color:#B91C1C; font-weight:700; line-height:1.6;"></ul>
             </div>
-            <h3 class="popup-title-error">Oooops!</h3>
-            <p class="popup-desc" id="validationDescText" style="margin-bottom:12px;">Ada kolom wajib yang belum terisi lengkap:</p>
-            
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin-bottom:20px; width:100%; text-align:left; box-sizing:border-box; z-index:2; position:relative; max-height:160px; overflow-y:auto;">
-                <ul id="validationMissingList" style="margin:0 0 0 16px; padding:0; font-size:0.82rem; color:#DC2626; font-weight:700; line-height:1.65;"></ul>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-danger" onclick="closeValidationModal()">
+                    Lengkapi Data
+                </button>
             </div>
-
-            <button type="button" class="popup-btn-error" onclick="closeValidationModal()">
-                Lengkapi Data
-            </button>
-
-            <svg class="popup-wave-bg" viewBox="0 0 400 65" fill="none" preserveAspectRatio="none">
-                <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#FEF2F2" opacity="0.8"/>
-                <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#FEE2E2" opacity="0.9"/>
-            </svg>
         </div>
     </div>
 
-    <!-- ================= MODERN POPUP: OOOOPS! KETIDAKSESUAIAN NAMA ================= -->
     <!-- ================= POPUP KONFIRMASI KELUAR DARI PORTAL ================= -->
     <div class="logout-popover" id="modalLogoutConfirm">
         <div class="logout-popover-arrow"></div>
@@ -4539,120 +4657,74 @@
         </div>
     </div>
 
-    <div class="modern-popup-overlay" id="modalNamaMismatch">
-        <div class="modern-popup-card">
-            <button type="button" class="popup-close-btn" onclick="closeNamaMismatchModal()" title="Tutup">&times;</button>
-            <div class="popup-icon-circle error">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+    <!-- ================= POPUP NOTIFIKASI: KETIDAKSESUAIAN NAMA KTP VS NPWP ================= -->
+    <div class="notif-popup-overlay" id="modalNamaMismatch">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeNamaMismatchModal()" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title is-danger">Nama Tidak Cocok</h3>
+            <p class="notif-popup-desc">Nama pada NPWP tidak cocok dengan KTP pemohon.</p>
+            <div class="notif-popup-detail">
+                <div style="margin-bottom:4px; color:#475569;">Nama KTP: <strong id="mismatchKtpNama" style="color:#005FAC;">-</strong></div>
+                <div style="margin-bottom:6px; color:#475569;">Nama NPWP: <strong id="mismatchNpwpNama" style="color:#B91C1C;">-</strong></div>
+                <div style="font-size:0.74rem; color:#64748B; line-height:1.4;">Pemohon dan NPWP wajib orang pribadi yang sama sesuai aturan kepabeanan.</div>
             </div>
-            <h3 class="popup-title-error">Oooops!</h3>
-            <p class="popup-desc" style="margin-bottom:12px;">Nama pada NPWP tidak cocok dengan KTP pemohon.</p>
-            
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin-bottom:20px; width:100%; text-align:left; box-sizing:border-box; z-index:2; position:relative; font-size:0.80rem;">
-                <div style="margin-bottom:4px; color:#475569;">Nama KTP: <strong id="mismatchKtpNama" style="color:#00447C;">-</strong></div>
-                <div style="margin-bottom:6px; color:#475569;">Nama NPWP: <strong id="mismatchNpwpNama" style="color:#DC2626;">-</strong></div>
-                <div style="font-size:0.75rem; color:#64748B; line-height:1.4;">Pemohon dan NPWP wajib orang pribadi yang sama sesuai aturan kepabeanan.</div>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-danger" onclick="closeNamaMismatchModal()">
+                    Periksa Kembali
+                </button>
             </div>
-
-            <button type="button" class="popup-btn-error" onclick="closeNamaMismatchModal()">
-                Periksa Kembali
-            </button>
-
-            <svg class="popup-wave-bg" viewBox="0 0 400 65" fill="none" preserveAspectRatio="none">
-                <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#FEF2F2" opacity="0.8"/>
-                <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#FEE2E2" opacity="0.9"/>
-            </svg>
         </div>
     </div>
 
-    <!-- ================= MODERN POPUP: OOOOPS! FORMAT BERKAS DITOLAK ================= -->
-    <div class="modern-popup-overlay" id="modalFormatAlert">
-        <div class="modern-popup-card">
-            <button type="button" class="popup-close-btn" onclick="closeFormatAlertModal()" title="Tutup">&times;</button>
-            <div class="popup-icon-circle error">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+    <!-- ================= POPUP NOTIFIKASI: FORMAT BERKAS DITOLAK ================= -->
+    <div class="notif-popup-overlay" id="modalFormatAlert">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeFormatAlertModal()" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title is-danger">Format Berkas Ditolak</h3>
+            <p class="notif-popup-desc">Format berkas yang Anda pilih tidak didukung sistem.</p>
+            <div class="notif-popup-detail">
+                <div style="margin-bottom:4px; color:#334155;">Berkas dipilih: <strong id="rejectedFileName" style="color:#B91C1C;">-</strong></div>
+                <div style="font-size:0.74rem; color:#64748B;">Sistem hanya menerima berkas asli berekstensi <strong>JPG, PNG, atau PDF</strong>.</div>
             </div>
-            <h3 class="popup-title-error">Oooops!</h3>
-            <p class="popup-desc" style="margin-bottom:12px;">Format berkas yang Anda pilih tidak didukung sistem.</p>
-            
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin-bottom:20px; width:100%; text-align:left; box-sizing:border-box; z-index:2; position:relative; font-size:0.80rem;">
-                <div style="margin-bottom:4px; color:#334155;">Berkas dipilih: <strong id="rejectedFileName" style="color:#DC2626;">-</strong></div>
-                <div style="font-size:0.76rem; color:#64748B;">Sistem hanya menerima berkas asli berekstensi <strong>JPG, PNG, atau PDF</strong>.</div>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-danger" onclick="closeFormatAlertModal()">
+                    Pilih Berkas Lain
+                </button>
             </div>
-
-            <button type="button" class="popup-btn-error" onclick="closeFormatAlertModal()">
-                Pilih Berkas Lain
-            </button>
-
-            <svg class="popup-wave-bg" viewBox="0 0 400 65" fill="none" preserveAspectRatio="none">
-                <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#FEF2F2" opacity="0.8"/>
-                <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#FEE2E2" opacity="0.9"/>
-            </svg>
         </div>
     </div>
 
-    <!-- ================= MODERN POPUP: OOOOPS! DOKUMEN HITAM PUTIH / FOTOKOPI ================= -->
-    <div class="modern-popup-overlay" id="colorRejectionModal">
-        <div class="modern-popup-card">
-            <button type="button" class="popup-close-btn" onclick="closeColorRejectionModal()" title="Tutup">&times;</button>
-            <div class="popup-icon-circle error">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+    <!-- ================= POPUP NOTIFIKASI: DOKUMEN HITAM PUTIH / FOTOKOPI ================= -->
+    <div class="notif-popup-overlay" id="colorRejectionModal">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeColorRejectionModal()" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title is-danger">Dokumen Harus Berwarna</h3>
+            <p class="notif-popup-desc">Dokumen terdeteksi hitam-putih atau fotokopi.</p>
+            <div class="notif-popup-detail">
+                <div style="margin-bottom:4px; color:#334155;">Dokumen: <strong id="colorRejectionDocName" style="color:#B91C1C;">-</strong></div>
+                <div style="font-size:0.74rem; color:#64748B;">Sesuai regulasi kepabeanan, seluruh berkas wajib berupa <strong>dokumen asli berwarna</strong>.</div>
             </div>
-            <h3 class="popup-title-error">Oooops!</h3>
-            <p class="popup-desc" style="margin-bottom:12px;">Dokumen terdeteksi hitam-putih atau fotokopi.</p>
-            
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin-bottom:20px; width:100%; text-align:left; box-sizing:border-box; z-index:2; position:relative; font-size:0.80rem;">
-                <div style="margin-bottom:4px; color:#334155;">Dokumen: <strong id="colorRejectionDocName" style="color:#DC2626;">-</strong></div>
-                <div style="font-size:0.76rem; color:#64748B;">Sesuai regulasi kepabeanan, seluruh berkas wajib berupa <strong>dokumen asli berwarna</strong>.</div>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-cancel" onclick="closeColorRejectionModal()">Tutup</button>
+                <button type="button" class="btn-notif-danger" onclick="retryColorUpload()">Unggah Berwarna</button>
             </div>
-
-            <button type="button" class="popup-btn-error" onclick="retryColorUpload()">
-                Unggah Berkas Berwarna
-            </button>
-
-            <svg class="popup-wave-bg" viewBox="0 0 400 65" fill="none" preserveAspectRatio="none">
-                <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#FEF2F2" opacity="0.8"/>
-                <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#FEE2E2" opacity="0.9"/>
-            </svg>
         </div>
     </div>
 
-    <!-- MODAL PERINGATAN KETIDAKSESUAIAN JENIS DOKUMEN (mis. STNK diunggah ke kolom KTP) -->
-    <div class="modern-popup-overlay" id="docMismatchModal">
-        <div class="modern-popup-card">
-            <button type="button" class="popup-close-btn" onclick="closeDocMismatchModal()" title="Tutup">&times;</button>
-            <div class="popup-icon-circle error">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
+    <!-- ================= POPUP NOTIFIKASI: KETIDAKSESUAIAN JENIS DOKUMEN ================= -->
+    <div class="notif-popup-overlay" id="docMismatchModal">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeDocMismatchModal()" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title is-danger">Dokumen Tidak Sesuai</h3>
+            <p class="notif-popup-desc">Jenis dokumen yang diunggah berbeda dari kolom ini.</p>
+            <div class="notif-popup-detail">
+                <div style="margin-bottom:4px; color:#334155;">Seharusnya: <strong id="docMismatchExpected" style="color:#059669;">-</strong></div>
+                <div style="color:#334155;">Terdeteksi sebagai: <strong id="docMismatchDetected" style="color:#B91C1C;">-</strong></div>
             </div>
-            <h3 class="popup-title-error">Dokumen Tidak Sesuai</h3>
-            <p class="popup-desc" style="margin-bottom:12px;">Sistem mendeteksi jenis dokumen yang berbeda dari yang seharusnya diunggah di kolom ini.</p>
-
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin-bottom:20px; width:100%; text-align:left; box-sizing:border-box; z-index:2; position:relative; font-size:0.80rem;">
-                <div style="margin-bottom:4px; color:#334155;">Seharusnya: <strong id="docMismatchExpected" style="color:#166534;">-</strong></div>
-                <div style="color:#334155;">Terdeteksi sebagai: <strong id="docMismatchDetected" style="color:#DC2626;">-</strong></div>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-cancel" onclick="closeDocMismatchModal()">Tutup</button>
+                <button type="button" class="btn-notif-danger" onclick="retryDocMismatchUpload()">Unggah Ulang</button>
             </div>
-
-            <button type="button" class="popup-btn-error" onclick="retryDocMismatchUpload()">
-                Unggah Ulang Dokumen yang Benar
-            </button>
-
-            <svg class="popup-wave-bg" viewBox="0 0 400 65" fill="none" preserveAspectRatio="none">
-                <path d="M0 35C60 20 140 45 220 30C290 15 350 40 400 25V65H0V35Z" fill="#FEF2F2" opacity="0.8"/>
-                <path d="M0 45C70 30 160 55 240 38C320 22 370 48 400 35V65H0V45Z" fill="#FEE2E2" opacity="0.9"/>
-            </svg>
         </div>
     </div>
 
@@ -4829,20 +4901,16 @@
     </div>
 
     <!-- MODAL PERINGATAN SESI AKAN BERAKHIR (IDLE TIMEOUT, SEMUA ROLE) -->
-    <div class="modal-overlay" id="idleWarningModal" style="display:none; z-index:99999;">
-        <div class="modal-card" style="max-width:420px;">
-            <div class="modal-header" style="background:#B45309;">
-                <h3>⏳ Sesi Akan Berakhir</h3>
-            </div>
-            <div class="modal-body" style="text-align:center;">
-                <div style="font-size:0.88rem; color:#334155; margin-bottom:10px;">
-                    Tidak ada aktivitas terdeteksi. Demi keamanan, sesi Anda akan keluar otomatis dalam:
-                </div>
-                <div id="idleWarningCountdown" style="font-size:2rem; font-weight:800; color:#B45309;">60</div>
-                <div style="font-size:0.76rem; color:#64748B; margin-top:4px;">detik</div>
-            </div>
-            <div class="modal-footer" style="justify-content:center;">
-                <button type="button" class="btn btn-primary" style="background:#005FAC;" onclick="stayLoggedIn()">Tetap Masuk</button>
+    <div class="notif-popup-overlay" id="idleWarningModal" style="display:none; z-index:99999;">
+        <div class="notif-popup-card" style="max-width:300px;">
+            <h3 class="notif-popup-title">Sesi Akan Berakhir</h3>
+            <p class="notif-popup-desc" style="margin-bottom:8px;">
+                Tidak ada aktivitas terdeteksi. Demi keamanan, sesi Anda keluar otomatis dalam:
+            </p>
+            <div id="idleWarningCountdown" class="notif-popup-countdown">60</div>
+            <div class="notif-popup-countdown-unit">detik</div>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-primary" onclick="stayLoggedIn()">Tetap Masuk</button>
             </div>
         </div>
     </div>
