@@ -77,6 +77,19 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Tahap 2 Eliminasi Popup Browser: Modal Kustom Generik & Refactor Area Pemohon** (Antigravity — 27 Nov 2026 21:10 WIB)
+  1. **Infrastruktur Modal Generik Tanpa Popup Bawaan Browser**:
+     - Dibangun 3 elemen modal terpadu di `index.html`: `#appAlertModal`, `#appConfirmModal`, dan `#appPromptModal`.
+     - Menggunakan kelas CSS flat & compact yang seragam dengan `#modalLogoutConfirm` (`.notif-popup-overlay`, `.notif-popup-card`, `.btn-notif-primary` `#005FAC`, `.btn-notif-cancel`, `.btn-notif-danger`) dengan ikon status SVG terpadu (hijau sukses, merah error, kuning warning, biru info).
+     - Menambahkan fungsi helper: `showAppAlert(message, type, onOk)`, `showAppConfirm(message, onConfirm, onCancel, options)`, dan `showAppPrompt(message, defaultValue, onSubmit, onCancel, options)`.
+     - Ditambahkan monkey-patch pengaman `window.alert = function(msg) { showAppAlert(msg); }`.
+  2. **Refactor 100% Popup di Area Pemohon**:
+     - Diganti seluruh `alert()` di alur pemohon: validasi dokumen hitam-putih, ketidaksesuaian dokumen, fallback OCR (KTP, NPWP, STNK), akses kamera HP, unduh draf PDF, validasi dokumen bermeterai asli Hal. 1 & 2, kirim permohonan ke frontdesk, download data permohonan, peringatan idle-timeout 15 menit, hingga pesan live chat.
+  3. **Verifikasi**:
+     - `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+     - Sintaks inline JS lolos validasi `node --check` tanpa error.
+     - Pengujian interaktif Playwright (`test_app_alert_modal.png`): modal kustom muncul elegan dengan tombol "Mengerti", 0 popup bawaan browser.
+
 - **Koreksi Tuntas Pemotongan Gambar Preview-Box Dokumen (Rasio 1.58:1 & Object-Fit: Contain)** (Antigravity — 27 Nov 2026 21:05 WIB)
   1. **Latar Belakang & Akar Masalah**:
      - Koreksi eksplisit atas fix `height: 148px` sebelumnya yang belum tuntas. Pada layout split-view responsif, lebar kolom kiri (~561px) membuat rasio kotak menjadi 3.76:1 (jauh dari rasio kartu ID standar 1.58:1). Akibatnya, `object-fit: cover !important` memangkas lebih dari 50% bidang vertikal dokumen (baris "Nama" terpotong di atas, baris "Status Perkawinan" terpotong di bawah).

@@ -4972,6 +4972,49 @@
         </div>
     </div>
 
+    <!-- ================= MODAL KUSTOM: ALERT PENGGANTI BROWSER ALERT() ================= -->
+    <div class="notif-popup-overlay" id="appAlertModal" style="display:none;">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeAppAlert()" title="Tutup">&times;</button>
+            <div id="appAlertIcon" style="margin-bottom:8px; display:flex; justify-content:center;"></div>
+            <h3 class="notif-popup-title" id="appAlertTitle">Pemberitahuan</h3>
+            <p class="notif-popup-desc" id="appAlertMessage" style="white-space:pre-line; text-align:center; max-height:260px; overflow-y:auto; word-break:break-word;"></p>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-primary" id="appAlertOkBtn" onclick="closeAppAlert()">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL KUSTOM: CONFIRM PENGGANTI BROWSER CONFIRM() ================= -->
+    <div class="notif-popup-overlay" id="appConfirmModal" style="display:none;">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeAppConfirm(false)" title="Tutup">&times;</button>
+            <div id="appConfirmIcon" style="margin-bottom:8px; display:flex; justify-content:center;"></div>
+            <h3 class="notif-popup-title" id="appConfirmTitle">Konfirmasi Tindakan</h3>
+            <p class="notif-popup-desc" id="appConfirmMessage" style="white-space:pre-line; text-align:center; max-height:260px; overflow-y:auto; word-break:break-word;"></p>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-cancel" id="appConfirmCancelBtn" onclick="closeAppConfirm(false)">Batal</button>
+                <button type="button" class="btn-notif-primary" id="appConfirmYesBtn" onclick="closeAppConfirm(true)">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL KUSTOM: PROMPT PENGGANTI BROWSER PROMPT() ================= -->
+    <div class="notif-popup-overlay" id="appPromptModal" style="display:none;">
+        <div class="notif-popup-card">
+            <button type="button" class="notif-popup-close" onclick="closeAppPrompt(false)" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title" id="appPromptTitle">Masukkan Nilai</h3>
+            <p class="notif-popup-desc" id="appPromptMessage" style="white-space:pre-line; text-align:center; margin-bottom:10px;"></p>
+            <div style="margin-bottom:14px; text-align:left;">
+                <input type="text" id="appPromptInput" class="form-input" style="width:100%; box-sizing:border-box; padding:9px 12px; border-radius:8px; border:1.5px solid #CBD5E1; font-size:0.86rem; font-family:inherit;" onkeydown="if(event.key==='Enter') closeAppPrompt(true)">
+            </div>
+            <div class="notif-popup-actions">
+                <button type="button" class="btn-notif-cancel" id="appPromptCancelBtn" onclick="closeAppPrompt(false)">Batal</button>
+                <button type="button" class="btn-notif-primary" id="appPromptSubmitBtn" onclick="closeAppPrompt(true)">Simpan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL LIGHTBOX GAMBAR PRATINJAU (klik gambar KTP/NPWP/STNK/dll untuk perbesar) -->
     <div id="imageLightboxOverlay" class="image-lightbox-overlay" onclick="closeImageLightbox()">
         <div class="image-lightbox-content" onclick="event.stopPropagation()">
@@ -6294,7 +6337,7 @@
                 document.getElementById('colorRejectionDocName').innerText = docName || 'Dokumen';
                 modal.style.display = 'flex';
             } else {
-                alert('⚠️ BERKAS DITOLAK: ' + (docName || 'Dokumen') + ' Terdeteksi Hitam Putih / Fotokopi Non-Warna.\n\nSesuai SOP Pelayanan Pengeluaran Sementara KBM KPU BC Batam, seluruh berkas (KTP, NPWP, BPKB/Surat Leasing, STNK) WAJIB berupa DOKUMEN ASLI BERWARNA.\n\nSilakan ambil foto dokumen asli menggunakan kamera atau unggah berkas berwarna.');
+                showAppAlert('⚠️ BERKAS DITOLAK: ' + (docName || 'Dokumen') + ' Terdeteksi Hitam Putih / Fotokopi Non-Warna.\n\nSesuai SOP Pelayanan Pengeluaran Sementara KBM KPU BC Batam, seluruh berkas (KTP, NPWP, BPKB/Surat Leasing, STNK) WAJIB berupa DOKUMEN ASLI BERWARNA.\n\nSilakan ambil foto dokumen asli menggunakan kamera atau unggah berkas berwarna.', 'error');
             }
         }
 
@@ -6465,7 +6508,7 @@
                 document.getElementById('docMismatchDetected').innerText = detectedLabel;
                 modal.style.display = 'flex';
             } else {
-                alert(`⚠️ DOKUMEN TIDAK SESUAI\n\nSeharusnya: ${expectedLabel}\nTerdeteksi sebagai: ${detectedLabel}\n\nMohon unggah ulang dokumen yang benar.`);
+                showAppAlert(`⚠️ DOKUMEN TIDAK SESUAI\n\nSeharusnya: ${expectedLabel}\nTerdeteksi sebagai: ${detectedLabel}\n\nMohon unggah ulang dokumen yang benar.`, 'error');
             }
         }
         function closeDocMismatchModal() {
@@ -8673,7 +8716,7 @@
         function fallbackKtp() {
             isKtpUploadedAndScanned = true;
             checkAndRevealIdentitasSection();
-            alert('Hasil pindai KTP kurang jelas. Mohon lengkapi kolom yang belum terisi secara manual.');
+            showAppAlert('Hasil pindai KTP kurang jelas. Mohon lengkapi kolom yang belum terisi secara manual.', 'warning');
         }
 
         // ================= ROBUST NPWP PARSER (DENGAN NIK & NAMA WAJIB PAJAK) =================
@@ -8820,7 +8863,7 @@
         function fallbackNpwp() {
             isNpwpUploadedAndScanned = true;
             checkAndRevealIdentitasSection();
-            alert('Hasil pindai NPWP kurang jelas. Mohon ketikkan nomor NPWP secara manual.');
+            showAppAlert('Hasil pindai NPWP kurang jelas. Mohon ketikkan nomor NPWP secara manual.', 'warning');
         }
 
         // ================= STATUS HUBUNGAN KEPEMILIKAN (IK 001/KPUB.02/2025) =================
@@ -9432,7 +9475,7 @@
         }
 
         function fallbackStnk() {
-            alert('Hasil pindai STNK kurang jelas. Mohon lengkapi kolom yang belum terisi.');
+            showAppAlert('Hasil pindai STNK kurang jelas. Mohon lengkapi kolom yang belum terisi.', 'warning');
         }
 
         // ================= HIRARKI PENARIKAN NO. RANGKA & NO. MESIN =================
@@ -9521,8 +9564,9 @@
 
         function fallbackCam(target) {
             closeCamera();
-            alert('Akses kamera tidak dapat diaktifkan langsung. Membuka pemilih berkas foto...');
-            pickFile(target);
+            showAppAlert('Akses kamera tidak dapat diaktifkan langsung. Membuka pemilih berkas foto...', 'info', () => {
+                pickFile(target);
+            });
         }
 
         function capturePhoto() {
@@ -10126,9 +10170,9 @@
             // membubuhkan e-meterai asli lalu mengunggahnya sebelum tombol
             // "Kirim Permohonan ke Petugas" (submitFinalPermohonan) aktif.
             if (currentAuthSession && currentAuthSession.role === 'pemohon') {
-                alert('✓ Draf PDF berhasil diunduh.\n\nSelanjutnya: bubuhkan e-meterai asli pada Hal. 1 & 2 melalui salah satu portal resmi, lalu unggah dokumen yang sudah bermeterai pada kotak di bawah sebelum mengirim ke petugas Frontdesk.');
+                showAppAlert('✓ Draf PDF berhasil diunduh.\n\nSelanjutnya: bubuhkan e-meterai asli pada Hal. 1 & 2 melalui salah satu portal resmi, lalu unggah dokumen yang sudah bermeterai pada kotak di bawah sebelum mengirim ke petugas Frontdesk.', 'success');
             } else {
-                alert('✓ Sukses mengunduh 1 PDF Fullset Draf (10 Halaman): Surat_Permohonan_KBM_Batam_Fullset.pdf');
+                showAppAlert('✓ Sukses mengunduh 1 PDF Fullset Draf (10 Halaman): Surat_Permohonan_KBM_Batam_Fullset.pdf', 'success');
             }
             return;
         }
@@ -10166,11 +10210,11 @@
         // Kirim permohonan ke petugas Frontdesk — HANYA setelah dokumen bermeterai asli diunggah
         function submitFinalPermohonan() {
             if (!uploadedBermeteraiDataUrl) {
-                alert('⛔ Unggah dulu dokumen Hal. 1 & 2 yang sudah dibubuhi e-meterai asli sebelum mengirim permohonan.');
+                showAppAlert('⛔ Unggah dulu dokumen Hal. 1 & 2 yang sudah dibubuhi e-meterai asli sebelum mengirim permohonan.', 'error');
                 return;
             }
             if (!currentAuthSession || currentAuthSession.role !== 'pemohon') {
-                alert('⛔ Sesi tidak valid. Silakan masuk kembali sebagai pemohon.');
+                showAppAlert('⛔ Sesi tidak valid. Silakan masuk kembali sebagai pemohon.', 'error');
                 return;
             }
 
@@ -10253,12 +10297,13 @@
                 headers,
                 body: JSON.stringify(payload)
             }).then(res => res.json()).then(async data => {
-                alert('✓ BERKAS PERMOHONAN BERHASIL DIKIRIM!\n\nDokumen formulir kepabeanan Anda (bermeterai asli) telah dikunci untuk verifikasi petugas Bea Cukai Batam. Halaman dialihkan ke pelacakan status permohonan.');
-                closePdfModal();
-                await checkPemohonSubmissionState(user);
+                showAppAlert('✓ BERKAS PERMOHONAN BERHASIL DIKIRIM!\n\nDokumen formulir kepabeanan Anda (bermeterai asli) telah dikunci untuk verifikasi petugas Bea Cukai Batam. Halaman dialihkan ke pelacakan status permohonan.', 'success', async () => {
+                    closePdfModal();
+                    await checkPemohonSubmissionState(user);
+                });
             }).catch(err => {
                 console.error('Gagal mencatat permohonan:', err);
-                alert('⛔ Gagal mengirim permohonan. Silakan periksa koneksi dan coba lagi.');
+                showAppAlert('⛔ Gagal mengirim permohonan. Silakan periksa koneksi dan coba lagi.', 'error');
                 if (btnKirim) { btnKirim.disabled = false; btnKirim.innerText = '✓ Kirim Permohonan ke Petugas'; }
             });
         }
@@ -10373,7 +10418,7 @@
                     }
                 } catch(err) {
                     console.warn('PDF batch error:', err);
-                    alert('Gagal memproses file PDF scan. Pastikan format berkas valid.');
+                    showAppAlert('Gagal memproses file PDF scan. Pastikan format berkas valid.', 'error');
                 } finally {
                     setTimeout(() => { progressBox.style.display = 'none'; }, 2000);
                 }
@@ -10387,7 +10432,7 @@
                             const dataUrl = e.target.result;
                             validateDocumentColor(dataUrl, async function(colorCheck) {
                                 if (!colorCheck.isColor) {
-                                    alert(`⚠️ Berkas file ke-${i+1} (${files[i].name}) terdeteksi Hitam Putih/Fotokopi dan dilewati.`);
+                                    showAppAlert(`⚠️ Berkas file ke-${i+1} (${files[i].name}) terdeteksi Hitam Putih/Fotokopi dan dilewati.`, 'warning');
                                     resolve();
                                     return;
                                 }
@@ -10515,8 +10560,9 @@
                     // Pemohon tidak mengakses dashboard petugas, melainkan melihat statusnya sendiri
                     view = 'status_pemohon';
                 } else if (!currentAuthSession) {
-                    alert('⛔ AKSES DITOLAK: Silakan masuk terlebih dahulu.');
-                    showLandingAuth();
+                    showAppAlert('⛔ AKSES DITOLAK: Silakan masuk terlebih dahulu.', 'error', () => {
+                        showLandingAuth();
+                    });
                     return;
                 }
             }
@@ -10843,7 +10889,7 @@
         // pemeriksa barang/dokumen (yang akses semua tahap) tetap bisa mencetak ulang
         // dokumen dari tahap manapun untuk keperluan validasi kesesuaian.
         function downloadDataUrlFile(dataUrl, filename) {
-            if (!dataUrl) { alert('Berkas belum tersedia.'); return; }
+            if (!dataUrl) { showAppAlert('Berkas belum tersedia.', 'warning'); return; }
             const a = document.createElement('a');
             a.href = dataUrl;
             a.download = filename || 'dokumen';
@@ -10855,7 +10901,7 @@
         function previewPermohonanFile(id, fieldName, fallbackName) {
             const item = allPermohonan.find(p => p.id === id);
             if (!item || !item[fieldName]) {
-                alert('Berkas tidak ditemukan pada permohonan ini.');
+                showAppAlert('Berkas tidak ditemukan pada permohonan ini.', 'warning');
                 return;
             }
             downloadDataUrlFile(item[fieldName], fallbackName || (id + '_' + fieldName));
@@ -13199,6 +13245,153 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
         }
 
         // ================= 4. LOGOUT =================
+        // ================= GENERIC NOTIF POPUP HELPERS (PENGGANTI ALERT/CONFIRM/PROMPT) =================
+        let _appAlertCallback = null;
+        function showAppAlert(message, type = 'info', onOk = null) {
+            _appAlertCallback = onOk;
+            const modal = document.getElementById('appAlertModal');
+            const msgEl = document.getElementById('appAlertMessage');
+            const titleEl = document.getElementById('appAlertTitle');
+            const iconEl = document.getElementById('appAlertIcon');
+            const okBtn = document.getElementById('appAlertOkBtn');
+            if (!modal || !msgEl) {
+                if (typeof onOk === 'function') onOk();
+                return;
+            }
+            msgEl.textContent = message || '';
+
+            // Reset classes
+            titleEl.className = 'notif-popup-title';
+            okBtn.className = 'btn-notif-primary';
+
+            if (type === 'success' || (typeof message === 'string' && message.startsWith('✓'))) {
+                titleEl.textContent = 'Berhasil';
+                iconEl.innerHTML = '<div style="width:36px; height:36px; border-radius:50%; background:#ECFDF5; border:1.5px solid #10B981; display:flex; align-items:center; justify-content:center; color:#059669;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>';
+            } else if (type === 'error' || (typeof message === 'string' && (message.startsWith('⛔') || message.toLowerCase().includes('gagal') || message.toLowerCase().includes('ditolak')))) {
+                titleEl.textContent = 'Perhatian / Ditolak';
+                titleEl.classList.add('is-danger');
+                okBtn.className = 'btn-notif-danger';
+                iconEl.innerHTML = '<div style="width:36px; height:36px; border-radius:50%; background:#FEF2F2; border:1.5px solid #EF4444; display:flex; align-items:center; justify-content:center; color:#DC2626;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>';
+            } else if (type === 'warning' || (typeof message === 'string' && (message.startsWith('⚠️') || message.startsWith('⏳')))) {
+                titleEl.textContent = 'Peringatan';
+                iconEl.innerHTML = '<div style="width:36px; height:36px; border-radius:50%; background:#FFFBEB; border:1.5px solid #F59E0B; display:flex; align-items:center; justify-content:center; color:#D97706;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>';
+            } else {
+                titleEl.textContent = 'Informasi Portal';
+                iconEl.innerHTML = '<div style="width:36px; height:36px; border-radius:50%; background:#EFF6FF; border:1.5px solid #3B82F6; display:flex; align-items:center; justify-content:center; color:#2563EB;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeAppAlert() {
+            const modal = document.getElementById('appAlertModal');
+            if (modal) modal.style.display = 'none';
+            const cb = _appAlertCallback;
+            _appAlertCallback = null;
+            if (typeof cb === 'function') cb();
+        }
+
+        let _appConfirmCallback = null;
+        let _appConfirmCancelCallback = null;
+        function showAppConfirm(message, onConfirm, onCancel = null, options = {}) {
+            _appConfirmCallback = onConfirm;
+            _appConfirmCancelCallback = onCancel;
+            const modal = document.getElementById('appConfirmModal');
+            const msgEl = document.getElementById('appConfirmMessage');
+            const titleEl = document.getElementById('appConfirmTitle');
+            const iconEl = document.getElementById('appConfirmIcon');
+            const yesBtn = document.getElementById('appConfirmYesBtn');
+            const cancelBtn = document.getElementById('appConfirmCancelBtn');
+
+            if (!modal || !msgEl) {
+                if (typeof onConfirm === 'function') onConfirm();
+                return;
+            }
+            msgEl.textContent = message || '';
+            titleEl.textContent = options.title || 'Konfirmasi Tindakan';
+            yesBtn.textContent = options.confirmText || 'Ya, Lanjutkan';
+            cancelBtn.textContent = options.cancelText || 'Batal';
+
+            titleEl.className = 'notif-popup-title';
+            if (options.isDanger) {
+                titleEl.classList.add('is-danger');
+                yesBtn.className = 'btn-notif-danger';
+                iconEl.innerHTML = '<div style="width:36px; height:36px; border-radius:50%; background:#FEF2F2; border:1.5px solid #EF4444; display:flex; align-items:center; justify-content:center; color:#DC2626;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>';
+            } else {
+                yesBtn.className = 'btn-notif-primary';
+                iconEl.innerHTML = '<div style="width:36px; height:36px; border-radius:50%; background:#EFF6FF; border:1.5px solid #005FAC; display:flex; align-items:center; justify-content:center; color:#005FAC;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeAppConfirm(confirmed) {
+            const modal = document.getElementById('appConfirmModal');
+            if (modal) modal.style.display = 'none';
+            if (confirmed) {
+                const cb = _appConfirmCallback;
+                _appConfirmCallback = null;
+                _appConfirmCancelCallback = null;
+                if (typeof cb === 'function') cb();
+            } else {
+                const cbc = _appConfirmCancelCallback;
+                _appConfirmCallback = null;
+                _appConfirmCancelCallback = null;
+                if (typeof cbc === 'function') cbc();
+            }
+        }
+
+        let _appPromptCallback = null;
+        let _appPromptCancelCallback = null;
+        function showAppPrompt(message, defaultValue = '', onSubmit = null, onCancel = null, options = {}) {
+            _appPromptCallback = onSubmit;
+            _appPromptCancelCallback = onCancel;
+            const modal = document.getElementById('appPromptModal');
+            const msgEl = document.getElementById('appPromptMessage');
+            const titleEl = document.getElementById('appPromptTitle');
+            const inputEl = document.getElementById('appPromptInput');
+            const submitBtn = document.getElementById('appPromptSubmitBtn');
+            const cancelBtn = document.getElementById('appPromptCancelBtn');
+
+            if (!modal || !msgEl || !inputEl) {
+                if (typeof onSubmit === 'function') onSubmit(defaultValue);
+                return;
+            }
+            msgEl.textContent = message || '';
+            titleEl.textContent = options.title || 'Masukkan Nilai';
+            inputEl.value = defaultValue || '';
+            submitBtn.textContent = options.submitText || 'Simpan';
+            cancelBtn.textContent = options.cancelText || 'Batal';
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                inputEl.focus();
+                inputEl.select();
+            }, 50);
+        }
+
+        function closeAppPrompt(submitted) {
+            const modal = document.getElementById('appPromptModal');
+            const inputEl = document.getElementById('appPromptInput');
+            const val = inputEl ? inputEl.value : '';
+            if (modal) modal.style.display = 'none';
+
+            if (submitted) {
+                const cb = _appPromptCallback;
+                _appPromptCallback = null;
+                _appPromptCancelCallback = null;
+                if (typeof cb === 'function') cb(val);
+            } else {
+                const cbc = _appPromptCancelCallback;
+                _appPromptCallback = null;
+                _appPromptCancelCallback = null;
+                if (typeof cbc === 'function') cbc();
+            }
+        }
+
+        // Safety fallback agar pemanggilan alert() tak sengaja dari library atau skrip luar tetap berpenampilan modal kustom
+        window.alert = function(msg) { showAppAlert(msg); };
+
         function handleLogout() {
             const modal = document.getElementById('modalLogoutConfirm');
             const btn = document.getElementById('btnLogoutPortal');
@@ -13311,7 +13504,7 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
             applyUnauthenticatedUI();
             window.location.hash = '#/masuk';
             showLandingAuth();
-            alert('⏳ Sesi Anda telah berakhir otomatis karena tidak ada aktivitas selama 15 menit. Silakan masuk kembali.');
+            showAppAlert('⏳ Sesi Anda telah berakhir otomatis karena tidak ada aktivitas selama 15 menit. Silakan masuk kembali.', 'warning');
         }
 
         ['click', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
@@ -13851,7 +14044,7 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
 
         async function sendOperatorMessage() {
             if (!liveChatActivePhone) {
-                alert('Pilih kontak terlebih dahulu di sisi kiri.');
+                showAppAlert('Pilih kontak terlebih dahulu di sisi kiri.', 'warning');
                 return;
             }
             const inp = document.getElementById('txtOperatorMessage');
@@ -13871,10 +14064,10 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
                     if (inp) inp.value = '';
                     await loadLiveChatConversations(true);
                 } else {
-                    alert('Gagal mengirim WA: ' + (data.message || 'HTTP ' + res.status));
+                    showAppAlert('Gagal mengirim WA: ' + (data.message || 'HTTP ' + res.status), 'error');
                 }
             } catch (e) {
-                alert('Gagal mengirim WA: ' + e.message);
+                showAppAlert('Gagal mengirim WA: ' + e.message, 'error');
             } finally {
                 if (btn) btn.disabled = false;
             }
