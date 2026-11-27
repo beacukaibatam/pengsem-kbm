@@ -11907,6 +11907,176 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
             const m = document.getElementById('modalDocGuide');
             if (m) m.style.display = 'none';
         }
+
+        // ================= KONSOL LIVE CHAT OPERATOR WHATSAPP (+62 851-4490-1346) =================
+        let liveChatConversationsCache = [];
+        let liveChatActivePhone = null;
+        let liveChatPollTimer = null;
+
+        function openWhatsAppChatConsole() {
+            const modal = document.getElementById('liveChatModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            loadLiveChatConversations();
+            if (liveChatPollTimer) clearInterval(liveChatPollTimer);
+            liveChatPollTimer = setInterval(() => {
+                if (modal.style.display !== 'none') loadLiveChatConversations(true);
+            }, 6000);
+        }
+
+        function closeLiveChatModal() {
+            const modal = document.getElementById('liveChatModal');
+            if (modal) modal.style.display = 'none';
+            if (liveChatPollTimer) {
+                clearInterval(liveChatPollTimer);
+                liveChatPollTimer = null;
+            }
+        }
+
+        async function loadLiveChatConversations(silent = false) {
+            const listEl = document.getElementById('conversationListContainer');
+            if (!listEl) return;
+            if (!silent && liveChatConversationsCache.length === 0) {
+                listEl.innerHTML = '<div style="padding:18px; text-align:center; color:#64748B; font-size:0.78rem;">Memuat daftar obrolan WhatsApp...</div>';
+            }
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/wa/conversations`, {
+                    headers: _authHeaders(),
+                    credentials: 'include'
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    listEl.innerHTML = `<div style="padding:16px; color:#DC2626; font-size:0.78rem;">${escapeHtml(err.message || 'Gagal memuat obrolan WA (HTTP ' + res.status + ').')}</div>`;
+                    return;
+                }
+                const raw = await res.json();
+                // Dukung format array [{phone, nama, messages}] atau object {phone: {nama, messages}}
+                let list = [];
+                if (Array.isArray(raw)) {
+                    list = raw;
+                } else if (raw && typeof raw === 'object') {
+                    list = Object.entries(raw).map(([k, v]) => Object.assign({ phone: k }, v || {}));
+                }
+                liveChatConversationsCache = list;
+                filterContactList();
+                if (liveChatActivePhone) {
+                    const active = list.find(c => String(c.phone || c.no_wa || '') === String(liveChatActivePhone));
+                    if (active) renderLiveChatMessages(active);
+                }
+            } catch (e) {
+                if (!silent) {
+                    listEl.innerHTML = `<div style="padding:16px; color:#DC2626; font-size:0.78rem;">Gagal menghubungi server: ${escapeHtml(e.message)}</div>`;
+                }
+            }
+        }
+
+        function filterContactList() {
+            const listEl = document.getElementById('conversationListContainer');
+            if (!listEl) return;
+            const q = (document.getElementById('searchContactInput')?.value || '').trim().toLowerCase();
+            const filtered = liveChatConversationsCache.filter(c => {
+                const nama = String(c.nama || c.name || '').toLowerCase();
+                const phone = String(c.phone || c.no_wa || '').toLowerCase();
+                return !q || nama.includes(q) || phone.includes(q);
+            });
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div style="padding:18px; text-align:center; color:#94A3B8; font-size:0.78rem;">Belum ada obrolan WhatsApp masuk.</div>';
+                return;
+            }
+            listEl.innerHTML = filtered.map(c => {
+                const phone = String(c.phone || c.no_wa || '-');
+                const nama = String(c.nama || c.name || ('+' + phone));
+                const msgs = Array.isArray(c.messages) ? c.messages : [];
+                const last = msgs.length ? msgs[msgs.length - 1] : null;
+                const preview = last ? String(last.text || '').slice(0, 48) : 'Belum ada pesan';
+                const isSelected = String(liveChatActivePhone) === phone;
+                return `
+                    <div onclick="selectLiveChatContact('${escapeJsAttr(phone)}')" style="padding:10px 12px; border-radius:8px; margin-bottom:4px; cursor:pointer; background:${isSelected ? '#EFF6FF' : '#FFFFFF'}; border:1px solid ${isSelected ? '#3B82F6' : '#E2E8F0'};">
+                        <div style="font-weight:700; font-size:0.80rem; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(nama)}</div>
+                        <div style="font-size:0.70rem; color:#059669; font-weight:600;">+${escapeHtml(phone)}</div>
+                        <div style="font-size:0.70rem; color:#64748B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">${escapeHtml(preview)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectLiveChatContact(phone) {
+            liveChatActivePhone = phone;
+            filterContactList();
+            const conv = liveChatConversationsCache.find(c => String(c.phone || c.no_wa || '') === String(phone));
+            if (conv) renderLiveChatMessages(conv);
+        }
+
+        function renderLiveChatMessages(conv) {
+            const nameEl = document.getElementById('activeChatName');
+            const phoneEl = document.getElementById('activeChatPhone');
+            const badgeEl = document.getElementById('activeChatBadge');
+            const bodyEl = document.getElementById('operatorChatBody');
+            const phone = String(conv.phone || conv.no_wa || '-');
+            if (nameEl) nameEl.textContent = conv.nama || conv.name || ('+' + phone);
+            if (phoneEl) phoneEl.textContent = '+' + phone;
+            if (badgeEl) {
+                badgeEl.textContent = `${(conv.messages || []).length} Pesan`;
+                badgeEl.style.background = '#DCFCE7';
+                badgeEl.style.color = '#166534';
+            }
+            if (!bodyEl) return;
+            const msgs = Array.isArray(conv.messages) ? conv.messages : [];
+            if (msgs.length === 0) {
+                bodyEl.innerHTML = '<div style="margin:auto; color:#94A3B8; font-size:0.82rem;">Belum ada isi pesan untuk kontak ini.</div>';
+                return;
+            }
+            bodyEl.innerHTML = msgs.map(m => {
+                const sender = String(m.sender || m.role || 'user').toLowerCase();
+                const isOut = (sender === 'officer' || sender === 'bot' || sender === 'admin');
+                const safeText = escapeHtml(m.text || '').replace(/\n/g, '<br>');
+                const ts = escapeHtml(m.time || m.timestamp || '');
+                const label = sender === 'officer' ? 'Petugas' : (sender === 'bot' ? 'Bot WA' : 'Pemohon/Masuk');
+                return `
+                    <div style="align-self:${isOut ? 'flex-end' : 'flex-start'}; max-width:78%; background:${isOut ? '#DCFCE7' : '#FFFFFF'}; border:1px solid ${isOut ? '#86EFAC' : '#E2E8F0'}; border-radius:10px; padding:8px 12px; font-size:0.80rem; color:#0F172A;">
+                        <div style="font-size:0.66rem; font-weight:700; color:${isOut ? '#166534' : '#005FAC'}; margin-bottom:2px;">${label}${ts ? ' • ' + ts : ''}</div>
+                        <div style="line-height:1.4; word-break:break-word;">${safeText}</div>
+                    </div>
+                `;
+            }).join('');
+            bodyEl.scrollTop = bodyEl.scrollHeight;
+        }
+
+        function insertQuickReply(text) {
+            const inp = document.getElementById('txtOperatorMessage');
+            if (inp) { inp.value = text; inp.focus(); }
+        }
+
+        async function sendOperatorMessage() {
+            if (!liveChatActivePhone) {
+                alert('Pilih kontak terlebih dahulu di sisi kiri.');
+                return;
+            }
+            const inp = document.getElementById('txtOperatorMessage');
+            const text = (inp?.value || '').trim();
+            if (!text) return;
+            const btn = document.getElementById('btnSendOperator');
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/wa/send`, {
+                    method: 'POST',
+                    headers: _authHeaders({ 'Content-Type': 'application/json' }),
+                    credentials: 'include',
+                    body: JSON.stringify({ to: liveChatActivePhone, text })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    if (inp) inp.value = '';
+                    await loadLiveChatConversations(true);
+                } else {
+                    alert('Gagal mengirim WA: ' + (data.message || 'HTTP ' + res.status));
+                }
+            } catch (e) {
+                alert('Gagal mengirim WA: ' + e.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
 </script>
 
     <!-- ================= MODAL PANDUAN & KETERANGAN DOKUMEN ================= -->
