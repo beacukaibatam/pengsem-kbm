@@ -26,6 +26,8 @@ rsync -a --delete \
   --exclude '__pycache__/' \
   --exclude '*.pyc' \
   --exclude '.DS_Store' \
+  --exclude 'node_modules/' \
+  --exclude 'BACKUP_WEBSITE/' \
   "$REPO_DIR/" "$LATEST_DIR/"
 
 echo "[*] Membuat arsip ZIP bertanggal: $ZIP_PATH ..."
