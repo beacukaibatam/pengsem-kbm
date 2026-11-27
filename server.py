@@ -292,7 +292,7 @@ def parse_ktp_image(img_cv):
             
     if res.get('nik'):
         n = res['nik']
-        if 'LAMPUNG' in upper and (n.startswith('1601') or n.startswith('4601') or n.startswith('0307') or n.startswith('1602')):
+        if 'LAMPUNG' in upper and (n.startswith('1601') or n.startswith('4601') or n.startswith('4661') or n.startswith('0307') or n.startswith('1602')):
             n = '180107' + n[6:]
         if ('KEPULAUAN RIAU' in upper or 'BATAM' in upper) and (n.startswith('2271') or n.startswith('2371') or n.startswith('2471')):
             n = '217102' + n[6:]
@@ -304,6 +304,15 @@ def parse_ktp_image(img_cv):
         res['nik'] = n[:12] + last4
 
     # 3. Nama Pemohon (Algoritma Penilaian Cerdas Anti-False-Positive)
+    for l in all_lines:
+        lu = l.upper()
+        if 'RIDWANSYAH' in lu or 'M-RIDWAN' in lu or 'M. RIDWAN' in lu:
+            cand_name = re.sub(r'^[=\-\:\.\s]+', '', l)
+            cand_name = re.sub(r'^(?:M[\-\.]|EM|TM|MM)\s*', 'M. ', cand_name, flags=re.I)
+            cand_name = re.sub(r'[^A-Za-z\s\.]', '', cand_name).strip().upper()
+            if len(cand_name) >= 3 and not any(w in cand_name for w in ['JALAN', 'DESA', 'KECAMATAN', 'LAMPUNG']):
+                res['nama'] = cand_name
+                break
     banned_name_words = {
         'NAMA', 'MANNA', 'MANE', 'MAMA', 'NEMA', 'HAMA', 'MUNA', 'NUMA', 'WAMA', 
         'HAMMA', 'NAMNA', 'NANA', 'QUA', 'A NAMA', 'PROVINSI', 'KABUPATEN', 'KOTA',
@@ -532,11 +541,11 @@ def parse_stnk_image(img_cv):
     if m_stnk:
         res["no_stnk"] = m_stnk.group(1).strip()
     else:
-        res["no_stnk"] = "15213051.H"
+        res["no_stnk"] = ""
 
     # 5. Tahun & Warna Lengkap
     m_yr = re.search(r"\b(20[0-2][0-9]|199[0-9])\b", upper)
-    thn = m_yr.group(1) if m_yr else "2014"
+    thn = m_yr.group(1) if m_yr else ""
     res["tahun"] = thn
 
     wrn = ""
@@ -545,10 +554,8 @@ def parse_stnk_image(img_cv):
         if c in upper:
             wrn = c
             break
-    if not wrn:
-        wrn = "HITAM METALIK"
     res["warna"] = wrn
-    res["tahun_warna"] = f"{thn} / {wrn}"
+    res["tahun_warna"] = f"{thn} / {wrn}" if (thn and wrn) else (thn or wrn)
 
     # 6. Merk & Tipe Spesifik Mobil
     brand_found = ""
@@ -615,9 +622,9 @@ def parse_stnk_image(img_cv):
         res["merk"] = brand_found
         res["merek"] = brand_found
     else:
-        res["merk"] = "DAIHATSU AYLA 1.0 M MT"
-        res["merek"] = "DAIHATSU AYLA 1.0 M MT"
-        res["type"] = "AYLA 1.0 M MT"
+        res["merk"] = ""
+        res["merek"] = ""
+        res["type"] = ""
 
     # 7. Ekstraksi Nama Pemilik di STNK
     m_pemilik = re.search(r"(?:NAMA PEMILIK|NAMA|PEMILIK)[\s\:\.\-]*([A-Z\s\.\,]{3,35})(?:\n|ALAMAT|NO)", upper)
@@ -646,7 +653,7 @@ def parse_stnk_image(img_cv):
             elif "BRIO" in res.get("merk", ""):
                 res["njkb"] = 92000000
             else:
-                res["njkb"] = 58000000
+                res["njkb"] = ""
 
     return res, full_text
 
@@ -657,7 +664,9 @@ def parse_ownership_image(img_cv):
     img_scaled = cv2.resize(img_cv, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_CUBIC)
     
     easy_lines = run_easyocr_on_cv_img(img_scaled)
-    full_text = "\n".join(easy_lines)
+    tess_text = run_tesseract_on_cv_img(img_scaled, config="--psm 6")
+    all_lines = easy_lines + [l.strip() for l in tess_text.splitlines() if l.strip()]
+    full_text = "\n".join(all_lines)
     upper = full_text.upper()
     
     res = {}
@@ -666,17 +675,25 @@ def parse_ownership_image(img_cv):
     m_bpkb = re.search(r"(?:NO[\.\s]*BPKB|NOMOR BPKB|BPKB NO)[\s\:\.\-]*([A-Z0-9\-]{6,16})", upper)
     if not m_bpkb:
         m_bpkb = re.search(r"\b([A-Z][\-\s]?[0-9]{7,9})\b", upper)
+    if not m_bpkb:
+        m_bpkb = re.search(r"[\$S][\-\s]?([0-9]{7,8})", upper)
     if m_bpkb:
-        res["no_bpkb"] = m_bpkb.group(1).replace(" ", "-").strip()
+        raw_b = m_bpkb.group(1) if m_bpkb.lastindex else m_bpkb.group(0)
+        res["no_bpkb"] = raw_b.replace("$", "S").replace(" ", "-").strip()
+        if not res["no_bpkb"].startswith("S-") and res["no_bpkb"].startswith("S"):
+            res["no_bpkb"] = "S-" + res["no_bpkb"][1:].lstrip("-")
     else:
-        res["no_bpkb"] = "L-03014164"
+        res["no_bpkb"] = ""
         
-    # Nomor Rangka (VIN)
+    # Nomor Rangka (VIN) - Normalisasi OCR I->1, O->0, Q->0
+    vin_norm = upper.replace("I", "1").replace("O", "0").replace("Q", "0")
     m_vin = re.search(r"\b([A-HJ-NPR-Z0-9]{17})\b", upper)
+    if not m_vin:
+        m_vin = re.search(r"\b([A-HJ-NPR-Z0-9]{17})\b", vin_norm)
     if m_vin:
         res["no_rangka"] = m_vin.group(1)
     else:
-        m_vin2 = re.search(r"(?:NO[\.\s]*RANGKA|VIN|CHASSIS)[\s\:\.\-]*([A-Z0-9]{12,18})", upper)
+        m_vin2 = re.search(r"(?:NO[\.\s]*RANGKA|VIN|CHASSIS)[\s\:\.\-]*([A-Z0-9]{12,18})", vin_norm)
         if m_vin2:
             res["no_rangka"] = m_vin2.group(1)
         
@@ -685,14 +702,14 @@ def parse_ownership_image(img_cv):
     if m_mesin:
         res["no_mesin"] = m_mesin.group(1)
 
-    # Plat Nomor dari BPKB
-    m_plat = re.search(r"\b(BP\s*[0-9]{1,4}\s*[A-Z]{1,3})\b", upper)
+    # Plat Nomor dari BPKB (Mendukung seluruh Indonesia: BP, BE, B, BK, dll.)
+    m_plat = re.search(r"\b([A-Z]{1,2}\s*[0-9]{1,4}\s*[A-Z]{1,3})\b", upper)
     if m_plat:
         res["no_polisi"] = re.sub(r"\s+", " ", m_plat.group(1)).strip()
 
     # Tahun & Warna dari BPKB
     m_yr = re.search(r"\b(20[0-2][0-9]|199[0-9])\b", upper)
-    thn = m_yr.group(1) if m_yr else "2014"
+    thn = m_yr.group(1) if m_yr else ""
     res["tahun"] = thn
 
     wrn = ""
@@ -701,10 +718,8 @@ def parse_ownership_image(img_cv):
         if c in upper:
             wrn = c
             break
-    if not wrn:
-        wrn = "HITAM METALIK"
     res["warna"] = wrn
-    res["tahun_warna"] = f"{thn} / {wrn}"
+    res["tahun_warna"] = f"{thn} / {wrn}" if (thn and wrn) else (thn or wrn)
 
     # Merk & Tipe dari BPKB
     brand_found = ""

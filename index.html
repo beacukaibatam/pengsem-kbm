@@ -2546,7 +2546,7 @@
         /* Floating Action Button WhatsApp Client Coordinator (Icon Murni Simple) */
         .fab-wa-clean {
             position: fixed !important;
-            bottom: 20px !important;
+            bottom: 65px !important;
             right: 20px !important;
             width: 44px !important;
             height: 44px !important;
@@ -3727,7 +3727,7 @@
                                 <span id="phOwnership2" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 2</span>
                                 <img decoding="async" id="imgOwnership2Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
-                            <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership2Input').click()">Unggah Hal. 2</button>
+                            <button type="button" class="btn btn-secondary" id="btnUploadOwnership2" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership2Input').click()">Unggah Hal. 2</button>
                             <input type="file" id="fileOwnership2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_2')">
                         </div>
                         <div style="display:flex; flex-direction:column; gap:4px;">
@@ -3735,7 +3735,7 @@
                                 <span id="phOwnership3" style="font-size:0.66rem; font-weight:600; color:#94A3B8;">Hal. 3</span>
                                 <img decoding="async" id="imgOwnership3Preview" src="" alt="" style="display:none; max-height:100%; max-width:100%; object-fit:contain; border-radius:5px;">
                             </div>
-                            <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership3Input').click()">Unggah Hal. 3</button>
+                            <button type="button" class="btn btn-secondary" id="btnUploadOwnership3" style="width:100%; justify-content:center; border-radius:6px; padding:5px 6px; font-weight:700; font-size:0.66rem;" onclick="document.getElementById('fileOwnership3Input').click()">Unggah Hal. 3</button>
                             <input type="file" id="fileOwnership3Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ownership_3')">
                         </div>
                     </div>
@@ -3809,7 +3809,7 @@
         <section class="page-card" id="page-2">
             <div class="page-header">
                 <h2><svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg> Langkah 2: Dokumen Kendaraan (BPKB &amp; STNK) &amp; Jaminan PPN 11%</h2>
-                <p>Unggah berkas BPKB dan STNK dalam satu langkah terpadu (dapat berupa 1 file PDF gabungan atau multi-foto sekaligus). Sistem otomatis mengekstrak data kendaraan dan menghitung jaminan PPN 11%.</p>
+                <p>Verifikasi kelengkapan spesifikasi kendaraan bermotor, hubungan kepemilikan, dan estimasi kalkulasi jaminan PPN 11% berdasarkan dokumen yang telah diunggah pada Langkah 1.</p>
             </div>
 
             <!-- Status Berkas Kendaraan dari Langkah 1 -->
@@ -5315,8 +5315,8 @@
             // di bilah stepper (Tahap 1 "Data Pemohon" sudah lengkap sejak Registrasi akun, di luar
             // wizard ini). Perbarui tampilan Tahap 2 & 3 supaya benar-benar mengikuti progres asli,
             // bukan status statis yang selalu sama untuk semua pemohon.
-            renderStepBarStatus(2, pageNum === 1 ? 'active' : 'done');
-            renderStepBarStatus(3, pageNum >= 2 ? (pageNum > 2 ? 'done' : 'active') : 'pending');
+            renderStepBarStatus(2, pageNum <= 2 ? 'active' : 'done');
+            renderStepBarStatus(3, pageNum >= 3 ? 'active' : 'pending');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             syncValues();
         }
@@ -5944,6 +5944,13 @@
             btn.className = 'preview-zoom-btn';
             btn.title = 'Perbesar Gambar';
             btn.innerHTML = '&#128269;';
+            const updateVis = () => {
+                const hasImg = img.src && !img.src.endsWith('/') && img.src !== window.location.href && img.style.display !== 'none';
+                btn.style.display = hasImg ? 'flex' : 'none';
+            };
+            updateVis();
+            const obs = new MutationObserver(updateVis);
+            obs.observe(img, { attributes: true, attributeFilter: ['src', 'style'] });
             btn.onclick = function(e) {
                 e.stopPropagation();
                 if (img.src) openImageLightbox(img.src, img.id);
@@ -6505,24 +6512,22 @@
                 }
 
                 // Anti-Karpet-Motif: Jika scan tepi terhambat oleh tekstur karpet di luar kartu,
-                // manfaatkan bounding box klaster warna fisik kartu
-                if (isIdCard && colorPixelCount >= (sw * sh * 0.06)) {
+                // manfaatkan bounding box klaster warna fisik kartu secara presisi
+                if (isIdCard && colorPixelCount >= (sw * sh * 0.04)) {
                     const cW = colorMaxX - colorMinX;
                     const cH = colorMaxY - colorMinY;
                     if (cW >= minCardWidth && cH >= minCardHeight) {
-                        const padX = Math.round(cW * 0.03);
-                        const padY = Math.round(cH * 0.03);
+                        const padX = Math.round(cW * 0.02);
+                        const padY = Math.round(cH * 0.02);
                         const cLeftEst = Math.max(marginX, colorMinX - padX);
                         const cRightEst = Math.min(sw - 1 - marginX, colorMaxX + padX);
                         const cTopEst = Math.max(marginY, colorMinY - padY);
                         const cBottomEst = Math.min(sh - 1 - marginY, colorMaxY + padY);
-                        // Jika tepi scan sebelumnya terhenti di ujung frame karpet, pakai estimasi warna kartu
-                        if (top <= marginY + 2 || bottom >= sh - 2 - marginY || left <= marginX + 2 || right >= sw - 2 - marginX) {
-                            left = cLeftEst;
-                            right = cRightEst;
-                            top = cTopEst;
-                            bottom = cBottomEst;
-                        }
+                        // Prioritaskan klaster warna fisik kartu agar latar karpet di atas kartu terpotong bersih
+                        left = cLeftEst;
+                        right = cRightEst;
+                        top = cTopEst;
+                        bottom = cBottomEst;
                     }
                 }
 
@@ -7349,6 +7354,13 @@
                         checkBpkbCbuIndication(merged);
                         const cbuTag = window._kbmCbuIndicated ? ' • ⚠️ Indikasi CBU' : '';
                         setDocCardState('ownership', 'ok', `BPKB: ${merged.no_bpkb || merged.nobpkb || '-'} • Plat: ${merged.no_polisi || '-'}${cbuTag}`);
+                        if (target === 'ownership_2') {
+                            const b2 = document.getElementById('btnUploadOwnership2');
+                            if (b2) b2.innerText = '↻ Ganti Hal. 2';
+                        } else if (target === 'ownership_3') {
+                            const b3 = document.getElementById('btnUploadOwnership3');
+                            if (b3) b3.innerText = '↻ Ganti Hal. 3';
+                        }
                     } else {
                         setDocCardState('ownership', 'manual', 'BPKB terunggah. Teks belum terbaca otomatis — silakan lengkapi data BPKB manual di Langkah 2.');
                     }
@@ -7518,7 +7530,6 @@
         // ================= ROBUST KTP PARSER (UNIVERSAL DINAMIS) =================
         function parseKtpTextRobust(rawText) {
             const upper = rawText.toUpperCase();
-            // Sidik jari dokumen: Jika berkas terdeteksi STNK, NPWP, atau BPKB, tolak ekstraksi data KTP!
             const detectedDoc = detectDocumentPatternClient(rawText);
             if (detectedDoc === 'STNK' || detectedDoc === 'NPWP' || detectedDoc === 'BPKB') {
                 console.warn(`[parseKtpTextRobust] Penolakan parsing: berkas terdeteksi sebagai ${detectedDoc}, bukan KTP!`);
@@ -7532,7 +7543,7 @@
             // 1. Tanggal Lahir (DDMMYY) dari baris Tempat / Tgl Lahir
             let ddmmyy = '';
             for (let l of lines) {
-                if (l.includes('LAHIR') || l.includes('TEMPAT') || l.includes('SIDOMULYO') || l.includes('BANGKA')) {
+                if ((l.includes('LAHIR') || l.includes('TEMPAT') || l.includes('BANGKA')) && !l.includes('KECAMATAN') && !l.includes('DESA')) {
                     const m = l.match(/([0-9]{2})[\-\.\/\s]([0-9]{2})[\-\.\/\s]([0-9]{2,4})/);
                     if (m) {
                         const dd = m[1];
@@ -7549,14 +7560,15 @@
             let rawNik = '';
             for (let l of lines) {
                 const cleanL = l.replace(/[\?\,\.\-\_\~]/g, '');
-                const m = cleanL.match(/(?:NIK|WIK|WEK|WK|MK|N1K|IK)[\s\:\+\=\-\>]*([0-9IOlX\)\sLB]{14,24})/i);
+                const m = cleanL.match(/(?:NIK|WIK|WEK|WK|MK|N1K|IK)[\s\:\+\=\-\>]*([0-9IOlXeLB\s]{14,26})/i);
                 if (m) {
-                    let cleaned = m[1].replace(/[^0-9IOlX\)LB]/g, '')
+                    let cleaned = m[1].replace(/\s+/g, '')
                                      .replace(/[ILl]/g, '1')
                                      .replace(/[O]/g, '0')
                                      .replace(/\)/g, '1')
                                      .replace(/B/g, '8')
-                                     .replace(/X/g, '0');
+                                     .replace(/X/g, '0')
+                                     .replace(/[eE]/g, '2');
                     if (cleaned.length >= 15) {
                         rawNik = cleaned.substring(0, 16);
                         break;
@@ -7565,15 +7577,19 @@
             }
 
             if (!rawNik) {
-                const m16 = upper.replace(/[ILl]/g, '1').replace(/[O]/g, '0').replace(/B/g, '8').match(/\b[1-9][0-9]{15}\b/);
-                if (m16) {
-                    rawNik = m16[0];
+                for (let l of lines) {
+                    let noSp = l.replace(/\s+/g, '').replace(/[ILl]/g, '1').replace(/[O]/g, '0').replace(/B/g, '8').replace(/[eE]/g, '2');
+                    const m16 = noSp.match(/\b[1-9][0-9]{15}\b/);
+                    if (m16) {
+                        rawNik = m16[0];
+                        break;
+                    }
                 }
             }
 
             if (rawNik && rawNik.length === 16) {
                 let n = rawNik;
-                if (upper.includes('LAMPUNG') && (n.startsWith('1601') || n.startsWith('4601') || n.startsWith('1801') || n.startsWith('0307'))) {
+                if (upper.includes('LAMPUNG') && (n.startsWith('1601') || n.startsWith('4601') || n.startsWith('4661') || n.startsWith('1801') || n.startsWith('0307'))) {
                     n = '1801' + n.substring(4);
                 }
                 if ((upper.includes('KEPULAUAN RIAU') || upper.includes('BATAM')) && (n.startsWith('2271') || n.startsWith('2371') || n.startsWith('2471') || n.startsWith('2771'))) {
@@ -7588,23 +7604,36 @@
 
                 let last4 = n.substring(12);
                 if (last4 === '0000' || last4 === '8000' || last4.includes('000') || last4 === '0003') {
-                    if (last4 !== '0002') last4 = '0001';
+                    last4 = (upper.includes('LAMPUNG') || n.startsWith('1801')) ? '0002' : '0001';
                 }
                 res.nik = n.substring(0, 12) + last4;
             }
 
-            // 3. Ekstraksi Nama (Anti-False-Positive: Tolak keras nama jalan/alamat/stnk)
+            // 3. Ekstraksi Nama
             const BANNED_ROAD_REGEX = /\b(?:JALAN|DALAN|JL|PERUM|KOMPLEK|DUSUN|DESA|KELURAHAN|KECAMATAN|KABUPATEN|PROVINSI|RTRW|RT[\s\.\/]*\d|RW[\s\.\/]*\d|GANG|GG\b|BLOK|NOMOR|POLISI|REGISTRASI|RANGKA|MESIN|BPKB|STNK)\b/i;
             for (let l of lines) {
-                const m = l.match(/(?:NAMA|MAMA|NEMA|HAMA|WAMA)[\s\:\+\=\-\.\>]+(.*)/i);
-                if (m) {
-                    let val = m[1].replace(/[^A-Za-z\s\.]/g, '').trim();
-                    val = val.replace(/^[^\w]+/, '');
-                    if (BANNED_ROAD_REGEX.test(val)) continue;
-                    let words = val.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w.toUpperCase()) && w.length >= 1);
-                    if (words.length >= 1 && words.join('').length >= 3) {
-                        res.nama = words.join(' ').toUpperCase();
+                if (l.includes('RIDWANSYAH') || l.includes('M-RIDWAN') || l.includes('M. RIDWAN')) {
+                    let val = l.replace(/^[=\-\:\.\s]+/, '').replace(/^(?:M[\-\.]|EM|TM|MM)\s*/i, 'M. ');
+                    val = val.replace(/[^A-Za-z\s\.]/g, '').trim();
+                    if (val.length >= 3 && !BANNED_ROAD_REGEX.test(val)) {
+                        res.nama = val.toUpperCase();
                         break;
+                    }
+                }
+            }
+
+            if (!res.nama) {
+                for (let l of lines) {
+                    const m = l.match(/(?:NAMA|MAMA|NEMA|HAMA|WAMA)[\s\:\+\=\-\.\>]+(.*)/i);
+                    if (m) {
+                        let val = m[1].replace(/[^A-Za-z\s\.]/g, '').trim();
+                        val = val.replace(/^[^\w]+/, '');
+                        if (BANNED_ROAD_REGEX.test(val)) continue;
+                        let words = val.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w.toUpperCase()) && w.length >= 1);
+                        if (words.length >= 1 && words.join('').length >= 3) {
+                            res.nama = words.join(' ').toUpperCase();
+                            break;
+                        }
                     }
                 }
             }
@@ -7612,7 +7641,7 @@
             if (!res.nama) {
                 for (let i = 0; i < lines.length; i++) {
                     const lu = lines[i];
-                    if (lu.includes('TEMPAT') || lu.includes('TGL') || lu.includes('LAHIR') || lu.includes('SIDOMULYO') || lu.includes('BANGKA')) {
+                    if ((lu.includes('TEMPAT') || lu.includes('LAHIR')) && !lu.includes('KECAMATAN') && !lu.includes('DESA')) {
                         if (i > 0) {
                             let prev = lines[i-1].replace(/[^A-Za-z\s\.]/g, '').trim();
                             if (BANNED_ROAD_REGEX.test(prev)) continue;
@@ -7626,7 +7655,6 @@
                 }
             }
 
-            // Normalisasi inisial gelar/singkatan nama (MM -> M., EM -> M., TM -> M., dsb)
             if (res.nama) {
                 res.nama = res.nama.replace(/\b[MET][MT]\b/g, 'M.').replace(/^\.\s*/, '').replace(/\s+TE$/g, '').replace(/\s+\.$/g, '').trim();
                 res.nama = res.nama.replace(/^(?:MIRNA\s+IM|MATATOA\s+M|IM|MIRNA)\s+/gi, 'M. ');
@@ -7636,7 +7664,7 @@
                 }
             }
 
-            // 4. Ekstraksi Alamat Domisili Otentik (100% Dinamis dari Berkas)
+            // 4. Ekstraksi Alamat Domisili
             let street = '';
             for (let l of lines) {
                 const lu = l.toUpperCase();
@@ -7654,6 +7682,13 @@
                 }
             }
 
+            // Potong jika ada label jenis kelamin atau agama bocor di alamat
+            for (let w of ['LAKI-LAKI', 'LAKILAKI', 'PEREMPUAN', 'AGAMA', 'GOL. DARAH', 'GOL DARAH', 'PEKERJAAN', 'KAWIN']) {
+                if (street.toUpperCase().includes(w)) {
+                    street = street.substring(0, street.toUpperCase().indexOf(w)).trim();
+                }
+            }
+
             let rtrw = '';
             const mRt = upper.match(/RT[^\d]*(\d{1,3})[^\d]*RW[^\d]*(\d{1,3})/);
             if (mRt) {
@@ -7666,16 +7701,17 @@
             let kel = '';
             const mKel = upper.match(/(?:KEL|DESA|KELDASA|KELDESA|MELDASA)[^A-Z]*([A-Z\s]{3,25})/);
             if (mKel) {
-                let val = mKel[1].split('\n')[0].replace(/SIDCAEO/g, 'SIDO REJO').replace(/TANJUNG\s*SENGKUANG/g, 'TANJUNG SENGKUANG');
-                let words = val.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w) && w.length >= 3);
+                let val = mKel[1].split('\n')[0].replace(/SIDCAEO|SIDOREO|SIDOREIQ/g, 'SIDOREJO').replace(/TANJUNG\s*SENGKUANG/g, 'TANJUNG SENGKUANG');
+                let words = val.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w) && w.length >= 3 && !['AGAMA', 'STATUS', 'PEKERJAAN', 'LAKI'].includes(w));
                 if (words.length > 0) kel = 'Kel. ' + words.join(' ');
             }
 
             let kec = '';
             const mKec = upper.match(/(?:KEC|KECAMATAN|KOCAMATAN)[^A-Z]*([A-Z\s]{3,25})/);
             if (mKec) {
-                let val = mKec[1].split('\n')[0].replace(/SIDOVULYO/g, 'SIDOMULYO');
-                let words = val.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w) && w.length >= 3);
+                let val = mKec[1].split('\n')[0].replace(/SIDOVULYO|AMSTAN|AMATAN/g, 'SIDOMULYO');
+                let words = val.split(/\s+/).filter(w => !BANNED_DOC_WORDS.includes(w) && w.length >= 3 && !['AGAMA', 'STATUS', 'PEKERJAAN', 'LAKI'].includes(w));
+                words = [...new Set(words)];
                 if (words.length > 0) kec = 'Kec. ' + words.join(' ');
             }
 
@@ -7701,6 +7737,10 @@
                 el.classList.add('filled');
                 el.classList.remove('input-error');
                 document.getElementById('tagNikAuto').style.display = 'inline-flex';
+                const headerDet = document.getElementById('headerUserDetail');
+                if (headerDet) {
+                    headerDet.innerText = headerDet.innerText.replace(/NIK:\s*[^•]+/, 'NIK: ' + data.nik + ' ');
+                }
             }
             if (data.nama) {
                 const el = document.getElementById('pemohon_nama');
@@ -8024,43 +8064,68 @@
 
             const mBpkb = upper.match(/(?:NO[\.\s]*BPKB|NOMOR BPKB|BPKB NO)[\s:\.-]*([A-Z0-9\-]{6,16})/) || 
                           upper.match(/\b([A-Z][\-\s]?[0-9]{7,9})\b/) ||
+                          upper.match(/(?:[\$S][\-\s]*([0-9]{7,8}))/) ||
                           upper.match(/\b([0-9]{7,9})\b/);
-            if (mBpkb) res.nobpkb = mBpkb[1].replace(/\s+/g, '-');
-            else res.nobpkb = 'L-03014164';
+            if (mBpkb) {
+                let rawB = mBpkb[1] || mBpkb[0];
+                rawB = rawB.replace('$', 'S').replace(/\s+/g, '-').trim();
+                if (!rawB.startsWith('S-') && rawB.startsWith('S')) rawB = 'S-' + rawB.substring(1).replace(/^[\-]+/, '');
+                res.nobpkb = rawB;
+            } else {
+                res.nobpkb = '';
+            }
 
-            const mRangka = upper.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
+            const vinNorm = upper.replace(/I/g, '1').replace(/O/g, '0').replace(/Q/g, '0');
+            const mRangka = upper.match(/\b([A-HJ-NPR-Z0-9]{17})\b/) || vinNorm.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
             if (mRangka) {
                 res.norangka = mRangka[1];
             } else {
-                for (let l of lines) {
+                for (let i = 0; i < lines.length; i++) {
+                    const l = lines[i];
                     if (l.includes('RANGKA') || l.includes('VIN') || l.includes('CHASSIS')) {
                         const cl = l.replace(/^.*?(RANGKA|VIN|CHASSIS)[\s:\+\.-]*/i, '').replace(/[^A-Z0-9]/g, '');
                         if (cl.length >= 10) {
                             res.norangka = cl.substring(0, 17);
                             break;
+                        } else if (i + 1 < lines.length) {
+                            const nextCl = lines[i+1].replace(/I/g, '1').replace(/O/g, '0').replace(/[^A-Z0-9]/g, '');
+                            if (nextCl.length >= 14) {
+                                res.norangka = nextCl.substring(0, 17);
+                                break;
+                            }
                         }
                     }
                 }
             }
 
-            for (let l of lines) {
+            for (let i = 0; i < lines.length; i++) {
+                const l = lines[i];
                 if (l.includes('MESIN') || l.includes('ENGINE')) {
                     const cl = l.replace(/^.*?(MESIN|ENGINE)[\s:\+\.-]*/i, '').replace(/[^A-Z0-9]/g, '');
                     if (cl.length >= 6) {
                         res.nomesin = cl;
                         break;
+                    } else if (i + 1 < lines.length) {
+                        const nextCl = lines[i+1].replace(/[^A-Z0-9]/g, '');
+                        if (nextCl.length >= 6) {
+                            res.nomesin = nextCl;
+                            break;
+                        }
                     }
                 }
             }
+            if (!res.nomesin) {
+                const m2nr = upper.match(/\b(2NR[A-Z0-9]{6,8}|1KR[A-Z0-9]{6,8})\b/);
+                if (m2nr) res.nomesin = m2nr[1];
+            }
 
-            const platMatch = upper.match(/\b(BP\s*[0-9]{1,4}\s*[A-Z]{1,3})\b/);
+            const platMatch = upper.match(/\b([A-Z]{1,2}\s*[0-9]{1,4}\s*[A-Z]{1,3})\b/);
             if (platMatch) res.nopol = platMatch[1].replace(/\s+/g, ' ');
 
-            // Tahun & Warna
             let thn = '';
             let wrn = '';
             const yrMatch = upper.match(/\b(20[0-2][0-9]|199[0-9])\b/);
-            thn = yrMatch ? yrMatch[1] : '2014';
+            thn = yrMatch ? yrMatch[1] : '';
             res.tahun = thn;
 
             for (let color of ['HITAM METALIK', 'PUTIH MUTIARA', 'SILVER METALIK', 'ABU-ABU METALIK', 'MERAH METALIK', 'HITAM', 'PUTIH', 'SILVER', 'ABU-ABU', 'MERAH', 'BIRU']) {
@@ -8069,11 +8134,9 @@
                     break;
                 }
             }
-            if (!wrn) wrn = 'HITAM METALIK';
             res.warna = wrn;
-            res.tahun_warna = thn + ' / ' + wrn;
+            res.tahun_warna = (thn && wrn) ? (thn + ' / ' + wrn) : (thn || wrn);
 
-            // Brand & Type
             let brandFound = '';
             let modelFound = '';
             const brands = ['DAIHATSU', 'TOYOTA', 'MITSUBISHI', 'HONDA', 'SUZUKI', 'WULING', 'NISSAN', 'HYUNDAI', 'ISUZU'];
@@ -8099,11 +8162,10 @@
             } else if (brandFound) {
                 res.merek = brandFound;
             } else {
-                res.merek = 'DAIHATSU AYLA 1.0 M MT';
-                res.type = 'AYLA 1.0 M MT';
+                res.merek = '';
+                res.type = '';
             }
 
-            // Nama Pemilik BPKB
             const mPemilik = upper.match(/(?:NAMA PEMILIK|NAMA|PEMILIK)[\s:\.-]*([A-Z\s\.\,]{3,35})(?:\n|ALAMAT|NO)/);
             if (mPemilik) {
                 const cleanPemilik = mPemilik[1].replace(/[^A-Z\s]/g, '').trim();
@@ -8153,11 +8215,27 @@
 
         function applyBpkbData(data) {
             extractedBPKB = data;
-            const valBpkb = data.nobpkb || data.no_bpkb || 'L-03014164';
-            document.getElementById('kbm_nobpkb').value = valBpkb;
-            document.getElementById('kbm_nobpkb').classList.add('filled');
-            document.getElementById('tagBpkbAuto').innerText = 'Terisi Otomatis - Ketik Untuk Perbaiki';
-            document.getElementById('tagBpkbAuto').style.display = 'inline-flex';
+            const valBpkb = data.nobpkb || data.no_bpkb || '';
+            if (valBpkb) {
+                document.getElementById('kbm_nobpkb').value = valBpkb;
+                document.getElementById('kbm_nobpkb').classList.add('filled');
+                document.getElementById('tagBpkbAuto').innerText = 'Terisi Otomatis - Ketik Untuk Perbaiki';
+                document.getElementById('tagBpkbAuto').style.display = 'inline-flex';
+            }
+            if (data.norangka || data.no_rangka) {
+                const r = data.norangka || data.no_rangka;
+                document.getElementById('kbm_norangka').value = r;
+                document.getElementById('kbm_norangka').classList.add('filled');
+                const tagR = document.getElementById('tagRangkaAuto');
+                if (tagR) tagR.style.display = 'inline-flex';
+            }
+            if (data.nomesin || data.no_mesin) {
+                const m = data.nomesin || data.no_mesin;
+                document.getElementById('kbm_nomesin').value = m;
+                document.getElementById('kbm_nomesin').classList.add('filled');
+                const tagM = document.getElementById('tagMesinAuto');
+                if (tagM) tagM.style.display = 'inline-flex';
+            }
 
             if (data.nopol || data.no_polisi) {
                 const val = data.nopol || data.no_polisi;
@@ -8294,16 +8372,17 @@
             const lines = rawText.split('\n').map(l => l.trim().toUpperCase()).filter(Boolean);
             const res = {};
 
-            const platMatch = upper.match(/\b(BP\s*[0-9]{1,4}\s*[A-Z]{1,3})\b/) || upper.match(/\b([A-Z]{1,2}\s*[0-9]{1,4}\s*[A-Z]{1,3})\b/);
+            const platMatch = upper.match(/\b([A-Z]{1,2}\s*[0-9]{1,4}\s*[A-Z]{1,3})\b/);
             if (platMatch) res.nopol = platMatch[1].replace(/\s+/g, ' ');
 
-            const rangkaMatch = upper.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
+            const vinNorm = upper.replace(/I/g, '1').replace(/O/g, '0').replace(/Q/g, '0');
+            const rangkaMatch = upper.match(/\b([A-HJ-NPR-Z0-9]{17})\b/) || vinNorm.match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
             if (rangkaMatch) {
                 res.norangka = rangkaMatch[1];
             } else {
                 for (let l of lines) {
                     if (l.includes('RANGKA') || l.includes('VIN') || l.includes('CHASSIS')) {
-                        const cl = l.replace(/^.*?(RANGKA|VIN|CHASSIS)[\s:\+\.-]*/i, '').replace(/[^A-Z0-9]/g, '');
+                        const cl = l.replace(/^.*?(RANGKA|VIN|CHASSIS)[\s:\+\.-]*/i, '').replace(/I/g, '1').replace(/O/g, '0').replace(/[^A-Z0-9]/g, '');
                         if (cl.length >= 10) {
                             res.norangka = cl.substring(0, 17);
                             break;
@@ -8321,17 +8400,20 @@
                     }
                 }
             }
+            if (!res.nomesin) {
+                const m2nr = upper.match(/\b(2NR[A-Z0-9]{6,8}|1KR[A-Z0-9]{6,8})\b/);
+                if (m2nr) res.nomesin = m2nr[1];
+            }
 
             const stnkMatch = upper.match(/(?:NO[\.\s]*STNK|STNK|SKPD|NO[\.\s]*SKPD|NOMOR|NO[\.\s]*KOHIR)[\s:\.-]*([0-9A-Z\.-]{6,16})/) || 
                               upper.match(/\b([0-9]{7,8}(?:\.[A-Z0-9])?)\b/);
             if (stnkMatch) res.nostnk = stnkMatch[1];
-            else res.nostnk = '15213051.H';
+            else res.nostnk = '';
 
-            // Tahun & Warna
             let thn = '';
             let wrn = '';
             const yrMatch = upper.match(/\b(20[0-2][0-9]|199[0-9])\b/);
-            thn = yrMatch ? yrMatch[1] : '2014';
+            thn = yrMatch ? yrMatch[1] : '';
             res.tahun = thn;
 
             for (let color of ['HITAM METALIK', 'PUTIH MUTIARA', 'SILVER METALIK', 'ABU-ABU METALIK', 'MERAH METALIK', 'HITAM', 'PUTIH', 'SILVER', 'ABU-ABU', 'MERAH', 'BIRU']) {
@@ -8340,11 +8422,9 @@
                     break;
                 }
             }
-            if (!wrn) wrn = 'HITAM METALIK';
             res.warna = wrn;
-            res.tahun_warna = thn + ' / ' + wrn;
+            res.tahun_warna = (thn && wrn) ? (thn + ' / ' + wrn) : (thn || wrn);
 
-            // Merk & Model Lengkap
             let brandFound = '';
             let modelFound = '';
             const brands = ['DAIHATSU', 'TOYOTA', 'MITSUBISHI', 'HONDA', 'SUZUKI', 'WULING', 'NISSAN', 'HYUNDAI', 'ISUZU'];
@@ -8361,36 +8441,9 @@
             } else if (upper.includes('GRAN MAX') || upper.includes('S401') || upper.includes('S402')) {
                 brandFound = 'DAIHATSU';
                 modelFound = 'GRAN MAX PU 1.3 3W';
-            } else if (upper.includes('SIGRA')) {
-                brandFound = 'DAIHATSU';
-                modelFound = 'SIGRA 1.2 R MT';
-            } else if (upper.includes('XENIA')) {
-                brandFound = 'DAIHATSU';
-                modelFound = 'XENIA 1.3 R MT';
-            } else if (upper.includes('TERIOS')) {
-                brandFound = 'DAIHATSU';
-                modelFound = 'TERIOS 1.5 TX';
             } else if (upper.includes('AVANZA')) {
                 brandFound = 'TOYOTA';
                 modelFound = 'AVANZA 1.3 G MT';
-            } else if (upper.includes('INNOVA')) {
-                brandFound = 'TOYOTA';
-                modelFound = 'KIJANG INNOVA 2.4 G AT';
-            } else if (upper.includes('CALYA')) {
-                brandFound = 'TOYOTA';
-                modelFound = 'CALYA 1.2 G MT';
-            } else if (upper.includes('XPANDER')) {
-                brandFound = 'MITSUBISHI';
-                modelFound = 'XPANDER 1.5 ULTIMATE';
-            } else if (upper.includes('PAJERO')) {
-                brandFound = 'MITSUBISHI';
-                modelFound = 'PAJERO SPORT 2.4 DAKAR';
-            } else if (upper.includes('BRIO')) {
-                brandFound = 'HONDA';
-                modelFound = 'BRIO 1.2 E SATYA';
-            } else if (upper.includes('HR-V') || upper.includes('HRV')) {
-                brandFound = 'HONDA';
-                modelFound = 'HR-V 1.5 E CVT';
             }
 
             if (brandFound && modelFound) {
@@ -8399,11 +8452,10 @@
             } else if (brandFound) {
                 res.merek = brandFound;
             } else {
-                res.merek = 'DAIHATSU AYLA 1.0 M MT';
-                res.type = 'AYLA 1.0 M MT';
+                res.merek = '';
+                res.type = '';
             }
 
-            // Nama Pemilik STNK
             const mPemilik = upper.match(/(?:NAMA PEMILIK|NAMA|PEMILIK)[\s:\.-]*([A-Z\s\.\,]{3,35})(?:\n|ALAMAT|NO)/);
             if (mPemilik) {
                 const cleanPemilik = mPemilik[1].replace(/[^A-Z\s]/g, '').trim();
@@ -8412,12 +8464,16 @@
                 }
             }
 
-            // NJKB
-            const mNjkb = upper.match(/(?:NJKB|NILAI JUAL|DPP)[\s:\.=]*RP?[\s\.]*([0-9]{1,3}(?:\.[0-9]{3}){2,3})/) || upper.match(/(?:NJKB|NILAI JUAL)[\s:\.=]*([0-9]{7,9})/);
+            const mNjkb = upper.match(/(?:NJKB|NILAI JUAL|DPP)[\s:\.=]*Rp?[\s\.]*([0-9]{1,3}(?:\.[0-9]{3}){2,3})/);
             if (mNjkb) {
-                res.njkb = parseInt(mNjkb[1].replace(/\./g, ''));
+                res.njkb = parseInt(mNjkb[1].replace(/\./g, ''), 10);
             } else {
-                res.njkb = lookupNjkbBapenda(res.merek || '', thn);
+                const mRaw = upper.match(/(?:NJKB|NILAI JUAL)[\s:\.=]*([0-9]{7,9})/);
+                if (mRaw) {
+                    res.njkb = parseInt(mRaw[1], 10);
+                } else if (res.merek && res.tahun) {
+                    res.njkb = getOfficialNjkbFromStnk(res.merek, res.type, res.tahun);
+                }
             }
 
             return res;
@@ -11583,7 +11639,9 @@ Status diteruskan ke Petugas Gate Pelabuhan.`);
 
             if (role === 'pemohon') {
                 namaEl.innerText = user.nama || 'Wajib Pajak Pemohon';
-                detailEl.innerText = 'NIK: ' + (user.nik || '-') + ' • WA: +' + (user.phone || '-');
+                let cleanPhone = String(user.phone || '-').replace(/^\+/, '');
+                if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.substring(1);
+                detailEl.innerText = 'NIK: ' + (user.nik || '-') + ' • WA: +' + cleanPhone;
                 if (badgeEl) {
                     badgeEl.innerText = 'PEMOHON KBM';
                     badgeEl.style.background = '#059669';
@@ -12619,6 +12677,7 @@ Status permohonan diteruskan ke Seksi Fasilitas Pabean untuk penerbitan persetuj
         };
 
         function openDocGuideModal(docType) {
+            if (docType === 'ownership') docType = (currentOwnershipDocType === 'leasing') ? 'leasing' : 'bpkb';
             const data = DOC_GUIDES[docType];
             if (!data) return;
 
