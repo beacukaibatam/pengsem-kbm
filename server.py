@@ -1441,6 +1441,8 @@ def _normalize_login_ident(raw):
 OTP_RATE_TRACKER = {}     # key: (ip, phone) -> list[timestamp]
 VERIFY_OTP_TRACKER = {}   # key: (ip, identifier) -> list[timestamp]
 RESET_PW_TRACKER = {}     # key: (ip, identifier) -> list[timestamp]
+EMAIL_OTP_RATE_TRACKER = {}        # key: phone -> list[timestamp] — maks 3x/5 menit kirim OTP email registrasi
+RESET_EMAIL_OTP_RATE_TRACKER = {}  # key: key -> list[timestamp] — maks 3x/5 menit kirim OTP email reset sandi
 OCR_RATE_TRACKER = {}     # key: (ip, session_token) -> list[timestamp]
 DRAFT_SAVE_RATE_TRACKER = {}  # key: (ip, session_token) -> list[timestamp] — autosave Tahap 2
 
@@ -2905,6 +2907,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 else:
                     phone = raw_phone
 
+                # Rate Limit Kirim Ulang OTP ke Email: Maks 3x per 5 menit per nomor pemohon
+                if _is_rate_limited(EMAIL_OTP_RATE_TRACKER, phone, max_attempts=3, window_seconds=300):
+                    database.log_activity(phone, 'pemohon', 'EMAIL_OTP_RATE_LIMITED', detail=f'Permintaan OTP email melebihi 3x/5 menit untuk nomor {phone}')
+                    self._send_json_error(429, "Terlalu banyak permintaan pengiriman OTP ke email. Mohon tunggu 5 menit sebelum mencoba kembali.")
+                    return
+                _record_rate_hit(EMAIL_OTP_RATE_TRACKER, phone, window_seconds=300)
+
                 req_email = str(body.get('email', '')).strip().lower()
 
                 otps = load_db_otp()
@@ -3300,6 +3309,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 body = json.loads(post_data.decode('utf-8'))
                 key = str(body.get('key', '')).strip()
+
+                # Rate Limit Kirim Ulang OTP Reset ke Email: Maks 3x per 5 menit per identifier key
+                if _is_rate_limited(RESET_EMAIL_OTP_RATE_TRACKER, key, max_attempts=3, window_seconds=300):
+                    database.log_activity(key, 'pemohon', 'RESET_EMAIL_OTP_RATE_LIMITED', detail=f'Permintaan OTP email reset sandi melebihi 3x/5 menit untuk key {key}')
+                    self._send_json_error(429, "Terlalu banyak permintaan pengiriman OTP reset ke email. Mohon tunggu 5 menit sebelum mencoba kembali.")
+                    return
+                _record_rate_hit(RESET_EMAIL_OTP_RATE_TRACKER, key, window_seconds=300)
+
                 req_email = str(body.get('email', '')).strip().lower()
 
                 otps = load_db_otp()
@@ -3320,14 +3337,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 otp_code = otp_data.get('otp')
                 nama = otp_data.get('nama', 'Pengguna Portal KBM')
 
-                send_email_otp(target_email, otp_code, nama)
-                print(f"[+] OTP Reset Password via Email terkirim ke {target_email} (Kode: {otp_code})")
+                email_res = send_email_otp(target_email, otp_code, nama, purpose="Reset Kata Sandi")
+                print(f"[+] OTP Reset Password via Email terkirim ke {target_email} (Kode: {otp_code}) - Hasil: {email_res}")
+
+                is_real_sent = isinstance(email_res, dict) and email_res.get('status') == 'ok' and email_res.get('method') in ('smtp_tls', 'gmail_cli')
 
                 self._send_json_response({
                     "status": "ok",
-                    "message": f"Kode OTP reset kata sandi telah dikirimkan ke email: {target_email}.",
+                    "message": f"Kode OTP reset kata sandi telah dikirimkan ke email: {target_email}." if is_real_sent else "Pengiriman email belum aktif. Silakan hubungi Client Coordinator untuk bantuan reset kata sandi.",
                     "email": target_email,
-                    "ttl": 300
+                    "ttl": 300,
+                    "email_sent": is_real_sent
                 })
                 return
             except Exception as e:

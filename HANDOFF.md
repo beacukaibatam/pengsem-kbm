@@ -77,6 +77,21 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Audit Remediasi Keamanan OTP Email: Rate Limiting 3x/5m & Anti-Halusinasi Status Pengiriman** (Antigravity — 27 Nov 2026 20:45 WIB)
+  1. **Latar Belakang & Akar Masalah**:
+     - Menindaklanjuti audit atas commit `78fd5aa` (dual-delivery OTP WA + Email dinas): endpoint publik `/api/auth/request-email-otp` dan `/api/auth/reset-password-request-email-otp` belum memiliki rate limiter sehingga rentan dieksploitasi untuk spamming/kehabisan kuota email.
+     - Selain itu, `/api/auth/reset-password-request-email-otp` langsung mengembalikan pesan sukses "Kode OTP reset kata sandi telah dikirimkan ke email..." tanpa memeriksa apakah `send_email_otp` benar-benar terkirim via SMTP atau hanya jatuh ke `logged_fallback` (melanggar prinsip anti-halusinasi sistem).
+  2. **Implementasi Rate Limiter 3x/5 Menit**:
+     - Ditambahkan tracker in-memory: `EMAIL_OTP_RATE_TRACKER = {}` (kunci: nomor telepon pemohon `phone`) dan `RESET_EMAIL_OTP_RATE_TRACKER = {}` (kunci: sesi reset `key`).
+     - Pemohon dibatasi maksimal 3 kali permintaan pengiriman email OTP dalam rentang 300 detik (5 menit). Percobaan ke-4 langsung ditolak dengan HTTP 429: `"Terlalu banyak permintaan pengiriman OTP ke email. Mohon tunggu 5 menit sebelum mencoba kembali."` dan dicatat ke log audit aktivitas.
+  3. **Pemberitahuan Status Jujur (Anti-Halusinasi / Anti-False Success)**:
+     - Output `send_email_otp(..., purpose="Reset Kata Sandi")` kini dievaluasi secara ketat: `is_real_sent = isinstance(email_res, dict) and email_res.get('status') == 'ok' and email_res.get('method') in ('smtp_tls', 'gmail_cli')`.
+     - Jika `is_real_sent` bernilai `True`, sistem mengabarkan email terkirim. Jika `False` (karena kredensial SMTP belum terpasang atau gagal kirim), respons JSON mengirimkan `"email_sent": False` dengan pesan jujur: *"Pengiriman email belum aktif. Silakan hubungi Client Coordinator untuk bantuan reset kata sandi."*.
+  4. **Verifikasi Empiris**:
+     - Diuji langsung via panggilan API 4x berturut-turut pada kedua endpoint. Panggilan 1 s.d. 3 berhasil mengembalikan HTTP 200 dengan status jujur (`email_sent: False` saat SMTP non-aktif), dan panggilan ke-4 tepat mengembalikan HTTP 429 (`rate limited`).
+     - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+     - Python syntax: `python3 -m py_compile server.py` PASS tanpa error.
+
 - **Transisi Bilah Stepper ke `position: fixed` (Diam Total Sejak Pixel Scroll Ke-0 Tanpa Fase Berjalan)** (Antigravity — 27 Nov 2026 20:25 WIB)
   1. **Akar Masalah Fase Berjalan Sticky**:
      - `position: sticky` secara native tetap bergerak 1:1 bersama dokumen sampai batas `top` tercapai (scroll awal puluhan piksel). Pengguna menghendaki stepper diam total permanen persis seperti `.app-header`.
