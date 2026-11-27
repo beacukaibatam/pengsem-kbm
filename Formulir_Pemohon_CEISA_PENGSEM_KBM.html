@@ -3880,12 +3880,6 @@
 
     <div class="main-container">
 
-        <!-- Pemberitahuan draf dipulihkan (muncul singkat setelah login bila ada draf tersimpan) -->
-        <div id="draftRestoredBanner" style="display:none; align-items:center; gap:8px; background:#EFF6FF; border:1.5px solid #BFDBFE; color:#1D4ED8; font-size:0.76rem; font-weight:700; padding:8px 12px; border-radius:8px; margin-bottom:12px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-            Draf berkas yang sudah Anda isi/koreksi sebelumnya berhasil dipulihkan dari penyimpanan server.
-        </div>
-
         <!-- Bilah Wizard 4 Tahap Pemohon (Opsi 1) -->
         <div class="page-card" style="margin-bottom:12px; padding:8px 12px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px;">
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
@@ -8026,16 +8020,6 @@
                 renderCrossValidationPanel();
                 syncValues();
                 _markAutosaved();
-
-                const anyFieldsRestored = draft.fields && Object.keys(draft.fields).length > 0;
-                const anyImagesRestored = draft.images && Object.keys(draft.images).length > 0;
-                if (targetsRestored.length || anyFieldsRestored || anyImagesRestored) {
-                    const banner = document.getElementById('draftRestoredBanner');
-                    if (banner) {
-                        banner.style.display = 'flex';
-                        setTimeout(() => { banner.style.display = 'none'; }, 7000);
-                    }
-                }
             } catch (e) {
                 console.warn('[Draf] Gagal memulihkan draf:', e);
             } finally {

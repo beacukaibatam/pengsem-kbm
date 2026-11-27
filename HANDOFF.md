@@ -77,6 +77,18 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Penghilangan Banner Notifikasi Draf Dipulihkan (`#draftRestoredBanner`)** (Antigravity — 27 Nov 2026 22:30 WIB)
+  1. **Permintaan Pengguna**:
+     - Menghapus banner: *"Draf berkas yang sudah Anda isi/koreksi sebelumnya berhasil dipulihkan dari penyimpanan server."* karena user tidak ingin notifikasi ini ditampilkan lagi.
+  2. **Implementasi & Efek**:
+     - Menghapus elemen `<div id="draftRestoredBanner" ...>` dari HTML di atas wizard.
+     - Menghapus pemanggilan penampil banner (`banner.style.display = 'flex'` dan `setTimeout` 7 detik) dari dalam `restoreFormDraft()`.
+     - Logika pemulihan data draf (`restoreFormDraft()`: fields snapshot, image preview dataUrl, store OCR, badge status '✓ Terbaca Otomatis' / '✓ Tersimpan') tetap berjalan 100% normal dan tenang di latar belakang tanpa ada interupsi notifikasi banner.
+  3. **Verifikasi**:
+     - `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+     - Sintaks inline JS lolos `node -e` tanpa error.
+     - Playwright browser test: `#draftRestoredBanner` count = 0 (terbukti tidak ada di DOM), pemulihan draf KTP & data tetap berjalan sukses (bukti screenshot `clean_draft_restored_no_banner.png`).
+
 - **Fix Draf Foto KTP Hilang Pasca Simpan & Reload (Async Await Draft-Save & Kompresi <400KB)** (Antigravity — 27 Nov 2026 22:20 WIB)
   1. **Akar Masalah Nyata**:
      - `manualSaveDraft()` dan fungsi stepper `saveStep1AndContinue()`, `saveStep2AndContinue()`, `saveStep3AndContinue()` memanggil `_runAutosave()` tanpa `await`.
