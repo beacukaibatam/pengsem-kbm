@@ -18,4 +18,4 @@ if [ ! -f ".env" ]; then
 fi
 
 echo "[*] Menjalankan PENGSEM KBM WhatsApp Gateway di http://127.0.0.1:${PORT:-3001} ..."
-exec node index.js
+exec node --dns-result-order=ipv4first --no-network-family-autoselection index.js

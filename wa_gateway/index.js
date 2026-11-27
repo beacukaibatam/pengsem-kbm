@@ -3,6 +3,18 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const dns = require('dns');
+const net = require('net');
+const https = require('https');
+
+// Paksa IPv4-first & matikan Happy Eyeballs autoSelectFamily (Node 22 di macOS tanpa IPv6 publik
+// sering menyebabkan AggregateError EHOSTUNREACH/ETIMEDOUT ke web.whatsapp.com)
+dns.setDefaultResultOrder('ipv4first');
+if (typeof net.setDefaultAutoSelectFamily === 'function') {
+  net.setDefaultAutoSelectFamily(false);
+}
+const ipv4HttpsAgent = new https.Agent({ family: 4, keepAlive: true });
+
 const express = require('express');
 const pino = require('pino');
 const qrcodeTerminal = require('qrcode-terminal');
@@ -191,6 +203,7 @@ async function startWhatsAppSocket() {
     ...(version ? { version } : {}),
     auth: state,
     logger,
+    agent: ipv4HttpsAgent,
     browser: Browsers.macOS('PENGSEM KBM Batam'),
     printQRInTerminal: false,
     syncFullHistory: false,
