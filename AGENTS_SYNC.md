@@ -375,3 +375,8 @@
   - Menambahkan fungsi `editOnboardingAnswers()` yang menyembunyikan `#page-1` & wizard card, menampilkan kembali `#onboardingStep1`, memulihkan posisi radio button & highlight kartu sesuai `onboardingState` terakhir pemohon, serta menyetel `onboardingCompleted = false`.
   - Saat pemohon selesai mengoreksi dan mengonfirmasi kembali dari Panduan Dokumen (`proceedFromDocGuideToForm`), fungsi `applyOnboardingStateToForm()` menyesuaikan seluruh tampilan Tahap 1 tanpa menghapus berkas yang telah diunggah.
   - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, JS syntax OK.
+- [x] Poin 58 (Antigravity): **PROPORSIONALITAS GRID SPLIT-SCREEN 60:40 (`.split-screen-grid`)**:
+  - Mengubah rasio kolom `.split-screen-grid` dari 50/50 (`1fr 1fr`) menjadi 60/40 (`1.5fr 1fr`).
+  - Memberikan area pratinjau dokumen di kolom kiri ruang 60% yang lebih lapang untuk kartu dokumen berdampingan, sementara kolom kanan (40%) tetap proporsional dan padat untuk isian field teks di Tahap 1, 2, dan 3.
+  - Responsivitas mobile (`max-width: 900px`) tetap aman dengan susunan 1 kolom (`1fr`).
+  - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.

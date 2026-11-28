@@ -77,6 +77,11 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Penyesuaian Lebar Grid Split-Screen 60:40 (Perubahan 2 Selesai)** (Antigravity — 28 Nov 2026 ~19:40 WIB)
+  - Mengubah `.split-screen-grid` menjadi `grid-template-columns: 1.5fr 1fr;` (60% kiri untuk upload/preview berkas, 40% kanan untuk form isian).
+  - Terapkan konsisten pada Tahap 1, 2, dan 3 dengan breakpoint mobile tetap aman (1 kolom pada ≤900px).
+  - Zero-diff `diff -u` = 0, JS syntax OK.
+
 - **Perbaikan Koreksi Status Onboarding dari Tahap 1 (Bug 1 Selesai)** (Antigravity — 28 Nov 2026 ~19:35 WIB)
   - Menyediakan banner ringkasan `#onboardingSummaryBanner` di header `#page-1` dengan tombol aksi *"✎ Ubah Status Pengurusan & Kepemilikan ➔"*.
   - Mengimplementasikan `editOnboardingAnswers()` untuk kembali ke `#onboardingStep1` dengan mempertahankan jawaban radio button terakhir (tidak ter-reset ke default).
