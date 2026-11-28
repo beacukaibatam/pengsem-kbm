@@ -1798,6 +1798,27 @@ def _duplicate_registration_message(phone_exists, email_exists):
         return "Alamat email ini sudah terdaftar di sistem. Silakan gunakan alamat email lain atau langsung Masuk (Login) jika sudah memiliki akun."
     return ""
 
+def _mask_phone(phone):
+    """Sensor nomor WhatsApp: sisakan 2 digit terakhir (mis. 628123... -> **********97)."""
+    p = str(phone or '').strip()
+    if not p:
+        return ''
+    if len(p) <= 2:
+        return '*' * len(p)
+    return '*' * (len(p) - 2) + p[-2:]
+
+def _mask_email(email):
+    """Sensor alamat email: sisakan 3 karakter terakhir sebelum '@' (mis. ...m17@gmail.com)."""
+    e = str(email or '').strip()
+    if not e or '@' not in e:
+        return e
+    local, domain = e.split('@', 1)
+    if len(local) <= 3:
+        masked_local = local
+    else:
+        masked_local = '*' * (len(local) - 3) + local[-3:]
+    return masked_local + '@' + domain
+
 def load_db_otp():
     otps = {}
     if os.path.exists(DB_OTP_PATH):
@@ -2325,16 +2346,19 @@ def send_email_otp(to_email, otp_code, nama="Pemohon KBM Batam", purpose="Pendaf
     import subprocess
     import shutil
     
-    subject = f"🏛️ [KPU Bea Cukai Batam] Kode Verifikasi OTP {purpose}: {otp_code}"
+    # Subject TANPA kode OTP & tanpa emoji — menyertakan kode OTP di baris subject adalah
+    # salah satu pemicu spam terbesar pada filter Gmail/Outlook; kode hanya di isi email.
+    subject = f"[KPU Bea Cukai Batam] Kode Verifikasi {purpose}"
     body = (
-        f"🏛️ KPU BEA DAN CUKAI TIPE B BATAM\n"
-        f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+        f"KPU Bea Cukai Tipe B Batam\n"
+        f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) ke TLDDP\n\n"
         f"Halo Bapak/Ibu {nama},\n\n"
-        f"Berikut adalah Kode Verifikasi (OTP) untuk {purpose} portal Anda:\n\n"
-        f"👉  {otp_code}  👈\n\n"
-        f"Kode ini berlaku selama 5 menit. Mohon tidak memberikan kode ini kepada siapapun demi keamanan data Anda.\n\n"
-        f"Jika Anda tidak merasa melakukan pendaftaran ini, abaikan email ini.\n\n"
-        f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+        f"Berikut Kode Verifikasi (OTP) untuk {purpose} akun portal Anda:\n\n"
+        f"Kode OTP: {otp_code}\n\n"
+        f"Kode ini berlaku selama 5 menit. Jangan berikan kode ini kepada siapa pun demi keamanan data Anda.\n\n"
+        f"Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini.\n\n"
+        f"Informasi lebih lanjut: 0851-5814-8448 (Client Coordinator)\n"
+        f"KPU Bea Cukai Batam"
     )
 
     # 1. Coba kirim via SMTP TLS jika Environment Variables tersedia (Produksi Cloud)
@@ -3604,7 +3628,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             }, cookie_header="session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
             return
 
-        # API Permintaan Kode OTP untuk Penghapusan Akun Pemohon (dual-delivery WA & Email)
+        # API Permintaan Kode OTP untuk Penghapusan Akun Pemohon (channel: whatsapp / email)
         if self.path == '/api/auth/delete-account-request-otp':
             token, sess = get_session_from_request(self)
             if not sess or sess.get('role') != 'pemohon':
@@ -3612,6 +3636,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             user = sess.get('user', {}) or {}
             acct_key = str(user.get('id') or user.get('phone') or user.get('username') or user.get('email') or '')
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                self._send_json_error(400, 'Format permintaan tidak valid.')
+                return
+
+            reason = str(body.get('reason', '')).strip()
+            channel = str(body.get('channel', 'whatsapp')).strip().lower()
+            if len(reason) < 5:
+                self._send_json_error(400, 'Alasan penghapusan akun wajib diisi (minimal 5 karakter) sebelum meminta kode OTP.')
+                return
+            if channel not in ('whatsapp', 'email'):
+                channel = 'whatsapp'
+
             # Rate-limit berbasis IDENTITAS AKUN (bukan IP) — tidak bisa dilewati spoofing header.
             if _is_rate_limited(DELETE_ACCOUNT_OTP_TRACKER, acct_key, max_attempts=3, window_seconds=300):
                 database.log_activity(acct_key, 'pemohon', 'DELETE_ACCOUNT_OTP_RATE_LIMITED', detail='Permintaan OTP hapus akun melebihi 3x/5 menit')
@@ -3619,23 +3659,51 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             _record_rate_hit(DELETE_ACCOUNT_OTP_TRACKER, acct_key, window_seconds=300)
 
-            otp_code = f"{random.randint(100000, 999999)}"
-            expires_at = time.time() + 300
             otps = load_db_otp()
             otp_key = 'delete_account:' + acct_key
             nama = str(user.get('nama') or 'Pemohon KBM Batam')
             phone = str(user.get('phone') or '').strip()
             email = str(user.get('email') or '').strip().lower()
-            otps[otp_key] = {
-                'otp': otp_code,
-                'expires_at': expires_at,
-                'phone': phone,
-                'email': email,
-                'nama': nama,
-                'action': 'delete_account',
-                'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }
-            save_db_otp(otps)
+
+            # Pakai OTP yang sama bila belum kedaluwarsa, supaya kirim ke WA lalu ke Email
+            # tetap satu kode yang sama; buat kode baru bila belum ada / kedaluwarsa.
+            existing = otps.get(otp_key)
+            if existing and time.time() < existing.get('expires_at', 0):
+                otp_code = existing.get('otp')
+            else:
+                otp_code = f"{random.randint(100000, 999999)}"
+                otps[otp_key] = {
+                    'otp': otp_code,
+                    'expires_at': time.time() + 300,
+                    'phone': phone,
+                    'email': email,
+                    'nama': nama,
+                    'action': 'delete_account',
+                    'reason': reason,
+                    'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                save_db_otp(otps)
+
+            if channel == 'email':
+                if not email or '@' not in email:
+                    self._send_json_error(400, 'Alamat email tidak ditemukan pada akun Anda. Mohon gunakan pengiriman ke WhatsApp.')
+                    return
+                email_res = None
+                try:
+                    email_res = send_email_otp(email, otp_code, nama, purpose='Penghapusan Akun')
+                    print(f"[+] OTP hapus akun dikirimkan ke email {email}: {email_res}")
+                except Exception as e_em:
+                    print(f"[!] Gagal kirim OTP hapus akun ke email {email}: {e_em}")
+                is_sent = isinstance(email_res, dict) and email_res.get('status') == 'ok' and email_res.get('method') in ('smtp_tls', 'gmail_cli')
+                masked = _mask_email(email)
+                self._send_json_response({
+                    'status': 'ok',
+                    'channel': 'email',
+                    'masked_contact': masked,
+                    'delivered': is_sent,
+                    'message': f"OTP telah dikirim ke {masked}." if is_sent else 'Pengiriman email belum aktif. Mohon gunakan pengiriman ke WhatsApp.'
+                })
+                return
 
             wa_msg = (
                 f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
@@ -3646,7 +3714,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 f"Kode ini berlaku 5 menit. Jika Anda tidak merasa meminta penghapusan akun, abaikan pesan ini.\n\n"
                 f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
             )
-
             meta_res = None
             if phone:
                 try:
@@ -3655,38 +3722,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     print(f"[+] OTP hapus akun diproses untuk WhatsApp {phone} (Kode: {otp_code}) - Meta: {meta_res}")
                 except Exception as e_wa:
                     print(f"[!] Gagal kirim OTP hapus akun ke WA {phone}: {e_wa}")
-
-            is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
-
-            email_res = None
-            if email and '@' in email:
-                try:
-                    email_res = send_email_otp(email, otp_code, nama, purpose='Penghapusan Akun')
-                    print(f"[+] OTP hapus akun dikirimkan ke email {email}: {email_res}")
-                except Exception as e_em:
-                    print(f"[!] Gagal kirim OTP hapus akun ke email {email}: {e_em}")
-
-            is_email_success = isinstance(email_res, dict) and email_res.get('status') == 'ok' and email_res.get('method') in ('smtp_tls', 'gmail_cli')
-            is_any_delivered = is_meta_success or is_email_success
-
-            if is_meta_success and is_email_success:
-                msg = 'Kode OTP verifikasi telah dikirimkan ke WhatsApp & Email Anda.'
-            elif is_meta_success:
-                msg = 'Kode OTP verifikasi telah dikirimkan ke WhatsApp Anda.'
-            elif is_email_success:
-                msg = 'Kode OTP verifikasi telah dikirimkan ke Email Anda.'
-            else:
-                msg = 'Kode OTP sedang diproses. Mohon cek WhatsApp/Email Anda.'
-
+            is_sent = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
+            masked = _mask_phone(phone)
             self._send_json_response({
                 'status': 'ok',
-                'message': msg,
-                'ttl': 300,
-                'otp_delivered': is_any_delivered,
-                'wa_delivered': is_meta_success,
-                'email_delivered': is_email_success,
-                'masked_phone': phone,
-                'masked_email': email
+                'channel': 'whatsapp',
+                'masked_contact': masked,
+                'delivered': is_sent,
+                'message': f"OTP telah dikirim ke {masked}." if is_sent else 'Kode OTP sedang diproses. Mohon cek WhatsApp Anda.'
             })
             return
 

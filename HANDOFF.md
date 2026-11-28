@@ -77,6 +77,13 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Penyempurnaan Hapus Akun Pemohon (alasan wajib dulu, opsi WA/Email, kontak tersensor, anti-spam email)** (Cline — 28 Nov 2026 ~22:45 WIB)
+  - **Alasan wajib dulu**: tombol request OTP (WA maupun Email) dinonaktifkan sampai kolom alasan terisi ≥5 karakter; backend `delete-account-request-otp` juga menolak permintaan tanpa `reason`.
+  - **WA utama + opsi Email**: endpoint `delete-account-request-otp` kini menerima `channel` (`whatsapp`/`email`), mengirim OTP ke kanal yang dipilih, dan memakai ulang kode yang sama bila belum kedaluwarsa (kirim WA lalu Email tetap satu kode). UI menampilkan tombol "Kirim Kode OTP (WA)" + tombol opsional "Kirim ke Email".
+  - **Kontak tersensor**: helper `_mask_phone` (2 digit terakhir tetap tampil) & `_mask_email` (3 karakter sebelum "@" tetap tampil); pesan status "OTP telah dikirim ke **********97" (WA) atau "OTP telah dikirim ke ***********m17@gmail.com" (email).
+  - **Email masuk spam — penyebab & perbaikan**: akar masalah utama adalah kode OTP diletakkan di baris SUBJECT + emoji (pemicu spam klasik pada Gmail/Outlook). Sudah diperbaiki: subject jadi `[KPU Bea Cukai Batam] Kode Verifikasi {purpose}` (tanpa OTP/emoji), body dibersihkan dari emoji. Untuk benar-benar lolos dari spam, KPU juga perlu mengonfigurasi SPF, DKIM, dan DMARC di DNS domain pengirim (ini konfigurasi infrastruktur, bukan kode).
+  - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` OK, `python3 -m py_compile server.py database.py` OK.
+
 - **Fitur Hapus Akun Pemohon (wajib alasan + verifikasi OTP ke WA/Email)** (Cline — 28 Nov 2026 ~22:30 WIB)
   - **Backend**: `database.delete_user_by_id()` baru untuk menghapus baris `users` SQLite (fallback username/phone/email/nik/nip). Endpoint `POST /api/auth/delete-account-request-otp` (wajib sesi pemohon; OTP 6 digit dual-delivery ke WhatsApp & Email via `send_whatsapp_otp_template`/`send_email_otp`, disimpan di `load_db_otp()` dgn kunci `delete_account:<id>`, rate-limit 3x/5 menit berbasis identitas akun). Endpoint `POST /api/auth/delete-account` (wajib `reason` ≥5 karakter + `otp` benar; hapus akun dari SQLite & JSON, bersihkan draf, catat `AKUN_PEMOHON_DIHAPUS` beserta alasan, hapus sesi aktif).
   - **Perilaku data**: hanya AKUN (login) yang dihapus. Data `permohonan` yang sudah diajukan TETAP dipertahankan sebagai arsip resmi kepabeanan (tidak ikut dihapus) — pemohon yang akunnya terhapus tidak bisa lagi login/melacak, tapi permohonan historisnya tetap tersedia bagi petugas.

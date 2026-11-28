@@ -5315,7 +5315,11 @@
                 <label style="font-size:0.74rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;" for="deleteAccountOtp">Kode OTP (6 digit):</label>
                 <div style="display:flex; gap:8px; align-items:stretch;">
                     <input type="text" id="deleteAccountOtp" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="______" style="flex:1; min-width:0; border:1.5px solid #CBD5E1; border-radius:8px; padding:8px 10px; font-size:0.9rem; letter-spacing:3px; text-align:center; font-family:monospace;" oninput="updateDeleteAccountButtonState()">
-                    <button type="button" id="btnDeleteAccountSendOtp" class="btn-notif-cancel" onclick="requestDeleteAccountOtp()">Kirim Kode OTP</button>
+                    <button type="button" id="btnDeleteAccountSendOtp" class="btn-notif-primary" onclick="requestDeleteAccountOtp('whatsapp')" disabled style="opacity:0.5; cursor:not-allowed;">Kirim Kode OTP (WA)</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                    <button type="button" id="btnDeleteAccountSendEmail" class="btn-notif-cancel" onclick="requestDeleteAccountOtp('email')" disabled style="opacity:0.5; cursor:not-allowed;">Kirim ke Email</button>
+                    <span style="font-size:0.68rem; color:#64748B;">(opsional)</span>
                 </div>
                 <div id="deleteAccountOtpStatus" style="font-size:0.68rem; color:#64748B; margin-top:5px; min-height:15px; line-height:1.4;"></div>
             </div>
@@ -15990,12 +15994,25 @@
         function updateDeleteAccountButtonState() {
             const reason = document.getElementById('deleteAccountReason');
             const otp = document.getElementById('deleteAccountOtp');
-            const btn = document.getElementById('btnDeleteAccountConfirm');
-            if (!btn) return;
-            const ok = (reason && reason.value.trim().length >= 5) && (otp && otp.value.trim().length === 6);
-            btn.disabled = !ok;
-            btn.style.opacity = ok ? '1' : '0.5';
-            btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+            const btnConfirm = document.getElementById('btnDeleteAccountConfirm');
+            const btnWa = document.getElementById('btnDeleteAccountSendOtp');
+            const btnEmail = document.getElementById('btnDeleteAccountSendEmail');
+            const reasonOk = !!(reason && reason.value.trim().length >= 5);
+            const otpOk = !!(otp && otp.value.trim().length === 6);
+
+            // Tombol request OTP (WA & Email) hanya aktif setelah alasan terisi.
+            [btnWa, btnEmail].forEach(function (b) {
+                if (!b) return;
+                b.disabled = !reasonOk;
+                b.style.opacity = reasonOk ? '1' : '0.5';
+                b.style.cursor = reasonOk ? 'pointer' : 'not-allowed';
+            });
+
+            if (!btnConfirm) return;
+            const ok = reasonOk && otpOk;
+            btnConfirm.disabled = !ok;
+            btnConfirm.style.opacity = ok ? '1' : '0.5';
+            btnConfirm.style.cursor = ok ? 'pointer' : 'not-allowed';
         }
 
         function _deleteAccountAuthHeaders() {
@@ -16006,24 +16023,30 @@
             return h;
         }
 
-        async function requestDeleteAccountOtp() {
-            const btn = document.getElementById('btnDeleteAccountSendOtp');
+        async function requestDeleteAccountOtp(channel) {
+            channel = channel === 'email' ? 'email' : 'whatsapp';
+            const reason = document.getElementById('deleteAccountReason');
+            const reasonVal = reason ? reason.value.trim() : '';
+            if (reasonVal.length < 5) { showAppAlert('Alasan penghapusan akun wajib diisi (minimal 5 karakter) sebelum meminta kode OTP.', 'warning'); return; }
+
+            const btnWa = document.getElementById('btnDeleteAccountSendOtp');
+            const btnEmail = document.getElementById('btnDeleteAccountSendEmail');
             const status = document.getElementById('deleteAccountOtpStatus');
-            if (btn) { btn.disabled = true; btn.innerText = '⏳ Mengirim...'; }
+            const activeBtn = (channel === 'email') ? btnEmail : btnWa;
+            const origText = activeBtn ? activeBtn.innerText : '';
+            if (activeBtn) { activeBtn.disabled = true; activeBtn.innerText = '⏳ Mengirim...'; }
             if (status) status.innerText = '';
             try {
                 const resp = await fetch(`${API_BASE_URL}/api/auth/delete-account-request-otp`, {
                     method: 'POST',
-                    headers: _deleteAccountAuthHeaders()
+                    headers: _deleteAccountAuthHeaders(),
+                    body: JSON.stringify({ reason: reasonVal, channel: channel })
                 });
                 const data = await resp.json().catch(() => ({}));
                 if (resp.ok) {
-                    const parts = [];
-                    if (data.wa_delivered) parts.push('WhatsApp');
-                    if (data.email_delivered) parts.push('Email');
                     if (status) {
-                        status.style.color = '#059669';
-                        status.innerText = parts.length ? ('✓ Kode OTP dikirim ke ' + parts.join(' & ') + '. Cek pesan masuk Anda.') : '⏳ Kode OTP sedang diproses. Mohon cek WhatsApp/Email Anda.';
+                        status.style.color = data.delivered ? '#059669' : '#B45309';
+                        status.innerText = data.message || (data.delivered ? 'OTP telah dikirim.' : 'Kode OTP sedang diproses.');
                     }
                 } else {
                     if (status) { status.style.color = '#B91C1C'; status.innerText = data.message || 'Gagal mengirim kode OTP.'; }
@@ -16031,7 +16054,8 @@
             } catch (e) {
                 if (status) { status.style.color = '#B91C1C'; status.innerText = 'Gagal menghubungi server.'; }
             } finally {
-                if (btn) { btn.disabled = false; btn.innerText = 'Kirim Kode OTP'; }
+                if (activeBtn) { activeBtn.disabled = false; activeBtn.innerText = origText; }
+                updateDeleteAccountButtonState();
             }
         }
 
