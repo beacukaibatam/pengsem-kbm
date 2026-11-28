@@ -3385,14 +3385,14 @@
                             </div>
 
                             <!-- ================= SYARAT & KETENTUAN PERNYATAAN INTEGRITAS LAYANAN ================= -->
-                            <div class="landing-terms-box" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:10px; padding:8px 12px; margin-bottom:8px;">
-                                <label class="landing-terms-check-label" style="display:flex; align-items:flex-start; gap:8px; font-size:0.72rem; font-weight:700; color:#1E293B; cursor:pointer; line-height:1.3;">
-                                    <input type="checkbox" id="landingRegTermsAgree" onchange="updateLandingRegButtonState()" style="width:16px; height:16px; margin-top:1px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
-                                    <span>Dengan melakukan registrasi ini, saya menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat dan Ketentuan.</span>
+                            <div class="landing-terms-box" style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:10px; padding:10px 12px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                                <label class="landing-terms-check-label" style="display:flex; align-items:flex-start; gap:8px; font-size:0.72rem; font-weight:700; color:#1E293B; cursor:pointer; line-height:1.35;">
+                                    <input type="checkbox" id="landingRegTermsAgree" onchange="updateLandingRegButtonState()" style="width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
+                                    <span>Saya menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat dan Ketentuan layanan serta bersedia mematuhi seluruh prosedur kepabeanan yang berlaku.</span>
                                 </label>
-                                <details class="landing-terms-details" style="margin-top:5px; padding-left:24px;">
+                                <details class="landing-terms-details" style="margin-top:6px; padding-left:24px;">
                                     <summary style="font-size:0.68rem; color:#0284C7; font-weight:700; cursor:pointer; user-select:none;">Lihat Rincian Pernyataan &amp; Ketentuan ▾</summary>
-                                    <div style="margin-top:6px; font-size:0.68rem; color:#475569; line-height:1.4; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:8px 10px;">
+                                    <div style="margin-top:6px; font-size:0.68rem; color:#475569; line-height:1.4; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:8px 10px;">
                                         <ol style="margin:0; padding-left:16px; display:flex; flex-direction:column; gap:5px;">
                                             <li><strong>Pemrosesan Data Kepabeanan:</strong> Dengan mendaftarkan akun ini, saya memahami dan menyetujui bahwa data identitas diri dan kendaraan saya diproses untuk keperluan pelayanan pabean pengeluaran sementara kendaraan bermotor dari KPBPB Batam ke TLDDP serta pengawasan rekonsiliasi pemasukan kembali ke KPBPB Batam.</li>
                                             <li><strong>Kepatuhan Prosedur &amp; Jaminan PPN 11%:</strong> Saya menyatakan bersedia mematuhi dan mengikuti seluruh tahapan prosedur kepabeanan yang berlaku, termasuk menghadiri pemeriksaan fisik kendaraan, menerima penetapan dan menyerahkan jaminan tunai/bank garansi PPN 11%, serta mengurus penerbitan surat jalan Polri.</li>
@@ -3403,8 +3403,8 @@
                             </div>
 
                             <!-- ================= PERSETUJUAN PENGGUNAAN DATA PIHAK KETIGA ================= -->
-                            <div class="landing-thirdparty-box" style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:8px 12px; margin-bottom:12px;">
-                                <label class="landing-thirdparty-check-label" style="display:flex; align-items:flex-start; gap:8px; font-size:0.71rem; font-weight:600; color:#14532D; cursor:pointer; line-height:1.35;">
+                            <div class="landing-thirdparty-box" style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:10px 12px; margin-bottom:14px; box-shadow:0 1px 3px rgba(16,185,129,0.05);">
+                                <label class="landing-thirdparty-check-label" style="display:flex; align-items:flex-start; gap:8px; font-size:0.71rem; font-weight:600; color:#14532D; cursor:pointer; line-height:1.4;">
                                     <input type="checkbox" id="landingRegThirdPartyAgree" onchange="updateLandingRegButtonState()" style="width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
                                     <span>Apabila permohonan ini memuat data pihak lain (seperti pemilik kendaraan, penyewa, pemberi sewa, pemberi kuasa, dan/atau anggota keluarga, atau lainnya), saya menyatakan telah mendapat persetujuan dari pihak yang bersangkutan untuk mengunggah dan menggunakan data identitasnya dalam permohonan ini, dan bertanggung jawab penuh atas keabsahan persetujuan tersebut.</span>
                                 </label>
@@ -3755,6 +3755,8 @@
 
     <!-- ================= PORTAL VIEW 1: DASHBOARD MONITORING PEGAWAI ================= -->
     <div id="viewDashboard" class="main-container" style="display:none; padding-top:20px;">
+        <!-- STATUS TRACKER 9-TAHAP (SESUAI FLOWCHART & MOCKUP) -->
+        <div id="pemohonStatusTrackerContainer" style="display:none; margin-bottom:24px;"></div>
         
         <!-- KPI METRICS SUMMARY -->
         <section class="dash-kpi-grid">
@@ -4280,6 +4282,9 @@
                         </div>
                     </div>
 
+                    <!-- Banner Peringatan Keserasian Nama Surat Kuasa (Non-blocking) -->
+                    <div id="suratKuasaCrossCheckBanner" style="display:none; background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.75rem;"></div>
+
                     <!-- Grid 2 Kolom Berdampingan: KTP Pemohon & NPWP Pemohon -->
                     <div class="cards-grid-2col">
                         <!-- Scanner Card 1: KTP Pemohon / Pihak yang Diwakilkan -->
@@ -4496,19 +4501,34 @@
             <div class="split-screen-grid">
                 <!-- SISI KIRI: Unggah BPKB / Leasing + Hubungan Kepemilikan -->
                 <div style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Dua Kartu Pilihan: BPKB Milik Sendiri vs BPKB di Leasing/Bank -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div id="cardBpkbSendiri" onclick="switchOwnershipDocType('bpkb')" style="cursor:pointer; border:2px solid #005FAC; background:#F0F7FF; border-radius:8px; padding:12px; transition:all 0.15s ease;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="radio" name="optOwnershipDoc" id="optDocBpkb" value="bpkb" checked style="accent-color:#005FAC; cursor:pointer;">
+                                <div>
+                                    <div style="font-weight:800; font-size:0.84rem; color:#0F172A;">BPKB Milik Sendiri</div>
+                                    <div style="font-size:0.68rem; color:#64748B;">Kendaraan lunas, BPKB di tangan Pemohon</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="cardBpkbLeasing" onclick="switchOwnershipDocType('leasing')" style="cursor:pointer; border:1.5px solid #CBD5E1; background:#FFFFFF; border-radius:8px; padding:12px; transition:all 0.15s ease;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="radio" name="optOwnershipDoc" id="optDocLeasing" value="leasing" style="accent-color:#005FAC; cursor:pointer;">
+                                <div>
+                                    <div style="font-weight:800; font-size:0.84rem; color:#0F172A;">BPKB di Leasing/Bank</div>
+                                    <div style="font-size:0.68rem; color:#64748B;">Kendaraan masih kredit / Belum Lunas</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Scanner Card BPKB -->
                     <div class="scanner-card" id="accWrapBpkb" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; min-height:24px;">
-                            <!-- Switcher BPKB vs Leasing -->
-                            <div style="display:flex; align-items:center; gap:10px; font-size:0.74rem;">
-                                <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:700; color:#0F172A;">
-                                    <input type="radio" name="optOwnershipDoc" id="optDocBpkb" value="bpkb" checked onchange="switchOwnershipDocType('bpkb')">
-                                    <span>BPKB (Lunas)</span>
-                                </label>
-                                <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:700; color:#64748B;">
-                                    <input type="radio" name="optOwnershipDoc" id="optDocLeasing" value="leasing" onchange="switchOwnershipDocType('leasing')">
-                                    <span>Surat Leasing (Kredit)</span>
-                                </label>
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+                                <span id="labelOwnershipCardTitle">Unggah BPKB</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <span id="accSaveStatusBpkb" class="acc-save-status"></span>
@@ -4524,7 +4544,7 @@
 
                         <!-- Deskripsi dinamis BPKB / Leasing -->
                         <div id="descOwnershipDoc" style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
-                            Unggah foto/scan 3 lembar BPKB asli (Wajib Berwarna): Hal. 1 Identitas Kendaraan, Hal. 2 Pendaftaran Pertama, Hal. 3 Penyerahan Kepemilikan.
+                            Unggah foto/scan BPKB asli (Wajib Berwarna): Hal. 1 Identitas Kendaraan, Hal. 2 Pendaftaran Pertama, Hal. 3 Penyerahan Kepemilikan.
                         </div>
 
                         <!-- 3 Slot BPKB Klik Langsung -->
@@ -4585,6 +4605,46 @@
 
                         <!-- Cuplikan Data Hasil OCR BPKB -->
                         <div id="snippetOwnership" class="ocr-snippet-box">Menunggu berkas BPKB diunggah...</div>
+                    </div>
+
+                    <!-- Dokumen Tambahan - BPKB di Leasing/Bank (Khusus Opsi Leasing) -->
+                    <div id="leasingDocExtraBox" style="display:none; background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:10px; padding:12px;">
+                        <div style="font-weight:800; font-size:0.80rem; color:#92400E; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                            <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            Dokumen Tambahan — BPKB di Leasing/Bank:
+                        </div>
+                        <div class="cards-grid-2col">
+                            <!-- Surat Keterangan BPKB dari Leasing/Bank -->
+                            <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:8px; padding:10px;">
+                                <div style="font-size:0.73rem; font-weight:700; color:#92400E; margin-bottom:6px;">1. Surat Keterangan BPKB dari Leasing/Bank</div>
+                                <div class="preview-box" id="previewSuratLeasingBox" onclick="document.getElementById('fileSuratLeasingInput').click()" style="aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer; background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                    <div id="phSuratLeasing" style="font-size:0.68rem; color:#64748B; text-align:center; padding:4px;">
+                                        📷 Klik unggah Surat Keterangan
+                                    </div>
+                                    <img decoding="async" id="imgSuratLeasingPreview" src="" alt="Surat Leasing" style="display:none; max-width:100%; max-height:100%;">
+                                </div>
+                                <input type="file" id="fileSuratLeasingInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratLeasing')">
+                            </div>
+                            <!-- Fotokopi Perjanjian Kredit/Fidusia -->
+                            <div style="background:#FFFFFF; border:1px solid #FCD34D; border-radius:8px; padding:10px;">
+                                <div style="font-size:0.73rem; font-weight:700; color:#92400E; margin-bottom:6px;">2. Fotokopi Perjanjian Kredit/Fidusia</div>
+                                <div class="preview-box" id="previewPerjanjianKreditBox" onclick="document.getElementById('filePerjanjianKreditInput').click()" style="aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer; background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                    <div id="phPerjanjianKredit" style="font-size:0.68rem; color:#64748B; text-align:center; padding:4px;">
+                                        📷 Klik unggah Perjanjian Kredit
+                                    </div>
+                                    <img decoding="async" id="imgPerjanjianKreditPreview" src="" alt="Perjanjian Kredit" style="display:none; max-width:100%; max-height:100%;">
+                                </div>
+                                <input type="file" id="filePerjanjianKreditInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'perjanjianKredit')">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Banner Info Validasi Silang BPKB -->
+                    <div style="background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:8px; padding:10px 14px; font-size:0.73rem; color:#1E40AF; display:flex; align-items:center; gap:8px;">
+                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <div>
+                            <strong>Validasi Silang:</strong> Nomor Rangka &amp; Nomor Mesin pada BPKB akan dicocokkan otomatis dengan STNK (Tahap 3) dan hasil gesekan fisik saat pemeriksaan di lapangan.
+                        </div>
                     </div>
 
                     <!-- Panel Hubungan Kepemilikan (Sesuai IK 001/KPUB.02/2025) -->
@@ -4846,6 +4906,39 @@
                         <input type="file" id="fileStnk2Input" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'stnk_2')">
                     </div>
 
+                    <!-- Banner Info Validasi Silang STNK -->
+                    <div style="background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:8px; padding:10px 14px; font-size:0.73rem; color:#1E40AF; display:flex; align-items:center; gap:8px;">
+                        <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <div>
+                            <strong>Validasi Silang:</strong> Nomor Polisi &amp; Nomor Rangka pada STNK dicocokkan otomatis dengan BPKB (Tahap 2).
+                        </div>
+                    </div>
+
+                    <!-- Kartu: Perhitungan NJKB & Jaminan (Otomatis) -->
+                    <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; box-sizing:border-box;">
+                        <div style="font-weight:800; font-size:0.86rem; color:#0F172A; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                            <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            Perhitungan NJKB &amp; Jaminan (Otomatis)
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.78rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #E2E8F0; padding-bottom:6px;">
+                                <span style="color:#64748B;">NJKB (Bapenda Kepri)</span>
+                                <strong style="color:#0F172A; font-family:monospace;" id="cardNjkbDisplay">Rp 0</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #E2E8F0; padding-bottom:6px;">
+                                <span style="color:#64748B;">PPN 11%</span>
+                                <strong style="color:#0F172A; font-family:monospace;" id="cardPpnDisplay">Rp 0</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:6px; padding:8px 10px;">
+                                <strong style="color:#15803D;">Jaminan PPN yang Harus Dibayar</strong>
+                                <strong style="color:#15803D; font-size:0.95rem; font-family:monospace;" id="cardJaminanDisplay">Rp 0</strong>
+                            </div>
+                        </div>
+                        <div style="font-size:0.68rem; color:#64748B; margin-top:8px; line-height:1.4;">
+                            * Nilai NJKB bersumber dari basis data resmi Bapenda Provinsi Kepulauan Riau sesuai merek, tipe &amp; tahun kendaraan. Jaminan berlaku selama 45 hari sejak diterbitkan.
+                        </div>
+                    </div>
+
                     <!-- Panel Validasi Silang Detail Antar-Dokumen -->
                     <div id="crossValidationPanel" style="display:none; background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:10px; padding:12px; margin-top:2px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
@@ -4933,80 +5026,142 @@
             </div>
         </section>
 
-        <!-- ================= PAGE 4: TAHAP 4 — 6 FOTO KENDARAAN, RUTE & KIRIM PERMOHONAN ================= -->
+        <!-- ================= PAGE 4: TAHAP 4 — BERKAS PENDUKUNG & PENGAJUAN ================= -->
         <section class="page-card" id="page-4" style="padding:16px 20px;">
             <div class="page-header" style="margin-bottom:12px; padding-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
                     <h2 style="font-size:0.98rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:8px; margin:0 0 3px 0;">
                         <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                        Tahap 4: Foto Fisik Kendaraan, Rute Tujuan &amp; Kirim Permohonan
+                        Tahap 4 — Berkas Pendukung &amp; Pengajuan
                     </h2>
                     <p style="font-size:0.75rem; color:#64748B; margin:0; line-height:1.35;">
-                        Lengkapi 6 foto fisik kendaraan, tentukan rute pelabuhan tujuan di TLDDP, lalu unduh draf permohonan dan bubuhkan e-meterai sah sebelum mengirim permohonan.
+                        Lengkapi berkas pendukung pengemudi, foto fisik kendaraan 4 sisi, hasil gesekan fisik, dan unggah Surat Pernyataan komitmen bermeterai.
                     </p>
                 </div>
                 <span class="pabean-badge-ok" style="font-size:0.72rem;">Tahap 4 dari 4</span>
             </div>
 
-            <!-- Panel 6 Foto Fisik Kendaraan & Cek Fisik Lapangan -->
-            <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:10px; padding:14px; margin-bottom:14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
-                    <div>
-                        <div style="font-weight:800; font-size:0.86rem; color:#0F172A;">
-                            📸 6 Foto Fisik Kendaraan &amp; Nomor Fisik (Klik Kotak untuk Unggah)
+            <!-- 4 Kartu Grid Berdampingan (2 Kolom di Desktop) Sesuai Mockup -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-bottom:14px;">
+                
+                <!-- KARTU 1: SIM PENGEMUDI -->
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                            <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+                            SIM Pengemudi
                         </div>
-                        <div style="font-size:0.72rem; color:#64748B;">
-                            Klik langsung pada masing-masing kotak foto atau gunakan tombol unggah sekaligus.
-                        </div>
+                        <span id="badgeSimStatus" style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#FEF3C7; color:#92400E;">Belum</span>
                     </div>
-                    <button type="button" class="btn btn-secondary" style="font-size:0.72rem; padding:4px 10px;" onclick="document.getElementById('multiCarPhotosInput').click()">
-                        <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Unggah Sekaligus (Multi-Foto)
-                    </button>
-                    <input type="file" id="multiCarPhotosInput" accept="image/*" multiple style="display:none;" onchange="handleCarPhotosUpload(event)">
+                    <div class="preview-box" id="previewSimBox" onclick="document.getElementById('fileSimInput').click()" style="aspect-ratio:1.8/1; width:100%; cursor:pointer; background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                        <div id="phSim" style="font-size:0.74rem; color:#64748B; text-align:center;">
+                            📷 Foto/Scan SIM
+                        </div>
+                        <img decoding="async" id="imgSimPreview" src="" alt="SIM" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
+                    </div>
+                    <input type="file" id="fileSimInput" accept="image/*,application/pdf" style="display:none;" onchange="handleSimUpload(event)">
                 </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:8px;">
-                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(0)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
-                        <div id="phDepan" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Sisi Depan</div>
-                        <img id="imgPhDepan" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
+                <!-- KARTU 2: FOTO KENDARAAN (4 SISI) -->
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                            <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                            Foto Kendaraan (4 sisi)
+                        </div>
+                        <span id="badgeFotoMobilStatus" style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#FEF3C7; color:#92400E;">Belum</span>
                     </div>
-                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(2)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
-                        <div id="phKanan" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Samping Kanan</div>
-                        <img id="imgPhKanan" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
-                    </div>
-                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(3)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
-                        <div id="phKiri" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Samping Kiri</div>
-                        <img id="imgPhKiri" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
-                    </div>
-                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(1)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
-                        <div id="phBelakang" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ Sisi Belakang</div>
-                        <img id="imgPhBelakang" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
-                    </div>
-                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(4)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
-                        <div id="phRangka" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ No. Rangka Fisik</div>
-                        <img id="imgPhRangka" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
-                    </div>
-                    <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(5)" style="background:#FFF; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; text-align:center; cursor:pointer; height:105px; margin:0;">
-                        <div id="phMesin" style="font-size:0.72rem; font-weight:700; color:#005FAC;">+ No. Mesin Fisik</div>
-                        <img id="imgPhMesin" style="display:none; width:100%; height:75px; object-fit:cover; border-radius:5px; margin-top:4px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <!-- Depan -->
+                        <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(0)" style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:6px; padding:6px; text-align:center; cursor:pointer; height:68px; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                            <div id="phDepan" style="font-size:0.70rem; font-weight:700; color:#64748B;">Depan</div>
+                            <img id="imgPhDepan" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:4px;">
+                        </div>
+                        <!-- Belakang -->
+                        <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(1)" style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:6px; padding:6px; text-align:center; cursor:pointer; height:68px; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                            <div id="phBelakang" style="font-size:0.70rem; font-weight:700; color:#64748B;">Belakang</div>
+                            <img id="imgPhBelakang" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:4px;">
+                        </div>
+                        <!-- Samping Kiri -->
+                        <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(3)" style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:6px; padding:6px; text-align:center; cursor:pointer; height:68px; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                            <div id="phKiri" style="font-size:0.70rem; font-weight:700; color:#64748B;">Samping Kiri</div>
+                            <img id="imgPhKiri" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:4px;">
+                        </div>
+                        <!-- Samping Kanan -->
+                        <div class="car-photo-card preview-box" onclick="triggerSingleCarPhoto(2)" style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:6px; padding:6px; text-align:center; cursor:pointer; height:68px; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                            <div id="phKanan" style="font-size:0.70rem; font-weight:700; color:#64748B;">Samping Kanan</div>
+                            <img id="imgPhKanan" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:4px;">
+                        </div>
                     </div>
                 </div>
+
+                <!-- KARTU 3: HASIL GESEKAN RANGKA & MESIN (OPSIONAL) -->
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                Hasil Gesekan Rangka &amp; Mesin
+                            </div>
+                            <span id="badgeGesekanStatus" style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#FEF3C7; color:#92400E;">Belum (Opsional)</span>
+                        </div>
+                        <div style="font-size:0.68rem; color:#64748B; line-height:1.35; margin-bottom:8px;">
+                            Akan diambil ulang &amp; dicocokkan oleh Petugas Pemeriksa Fisik saat pemeriksaan kendaraan — unggah draf awal jika sudah tersedia.
+                        </div>
+                    </div>
+                    <div class="preview-box" id="previewGesekanBox" onclick="document.getElementById('fileGesekanInput').click()" style="aspect-ratio:2.6/1; width:100%; cursor:pointer; background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                        <div id="phGesekan" style="font-size:0.72rem; color:#64748B; text-align:center;">
+                            📷 Foto Gesekan (opsional di tahap ini)
+                        </div>
+                        <img decoding="async" id="imgGesekanPreview" src="" alt="Gesekan" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
+                    </div>
+                    <input type="file" id="fileGesekanInput" accept="image/*,application/pdf" style="display:none;" onchange="handleGesekanUpload(event)">
+                </div>
+
+                <!-- KARTU 4: SURAT PERNYATAAN KOMITMEN -->
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                Surat Pernyataan Komitmen
+                            </div>
+                            <span id="badgePernyataanStatus" style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#FEF3C7; color:#92400E;">Belum</span>
+                        </div>
+                        <div style="font-size:0.68rem; color:#64748B; line-height:1.35; margin-bottom:8px;">
+                            Surat akan dibuat otomatis sistem dari data permohonan — unduh, tanda tangan &amp; bubuhi e-meterai, lalu unggah kembali.
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button type="button" onclick="downloadDraftPdfPernyataan()" style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; font-family:inherit; min-height:68px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span style="font-size:0.70rem; font-weight:700; color:#005FAC;">Unduh Draf PDF</span>
+                        </button>
+                        <div class="preview-box" id="previewBermeteraiBox" onclick="document.getElementById('fileBermeteraiTahap4Input').click()" style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:8px; padding:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; min-height:68px; margin:0; position:relative; overflow:hidden;">
+                            <div id="phBermeterai" style="font-size:0.70rem; font-weight:700; color:#64748B; text-align:center;">
+                                Unggah yang Sudah Ditandatangani
+                            </div>
+                            <img decoding="async" id="imgBermeteraiTahap4Preview" src="" alt="Surat Bermeterai" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
+                        </div>
+                        <input type="file" id="fileBermeteraiTahap4Input" accept="image/*,application/pdf" style="display:none;" onchange="handleBermeteraiTahap4Upload(event)">
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Form Rute & Jadwal -->
-            <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; margin-bottom:14px;">
-                <div style="font-weight:800; font-size:0.86rem; color:#0F172A; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Rute Perjalanan &amp; Periode Pengeluaran Sementara
+            <!-- Detail Data Rute & Periode (Form ringkas) -->
+            <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+                <div style="font-weight:800; font-size:0.80rem; color:#005FAC; margin-bottom:8px;">
+                    Rute Perjalanan &amp; Periode Pengeluaran Sementara:
                 </div>
-                <div class="form-grid">
+                <div class="form-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
                     <div class="form-group">
-                        <label class="form-label">Pelabuhan Pemuatan (Asal di Batam)</label>
-                        <input type="text" class="form-input" value="Pelabuhan ASDP Telaga Punggur, Batam" readonly>
+                        <label class="form-label" for="pelabuhan_muat">Pelabuhan Muat Asal (KPBPB Batam)</label>
+                        <input type="text" id="pelabuhan_muat" class="form-input" value="Pelabuhan Telaga Punggur, Batam" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="rute_tujuan">Pelabuhan Tujuan Bongkar (TLDDP)</label>
-                        <input type="text" id="rute_tujuan" class="form-input" placeholder="Contoh: Pelabuhan Sei Pakning / Buton / Mengkapan" oninput="syncValues()">
+                        <input type="text" id="rute_tujuan" class="form-input" placeholder="Contoh: Pelabuhan Sei Pakning / Buton" oninput="syncValues()">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="tgl_keluar">Tanggal Keluar Batam</label>
@@ -5016,106 +5171,46 @@
                         <label class="form-label" for="tgl_kembali">Tanggal Wajib Kembali (Maks 45 Hari)</label>
                         <input type="date" id="tgl_kembali" class="form-input" oninput="syncValues()">
                     </div>
-                    <div class="form-group full">
+                    <div class="form-group full" style="grid-column: 1 / -1;">
                         <label class="form-label" for="keperluan">Keperluan Pengeluaran Sementara</label>
-                        <input type="text" id="keperluan" class="form-input" placeholder="Contoh: Mudik dan Libur Hari Raya Idul Fitri 1447 H ke Sumatera Barat / Riau" oninput="syncValues()">
+                        <input type="text" id="keperluan" class="form-input" placeholder="Contoh: Mudik dan Libur Hari Raya Idul Fitri ke Sumatera Barat" oninput="syncValues()">
                     </div>
                 </div>
             </div>
 
-            <!-- Tabel Ringkasan Data -->
-            <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:10px; padding:14px; margin-bottom:14px;">
-                <div style="font-weight:800; font-size:0.85rem; margin-bottom:10px; color:#005FAC;">
-                    DATA PENGAJUAN PENGELUARAN SEMENTARA:
+            <!-- KELENGKAPAN BERKAS PERMOHONAN (Progress Bar Sesuai Mockup) -->
+            <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+                <div style="font-weight:800; font-size:0.82rem; color:#0F172A; margin-bottom:8px;">
+                    Kelengkapan Berkas Permohonan
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px; font-size:0.75rem;">
-                    <div><strong>Nama Pemohon:</strong> <span id="sumNama">-</span></div>
-                    <div><strong>NIK:</strong> <span id="sumNik">-</span></div>
-                    <div><strong>Kendaraan:</strong> <span id="sumKbm">-</span></div>
-                    <div><strong>Nomor Polisi:</strong> <span id="sumNopol">-</span></div>
-                    <div><strong>Nomor Rangka:</strong> <span id="sumRangka">-</span></div>
-                    <div><strong>Jaminan PPN 11%:</strong> <span id="sumJaminan" style="color:#B45309; font-weight:800;">Rp 0</span></div>
-                    <div><strong>Rute:</strong> <span id="sumRute">Telaga Punggur → -</span></div>
-                    <div><strong>Periode:</strong> <span id="sumPeriode">-</span></div>
+                <div style="width:100%; height:10px; background:#E2E8F0; border-radius:5px; overflow:hidden; margin-bottom:8px;">
+                    <div id="kelengkapanProgressBar" style="width:0%; height:100%; background:#10B981; border-radius:5px; transition:width 0.3s ease;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; flex-wrap:gap; gap:6px;">
+                    <span id="kelengkapanProgressCount" style="color:#0F172A; font-weight:700;">0 dari 8 dokumen lengkap</span>
+                    <span id="kelengkapanProgressSub" style="color:#B45309; font-weight:700;">8 dokumen belum lengkap</span>
                 </div>
             </div>
 
-            <!-- ================= FASILITASI E-METERAI RESMI PERURI & POS INDONESIA ================= -->
-            <div class="emeterai-facility-card" style="background:#FFFBEB; border:1.5px solid #FCD34D; border-radius:var(--radius-md); padding:16px; margin-bottom:16px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="background:#FEF3C7; width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; border:1.5px solid #F59E0B; flex-shrink:0;"><svg class="flat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line></svg></div>
-                        <div>
-                            <div style="font-weight:800; font-size:0.95rem; color:#92400E; display:flex; align-items:center; gap:8px;">
-                                Fasilitas E-Meterai Terpadu (PERURI &amp; Pos Indonesia)
-                                <span style="background:#059669; color:#FFFFFF; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:10px;">Rp 10.000 / Lembar</span>
-                            </div>
-                            <div style="font-size:0.75rem; color:#B45309; line-height:1.4; margin-top:2px;">
-                                Halaman Depan 1 (Surat Permohonan) &amp; Halaman Depan 2 (Surat Pernyataan) difasilitasi E-Meterai sah sebelum digabung menjadi 1 PDF Nadine.
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-secondary" onclick="openEmeteraiPortalModal()" style="font-size:0.76rem; border-color:#F59E0B; color:#92400E; background:#FFFFFF; font-weight:700; display:flex; align-items:center; gap:6px;">
-                        <span>🌐 Buka Portal E-Meterai Resmi</span>
-                        <svg class="flat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                    </button>
-                </div>
-
-                <!-- Status Pembubuhan Meterai 2 Surat Depan -->
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px; margin-top:12px;">
-                    <!-- Dokumen 1: Surat Permohonan -->
-                    <div style="background:#FFFFFF; border:1px solid #FDE68A; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:700; font-size:0.80rem; color:#1E293B;">1. Surat Permohonan KBM (Hal. 1)</div>
-                            <div style="font-size:0.70rem; color:#64748B;">Dibubuhi E-Meterai Rp 10.000 &amp; Tanda Tangan</div>
-                        </div>
-                        <span class="pill-source wa" style="background:#DCFCE7; color:#15803D; font-weight:700; font-size:0.70rem;">✓ E-Meterai Aktif</span>
-                    </div>
-                    <!-- Dokumen 2: Surat Pernyataan Jaminan -->
-                    <div style="background:#FFFFFF; border:1px solid #FDE68A; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:700; font-size:0.80rem; color:#1E293B;">2. Surat Pernyataan Jaminan (Hal. 2)</div>
-                            <div style="font-size:0.70rem; color:#64748B;">Dibubuhi E-Meterai Rp 10.000 &amp; Komitmen Batam</div>
-                        </div>
-                        <span class="pill-source wa" style="background:#DCFCE7; color:#15803D; font-weight:700; font-size:0.70rem;">✓ E-Meterai Aktif</span>
-                    </div>
-                </div>
-
-                <div style="font-size:0.72rem; color:#78350F; margin-top:10px; line-height:1.5; background:#FEF3C7; padding:8px 12px; border-radius:6px; display:flex; align-items:center; gap:8px;">
-                    <svg class="flat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                    <span><strong>100% Praktis &amp; Paperless:</strong> Sistem secara otomatis membubuhkan visualisasi E-Meterai resmi ber-QR Code PERURI pada kedua lembar surat depan saat Anda menekan tombol <strong>Unduh 1 PDF Asli</strong>. Tidak perlu cetak kertas manual, tidak perlu antre beli meterai tempel fisik.</span>
-                </div>
-            </div>
-
-            <!-- Mode Frontdesk Loket Action -->
-            <div id="frontdeskBox" style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
-                <div style="font-weight:800; font-size:0.85rem; color:#065F46; margin-bottom:4px;">
-                    <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> AUDIT KESESUAIAN BERKAS FISIK OLEH FRONTDESK LOKET
-                </div>
-                <div style="font-size:0.74rem; color:#047857; margin-bottom:10px;">
-                    Petugas loket mencocokkan lembar formulir dengan berkas fisik asli (KTP, STNK, Surat Pernyataan Bermaterai, dan Cek Fisik KBM).
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button type="button" class="btn btn-success" style="padding:10px 16px; font-size:0.82rem;" onclick="openPdfModal()">
-                        ✓ ACC LOKET &amp; TERBITKAN 1 PDF FULLSET NADINE
+            <!-- Navigasi Bawah & Tombol Pengajuan -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:8px;">
+                <button type="button" class="btn btn-secondary" onclick="goToPage(3)">
+                    ⬅ Kembali ke STNK
+                </button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-secondary" onclick="manualSaveDraft()">
+                        ← Simpan Draf
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="openPdfModal()">
-                        <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Pratinjau Bundel 10 Halaman PDF
+                        Preview Dokumen Lengkap
+                    </button>
+                    <button type="button" id="btnAjukanPermohonanFinal" class="btn btn-primary" onclick="submitFinalPermohonan()">
+                        Ajukan Permohonan ➔
                     </button>
                 </div>
             </div>
-
-            <!-- Tombol Pemohon Submit Box -->
-            <div id="pemohonSubmitBox" style="margin-bottom:16px;">
-                <button type="button" class="btn btn-primary" style="padding:12px 18px; font-size:0.85rem;" onclick="openPdfModal()">
-                    <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Unduh Draf &amp; Unggah Dokumen Bermeterai ➔
-                </button>
-            </div>
-
-            <!-- Navigasi Bawah Tahap 4 -->
-            <div class="nav-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
-                <button type="button" class="btn btn-secondary" onclick="goToPage(3)">⬅ Kembali ke STNK</button>
-                <div></div>
+            <div style="font-size:0.68rem; color:#64748B; text-align:right; margin-top:4px;">
+                Tombol "Ajukan Permohonan" aktif setelah seluruh dokumen wajib lengkap &amp; bermeterai.
             </div>
         </section>
 
@@ -6754,6 +6849,7 @@
             if (pageNum === 3) updateStnkComparison();
             renderStepBarStatus(2, pageNum <= 3 ? 'active' : 'done');
             renderStepBarStatus(3, pageNum >= 4 ? 'active' : 'pending');
+            if (pageNum === 4 && typeof updateKelengkapanProgress === 'function') updateKelengkapanProgress();
             window.scrollTo({ top: 0, behavior: 'smooth' });
             syncValues();
         }
@@ -6949,6 +7045,24 @@
             const lblHal1 = document.getElementById('lblUploadOwnershipHal1');
             const bpkbExtra = document.getElementById('bpkbExtraSlots');
             const leasingExtra = document.getElementById('leasingExtraWrap');
+            const cardSendiri = document.getElementById('cardBpkbSendiri');
+            const cardLeasing = document.getElementById('cardBpkbLeasing');
+            const leasingExtraBox = document.getElementById('leasingDocExtraBox');
+            const rbBpkb = document.getElementById('optDocBpkb');
+            const rbLeasing = document.getElementById('optDocLeasing');
+
+            if (type === 'bpkb') {
+                if (rbBpkb) rbBpkb.checked = true;
+                if (cardSendiri) { cardSendiri.style.borderColor = '#005FAC'; cardSendiri.style.background = '#F0F7FF'; cardSendiri.style.borderWidth = '2px'; }
+                if (cardLeasing) { cardLeasing.style.borderColor = '#CBD5E1'; cardLeasing.style.background = '#FFFFFF'; cardLeasing.style.borderWidth = '1.5px'; }
+                if (leasingExtraBox) leasingExtraBox.style.display = 'none';
+            } else {
+                if (rbLeasing) rbLeasing.checked = true;
+                if (cardLeasing) { cardLeasing.style.borderColor = '#005FAC'; cardLeasing.style.background = '#F0F7FF'; cardLeasing.style.borderWidth = '2px'; }
+                if (cardSendiri) { cardSendiri.style.borderColor = '#CBD5E1'; cardSendiri.style.background = '#FFFFFF'; cardSendiri.style.borderWidth = '1.5px'; }
+                if (leasingExtraBox) leasingExtraBox.style.display = 'block';
+            }
+
             if (desc) {
                 if (type === 'bpkb') {
                     desc.innerText = 'Unggah scan lembar BPKB yang memuat No. Rangka, No. Mesin, dan data kepemilikan (Wajib Berwarna).';
@@ -7431,6 +7545,9 @@
                 const idx = id.replace('previewLeasing', '').replace('Box', '');
                 return 'ownership_leasing_' + idx;
             }
+            if (id === 'previewSimBox') return 'sim';
+            if (id === 'previewGesekanBox') return 'gesekan';
+            if (id === 'previewBermeteraiBox') return 'pernyataan';
             if (id.startsWith('preview') && id.endsWith('Box')) {
                 const base = id.replace('preview', '').replace('Box', '');
                 return base.charAt(0).toLowerCase() + base.slice(1);
@@ -7864,6 +7981,9 @@
                 }
                 document.getElementById('lblNjkbInfo').innerText = 'Rp ' + formattedNjkb;
                 document.getElementById('valJaminanPpn').innerText = formattedPpn;
+                const elCardNjkb = document.getElementById('cardNjkbDisplay'); if (elCardNjkb) elCardNjkb.innerText = 'Rp ' + formattedNjkb;
+                const elCardPpn = document.getElementById('cardPpnDisplay'); if (elCardPpn) elCardPpn.innerText = formattedPpn;
+                const elCardJam = document.getElementById('cardJaminanDisplay'); if (elCardJam) elCardJam.innerText = formattedPpn;
                 const elSum = document.getElementById('sumJaminan');
                 if (elSum) elSum.innerText = formattedPpn;
                 const elM = document.getElementById('mJaminan');
@@ -8184,10 +8304,10 @@
                 document.getElementById('tagBpkbAuto').style.display = 'none';
             }
 
-            const mainTargets = ['ktp', 'npwp', 'ownership', 'stnk', 'stnk_2', 'ktpWakil'];
+            const mainTargets = ['ktp', 'npwp', 'ownership', 'stnk', 'stnk_2', 'ktpWakil', 'suratKuasa'];
             const isOwnershipExtra = (target === 'ownership_2' || target === 'ownership_3' || /^ownership_leasing_\d+$/.test(target));
             if (mainTargets.includes(target)) {
-                const boxMap = { ktp: 'previewKtpBox', npwp: 'previewNpwpBox', ownership: 'previewOwnershipBox', stnk: 'previewStnkBox', stnk_2: 'previewStnk2Box', ktpWakil: 'previewKtpWakilBox' };
+                const boxMap = { ktp: 'previewKtpBox', npwp: 'previewNpwpBox', ownership: 'previewOwnershipBox', stnk: 'previewStnkBox', stnk_2: 'previewStnk2Box', ktpWakil: 'previewKtpWakilBox', suratKuasa: 'previewSuratKuasaBox' };
                 const box = document.getElementById(boxMap[target]);
                 if (box) box.style.display = 'flex';
             }
@@ -8493,6 +8613,52 @@
             }
         }
 
+        function checkSuratKuasaCrossValidation() {
+            if (onboardingState.pengurusan !== 'kuasa') return;
+            const banner = document.getElementById('suratKuasaCrossCheckBanner');
+            if (!banner) return;
+
+            const ktpPemilikNama = (docOcrStore.ktp && docOcrStore.ktp.nama) || document.getElementById('pemohon_nama')?.value || '';
+            const ktpWakilNama = (docOcrStore.ktpWakil && docOcrStore.ktpWakil.nama) || (currentAuthSession && currentAuthSession.user && currentAuthSession.user.nama) || '';
+            const skData = docOcrStore.suratKuasa || {};
+            const skPemberi = skData.nama_pemberi_kuasa || '';
+            const skPenerima = skData.nama_penerima_kuasa || '';
+
+            if (skPemberi || skPenerima) {
+                const normKtpPemilik = _normCmp(ktpPemilikNama);
+                const normKtpWakil = _normCmp(ktpWakilNama);
+                const normSkPemberi = _normCmp(skPemberi);
+                const normSkPenerima = _normCmp(skPenerima);
+
+                let mismatchWarnings = [];
+                if (normKtpPemilik && normSkPemberi && !normKtpPemilik.includes(normSkPemberi) && !normSkPemberi.includes(normKtpPemilik)) {
+                    mismatchWarnings.push(`Nama Pemberi Kuasa pada Surat Kuasa ("${skPemberi}") berbeda dengan KTP Pemilik ("${ktpPemilikNama}")`);
+                }
+                if (normKtpWakil && normSkPenerima && !normKtpWakil.includes(normSkPenerima) && !normSkPenerima.includes(normKtpWakil)) {
+                    mismatchWarnings.push(`Nama Penerima Kuasa pada Surat Kuasa ("${skPenerima}") berbeda dengan KTP Wakil ("${ktpWakilNama}")`);
+                }
+
+                if (mismatchWarnings.length > 0) {
+                    banner.innerHTML = `
+                        <div style="display:flex; align-items:flex-start; gap:8px;">
+                            <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" style="flex-shrink:0; margin-top:2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <div>
+                                <div style="font-weight:800; color:#92400E;">Peringatan Keserasian Nama Surat Kuasa (Non-Blocking):</div>
+                                <div style="font-size:0.72rem; color:#B45309; margin-top:2px; line-height:1.45;">
+                                    ${mismatchWarnings.join('; ')}. Silakan pastikan berkas fisik Surat Kuasa asli dan KTP yang dilampirkan telah sesuai saat pemeriksaan fisik di loket.
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    banner.style.display = 'block';
+                } else {
+                    banner.style.display = 'none';
+                }
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
         // ================= RESET TOTAL FORMULIR & MEMORI JS (ANTI-KEBOCORAN DATA ANTAR AKUN) =================
         function resetAllFormDataAndState() {
             // 1. Batalkan autosave in-flight jika ada
@@ -8504,6 +8670,8 @@
             // Sembunyikan box validasi silang & badge AI
             const matchBox = document.getElementById('identitasMatchBox');
             if (matchBox) matchBox.style.display = 'none';
+            const skBanner = document.getElementById('suratKuasaCrossCheckBanner');
+            if (skBanner) skBanner.style.display = 'none';
             ['badgeKtpAi', 'badgeKtpCrop', 'badgeNpwpAi', 'badgeNpwpCrop', 'badgeKtpWakilAi', 'badgeKtpWakilCrop'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
@@ -8721,6 +8889,31 @@
                 docOcrStore.stnk2 = {};
                 setDocCardState('stnk_2', 'initial', 'Menunggu berkas STNK Lembar 2 diunggah...');
                 renderCrossValidationPanel();
+            } else if (target === 'sim') {
+                const img = document.getElementById('imgSimPreview');
+                if (img) { img.src = ''; img.removeAttribute('src'); img.style.display = 'none'; }
+                const ph = document.getElementById('phSim');
+                if (ph) ph.style.display = 'block';
+                const badge = document.getElementById('badgeSimStatus');
+                if (badge) { badge.innerText = 'Belum'; badge.style.background = '#FEF3C7'; badge.style.color = '#92400E'; }
+                updateKelengkapanProgress();
+            } else if (target === 'gesekan') {
+                const img = document.getElementById('imgGesekanPreview');
+                if (img) { img.src = ''; img.removeAttribute('src'); img.style.display = 'none'; }
+                const ph = document.getElementById('phGesekan');
+                if (ph) ph.style.display = 'block';
+                const badge = document.getElementById('badgeGesekanStatus');
+                if (badge) { badge.innerText = 'Belum (Opsional)'; badge.style.background = '#FEF3C7'; badge.style.color = '#92400E'; }
+            } else if (target === 'pernyataan') {
+                uploadedBermeteraiDataUrl = null;
+                uploadedBermeteraiFileName = '';
+                const img = document.getElementById('imgBermeteraiTahap4Preview');
+                if (img) { img.src = ''; img.removeAttribute('src'); img.style.display = 'none'; }
+                const ph = document.getElementById('phBermeterai');
+                if (ph) ph.style.display = 'block';
+                const badge = document.getElementById('badgePernyataanStatus');
+                if (badge) { badge.innerText = 'Belum'; badge.style.background = '#FEF3C7'; badge.style.color = '#92400E'; }
+                updateKelengkapanProgress();
             } else if (target.startsWith('car_photo_')) {
                 const cIdx = parseInt(target.replace('car_photo_', ''), 10);
                 if (typeof carPhotoElements !== 'undefined' && carPhotoElements[cIdx]) {
@@ -9251,6 +9444,7 @@
                 syncValues();
                 _markAutosaved();
                 if (typeof initPreviewDeleteButtons === 'function') initPreviewDeleteButtons();
+                if (typeof updateKelengkapanProgress === 'function') updateKelengkapanProgress();
             } catch (e) {
                 console.warn('[Draf] Gagal memulihkan draf:', e);
             } finally {
@@ -9496,6 +9690,7 @@
                         return;
                     }
 
+                    docOcrStore.ktpWakil = finalData;
                     if (snip) snip.innerHTML = `<strong>KTP Wakil Terbaca:</strong> ${finalData.nama || '-'} (NIK: ${finalData.nik || '-'})`;
                     if (badge) {
                         badge.className = 'pabean-badge-verified';
@@ -9503,10 +9698,63 @@
                         badge.style.background = '#DCFCE7';
                         badge.style.color = '#166534';
                     }
+                    if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                     scheduleAutosave();
                 } catch (err) {
                     console.warn('OCR error KTP Wakil:', err);
                     if (snip) snip.innerText = 'KTP Wakil terunggah. Silakan pastikan foto terbaca jelas.';
+                } finally {
+                    if (laser) laser.style.display = 'none';
+                }
+                return;
+            }
+
+            if (target === 'suratKuasa') {
+                uploadedSuratKuasaDataUrl = imgUrl;
+                supportingDocsUploaded.suratKuasa = true;
+                const box = document.getElementById('previewSuratKuasaBox');
+                const img = document.getElementById('imgSuratKuasaPreview');
+                const ph = document.getElementById('phSuratKuasa');
+                const laser = document.getElementById('laserSuratKuasa');
+                const snip = document.getElementById('snippetSuratKuasa');
+                const badge = document.getElementById('badgeSuratKuasaStatus');
+
+                if (ph) ph.style.display = 'none';
+                if (img) { img.style.display = 'block'; img.src = imgUrl; }
+                if (box) box.style.display = 'flex';
+                if (laser) laser.style.display = 'block';
+                if (badge) {
+                    badge.innerText = 'Memindai Surat Kuasa...';
+                    badge.style.background = '#FEF3C7';
+                    badge.style.color = '#92400E';
+                }
+
+                try {
+                    const ocrRes = await fetchOCR('suratKuasa', ocrPayloadUrl);
+                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
+                    docOcrStore.suratKuasa = serverParsed;
+
+                    if (badge) {
+                        badge.className = 'pabean-badge-verified';
+                        badge.innerText = '✓ Terbaca';
+                        badge.style.background = '#DCFCE7';
+                        badge.style.color = '#166534';
+                    }
+                    const pmberi = serverParsed.nama_pemberi_kuasa || '';
+                    const pnrma = serverParsed.nama_penerima_kuasa || '';
+                    if (snip) {
+                        if (pmberi || pnrma) {
+                            snip.innerHTML = `<strong>Pemberi:</strong> ${pmberi || '-'} • <strong>Penerima:</strong> ${pnrma || '-'}`;
+                        } else {
+                            snip.innerText = 'Surat Kuasa berhasil diunggah & dipindai.';
+                        }
+                    }
+                    if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
+                    scheduleAutosave();
+                } catch (err) {
+                    console.warn('OCR error Surat Kuasa:', err);
+                    if (snip) snip.innerText = 'Surat Kuasa berhasil diunggah.';
                 } finally {
                     if (laser) laser.style.display = 'none';
                 }
@@ -9567,6 +9815,7 @@
                         setDocCardState('ktp', 'manual', 'KTP terunggah. Teks belum terbaca otomatis — silakan ketik NIK, Nama & Alamat secara manual di bawah.');
                     }
                     renderCrossValidationPanel();
+                    if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                 } catch (err) {
                     console.warn('OCR error KTP:', err);
                     setDocCardState('ktp', 'manual', 'KTP terunggah. OCR gagal memproses — silakan isi/koreksi data KTP manual di bawah.');
@@ -9632,6 +9881,7 @@
                         setDocCardState('npwp', 'manual', 'NPWP terunggah. Nomor belum terbaca otomatis — silakan ketik Nomor NPWP manual di bawah.');
                     }
                     renderCrossValidationPanel();
+                    if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                 } catch (err) {
                     console.warn('OCR error NPWP:', err);
                     setDocCardState('npwp', 'manual', 'NPWP terunggah. OCR gagal memproses — silakan ketik Nomor NPWP manual di bawah.');
@@ -9737,6 +9987,7 @@
                         setDocCardState('ownership', 'manual', 'BPKB terunggah. Teks belum terbaca otomatis — silakan lengkapi data BPKB manual di Langkah 2.');
                     }
                     renderCrossValidationPanel();
+                    if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                 } catch (err) {
                     console.warn('OCR error Ownership:', err);
                     setDocCardState('ownership', 'manual', 'BPKB terunggah. OCR gagal memproses — silakan lengkapi data BPKB manual di Langkah 2.');
@@ -9803,6 +10054,7 @@
                         setDocCardState('stnk', 'manual', 'STNK Lbr 1 terunggah. Teks belum terbaca otomatis — silakan lengkapi manual di Langkah 2.');
                     }
                     renderCrossValidationPanel();
+                    if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                 } catch (err) {
                     console.warn('OCR error STNK Lbr 1:', err);
                     setDocCardState('stnk', 'manual', 'STNK Lbr 1 terunggah. OCR gagal memproses — silakan lengkapi manual di Langkah 2.');
@@ -9866,6 +10118,7 @@
                         setDocCardState('stnk_2', 'manual', 'STNK Lbr 2 (TBPKP) terunggah. Silakan cek/lengkapi data kendaraan & NJKB secara manual di Langkah 2.');
                     }
                     renderCrossValidationPanel();
+                    if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                 } catch (err) {
                     console.warn('OCR error STNK Lbr 2:', err);
                     setDocCardState('stnk_2', 'manual', 'STNK Lbr 2 (TBPKP) terunggah. OCR gagal memproses — silakan lengkapi manual di Langkah 2.');
@@ -10730,6 +10983,9 @@
             if (!rawVal) {
                 document.getElementById('valJaminanPpn').innerText = 'Rp 0';
                 document.getElementById('lblNjkbInfo').innerText = 'Rp 0';
+                const elCardNjkb = document.getElementById('cardNjkbDisplay'); if (elCardNjkb) elCardNjkb.innerText = 'Rp 0';
+                const elCardPpn = document.getElementById('cardPpnDisplay'); if (elCardPpn) elCardPpn.innerText = 'Rp 0';
+                const elCardJam = document.getElementById('cardJaminanDisplay'); if (elCardJam) elCardJam.innerText = 'Rp 0';
                 return;
             }
             const njkbNum = parseInt(rawVal);
@@ -10740,6 +10996,9 @@
 
             document.getElementById('lblNjkbInfo').innerText = fmtNjkb;
             document.getElementById('valJaminanPpn').innerText = fmtPpn;
+            const elCardNjkb = document.getElementById('cardNjkbDisplay'); if (elCardNjkb) elCardNjkb.innerText = fmtNjkb;
+            const elCardPpn = document.getElementById('cardPpnDisplay'); if (elCardPpn) elCardPpn.innerText = fmtPpn;
+            const elCardJam = document.getElementById('cardJaminanDisplay'); if (elCardJam) elCardJam.innerText = fmtPpn;
             const elSum = document.getElementById('sumJaminan');
             if (elSum) elSum.innerText = fmtPpn;
             const elM = document.getElementById('mJaminan');
@@ -10928,6 +11187,9 @@
 
                 document.getElementById('lblNjkbInfo').innerText = 'Rp ' + formattedNjkb;
                 document.getElementById('valJaminanPpn').innerText = formattedPpn;
+                const elCardNjkb = document.getElementById('cardNjkbDisplay'); if (elCardNjkb) elCardNjkb.innerText = 'Rp ' + formattedNjkb;
+                const elCardPpn = document.getElementById('cardPpnDisplay'); if (elCardPpn) elCardPpn.innerText = formattedPpn;
+                const elCardJam = document.getElementById('cardJaminanDisplay'); if (elCardJam) elCardJam.innerText = formattedPpn;
                 const elSum = document.getElementById('sumJaminan');
                 if (elSum) elSum.innerText = formattedPpn;
                 const elM = document.getElementById('mJaminan');
@@ -11426,21 +11688,24 @@
                 tahunWarnaHiddenEl.value = (tV && wV) ? (tV + ' / ' + wV) : (tV || wV);
             }
 
-            document.getElementById('sumNama').innerText = nama || '-';
-            document.getElementById('sumNik').innerText = nik || '-';
-            document.getElementById('sumNopol').innerText = nopol || '-';
-            document.getElementById('sumRangka').innerText = rangka || '-';
-            document.getElementById('sumKbm').innerText = merek || '-';
-            document.getElementById('sumRute').innerText = rute ? ('Telaga Punggur → ' + rute) : 'Telaga Punggur → -';
+            const elSumNama = document.getElementById('sumNama'); if (elSumNama) elSumNama.innerText = nama || '-';
+            const elSumNik = document.getElementById('sumNik'); if (elSumNik) elSumNik.innerText = nik || '-';
+            const elSumNopol = document.getElementById('sumNopol'); if (elSumNopol) elSumNopol.innerText = nopol || '-';
+            const elSumRangka = document.getElementById('sumRangka'); if (elSumRangka) elSumRangka.innerText = rangka || '-';
+            const elSumKbm = document.getElementById('sumKbm'); if (elSumKbm) elSumKbm.innerText = merek || '-';
+            const elSumRute = document.getElementById('sumRute'); if (elSumRute) elSumRute.innerText = rute ? ('Telaga Punggur → ' + rute) : 'Telaga Punggur → -';
             
-            if (tglKeluar && tglKembali) {
-                document.getElementById('sumPeriode').innerText = tglKeluar + ' s.d. ' + tglKembali;
-            } else {
-                document.getElementById('sumPeriode').innerText = '-';
+            const elSumPeriode = document.getElementById('sumPeriode');
+            if (elSumPeriode) {
+                if (tglKeluar && tglKembali) {
+                    elSumPeriode.innerText = tglKeluar + ' s.d. ' + tglKembali;
+                } else {
+                    elSumPeriode.innerText = '-';
+                }
             }
 
-            document.getElementById('mNama').innerText = nama || '-';
-            document.getElementById('mNopol').innerText = nopol || '-';
+            const elMNama = document.getElementById('mNama'); if (elMNama) elMNama.innerText = nama || '-';
+            const elMNopol = document.getElementById('mNopol'); if (elMNopol) elMNopol.innerText = nopol || '-';
 
             if (typeof checkIdentitasMatch === 'function') checkIdentitasMatch();
             if (typeof scheduleAutosave === 'function') scheduleAutosave();
@@ -11713,6 +11978,9 @@
                 ['foto_belakang', 'imgPhBelakang'],
                 ['foto_rangka', 'imgPhRangka'],
                 ['foto_mesin', 'imgPhMesin'],
+                ['sim', 'imgSimPreview'],
+                ['gesekan', 'imgGesekanPreview'],
+                ['pernyataan', 'imgBermeteraiTahap4Preview'],
             ];
             for (const [k, imgId] of _berkasMap) {
                 const du = _getDataUrlFromImg(imgId);
@@ -11970,6 +12238,7 @@
                     }
                     const lbl = document.getElementById(carPhotoLabels[idx]);
                     if (lbl) lbl.style.color = '#059669';
+                    if (typeof updateKelengkapanProgress === 'function') updateKelengkapanProgress();
                     scheduleAutosave();
                 };
                 reader.readAsDataURL(files[i]);
@@ -11994,6 +12263,7 @@
                     }
                     const lbl = document.getElementById(carPhotoLabels[slotIndex]);
                     if (lbl) lbl.style.color = '#059669';
+                    if (typeof updateKelengkapanProgress === 'function') updateKelengkapanProgress();
                     scheduleAutosave();
                 };
                 reader.readAsDataURL(file);
@@ -12006,6 +12276,387 @@
             switchRole('pemohon');
         };
     
+
+        // ================= TAHAP 4 HANDLERS & KELENGKAPAN PROGRESS =================
+        async function handleSimUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const compressed = await compressImageUnder400KB(e.target.result);
+                const img = document.getElementById('imgSimPreview');
+                const ph = document.getElementById('phSim');
+                const badge = document.getElementById('badgeSimStatus');
+                if (img) {
+                    img.src = compressed;
+                    img.style.display = 'block';
+                }
+                if (ph) ph.style.display = 'none';
+                if (badge) {
+                    badge.innerText = '✓ Lengkap';
+                    badge.style.background = '#DCFCE7';
+                    badge.style.color = '#15803D';
+                }
+                updateKelengkapanProgress();
+                scheduleAutosave();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleGesekanUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const compressed = await compressImageUnder400KB(e.target.result);
+                const img = document.getElementById('imgGesekanPreview');
+                const ph = document.getElementById('phGesekan');
+                const badge = document.getElementById('badgeGesekanStatus');
+                if (img) {
+                    img.src = compressed;
+                    img.style.display = 'block';
+                }
+                if (ph) ph.style.display = 'none';
+                if (badge) {
+                    badge.innerText = '✓ Terunggah';
+                    badge.style.background = '#DCFCE7';
+                    badge.style.color = '#15803D';
+                }
+                if (typeof carPhotosData !== 'undefined') carPhotosData[4] = compressed;
+                scheduleAutosave();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleBermeteraiTahap4Upload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                uploadedBermeteraiDataUrl = e.target.result;
+                uploadedBermeteraiFileName = file.name;
+                const img = document.getElementById('imgBermeteraiTahap4Preview');
+                const ph = document.getElementById('phBermeterai');
+                const badge = document.getElementById('badgePernyataanStatus');
+                if (img) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                if (ph) ph.style.display = 'none';
+                if (badge) {
+                    badge.innerText = '✓ Lengkap';
+                    badge.style.background = '#DCFCE7';
+                    badge.style.color = '#15803D';
+                }
+                updateKelengkapanProgress();
+                scheduleAutosave();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function downloadDraftPdfPernyataan() {
+            if (typeof generateAndDownloadRealPDF === 'function') {
+                generateAndDownloadRealPDF();
+            } else if (typeof openPdfModal === 'function') {
+                openPdfModal();
+            }
+        }
+
+        function updateKelengkapanProgress() {
+            let completedCount = 0;
+            
+            // 1. KTP
+            const hasKtp = !!(document.getElementById('imgKtpPreview')?.getAttribute('src') || '').startsWith('data:');
+            if (hasKtp) completedCount++;
+
+            // 2. NPWP
+            const hasNpwp = !!(document.getElementById('imgNpwpPreview')?.getAttribute('src') || '').startsWith('data:');
+            if (hasNpwp) completedCount++;
+
+            // 3. BPKB / Leasing
+            const hasBpkb = !!(document.getElementById('imgOwnershipPreview')?.getAttribute('src') || '').startsWith('data:') ||
+                            !!(document.getElementById('imgSuratLeasingPreview')?.getAttribute('src') || '').startsWith('data:');
+            if (hasBpkb) completedCount++;
+
+            // 4. STNK 1
+            const hasStnk1 = !!(document.getElementById('imgStnkPreview')?.getAttribute('src') || '').startsWith('data:');
+            if (hasStnk1) completedCount++;
+
+            // 5. STNK 2
+            const hasStnk2 = !!(document.getElementById('imgStnk2Preview')?.getAttribute('src') || '').startsWith('data:');
+            if (hasStnk2) completedCount++;
+
+            // 6. SIM Pengemudi
+            const hasSim = !!(document.getElementById('imgSimPreview')?.getAttribute('src') || '').startsWith('data:');
+            const badgeSim = document.getElementById('badgeSimStatus');
+            if (hasSim) {
+                completedCount++;
+                if (badgeSim) { badgeSim.innerText = '✓ Lengkap'; badgeSim.style.background = '#DCFCE7'; badgeSim.style.color = '#15803D'; }
+            } else {
+                if (badgeSim) { badgeSim.innerText = 'Belum'; badgeSim.style.background = '#FEF3C7'; badgeSim.style.color = '#92400E'; }
+            }
+
+            // 7. Foto Kendaraan 4 sisi
+            const fotoCount = [0, 1, 2, 3].filter(idx => typeof carPhotosData !== 'undefined' && !!carPhotosData[idx]).length;
+            const badgeFoto = document.getElementById('badgeFotoMobilStatus');
+            if (fotoCount === 4) {
+                completedCount++;
+                if (badgeFoto) { badgeFoto.innerText = '✓ Lengkap'; badgeFoto.style.background = '#DCFCE7'; badgeFoto.style.color = '#15803D'; }
+            } else {
+                if (badgeFoto) { badgeFoto.innerText = fotoCount > 0 ? (fotoCount + '/4 Sisi') : 'Belum'; badgeFoto.style.background = '#FEF3C7'; badgeFoto.style.color = '#92400E'; }
+            }
+
+            // 8. Surat Pernyataan Komitmen Bermeterai
+            const hasPernyataan = !!uploadedBermeteraiDataUrl;
+            const badgePernyataan = document.getElementById('badgePernyataanStatus');
+            if (hasPernyataan) {
+                completedCount++;
+                if (badgePernyataan) { badgePernyataan.innerText = '✓ Lengkap'; badgePernyataan.style.background = '#DCFCE7'; badgePernyataan.style.color = '#15803D'; }
+            } else {
+                if (badgePernyataan) { badgePernyataan.innerText = 'Belum'; badgePernyataan.style.background = '#FEF3C7'; badgePernyataan.style.color = '#92400E'; }
+            }
+
+            // Update Progress UI
+            const elCount = document.getElementById('kelengkapanProgressCount');
+            const elSub = document.getElementById('kelengkapanProgressSub');
+            const elBar = document.getElementById('kelengkapanProgressBar');
+            if (elCount) elCount.innerText = completedCount + ' dari 8 dokumen lengkap';
+            if (elSub) {
+                const remaining = 8 - completedCount;
+                if (remaining <= 0) {
+                    elSub.innerText = 'Semua dokumen wajib lengkap & siap diajukan';
+                    elSub.style.color = '#059669';
+                } else {
+                    elSub.innerText = remaining + ' dokumen menunggu kelengkapan / tanda tangan & e-meterai';
+                    elSub.style.color = '#B45309';
+                }
+            }
+            if (elBar) {
+                const pct = Math.min(100, Math.round((completedCount / 8) * 100));
+                elBar.style.width = pct + '%';
+            }
+
+            // Button state
+            const btnSubmit = document.getElementById('btnAjukanPermohonanFinal');
+            if (btnSubmit) {
+                if (completedCount >= 8) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.style.opacity = '1';
+                    btnSubmit.style.cursor = 'pointer';
+                } else {
+                    btnSubmit.disabled = true;
+                    btnSubmit.style.opacity = '0.6';
+                    btnSubmit.style.cursor = 'not-allowed';
+                }
+            }
+        }
+
+
+        // ================= STATUS TRACKER 9-TAHAP (SESUAI FLOWCHART & MOCKUP RESMI) =================
+        function getTrackerStageData(item) {
+            if (!item) return { activeIdx: 0, steps: [] };
+
+            const tglAju = item.tanggal_pengajuan || item.created_at || 'Baru saja';
+            const tglNadine = item.nadine_data?.nd_date || item.tgl_disposisi_frontdesk || (item.nd_id ? 'Tercatat di Nadine' : '-');
+            const tglSkep = item.tgl_skep || (item.no_skep ? 'Telah diterbitkan' : '-');
+            const noSkep = item.no_skep || item.no_kep || (item.skep_data?.no_skep) || 'Menunggu SKEP';
+            
+            const kodeBilling = item.kode_billing || item.billing_data?.kode_billing || ('8277' + String(item.id || '2026').replace(/[^0-9]/g, '').padEnd(12, '0').slice(0, 12));
+            const nominalJaminan = item.nominal_jaminan || item.ppn_amount || document.getElementById('valJaminanPpn')?.innerText || 'Rp 20.680.000';
+            const tglJatuhTempo = item.tgl_jatuh_tempo || item.billing_data?.jatuh_tempo || '02 Des 2026';
+            
+            const noPpftz = item.no_ppftz || (item.loket_verifikasi_data?.no_ppftz) || '-';
+            const noSpf = item.no_spf || (item.loket_verifikasi_data?.no_spf) || '-';
+            const noSppb = item.no_sppb || (item.pfpd_data?.no_sppb) || '-';
+
+            let activeIdx = 0;
+            const st = item.status || 'BERKAS_LENGKAP';
+            if (st === 'SELESAI_KELUAR_TLDDP') {
+                activeIdx = 8;
+            } else if (st === 'SPPB_GATE_OUT') {
+                activeIdx = 8;
+            } else if (st === 'PEMERIKSA_DOKUMEN' || st === 'MENUNGGU_DOKUMEN_TAMBAHAN') {
+                activeIdx = 6;
+            } else if (st === 'PPFTZ_CEK_FISIK') {
+                activeIdx = 4;
+            } else if (st === 'LOKET_VERIFIKASI') {
+                activeIdx = 5;
+            } else if (st === 'LOKET_JAMINAN') {
+                activeIdx = 3;
+            } else if (st === 'VERIFIKASI_FASILITAS') {
+                activeIdx = 2;
+            } else if (st === 'FRONTDESK_NADINE') {
+                activeIdx = 1;
+            } else {
+                activeIdx = 0;
+            }
+
+            const steps = [
+                {
+                    num: 1,
+                    title: '1. Permohonan Diajukan',
+                    sub: tglAju + ' • oleh Pemohon'
+                },
+                {
+                    num: 2,
+                    title: '2. Direkam Frontdesk / Nadine',
+                    sub: activeIdx > 1 ? (tglNadine + ' • Berkas lengkap & diteruskan ke Seksi Fasilitas') : (activeIdx === 1 ? 'Petugas Frontdesk sedang merekam & memverifikasi berkas di Nadine Kemenkeu' : 'Menunggu perekaman Frontdesk')
+                },
+                {
+                    num: 3,
+                    title: '3. SKEP Persetujuan Terbit',
+                    sub: activeIdx > 2 ? (tglSkep + ' • No. ' + noSkep) : (activeIdx === 2 ? 'Seksi Fasilitas sedang meneliti kelayakan permohonan' : 'Menunggu penerbitan Surat Keputusan')
+                },
+                {
+                    num: 4,
+                    title: '4. Jaminan PPN & Surat Jalan Polda',
+                    sub: activeIdx > 3 ? 'Jaminan PPN telah diserahkan & Surat Jalan Polda telah diverifikasi' : 'Menunggu pembayaran kode billing jaminan. Surat Jalan Polda akan diurus setelah jaminan dibayar.',
+                    showBillingBox: (activeIdx === 3 || !!item.kode_billing || !!item.billing_file_data_url),
+                    billingText: 'Kode Billing: ' + kodeBilling + ' • ' + nominalJaminan + ' • Jatuh tempo ' + tglJatuhTempo
+                },
+                {
+                    num: 5,
+                    title: '5. Pemeriksaan Fisik Kendaraan',
+                    sub: activeIdx > 4 ? 'Pemeriksaan fisik kendaraan selesai dicocokkan (BAP & LHP terbit)' : 'Petugas akan mencocokkan Nomor Rangka/Mesin & membawa Surat Jalan sebagai dokumen pelengkap.'
+                },
+                {
+                    num: 6,
+                    title: '6. PPFTZ-01, SPF & Instruksi Pemeriksaan Terbit',
+                    sub: activeIdx > 5 ? ('PPFTZ-01 (' + noPpftz + '), SPF (' + noSpf + ') telah terbit') : 'PPFTZ-01 mencantumkan No. Surat Jalan, No. KEP & No. Bukti Penerimaan Jaminan.'
+                },
+                {
+                    num: 7,
+                    title: '7. Pemeriksaan Dokumen',
+                    sub: activeIdx > 6 ? 'Pemeriksaan dokumen disetujui Pejabat Bea Cukai' : (st === 'MENUNGGU_DOKUMEN_TAMBAHAN' ? 'Nota Permintaan Dokumen (NPD): Mohon lengkapi dokumen tambahan yang diminta' : 'Hasil: Setuju → lanjut SPPB, atau NPD (Nota Permintaan Dokumen) bila ada dokumen yang masih diminta.')
+                },
+                {
+                    num: 8,
+                    title: '8. SPPB Terbit',
+                    sub: activeIdx > 7 ? ('SPPB Terbit (' + noSppb + ') • Siap ditunjukkan di Gate Pelabuhan') : 'Surat Persetujuan Pengeluaran Barang siap ditunjukkan di Gate.'
+                },
+                {
+                    num: 9,
+                    title: '9. Validasi Gate & Kendaraan Berangkat',
+                    sub: st === 'SELESAI_KELUAR_TLDDP' ? 'Kendaraan resmi keluar Kawasan Bebas Batam melalui Pelabuhan ASDP Telaga Punggur (kapal RoRo). Selesai.' : 'Kendaraan resmi keluar Kawasan Bebas Batam melalui Pelabuhan ASDP Telaga Punggur (kapal RoRo).'
+                }
+            ];
+
+            return { activeIdx, steps };
+        }
+
+        function renderStatusTrackerCard(item) {
+            if (!item) {
+                return `
+                    <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:12px; padding:32px 20px; text-align:center; max-width:680px; margin:0 auto; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                        <div style="font-size:2rem; margin-bottom:10px;">📋</div>
+                        <div style="font-size:1rem; font-weight:800; color:#0F172A; margin-bottom:6px;">Belum Ada Permohonan yang Diajukan</div>
+                        <div style="font-size:0.78rem; color:#64748B; margin-bottom:16px;">Anda belum memiliki permohonan pengeluaran sementara aktif. Silakan lengkapi formulir pengajuan.</div>
+                        <button type="button" class="btn btn-primary" onclick="switchPortalView('formulir')">Mulai Isi Formulir Pengajuan ➔</button>
+                    </div>
+                `;
+            }
+
+            const { activeIdx, steps } = getTrackerStageData(item);
+            const nopol = item.nopol || 'BP 1234 XY';
+            const merek = item.merek || item.kbm_merek || 'Toyota Avanza';
+            const noAgenda = item.id || 'PS-2026-00417';
+            const isCompleted = (item.status === 'SELESAI_KELUAR_TLDDP');
+
+            let stepsHtml = '';
+            steps.forEach((st, idx) => {
+                const isDone = (isCompleted || idx < activeIdx);
+                const isCurrent = (!isCompleted && idx === activeIdx);
+                const isLast = (idx === steps.length - 1);
+
+                let circleHtml = '';
+                if (isDone) {
+                    circleHtml = `<div style="width:26px; height:26px; border-radius:50%; background:#059669; color:#FFFFFF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>`;
+                } else if (isCurrent) {
+                    circleHtml = `<div style="width:26px; height:26px; border-radius:50%; background:#005FAC; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800; flex-shrink:0; box-shadow:0 0 0 3px rgba(0,95,172,0.2);">
+                        ${st.num}
+                    </div>`;
+                } else {
+                    circleHtml = `<div style="width:26px; height:26px; border-radius:50%; background:#F1F5F9; color:#94A3B8; border:1.5px solid #CBD5E1; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; flex-shrink:0;">
+                        ${st.num}
+                    </div>`;
+                }
+
+                const titleColor = (isDone || isCurrent) ? '#0F172A' : '#94A3B8';
+                const subColor = isCurrent ? '#005FAC' : (isDone ? '#475569' : '#94A3B8');
+
+                let billingBoxHtml = '';
+                if (st.showBillingBox && st.billingText) {
+                    billingBoxHtml = `
+                        <div style="background:#FEF9C3; border:1px solid #FDE047; border-radius:8px; padding:9px 12px; margin-top:8px; font-size:0.74rem; font-weight:700; color:#854D0E; display:flex; align-items:center; gap:8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A16207" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            <span>${st.billingText}</span>
+                        </div>
+                    `;
+                }
+
+                stepsHtml += `
+                    <div style="display:flex; gap:12px; position:relative;">
+                        <div style="display:flex; flex-direction:column; align-items:center; width:26px;">
+                            ${circleHtml}
+                            ${!isLast ? `<div style="width:2px; background:${isDone ? '#059669' : '#E2E8F0'}; flex-grow:1; min-height:26px; margin:4px 0;"></div>` : ''}
+                        </div>
+                        <div style="flex-grow:1; padding-bottom:${isLast ? '0' : '18px'};">
+                            <div style="font-size:0.84rem; font-weight:800; color:${titleColor}; line-height:1.3;">
+                                ${st.title}
+                            </div>
+                            <div style="font-size:0.73rem; color:${subColor}; line-height:1.4; margin-top:2px;">
+                                ${st.sub}
+                            </div>
+                            ${billingBoxHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:12px; padding:22px 24px; max-width:760px; margin:0 auto; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                    <!-- Header Status -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid #F1F5F9; flex-wrap:wrap; gap:8px;">
+                        <div>
+                            <h2 style="font-size:1.05rem; font-weight:800; color:#0F172A; margin:0 0 4px 0;">Status Permohonan</h2>
+                            <div style="font-size:0.78rem; color:#64748B; font-weight:600;">
+                                No. Permohonan: <strong style="color:#005FAC;">${escapeHtml(noAgenda)}</strong> • ${escapeHtml(merek)}, <span class="mono">${escapeHtml(nopol)}</span>
+                            </div>
+                        </div>
+                        <div>
+                            ${isCompleted ? 
+                                `<span style="background:#DCFCE7; border:1px solid #86EFAC; color:#15803D; font-size:0.75rem; font-weight:800; padding:4px 12px; border-radius:20px;">Selesai Keluar TLDDP</span>` :
+                                `<span style="background:#EFF6FF; border:1px solid #93C5FD; color:#005FAC; font-size:0.75rem; font-weight:800; padding:4px 12px; border-radius:20px;">Dalam Proses</span>`
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Stepper Vertikal 9-Tahap -->
+                    <div style="padding:4px 6px;">
+                        ${stepsHtml}
+                    </div>
+
+                    <!-- Catatan Kaki Otomatisasi WA -->
+                    <div style="font-size:0.72rem; color:#64748B; text-align:center; margin-top:20px; padding-top:14px; border-top:1px dashed #E2E8F0; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        <span>Notifikasi WhatsApp otomatis dikirim setiap kali status berubah.</span>
+                    </div>
+
+                    <!-- Tombol Aksi Tambahan Pemohon -->
+                    <div style="display:flex; justify-content:center; gap:10px; margin-top:16px;">
+                        <button type="button" class="btn btn-secondary" onclick="openDrawerDetail('${escapeJsAttr(noAgenda)}')" style="font-size:0.76rem; padding:8px 16px;">
+                            👁 Buka Rincian Berkas
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="openWhatsAppChatConsole()" style="font-size:0.76rem; padding:8px 16px; color:#059669; border-color:#059669;">
+                            💬 Live Chat Bantuan WA
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
         // ================= SUCCESS MODAL LOGIC =================
         let successModalCallback = null;
         function showSuccessModal(title, desc, btnText, callback) {
@@ -15394,6 +16045,11 @@
                 }
                 lockPemohonForm(userPermohonan);
                 switchPortalView('status_pemohon');
+                const trackerContainer = document.getElementById('pemohonStatusTrackerContainer');
+                if (trackerContainer) {
+                    trackerContainer.style.display = 'block';
+                    trackerContainer.innerHTML = renderStatusTrackerCard(userPermohonan);
+                }
             }
         }
 

@@ -1214,6 +1214,24 @@ def extract_with_vision_ai(image_bytes, target=''):
                 "no_bpkb, nama_pemilik, nik_pemilik, alamat_pemilik, no_polisi, merk, type, tahun, jenis, model, warna, "
                 "no_rangka, no_mesin, jumlah_roda, nama_apm_importir, pelabuhan_impor. Hanya JSON murni."
             ),
+            'suratKuasa': (
+                "Ekstrak informasi Surat Kuasa ini ke dalam JSON murni dengan kunci: "
+                "nama_pemberi_kuasa (Nama lengkap pihak yang memberi kuasa), "
+                "nik_pemberi_kuasa (NIK pihak yang memberi kuasa), "
+                "nama_penerima_kuasa (Nama lengkap pihak penerima kuasa / yang diberi kuasa / wakil), "
+                "nik_penerima_kuasa (NIK penerima kuasa), "
+                "nomor_surat (nomor surat kuasa bila ada), "
+                "keperluan (perihal pemberian kuasa). Hanya JSON murni."
+            ),
+            'surat_kuasa': (
+                "Ekstrak informasi Surat Kuasa ini ke dalam JSON murni dengan kunci: "
+                "nama_pemberi_kuasa (Nama lengkap pihak yang memberi kuasa), "
+                "nik_pemberi_kuasa (NIK pihak yang memberi kuasa), "
+                "nama_penerima_kuasa (Nama lengkap pihak penerima kuasa / yang diberi kuasa / wakil), "
+                "nik_penerima_kuasa (NIK penerima kuasa), "
+                "nomor_surat (nomor surat kuasa bila ada), "
+                "keperluan (perihal pemberian kuasa). Hanya JSON murni."
+            ),
             'vehicle': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi, no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
             'kbm_unified': "Ekstrak seluruh informasi kendaraan dari dokumen BPKB / STNK / Notice Pajak ini ke dalam format JSON dengan kunci: no_polisi, no_stnk, no_bpkb, nama_pemilik, alamat, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
             'fullset': "Ekstrak seluruh data pemohon dan kendaraan bermotor dari dokumen persyaratan lengkap ini ke dalam format JSON dengan kunci: nik, nama, npwp, alamat, no_polisi, no_stnk, no_bpkb, merk, type, jenis, model, tahun, warna, no_rangka, no_mesin, njkb. Hanya JSON murni.",
@@ -4653,7 +4671,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 rand3 = random.randint(100, 999)
 
                 # 4 OUTPUT OTOMATIS ATOMIK:
-                # 1. Terbit PPFTZ-01 & Proforma PPFTZ-03
+                # 1. Terbit PPFTZ-01 & Proforma PPFTZ-03 (mencantumkan No. KEP, No. BPJ, No. Surat Jalan Polda)
                 no_ppftz = f"{random.randint(10, 99)}/PPFTZ-01/KPU.02/2026"
                 no_proforma_ppftz03 = f"PRO-{rand3}/PPFTZ-03/KPU.02/2026"
                 # 2. Penunjukan Pemeriksa Dokumen
@@ -4662,12 +4680,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 # 4. Terbit IP (Instruksi Pemeriksaan) penunjukan Pemeriksa Barang
                 no_ip = f"IP-{rand3}/KPU.02/2026"
 
-                no_surat_jalan = str(body.get('no_surat_jalan', '')).strip()
+                no_skep = str(target_item.get('no_skep') or target_item.get('no_kep') or '-').strip()
+                no_bpj = str(target_item.get('no_bpj') or '-').strip()
+                no_surat_jalan = str(body.get('no_surat_jalan', '')).strip() or str(target_item.get('no_surat_jalan', '')).strip()
                 if no_surat_jalan:
                     target_item['no_surat_jalan'] = no_surat_jalan
 
                 target_item['status'] = 'PPFTZ_CEK_FISIK'
                 target_item['no_ppftz'] = no_ppftz
+                target_item['no_skep'] = no_skep
+                target_item['no_bpj'] = no_bpj
                 target_item['no_proforma_ppftz03'] = no_proforma_ppftz03
                 target_item['tgl_ppftz'] = today_str
                 target_item['no_spf'] = no_spf
@@ -4682,24 +4704,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'chk_bundel_permohonan': True,
                     'chk_bundel_skep': True,
                     'chk_bundel_jaminan': True,
+                    'no_skep': no_skep,
+                    'no_bpj': no_bpj,
                     'no_surat_jalan': no_surat_jalan,
                     'petugas_loket': sess.get('user', {}).get('nama', 'Petugas Loket'),
                     'approved_at': now_str
                 }
                 target_item['catatan_petugas'] = (
                     f"Approval Loket selesai. Terbit otomatis: PPFTZ-01 ({no_ppftz}), Proforma PPFTZ-03 ({no_proforma_ppftz03}), "
-                    f"SPF ({no_spf}), IP ({no_ip}). Surat Jalan Polda: {no_surat_jalan or '-'}. "
+                    f"SPF ({no_spf}), IP ({no_ip}). Dasar PPFTZ-01: No. KEP ({no_skep}), No. BPJ ({no_bpj}), Surat Jalan Polda: {no_surat_jalan or '-'}. "
                     f"Pemeriksa Barang: {pbrg_nama}; Pemeriksa Dokumen: {pfpd_nama}."
                 )
                 save_db_permohonan(db)
                 backup_sqlite_to_gdrive_async()
-                _log_officer_action(sess, 'LOKET_APPROVAL_4_OUTPUT', pid, f"PPFTZ {no_ppftz} | SPF {no_spf} | IP {no_ip} | SJ {no_surat_jalan} | PFPD {pfpd_nama}")
+                _log_officer_action(sess, 'LOKET_APPROVAL_4_OUTPUT', pid, f"PPFTZ {no_ppftz} | SKEP {no_skep} | BPJ {no_bpj} | SPF {no_spf} | IP {no_ip} | SJ {no_surat_jalan} | PFPD {pfpd_nama}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
                     f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
                     f"Berkas permohonan kendaraan Anda ({target_item.get('nopol', '-')}) telah *DISETUJUI PETUGAS LOKET*.\n"
                     f"• No. PPFTZ-01: *{no_ppftz}*\n"
+                    f"• No. KEP: *{no_skep}*\n"
+                    f"• No. BPJ: *{no_bpj}*\n"
                     f"• Proforma PPFTZ-03: *{no_proforma_ppftz03}*\n"
                     f"• No. SPF: *{no_spf}*\n"
                     f"• No. IP: *{no_ip}*\n\n"
@@ -4717,6 +4743,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'status': 'ok',
                     'message': f'Approval Loket berhasil! 4 output terbit otomatis (PPFTZ {no_ppftz}, SPF {no_spf}, IP {no_ip}, Pemeriksa Dokumen & Barang ditunjuk).',
                     'no_ppftz': no_ppftz,
+                    'no_skep': no_skep,
+                    'no_bpj': no_bpj,
+                    'no_surat_jalan': no_surat_jalan,
                     'no_proforma_ppftz03': no_proforma_ppftz03,
                     'no_spf': no_spf,
                     'no_ip': no_ip,

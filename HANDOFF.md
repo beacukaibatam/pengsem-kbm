@@ -77,6 +77,19 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Implementasi 6 Langkah Mockup Redesain Resmi V2 (`Mockup_Redesain_PENGSEM_KBM_v2.pdf`) & Flowchart IK No. 001/KPUB.02/2025** (Antigravity — 28 Nov 2026 ~20:15 WIB)
+  - **Langkah 1 (Penerbit PPFTZ-01 di server.py)**: `/api/loket/approve` kini mengekstrak `no_skep` dan `no_bpj` dari `target_item`, mencantumkannya ke dasar penerbitan PPFTZ-01, log audit, notifikasi WA pemohon, dan response JSON.
+  - **Langkah 2 (Validasi Silang Nama OCR Surat Kuasa)**: Menambahkan prompt AI Vision `'suratKuasa'` di `server.py` dan validasi silang di frontend antara KTP Pemilik vs Pemberi Kuasa, serta KTP Wakil vs Penerima Kuasa (banner non-blocking).
+  - **Langkah 3 (Redesain Layar Registrasi Sesuai Mockup 1)**: Memisahkan Syarat & Ketentuan Umum (kotak putih `#FFFFFF`) dengan Persetujuan Data Pihak Ketiga (kotak hijau muda `#F0FDF4`, border `#BBF7D0` dengan teks verbatim persetujuan). Tombol "Daftar" terkunci sebelum kedua checkbox dicentang.
+  - **Langkah 4 (Proporsionalitas Grid Split-Screen 60/40)**: Memastikan `.split-screen-grid` (`1.5fr 1fr`) seragam dan konsisten di Tahap 1, 2, dan 3 tanpa inline override.
+  - **Langkah 5 (Redesain Visual Tahap 2 & Tahap 3 Sesuai Mockup 7 & 8)**:
+    - *Tahap 2*: 2 kartu pilihan di atas (BPKB Milik Sendiri vs BPKB di Leasing/Bank) yang secara dinamis menampilkan `#leasingDocExtraBox` (Surat Keterangan BPKB dari Leasing & Fotokopi Perjanjian Kredit/Fidusia), plus info banner validasi silang No. Rangka/Mesin vs STNK.
+    - *Tahap 3*: Kartu "Perhitungan NJKB & Jaminan (Otomatis)" dengan data riil Bapenda Kepri (`#cardNjkbDisplay`, `#cardPpnDisplay`, `#cardJaminanDisplay` tebal hijau), disinkronisasikan di `onNjkbManualInput()`, `applyStnkData()`, dan `restoreFormDraft()`.
+  - **Langkah 6 (Redesain Visual Tahap 4 & Status Tracker 9-Tahap Pasca-Submit Sesuai Mockup 9 & 10)**:
+    - *Tahap 4 (`#page-4`)*: Grid 4 kartu (SIM Pengemudi, Foto Kendaraan 4 sisi [Depan, Belakang, Samping Kiri, Samping Kanan], Hasil Gesekan Rangka & Mesin [opsional, non-blocking], dan Surat Pernyataan Komitmen [Unduh Draf PDF & Unggah Bermeterai]). Dilengkapi Progress Bar Kelengkapan Berkas (0 s.d. 8 dokumen) yang mengontrol aktifnya tombol `Ajukan Permohonan ➔`.
+    - *Status Tracker Pasca-Submit (`mockup_page_10.png`)*: Stepper vertikal 9-tahap lengkap dari Permohonan Diajukan s.d. Validasi Gate RoRo ASDP Punggur, dengan timestamp riil, highlight box kuning Kode Billing & Jaminan PPN, serta notifikasi WhatsApp otomatis. Terpasang langsung di dashboard pemohon (`#pemohonStatusTrackerContainer`).
+  - **Verifikasi Kualitas**: Zero-diff `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, Node inline JS check OK, `python3 -m py_compile server.py database.py` OK, dan 4 screenshot verifikasi visual Playwright (`verify_tahap2.png`, `verify_tahap3.png`, `verify_tahap4.png`, `verify_status_tracker.png`) identik 100% dengan mockup PDF resmi.
+
 - **Redesain Visual Tahap 1: Kartu Dokumen Berdampingan 2-Kolom, OCR Snippet Lega, Badge Vision AI, Validasi Silang Identitas & Textarea Alamat (Perubahan 3 Selesai)** (Antigravity — 28 Nov 2026 ~19:50 WIB)
   - **Kartu Berdampingan 2 Kolom**: Kartu Unggah KTP & NPWP (serta KTP Wakil & Surat Kuasa pada kasus Dikuasakan via `#wrapDikuasakanCards`) disusun rapi 2 kolom menggunakan `.cards-grid-2col`, dan responsif 1 kolom pada layar sempit / mobile (&le; 680px).
   - **OCR Snippet Box Lega**: Mengubah `.ocr-snippet-box` menjadi kotak lega berlatar hijau muda (`#F0FDF4`), border hijau tipis (`#BBF7D0`), padding proporsional (8px 10px), multi-baris natural tanpa pemotongan teks / ellipsis (`height: auto`, `max-height: none`, `overflow: visible`, `white-space: normal`, `word-break: break-word`).
