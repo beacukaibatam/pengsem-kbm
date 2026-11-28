@@ -380,3 +380,11 @@
   - Memberikan area pratinjau dokumen di kolom kiri ruang 60% yang lebih lapang untuk kartu dokumen berdampingan, sementara kolom kanan (40%) tetap proporsional dan padat untuk isian field teks di Tahap 1, 2, dan 3.
   - Responsivitas mobile (`max-width: 900px`) tetap aman dengan susunan 1 kolom (`1fr`).
   - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
+- [x] Poin 59 (Antigravity): **REDESAIN VISUAL TAHAP 1 (KARTU DOKUMEN BERDAMPINGAN 2-KOLOM, OCR SNIPPET LEGA, BADGE VISION AI, VALIDASI SILANG IDENTITAS, & TEXTAREA ALAMAT)**:
+  - Kartu Unggah KTP & NPWP (dan KTP Wakil & Surat Kuasa pada kasus Dikuasakan via `#wrapDikuasakanCards`) disusun berdampingan 2 kolom (`.cards-grid-2col`) di dalam kolom 60% sisi kiri, responsif 1 kolom pada layar mobile (&le; 680px).
+  - `.ocr-snippet-box` didesain ulang menjadi kotak lega berlatar hijau muda (`#F0FDF4`) dan border hijau lembut (`#BBF7D0`), padding proporsional (8px 10px), multi-baris natural tanpa pemotongan teks / ellipsis (`height: auto`, `max-height: none`, `white-space: normal`, `word-break: break-word`, `overflow: visible`).
+  - Menambahkan badge status flat "✓ Terbaca Vision AI" (`#DCFCE7`) dan "✂ Auto-Cropped Vision AI" (`#E0F2FE`) di header kartu dokumen saat berhasil dibaca oleh OCR/Vision AI.
+  - Menambahkan box ringkas hijau "Validasi Silang Identitas Cocok (KTP ⟷ NPWP)" (`#identitasMatchBox`) di bawah kedua kartu, otomatis aktif saat NIK KTP identik dengan NPWP 16 Digit Format Coretax atau Nama pada KTP cocok dengan Nama NPWP.
+  - Header Tahap 1 dipadatkan: judul singkat "Tahap 1: Identitas Pemohon (KTP & NPWP)", subjudul padat 1 baris, serta badge terpisah "OCR Vision AI Otomatis" dan "Langkah 1 dari 4".
+  - Field `pemohon_alamat` diubah dari `<input type="text">` menjadi `<textarea rows="3">` multi-baris sehingga alamat tempat tinggal di Batam muat secara utuh dan nyaman dibaca tanpa terpotong.
+  - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, node script syntax check OK, py_compile OK, verifikasi visual Playwright desktop & mobile tersimpan.

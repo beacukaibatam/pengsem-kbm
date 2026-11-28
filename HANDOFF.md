@@ -77,6 +77,15 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Redesain Visual Tahap 1: Kartu Dokumen Berdampingan 2-Kolom, OCR Snippet Lega, Badge Vision AI, Validasi Silang Identitas & Textarea Alamat (Perubahan 3 Selesai)** (Antigravity — 28 Nov 2026 ~19:50 WIB)
+  - **Kartu Berdampingan 2 Kolom**: Kartu Unggah KTP & NPWP (serta KTP Wakil & Surat Kuasa pada kasus Dikuasakan via `#wrapDikuasakanCards`) disusun rapi 2 kolom menggunakan `.cards-grid-2col`, dan responsif 1 kolom pada layar sempit / mobile (&le; 680px).
+  - **OCR Snippet Box Lega**: Mengubah `.ocr-snippet-box` menjadi kotak lega berlatar hijau muda (`#F0FDF4`), border hijau tipis (`#BBF7D0`), padding proporsional (8px 10px), multi-baris natural tanpa pemotongan teks / ellipsis (`height: auto`, `max-height: none`, `overflow: visible`, `white-space: normal`, `word-break: break-word`).
+  - **Badge Vision AI & Auto-Crop**: Menambahkan badge flat "✓ Terbaca Vision AI" (`#DCFCE7`) dan "✂ Auto-Cropped Vision AI" (`#E0F2FE`) di sudut kanan header kartu dokumen saat berkas berhasil dianalisis OCR Vision AI.
+  - **Box Validasi Silang Identitas Cocok**: Menambahkan box hijau ringkas `#identitasMatchBox` di bawah kedua kartu yang otomatis tampil jika NIK KTP identik dengan NPWP 16 digit format Coretax atau Nama pada KTP cocok dengan Nama NPWP.
+  - **Header Tahap 1 Padat & Bersih**: Judul disederhanakan menjadi *"Tahap 1: Identitas Pemohon (KTP & NPWP)"*, subjudul padat 1 baris, dan badge kanan dipecah menjadi 2 badge flat: *"OCR Vision AI Otomatis"* dan *"Langkah 1 dari 4"*.
+  - **Textarea Domisili Alamat**: Field `pemohon_alamat` diubah menjadi `<textarea rows="3">` sehingga teks alamat panjang di Batam tampil utuh dan nyaman dibaca tanpa terpotong.
+  - **Verifikasi**: Zero-diff `diff -u` = 0, Node script check OK, py_compile OK, verifikasi visual Playwright desktop & mobile berhasil tersimpan.
+
 - **Penyesuaian Lebar Grid Split-Screen 60:40 (Perubahan 2 Selesai)** (Antigravity — 28 Nov 2026 ~19:40 WIB)
   - Mengubah `.split-screen-grid` menjadi `grid-template-columns: 1.5fr 1fr;` (60% kiri untuk upload/preview berkas, 40% kanan untuk form isian).
   - Terapkan konsisten pada Tahap 1, 2, dan 3 dengan breakpoint mobile tetap aman (1 kolom pada ≤900px).
