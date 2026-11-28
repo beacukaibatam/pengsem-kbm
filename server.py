@@ -3769,6 +3769,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "nama_pemohon": body.get("nama_pemohon", "-"),
                     "nik": sess_nik or body.get("nik", "-"),
                     "npwp": body.get("npwp", "-"),
+                    "wakil_nama": body.get("wakil_nama", ""),
+                    "wakil_nik": body.get("wakil_nik", ""),
                     "no_wa_pengirim": body.get("no_wa_pengirim", "-"),
                     "no_wa_pemohon": sess_phone or body.get("no_wa_pemohon", "-"),
                     "nomor_berbeda": body.get("nomor_berbeda", False),

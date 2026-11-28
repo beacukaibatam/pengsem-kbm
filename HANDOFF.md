@@ -77,6 +77,13 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Implementasi Model 2 (Akordion Vertikal Progresif) & Standardisasi Istilah Pemohon/Kuasa (Opsi 1) — SELESAI** (Cline — 28 Nov 2026 ~20:50 WIB)
+  - **Standardisasi istilah & eliminasi NPWP ganda**: Kolom `npwp_pemberi_kuasa` (beserta `#groupNpwpPemberiKuasa`) DIHAPUS dari HTML, snapshot draf (`_collectDraftFieldsSnapshot`), dan payload submit. NPWP kini satu kolom tunggal `pemohon_npwp` milik Pemohon. Ditambahkan field `wakil_nama` & `wakil_nik` di kartu KTP Penerima Kuasa, diisi otomatis dari OCR KTP Wakil (`runRealOCR`), disimpan ke draf + payload + `new_record` di `server.py`.
+  - **Istilah**: Pihak Utama "Pemohon (Pemilik Kendaraan / Pemberi Kuasa)", Pihak Pendamping "Penerima Kuasa (Wakil)" (label kartu KTP Wakil → "KTP Penerima Kuasa (Wakil)", label Tahap 1 & tabel panduan dokumen diperbarui).
+  - **Akordion vertikal progresif (engine `ACC_CONFIG`/`renderProgressiveAccordion()`)**: Tahap 1 = KTP → NPWP → Berkas Penerima Kuasa (khusus Dikuasakan); Tahap 2 = BPKB/Leasing; Tahap 4 = SIM → Foto 4 sisi → Gesekan → Surat Pernyataan. Berkas lengkap menciut rapi + badge hijau "✓ Lengkap" + ringkasan + tombol "Ubah"; berkas aktif terbuka lebar; berkas berikutnya terkunci ("🔒 Terkunci — lengkapi ... dulu") hingga berkas sebelumnya selesai lalu otomatis terbuka.
+  - **Autosave reaktif & Simpan Draf**: `renderProgressiveAccordion()` dipicu tiap OCR/unggah selesai; tombol permanen "💾 Simpan Draf" ditambahkan di Tahap 2 & 3 (Tahap 1 & 4 sudah ada, teks diseragamkan). Smart resume `openFirstIncompleteAccordion()` membuka halaman + akordion pada berkas pertama yang belum lengkap saat draf dipulihkan.
+  - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` blok `<script>` OK, `python3 -m py_compile server.py database.py` OK.
+
 - **Estafet ke Cline (VS Code / MacBook Air, Model DeepSeek V4 Pro): Implementasi Unggah Bertahap Model 2 (Akordion Vertikal Progresif) & Standardisasi Istilah Pemohon/Kuasa** (Antigravity — 28 Nov 2026 ~20:35 WIB)
   - **Status**: Siap dikerjakan oleh Cline di MacBook Air setelah `git pull origin main`.
   - **Keputusan Arsitektur UX yang Disetujui**:

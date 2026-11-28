@@ -423,6 +423,26 @@
             margin: 0 0 8px 0;
         }
 
+        /* ===== MODEL 2: AKORDION VERTIKAL PROGRESIF (UNGGAH BERTAHAP) ===== */
+        .acc-item { transition: opacity 0.2s ease; margin-bottom: 0; }
+        .acc-item-header { cursor: pointer; user-select: none; }
+        .acc-item-chevron { flex: 0 0 auto; display: inline-flex; color: #94A3B8; transition: transform 0.2s ease; }
+        .acc-item.open > .acc-item-header .acc-item-chevron { transform: rotate(90deg); color: #005FAC; }
+        .acc-summary { display: none; font-size: 0.74rem; color: #166534; line-height: 1.4; word-break: break-word; }
+        .acc-item.done.collapsed > .acc-summary { display: block; }
+        .acc-item.collapsed > :not(.acc-item-header):not(.acc-summary):not(.acc-lockhint) { display: none !important; }
+        .acc-item.locked { opacity: 0.55; }
+        .acc-item.locked > :not(.acc-item-header):not(.acc-lockhint) { display: none !important; }
+        .acc-item.locked > .acc-item-header { cursor: not-allowed; }
+        .acc-badge-lengkap { display: none; align-items: center; gap: 4px; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; font-size: 0.66rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+        .acc-item.done > .acc-item-header .acc-badge-lengkap { display: inline-flex; }
+        .acc-btn-ubah { display: none; font-size: 0.68rem; font-weight: 800; color: #005FAC; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+        .acc-item.done.collapsed > .acc-item-header .acc-btn-ubah { display: inline-flex; }
+        .acc-lockhint { display: none; background: #FFFBEB; border-top: 1px solid #FDE68A; color: #92400E; font-size: 0.7rem; font-weight: 700; padding: 8px 14px; }
+        .acc-item.locked > .acc-lockhint { display: block; }
+        .acc-item.done { box-shadow: inset 3px 0 0 #22C55E; }
+        .acc-item.open { box-shadow: inset 3px 0 0 #005FAC; }
+
         .scanner-btns {
             display: flex;
             gap: 8px;
@@ -4194,8 +4214,16 @@
             <div class="split-screen-grid">
                 <!-- SISI KIRI: Area Unggah Dokumen -->
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <!-- [KHUSUS DIKUASAKAN] Grid 2 Kolom: KTP Wakil & Surat Kuasa -->
-                    <div id="wrapDikuasakanCards" class="cards-grid-2col" style="display:none;">
+                    <!-- [KHUSUS DIKUASAKAN] Akordion Item 3: Berkas Penerima Kuasa (Wakil) -->
+                    <div class="acc-item" id="accItemWakil" data-acc-key="wakil" style="display:none; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; overflow:hidden;">
+                        <div class="acc-item-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                                Berkas Penerima Kuasa (Wakil)
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"></div>
+                        </div>
+                        <div id="wrapDikuasakanCards" class="cards-grid-2col" style="display:grid; padding:0 14px 14px;">
                         <!-- Card 0: KTP Wakil (Akun Login) -->
                         <div class="scanner-card" id="accWrapKtpWakil" style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
@@ -4205,7 +4233,7 @@
                                         <circle cx="8.5" cy="7" r="4"></circle>
                                         <polyline points="17 11 19 13 23 9"></polyline>
                                     </svg>
-                                    KTP Wakil (Akun Login)
+                                    KTP Penerima Kuasa (Wakil)
                                 </div>
                                 <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
                                     <span id="badgeKtpWakilAi" style="display:none; background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; font-size:0.64rem; font-weight:800; padding:1px 6px; border-radius:4px;">✓ Terbaca Vision AI</span>
@@ -4217,7 +4245,7 @@
                                 </div>
                             </div>
                             <div style="font-size:0.70rem; color:#166534; margin-bottom:6px;">
-                                NIK KTP Wakil wajib cocok 100% dengan akun login.
+                                NIK KTP Penerima Kuasa wajib cocok 100% dengan akun login.
                             </div>
                             <div class="preview-box" id="previewKtpWakilBox" onclick="pickFile('ktpWakil')" title="Klik kotak ini untuk unggah foto KTP Wakil" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#FFFFFF; border:1.5px dashed #86EFAC; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
                                 <div class="laser-line" id="laserKtpWakil" style="display:none;">
@@ -4237,6 +4265,16 @@
                                 </span>
                             </div>
                             <div id="snippetKtpWakil" class="ocr-snippet-box">Menunggu berkas KTP Wakil diunggah...</div>
+                            <div style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">
+                                <div>
+                                    <label style="font-size:0.68rem; font-weight:800; color:#166534; display:block; margin-bottom:2px;" for="wakil_nama">Nama Penerima Kuasa (Wakil)</label>
+                                    <input type="text" id="wakil_nama" class="form-input" placeholder="Nama lengkap sesuai KTP Penerima Kuasa" style="text-transform:uppercase; width:100%; box-sizing:border-box;" oninput="this.value=this.value.toUpperCase(); syncValues();">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.68rem; font-weight:800; color:#166534; display:block; margin-bottom:2px;" for="wakil_nik">NIK Penerima Kuasa (Wakil)</label>
+                                    <input type="text" id="wakil_nik" class="form-input mono" placeholder="16 digit NIK Penerima Kuasa" maxlength="16" style="width:100%; box-sizing:border-box;" oninput="syncValues()">
+                                </div>
+                            </div>
                             <input type="file" id="fileKtpWakilInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ktpWakil')">
                         </div>
 
@@ -4281,13 +4319,14 @@
                             <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'suratKuasa')">
                         </div>
                     </div>
+                    </div>
 
                     <!-- Banner Peringatan Keserasian Nama Surat Kuasa (Non-blocking) -->
                     <div id="suratKuasaCrossCheckBanner" style="display:none; background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.75rem;"></div>
 
-                    <!-- Grid 2 Kolom Berdampingan: KTP Pemohon & NPWP Pemohon -->
-                    <div class="cards-grid-2col">
-                        <!-- Scanner Card 1: KTP Pemohon / Pihak yang Diwakilkan -->
+                    <!-- Akordion Item 1 & 2: KTP Pemohon & NPWP Pemohon (vertikal progresif) -->
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <!-- Scanner Card 1: KTP Pemohon -->
                         <div class="scanner-card" id="accWrapKtp" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                                 <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
@@ -4337,7 +4376,7 @@
                             <input type="file" id="fileKtpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ktp')">
                         </div>
 
-                        <!-- Scanner Card 2: NPWP Pemohon / Pihak yang Diwakilkan -->
+                        <!-- Scanner Card 2: NPWP Pemohon -->
                         <div class="scanner-card" id="accWrapNpwp" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                                 <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
@@ -4434,18 +4473,6 @@
                                 <input type="text" id="pemohon_npwp" class="form-input mono" placeholder="Masukkan 15/16 digit NPWP" oninput="syncValues()">
                             </div>
 
-                            <!-- [KHUSUS DIKUASAKAN] Field NPWP Pemberi Kuasa (IK 10.a langkah b) -->
-                            <div class="form-group full" id="groupNpwpPemberiKuasa" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px;">
-                                <label class="form-label" for="npwp_pemberi_kuasa" style="color:#92400E; font-weight:800;">
-                                    NPWP Pemberi Kuasa (Wajib Sesuai IK No. 001/KPUB.02/2025):
-                                    <span class="tag-auto" id="tagNpwpKuasaAuto" style="display:none;">Terisi Otomatis</span>
-                                </label>
-                                <div style="font-size:0.69rem; color:#78350F; margin-bottom:5px;">
-                                    Sesuai IK bagian 10.a langkah b, pada permohonan yang dikuasakan, NPWP yang digunakan secara resmi dalam dokumen kepabeanan adalah NPWP Pemberi Kuasa, bukan NPWP Wakil.
-                                </div>
-                                <input type="text" id="npwp_pemberi_kuasa" class="form-input mono" placeholder="15 atau 16 digit NPWP pemilik kendaraan" style="width:100%; box-sizing:border-box;" oninput="syncValues()">
-                            </div>
-
                             <div class="form-group full" id="groupPemohonNama">
                                 <label class="form-label" for="pemohon_nama" id="labelPemohonNama">
                                     Nama Lengkap Sesuai KTP
@@ -4473,7 +4500,7 @@
                     <div class="nav-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
                         <button type="button" class="btn btn-secondary btn-save-draft" onclick="manualSaveDraft()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
-                            Simpan Draf
+                            💾 Simpan Draf
                         </button>
                         <button type="button" class="btn btn-primary" onclick="saveStep1AndContinue()">
                             Simpan Patokan &amp; Lanjut ke BPKB ➔
@@ -4815,9 +4842,15 @@
                         <button type="button" class="btn btn-secondary" onclick="goToPage(1)">
                             ⬅ Kembali ke KTP
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="saveStep2AndContinue()">
-                            Simpan BPKB &amp; Lanjut ke STNK ➔
-                        </button>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button type="button" class="btn btn-secondary btn-save-draft" onclick="manualSaveDraft()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+                                💾 Simpan Draf
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="saveStep2AndContinue()">
+                                Simpan BPKB &amp; Lanjut ke STNK ➔
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5018,9 +5051,15 @@
                         <button type="button" class="btn btn-secondary" onclick="goToPage(2)">
                             ⬅ Kembali ke BPKB
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="saveStep3AndContinue()">
-                            Simpan STNK &amp; Lanjut ke Foto &amp; Rute ➔
-                        </button>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button type="button" class="btn btn-secondary btn-save-draft" onclick="manualSaveDraft()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+                                💾 Simpan Draf
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="saveStep3AndContinue()">
+                                Simpan STNK &amp; Lanjut ke Foto &amp; Rute ➔
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5045,7 +5084,7 @@
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-bottom:14px;">
                 
                 <!-- KARTU 1: SIM PENGEMUDI -->
-                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div id="accCardSim" data-acc-key="sim" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
                             <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
@@ -5063,7 +5102,7 @@
                 </div>
 
                 <!-- KARTU 2: FOTO KENDARAAN (4 SISI) -->
-                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div id="accCardFoto" data-acc-key="foto" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
                             <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
@@ -5096,7 +5135,7 @@
                 </div>
 
                 <!-- KARTU 3: HASIL GESEKAN RANGKA & MESIN (OPSIONAL) -->
-                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div id="accCardGesekan" data-acc-key="gesekan" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                             <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
@@ -5119,7 +5158,7 @@
                 </div>
 
                 <!-- KARTU 4: SURAT PERNYATAAN KOMITMEN -->
-                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div id="accCardPernyataan" data-acc-key="pernyataan" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                             <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
@@ -5199,7 +5238,7 @@
                 </button>
                 <div style="display:flex; gap:8px;">
                     <button type="button" class="btn btn-secondary" onclick="manualSaveDraft()">
-                        ← Simpan Draf
+                        💾 Simpan Draf
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="openPdfModal()">
                         Preview Dokumen Lengkap
@@ -6623,12 +6662,12 @@
             let items = [
                 {
                     nama: 'KTP Asli',
-                    ket: onboardingState.pengurusan === 'kuasa' ? 'KTP Pihak yang Diwakilkan (Pemilik / Penyewa Kendaraan)' : 'KTP Pemohon Pribadi (Asli Berwarna, Masih Berlaku)',
+                    ket: onboardingState.pengurusan === 'kuasa' ? 'KTP Pemohon (Pemilik Kendaraan / Pemberi Kuasa) — Asli Berwarna, Masih Berlaku' : 'KTP Pemohon (Pemilik Kendaraan) — Asli Berwarna, Masih Berlaku',
                     sifat: 'Wajib Universal'
                 },
                 {
                     nama: 'NPWP Asli',
-                    ket: onboardingState.pengurusan === 'kuasa' ? 'NPWP Pihak yang Diwakilkan (15 atau 16 Digit NIK Coretax)' : 'NPWP Pemohon Pribadi (15 atau 16 Digit NIK Coretax)',
+                    ket: onboardingState.pengurusan === 'kuasa' ? 'NPWP Pemohon (Pemilik Kendaraan / Pemberi Kuasa) — 15 atau 16 Digit NIK Coretax' : 'NPWP Pemohon (Pemilik Kendaraan) — 15 atau 16 Digit NIK Coretax',
                     sifat: 'Wajib Universal'
                 },
                 {
@@ -6733,10 +6772,7 @@
         }
 
         function applyOnboardingStateToForm() {
-            const wrapKtpWakil = document.getElementById('accWrapKtpWakil');
-            const wrapSuratKuasa = document.getElementById('accWrapSuratKuasa');
-            const wrapDikuasakan = document.getElementById('wrapDikuasakanCards');
-            const grpNpwpKuasa = document.getElementById('groupNpwpPemberiKuasa');
+            const accWakil = document.getElementById('accItemWakil');
             const lblKtpTitle = document.getElementById('labelKtpTitle');
             const lblNpwpTitle = document.getElementById('labelNpwpTitle');
             const lblNama = document.getElementById('labelPemohonNama');
@@ -6744,17 +6780,14 @@
             const lblSuratKuasaSub = document.getElementById('labelSuratKuasaSubtitle');
 
             if (onboardingState.pengurusan === 'kuasa') {
-                if (wrapDikuasakan) wrapDikuasakan.style.display = 'grid';
-                if (wrapKtpWakil) wrapKtpWakil.style.display = 'flex';
-                if (wrapSuratKuasa) wrapSuratKuasa.style.display = 'flex';
+                if (accWakil) accWakil.style.display = 'block';
                 const boxSk = document.getElementById('previewSuratKuasaBox');
                 if (boxSk) boxSk.style.display = 'flex';
-                if (grpNpwpKuasa) grpNpwpKuasa.style.display = 'block';
 
-                if (lblKtpTitle) lblKtpTitle.innerText = 'KTP Pihak yang Diwakilkan (Pemilik/Penyewa)';
-                if (lblNpwpTitle) lblNpwpTitle.innerText = 'NPWP Pihak yang Diwakilkan (Pemilik/Penyewa)';
-                if (lblNama) lblNama.innerText = 'Nama Pihak yang Diwakilkan Sesuai KTP';
-                if (lblNik) lblNik.innerText = 'NIK Pihak yang Diwakilkan (16 Digit)';
+                if (lblKtpTitle) lblKtpTitle.innerText = 'KTP Pemohon (Pemilik Kendaraan / Pemberi Kuasa)';
+                if (lblNpwpTitle) lblNpwpTitle.innerText = 'NPWP Pemohon (Pemilik Kendaraan / Pemberi Kuasa)';
+                if (lblNama) lblNama.innerText = 'Nama Pemohon (Pemilik Kendaraan / Pemberi Kuasa) Sesuai KTP';
+                if (lblNik) lblNik.innerText = 'NIK Pemohon (16 Digit)';
 
                 // Pada kasus Dikuasakan, jangan isi otomatis data pihak yang diwakilkan dengan akun Wakil
                 const elNik = document.getElementById('pemohon_nik');
@@ -6775,12 +6808,9 @@
                         : 'Surat Kuasa Khusus Bermeterai Rp 10.000 (Menyebutkan Unit & Rute)';
                 }
             } else {
-                if (wrapDikuasakan) wrapDikuasakan.style.display = 'none';
-                if (wrapKtpWakil) wrapKtpWakil.style.display = 'none';
-                if (wrapSuratKuasa) wrapSuratKuasa.style.display = 'none';
-                if (grpNpwpKuasa) grpNpwpKuasa.style.display = 'none';
+                if (accWakil) accWakil.style.display = 'none';
 
-                if (lblKtpTitle) lblKtpTitle.innerText = 'KTP Pemohon';
+                if (lblKtpTitle) lblKtpTitle.innerText = 'KTP Pemohon (Pemilik Kendaraan)';
                 if (lblNpwpTitle) lblNpwpTitle.innerText = 'NPWP Pemohon';
                 if (lblNama) lblNama.innerText = 'Nama Lengkap Sesuai KTP';
                 if (lblNik) lblNik.innerText = 'NIK Pemohon (16 Digit)';
@@ -6798,6 +6828,7 @@
                     elNama.classList.add('filled');
                 }
             }
+            renderProgressiveAccordion();
             updateOnboardingSummaryBanner();
         }
 
@@ -8314,7 +8345,7 @@
 
             const docLabels = {
                 'ktp': 'KTP Pemohon',
-                'ktpWakil': 'KTP Wakil (Penerima Kuasa)',
+                'ktpWakil': 'KTP Penerima Kuasa (Wakil)',
                 'npwp': 'Kartu NPWP',
                 'ownership': (currentOwnershipDocType === 'bpkb' ? 'BPKB Hal. 1' : 'Surat Keterangan Leasing/Bank Lembar 1'),
                 'ownership_2': (currentOwnershipDocType === 'bpkb' ? 'BPKB Hal. 2' : 'Surat Keterangan Leasing/Bank Lembar 2'),
@@ -8571,6 +8602,7 @@
             if (target === 'ktp' || target === 'npwp') {
                 if (typeof checkIdentitasMatch === 'function') checkIdentitasMatch();
             }
+            if (typeof renderProgressiveAccordion === 'function') renderProgressiveAccordion();
         }
 
         function checkIdentitasMatch() {
@@ -8774,6 +8806,7 @@
             if (typeof renderCrossValidationPanel === 'function') renderCrossValidationPanel();
             if (typeof checkAndRevealIdentitasSection === 'function') checkAndRevealIdentitasSection();
             if (typeof syncValues === 'function') syncValues();
+            if (typeof renderProgressiveAccordion === 'function') renderProgressiveAccordion();
         }
 
         // ================= HAPUS BERKAS FOTO DARI PRATINJAU DOKUMEN =================
@@ -9141,6 +9174,161 @@
             });
         }
 
+        // ================= MODEL 2: AKORDION VERTIKAL PROGRESIF (UNGGAH BERTAHAP) =================
+        // Mengubah tumpukan kotak unggah menjadi alur bertingkat: berkas yang sudah lengkap
+        // menciut rapi (badge hijau "✓ Lengkap" + ringkasan identitas + tombol "Ubah"), berkas
+        // aktif terbuka lebar, dan berkas berikutnya otomatis terbuka begitu berkas saat ini
+        // selesai diunggah & dibaca OCR (dipicu ulang lewat renderProgressiveAccordion()).
+        const ACC_CONFIG = {
+            ktp:        { page: 1, container: 'accWrapKtp',        title: 'KTP Pemohon (Pemilik Kendaraan / Pemberi Kuasa)' },
+            npwp:       { page: 1, container: 'accWrapNpwp',       title: 'NPWP Pemohon' },
+            wakil:      { page: 1, container: 'accItemWakil',      title: 'Berkas Penerima Kuasa (Wakil)', kuasaOnly: true },
+            bpkb:       { page: 2, container: 'accWrapBpkb',       title: 'Unggah BPKB / Surat Keterangan Leasing' },
+            sim:        { page: 4, container: 'accCardSim',        title: 'SIM Pengemudi' },
+            foto:       { page: 4, container: 'accCardFoto',       title: 'Foto Fisik Kendaraan (4 Sisi)' },
+            gesekan:    { page: 4, container: 'accCardGesekan',    title: 'Hasil Gesekan Rangka & Mesin (Opsional)' },
+            pernyataan: { page: 4, container: 'accCardPernyataan', title: 'Surat Pernyataan Komitmen Bermeterai' }
+        };
+
+        function accGetImg(id) {
+            return (document.getElementById(id)?.getAttribute('src') || '').startsWith('data:');
+        }
+
+        function accIsDone(key) {
+            switch (key) {
+                case 'ktp':        return accGetImg('imgKtpPreview');
+                case 'npwp':       return accGetImg('imgNpwpPreview');
+                case 'wakil':      return accGetImg('imgKtpWakilPreview') && accGetImg('imgSuratKuasaPreview');
+                case 'bpkb':       return accGetImg('imgOwnershipPreview') || accGetImg('imgSuratLeasingPreview');
+                case 'sim':        return accGetImg('imgSimPreview');
+                case 'foto':       return (typeof carPhotosData !== 'undefined') && [0, 1, 2, 3].filter(i => !!carPhotosData[i]).length === 4;
+                case 'gesekan':    return accGetImg('imgGesekanPreview');
+                case 'pernyataan': return !!uploadedBermeteraiDataUrl;
+            }
+            return false;
+        }
+
+        function accSummary(key) {
+            switch (key) {
+                case 'ktp': { const o = docOcrStore.ktp || {}; return [o.nama, o.nik ? ('NIK: ' + o.nik) : ''].filter(Boolean).join(' • ') || 'KTP Pemohon terunggah'; }
+                case 'npwp': { const o = docOcrStore.npwp || {}; return (o.npwp ? ('NPWP: ' + o.npwp) : 'NPWP Pemohon terunggah'); }
+                case 'wakil': { const o = docOcrStore.ktpWakil || {}; const n = o.nama || document.getElementById('wakil_nama')?.value || ''; const k = o.nik || document.getElementById('wakil_nik')?.value || ''; return [n, k ? ('NIK: ' + k) : ''].filter(Boolean).join(' • ') || 'Berkas Penerima Kuasa lengkap'; }
+                case 'bpkb': { const o = docOcrStore.bpkb || {}; return [o.nopol, o.no_bpkb || o.no_rangka].filter(Boolean).join(' • ') || 'Dokumen kepemilikan terunggah'; }
+                case 'sim': return 'SIM Pengemudi terunggah';
+                case 'foto': return '4 sisi foto kendaraan lengkap';
+                case 'gesekan': return 'Foto gesekan rangka & mesin terunggah';
+                case 'pernyataan': return 'Surat pernyataan bermeterai terunggah';
+            }
+            return '';
+        }
+
+        function accInitItem(key) {
+            const cfg = ACC_CONFIG[key];
+            if (!cfg) return null;
+            const el = document.getElementById(cfg.container);
+            if (!el) return null;
+            if (!el.dataset.accInit) {
+                el.dataset.accInit = '1';
+                el.classList.add('acc-item');
+                el.dataset.accKey = key;
+                const header = el.children[0];
+                if (header) {
+                    header.classList.add('acc-item-header');
+                    header.addEventListener('click', function () {
+                        if (el.classList.contains('locked')) return;
+                        if (el.classList.contains('done')) el.classList.toggle('collapsed');
+                    });
+                    const controls = document.createElement('span');
+                    controls.className = 'acc-item-controls';
+                    controls.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:6px;flex-shrink:0;';
+                    controls.innerHTML =
+                        '<span class="acc-badge-lengkap">✓ Lengkap</span>' +
+                        '<button type="button" class="acc-btn-ubah">Ubah</button>' +
+                        '<span class="acc-item-chevron"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="9 18 15 12 9 6"></polyline></svg></span>';
+                    header.appendChild(controls);
+                    const ubah = controls.querySelector('.acc-btn-ubah');
+                    if (ubah) ubah.addEventListener('click', function (ev) {
+                        ev.stopPropagation();
+                        el.classList.remove('collapsed');
+                        el.classList.add('open');
+                    });
+                }
+                const summary = document.createElement('div');
+                summary.className = 'acc-summary';
+                el.appendChild(summary);
+                const lockhint = document.createElement('div');
+                lockhint.className = 'acc-lockhint';
+                el.appendChild(lockhint);
+            }
+            return el;
+        }
+
+        function renderProgressiveAccordion() {
+            const pages = { 1: [], 2: [], 4: [] };
+            Object.keys(ACC_CONFIG).forEach(k => {
+                if (pages[ACC_CONFIG[k].page]) pages[ACC_CONFIG[k].page].push(k);
+            });
+            if (onboardingState.pengurusan !== 'kuasa') {
+                pages[1] = pages[1].filter(k => k !== 'wakil');
+            }
+            Object.keys(pages).forEach(pageStr => {
+                const page = parseInt(pageStr, 10);
+                const keys = pages[page];
+                let activeKey = null;
+                for (const k of keys) {
+                    if (!document.getElementById(ACC_CONFIG[k].container)) continue;
+                    if (!accIsDone(k)) { activeKey = k; break; }
+                }
+                keys.forEach(k => {
+                    const el = accInitItem(k);
+                    if (!el) return;
+                    const done = accIsDone(k);
+                    const isActive = (k === activeKey);
+                    el.classList.toggle('done', done);
+                    el.classList.toggle('open', isActive && !done);
+                    el.classList.toggle('locked', !done && !isActive);
+                    el.classList.toggle('collapsed', done && !isActive);
+                    const summary = el.querySelector('.acc-summary');
+                    if (summary) summary.innerText = done ? accSummary(k) : '';
+                    const lockhint = el.querySelector('.acc-lockhint');
+                    if (lockhint) {
+                        if (!done && !isActive) {
+                            const prevIdx = keys.indexOf(k) - 1;
+                            const prevKey = prevIdx >= 0 ? keys[prevIdx] : null;
+                            lockhint.innerText = prevKey ? ('🔒 Terkunci — lengkapi "' + ACC_CONFIG[prevKey].title + '" terlebih dahulu.') : '🔒 Terkunci';
+                        } else {
+                            lockhint.innerText = '';
+                        }
+                    }
+                });
+            });
+        }
+
+        const SMART_RESUME_ORDER = [
+            { key: 'ktp', page: 1 }, { key: 'npwp', page: 1 }, { key: 'wakil', page: 1 },
+            { key: 'bpkb', page: 2 }, { key: 'stnk', page: 3 },
+            { key: 'sim', page: 4 }, { key: 'foto', page: 4 }, { key: 'gesekan', page: 4 }, { key: 'pernyataan', page: 4 }
+        ];
+
+        function findFirstIncompleteAccordion() {
+            for (const item of SMART_RESUME_ORDER) {
+                if (item.key === 'wakil' && onboardingState.pengurusan !== 'kuasa') continue;
+                if (item.key === 'stnk') {
+                    if (!accGetImg('imgStnkPreview')) return item;
+                    continue;
+                }
+                if (!accIsDone(item.key)) return item;
+            }
+            return null;
+        }
+
+        function openFirstIncompleteAccordion() {
+            const first = findFirstIncompleteAccordion();
+            if (!first) return;
+            if (typeof goToPage === 'function') goToPage(first.page);
+            renderProgressiveAccordion();
+        }
+
         // ================= DRAF FORMULIR TAHAP 2 (AUTOSAVE KE SERVER) =================
         // User frustrasi: data Tahap 2 (KTP/NPWP/BPKB/STNK beserta koreksi manual &
         // pratinjau gambar) hilang total kalau logout sebelum submit akhir, karena
@@ -9152,7 +9340,8 @@
         let _draftRestoring = false;
 
         function _collectDraftFieldsSnapshot() {
-            const ids = ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'npwp_pemberi_kuasa', 'pemohon_alamat', 'pemohon_telp',
+            const ids = ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'pemohon_alamat', 'pemohon_telp',
+                'wakil_nama', 'wakil_nik',
                 'kbm_nopol', 'kbm_nostnk', 'kbm_nobpkb', 'kbm_norangka', 'kbm_nomesin', 'kbm_merek',
                 'kbm_tahun', 'kbm_warna', 'kbm_njkb',
                 'rute_tujuan', 'tgl_keluar', 'tgl_kembali', 'keperluan'];
@@ -9445,6 +9634,8 @@
                 _markAutosaved();
                 if (typeof initPreviewDeleteButtons === 'function') initPreviewDeleteButtons();
                 if (typeof updateKelengkapanProgress === 'function') updateKelengkapanProgress();
+                if (typeof renderProgressiveAccordion === 'function') renderProgressiveAccordion();
+                if (typeof openFirstIncompleteAccordion === 'function') openFirstIncompleteAccordion();
             } catch (e) {
                 console.warn('[Draf] Gagal memulihkan draf:', e);
             } finally {
@@ -9691,7 +9882,15 @@
                     }
 
                     docOcrStore.ktpWakil = finalData;
-                    if (snip) snip.innerHTML = `<strong>KTP Wakil Terbaca:</strong> ${finalData.nama || '-'} (NIK: ${finalData.nik || '-'})`;
+                    if (finalData.nama) {
+                        const wn = document.getElementById('wakil_nama');
+                        if (wn) { wn.value = finalData.nama; wn.classList.add('filled'); }
+                    }
+                    if (finalData.nik) {
+                        const wk = document.getElementById('wakil_nik');
+                        if (wk) { wk.value = finalData.nik; wk.classList.add('filled'); }
+                    }
+                    if (snip) snip.innerHTML = `<strong>KTP Penerima Kuasa Terbaca:</strong> ${finalData.nama || '-'} (NIK: ${finalData.nik || '-'})`;
                     if (badge) {
                         badge.className = 'pabean-badge-verified';
                         badge.innerText = '✓ Terverifikasi';
@@ -9700,6 +9899,7 @@
                     }
                     if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                     scheduleAutosave();
+                    if (typeof renderProgressiveAccordion === 'function') renderProgressiveAccordion();
                 } catch (err) {
                     console.warn('OCR error KTP Wakil:', err);
                     if (snip) snip.innerText = 'KTP Wakil terunggah. Silakan pastikan foto terbaca jelas.';
@@ -9752,6 +9952,7 @@
                     }
                     if (typeof checkSuratKuasaCrossValidation === 'function') checkSuratKuasaCrossValidation();
                     scheduleAutosave();
+                    if (typeof renderProgressiveAccordion === 'function') renderProgressiveAccordion();
                 } catch (err) {
                     console.warn('OCR error Surat Kuasa:', err);
                     if (snip) snip.innerText = 'Surat Kuasa berhasil diunggah.';
@@ -12007,7 +12208,8 @@
                 nama_pemohon: (document.getElementById('pemohon_nama')?.value || user.nama || 'Pemohon').trim(),
                 nik: (document.getElementById('pemohon_nik')?.value || user.nik || '').trim(),
                 npwp: (document.getElementById('pemohon_npwp')?.value || '-').trim(),
-                npwp_pemberi_kuasa: (document.getElementById('npwp_pemberi_kuasa')?.value || '').trim(),
+                wakil_nama: (document.getElementById('wakil_nama')?.value || '').trim(),
+                wakil_nik: (document.getElementById('wakil_nik')?.value || '').trim(),
                 no_wa_pemohon: (document.getElementById('pemohon_telp')?.value || user.phone || '').trim(),
                 nopol: (document.getElementById('kbm_nopol')?.value || 'BP - (Menunggu STNK)').trim(),
                 merek_tipe: (document.getElementById('kbm_merek')?.value || 'Kendaraan Bermotor').trim(),
@@ -12449,6 +12651,8 @@
                     btnSubmit.style.cursor = 'not-allowed';
                 }
             }
+
+            if (typeof renderProgressiveAccordion === 'function') renderProgressiveAccordion();
         }
 
 
