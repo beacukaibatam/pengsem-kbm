@@ -3153,6 +3153,10 @@
                         <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
                 </button>
+                <button type="button" id="btnDeleteAccountPortal" onclick="openDeleteAccountModal()" title="Hapus Akun" aria-label="Hapus Akun" style="display:none; align-items:center; gap:5px; font-size:0.72rem; font-weight:800; color:#B91C1C; background:#FEF2F2; border:1.5px solid #FECACA; border-radius:8px; padding:6px 10px; cursor:pointer;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Hapus Akun
+                </button>
             </div>
         </div>
     </header>
@@ -5294,6 +5298,31 @@
         <div style="display:flex; gap:8px;">
             <button type="button" class="btn-logout-cancel" onclick="closeLogoutConfirmModal()">Batal</button>
             <button type="button" class="btn-logout-yes" onclick="confirmLogoutAction()">Ya</button>
+        </div>
+    </div>
+
+    <!-- ================= MODAL HAPUS AKUN PEMOHON (WAJIB ALASAN + OTP WA/EMAIL) ================= -->
+    <div class="notif-popup-overlay" id="modalDeleteAccount">
+        <div class="notif-popup-card" style="max-width: 430px; text-align: left;">
+            <button type="button" class="notif-popup-close" onclick="closeDeleteAccountModal()" title="Tutup">&times;</button>
+            <h3 class="notif-popup-title is-danger">Hapus Akun Pemohon</h3>
+            <p class="notif-popup-desc" style="text-align:left;">Penghapusan akun bersifat permanen dan tidak dapat dibatalkan. Untuk melanjutkan, isi alasan dan verifikasi kode OTP yang dikirim ke WhatsApp &amp; Email terdaftar Anda.</p>
+            <div style="margin-top:12px;">
+                <label style="font-size:0.74rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;" for="deleteAccountReason">Alasan menghapus akun:</label>
+                <textarea id="deleteAccountReason" rows="3" placeholder="Contoh: sudah tidak membutuhkan layanan / ganti nomor WhatsApp" style="width:100%; box-sizing:border-box; border:1.5px solid #CBD5E1; border-radius:8px; padding:8px 10px; font-size:0.78rem; font-family:inherit; resize:vertical;" oninput="updateDeleteAccountButtonState()"></textarea>
+            </div>
+            <div style="margin-top:10px;">
+                <label style="font-size:0.74rem; font-weight:800; color:#334155; display:block; margin-bottom:4px;" for="deleteAccountOtp">Kode OTP (6 digit):</label>
+                <div style="display:flex; gap:8px; align-items:stretch;">
+                    <input type="text" id="deleteAccountOtp" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="______" style="flex:1; min-width:0; border:1.5px solid #CBD5E1; border-radius:8px; padding:8px 10px; font-size:0.9rem; letter-spacing:3px; text-align:center; font-family:monospace;" oninput="updateDeleteAccountButtonState()">
+                    <button type="button" id="btnDeleteAccountSendOtp" class="btn-notif-cancel" onclick="requestDeleteAccountOtp()">Kirim Kode OTP</button>
+                </div>
+                <div id="deleteAccountOtpStatus" style="font-size:0.68rem; color:#64748B; margin-top:5px; min-height:15px; line-height:1.4;"></div>
+            </div>
+            <div class="notif-popup-actions" style="margin-top:14px;">
+                <button type="button" class="btn-notif-cancel" onclick="closeDeleteAccountModal()">Batal</button>
+                <button type="button" id="btnDeleteAccountConfirm" class="btn-notif-danger" onclick="submitDeleteAccount()" disabled style="opacity:0.5; cursor:not-allowed;">🗑 Hapus Akun</button>
+            </div>
         </div>
     </div>
 
@@ -15030,6 +15059,8 @@
         async function applyUserRoleUI(role, user) {
             if (typeof resetIdleTimer === 'function') resetIdleTimer(); // Mulai/reset idle-timeout begitu sesi aktif
             updateHeaderUserProfile(role, user);
+            const btnDel = document.getElementById('btnDeleteAccountPortal');
+            if (btnDel) btnDel.style.display = (role === 'pemohon') ? 'inline-flex' : 'none';
             const landing = document.getElementById('viewAuthLanding');
             const nav = document.getElementById('mainPortalNav');
             const badge = document.getElementById('authUserBadge');
@@ -15141,6 +15172,8 @@
         function applyUnauthenticatedUI() {
             resetAllFormDataAndState();
             if (typeof resetIdleTimer === 'function') resetIdleTimer(); // Pastikan idle-timeout mati saat tidak ada sesi
+            const btnDel = document.getElementById('btnDeleteAccountPortal');
+            if (btnDel) btnDel.style.display = 'none';
             const badge = document.getElementById('authUserBadge');
             const btnOpenAuth = document.getElementById('btnOpenAuthModal');
             const tabDash = document.getElementById('tabBtnDashboard');
@@ -15934,6 +15967,113 @@
             applyUnauthenticatedUI();
             window.location.hash = '#/masuk';
             showLandingAuth();
+        }
+
+        // ================= HAPUS AKUN PEMOHON (WAJIB ALASAN + OTP WA/EMAIL) =================
+        function openDeleteAccountModal() {
+            const modal = document.getElementById('modalDeleteAccount');
+            if (modal) modal.style.display = 'flex';
+            const reason = document.getElementById('deleteAccountReason');
+            const otp = document.getElementById('deleteAccountOtp');
+            const status = document.getElementById('deleteAccountOtpStatus');
+            if (reason) reason.value = '';
+            if (otp) otp.value = '';
+            if (status) status.innerText = '';
+            updateDeleteAccountButtonState();
+        }
+
+        function closeDeleteAccountModal() {
+            const modal = document.getElementById('modalDeleteAccount');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function updateDeleteAccountButtonState() {
+            const reason = document.getElementById('deleteAccountReason');
+            const otp = document.getElementById('deleteAccountOtp');
+            const btn = document.getElementById('btnDeleteAccountConfirm');
+            if (!btn) return;
+            const ok = (reason && reason.value.trim().length >= 5) && (otp && otp.value.trim().length === 6);
+            btn.disabled = !ok;
+            btn.style.opacity = ok ? '1' : '0.5';
+            btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+        }
+
+        function _deleteAccountAuthHeaders() {
+            let token = '';
+            try { token = localStorage.getItem('kbm_session_token') || ''; } catch (e) {}
+            const h = { 'Content-Type': 'application/json' };
+            if (token) h['Authorization'] = 'Bearer ' + token;
+            return h;
+        }
+
+        async function requestDeleteAccountOtp() {
+            const btn = document.getElementById('btnDeleteAccountSendOtp');
+            const status = document.getElementById('deleteAccountOtpStatus');
+            if (btn) { btn.disabled = true; btn.innerText = '⏳ Mengirim...'; }
+            if (status) status.innerText = '';
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/auth/delete-account-request-otp`, {
+                    method: 'POST',
+                    headers: _deleteAccountAuthHeaders()
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok) {
+                    const parts = [];
+                    if (data.wa_delivered) parts.push('WhatsApp');
+                    if (data.email_delivered) parts.push('Email');
+                    if (status) {
+                        status.style.color = '#059669';
+                        status.innerText = parts.length ? ('✓ Kode OTP dikirim ke ' + parts.join(' & ') + '. Cek pesan masuk Anda.') : '⏳ Kode OTP sedang diproses. Mohon cek WhatsApp/Email Anda.';
+                    }
+                } else {
+                    if (status) { status.style.color = '#B91C1C'; status.innerText = data.message || 'Gagal mengirim kode OTP.'; }
+                }
+            } catch (e) {
+                if (status) { status.style.color = '#B91C1C'; status.innerText = 'Gagal menghubungi server.'; }
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = 'Kirim Kode OTP'; }
+            }
+        }
+
+        async function submitDeleteAccount() {
+            const reason = document.getElementById('deleteAccountReason');
+            const otp = document.getElementById('deleteAccountOtp');
+            const btn = document.getElementById('btnDeleteAccountConfirm');
+            if (!reason || !otp) return;
+            const reasonVal = reason.value.trim();
+            const otpVal = otp.value.trim();
+            if (reasonVal.length < 5) { showAppAlert('Alasan penghapusan akun wajib diisi (minimal 5 karakter).', 'warning'); return; }
+            if (otpVal.length !== 6) { showAppAlert('Masukkan kode OTP 6 digit yang dikirim ke WhatsApp/Email Anda.', 'warning'); return; }
+            if (btn) { btn.disabled = true; btn.innerText = '⏳ Menghapus...'; }
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
+                    method: 'POST',
+                    headers: _deleteAccountAuthHeaders(),
+                    body: JSON.stringify({ reason: reasonVal, otp: otpVal })
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok) {
+                    closeDeleteAccountModal();
+                    showAppAlert('✓ ' + (data.message || 'Akun berhasil dihapus.'), 'success', () => {
+                        resetAllFormDataAndState();
+                        try { localStorage.removeItem('kbm_session_token'); } catch (e) {}
+                        currentAuthSession = null;
+                        document.body.classList.add('landing-page');
+                        document.body.style.removeProperty('padding-top');
+                        document.body.style.paddingTop = '0px';
+                        applyUnauthenticatedUI();
+                        window.location.hash = '#/masuk';
+                        showLandingAuth();
+                    });
+                } else {
+                    showAppAlert('⛔ ' + (data.message || 'Gagal menghapus akun.'), 'error');
+                    updateDeleteAccountButtonState();
+                }
+            } catch (e) {
+                showAppAlert('⛔ Gagal menghubungi server. Mohon periksa koneksi Anda.', 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = '🗑 Hapus Akun'; updateDeleteAccountButtonState(); }
+            }
         }
 
         function openAuthModal() {

@@ -1463,6 +1463,8 @@ EMAIL_OTP_RATE_TRACKER = {}        # key: phone -> list[timestamp] — maks 3x/5
 RESET_EMAIL_OTP_RATE_TRACKER = {}  # key: key -> list[timestamp] — maks 3x/5 menit kirim OTP email reset sandi
 OCR_RATE_TRACKER = {}     # key: (ip, session_token) -> list[timestamp]
 DRAFT_SAVE_RATE_TRACKER = {}  # key: (ip, session_token) -> list[timestamp] — autosave Tahap 2
+DELETE_ACCOUNT_OTP_TRACKER = {}     # key: identitas akun -> list[timestamp] — kirim OTP verifikasi hapus akun (maks 3x/5 menit)
+DELETE_ACCOUNT_CONFIRM_TRACKER = {} # key: identitas akun -> list[timestamp] — percobaan konfirmasi OTP hapus akun (maks 5x/5 menit)
 
 def _get_client_ip(handler):
     xff = handler.headers.get('X-Forwarded-For', '') if hasattr(handler, 'headers') and handler.headers else ''
@@ -3600,6 +3602,179 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "status": "ok",
                 "message": "Sesi aktif telah dihapus. Berhasil keluar."
             }, cookie_header="session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
+            return
+
+        # API Permintaan Kode OTP untuk Penghapusan Akun Pemohon (dual-delivery WA & Email)
+        if self.path == '/api/auth/delete-account-request-otp':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'pemohon':
+                self._send_json_error(401, 'Sesi tidak valid. Silakan masuk kembali.')
+                return
+            user = sess.get('user', {}) or {}
+            acct_key = str(user.get('id') or user.get('phone') or user.get('username') or user.get('email') or '')
+            # Rate-limit berbasis IDENTITAS AKUN (bukan IP) — tidak bisa dilewati spoofing header.
+            if _is_rate_limited(DELETE_ACCOUNT_OTP_TRACKER, acct_key, max_attempts=3, window_seconds=300):
+                database.log_activity(acct_key, 'pemohon', 'DELETE_ACCOUNT_OTP_RATE_LIMITED', detail='Permintaan OTP hapus akun melebihi 3x/5 menit')
+                self._send_json_error(429, 'Terlalu banyak permintaan kode OTP. Mohon tunggu 5 menit sebelum meminta kode baru.')
+                return
+            _record_rate_hit(DELETE_ACCOUNT_OTP_TRACKER, acct_key, window_seconds=300)
+
+            otp_code = f"{random.randint(100000, 999999)}"
+            expires_at = time.time() + 300
+            otps = load_db_otp()
+            otp_key = 'delete_account:' + acct_key
+            nama = str(user.get('nama') or 'Pemohon KBM Batam')
+            phone = str(user.get('phone') or '').strip()
+            email = str(user.get('email') or '').strip().lower()
+            otps[otp_key] = {
+                'otp': otp_code,
+                'expires_at': expires_at,
+                'phone': phone,
+                'email': email,
+                'nama': nama,
+                'action': 'delete_account',
+                'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            save_db_otp(otps)
+
+            wa_msg = (
+                f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                f"Halo Bapak/Ibu *{nama}*,\n\n"
+                f"Kode Verifikasi (OTP) untuk *PENGHAPUSAN AKUN* portal Anda adalah:\n"
+                f"👉 *{otp_code}*\n\n"
+                f"Kode ini berlaku 5 menit. Jika Anda tidak merasa meminta penghapusan akun, abaikan pesan ini.\n\n"
+                f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+            )
+
+            meta_res = None
+            if phone:
+                try:
+                    meta_res = send_whatsapp_otp_template(phone, otp_code, wa_msg)
+                    log_chat_message(phone, 'bot', wa_msg, name=nama)
+                    print(f"[+] OTP hapus akun diproses untuk WhatsApp {phone} (Kode: {otp_code}) - Meta: {meta_res}")
+                except Exception as e_wa:
+                    print(f"[!] Gagal kirim OTP hapus akun ke WA {phone}: {e_wa}")
+
+            is_meta_success = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
+
+            email_res = None
+            if email and '@' in email:
+                try:
+                    email_res = send_email_otp(email, otp_code, nama, purpose='Penghapusan Akun')
+                    print(f"[+] OTP hapus akun dikirimkan ke email {email}: {email_res}")
+                except Exception as e_em:
+                    print(f"[!] Gagal kirim OTP hapus akun ke email {email}: {e_em}")
+
+            is_email_success = isinstance(email_res, dict) and email_res.get('status') == 'ok' and email_res.get('method') in ('smtp_tls', 'gmail_cli')
+            is_any_delivered = is_meta_success or is_email_success
+
+            if is_meta_success and is_email_success:
+                msg = 'Kode OTP verifikasi telah dikirimkan ke WhatsApp & Email Anda.'
+            elif is_meta_success:
+                msg = 'Kode OTP verifikasi telah dikirimkan ke WhatsApp Anda.'
+            elif is_email_success:
+                msg = 'Kode OTP verifikasi telah dikirimkan ke Email Anda.'
+            else:
+                msg = 'Kode OTP sedang diproses. Mohon cek WhatsApp/Email Anda.'
+
+            self._send_json_response({
+                'status': 'ok',
+                'message': msg,
+                'ttl': 300,
+                'otp_delivered': is_any_delivered,
+                'wa_delivered': is_meta_success,
+                'email_delivered': is_email_success,
+                'masked_phone': phone,
+                'masked_email': email
+            })
+            return
+
+        # API Konfirmasi & Eksekusi Penghapusan Akun Pemohon (wajib alasan + OTP valid)
+        if self.path == '/api/auth/delete-account':
+            token, sess = get_session_from_request(self)
+            if not sess or sess.get('role') != 'pemohon':
+                self._send_json_error(401, 'Sesi tidak valid. Silakan masuk kembali.')
+                return
+            user = sess.get('user', {}) or {}
+            acct_key = str(user.get('id') or user.get('phone') or user.get('username') or user.get('email') or '')
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                self._send_json_error(400, 'Format permintaan tidak valid.')
+                return
+
+            reason = str(body.get('reason', '')).strip()
+            user_otp = str(body.get('otp', '')).strip()
+
+            if len(reason) < 5:
+                self._send_json_error(400, 'Alasan penghapusan akun wajib diisi (minimal 5 karakter).')
+                return
+            if not user_otp:
+                self._send_json_error(400, 'Kode OTP wajib diisi.')
+                return
+
+            if _is_rate_limited(DELETE_ACCOUNT_CONFIRM_TRACKER, acct_key, max_attempts=5, window_seconds=300):
+                database.log_activity(acct_key, 'pemohon', 'DELETE_ACCOUNT_CONFIRM_RATE_LIMITED', detail='Percobaan konfirmasi OTP hapus akun melebihi 5x/5 menit')
+                self._send_json_error(429, 'Terlalu banyak percobaan. Mohon tunggu 5 menit lalu minta kode baru.')
+                return
+            _record_rate_hit(DELETE_ACCOUNT_CONFIRM_TRACKER, acct_key, window_seconds=300)
+
+            otps = load_db_otp()
+            otp_key = 'delete_account:' + acct_key
+            if otp_key not in otps:
+                self._send_json_error(400, 'Kode OTP belum diminta atau sudah kedaluwarsa. Silakan minta kode baru.')
+                return
+            otp_info = otps[otp_key]
+            if time.time() > otp_info.get('expires_at', 0):
+                otps.pop(otp_key, None)
+                save_db_otp(otps)
+                self._send_json_error(400, 'Kode OTP telah kedaluwarsa. Silakan minta kode baru.')
+                return
+            if otp_info.get('otp') != user_otp:
+                self._send_json_error(400, 'Kode OTP salah. Pastikan Anda memasukkan 6 digit angka yang dikirim ke WhatsApp/Email.')
+                return
+
+            # OTP valid — hapus sesi OTP lalu eksekusi penghapusan akun
+            otps.pop(otp_key, None)
+            save_db_otp(otps)
+
+            users = load_db_users()
+            target_id = str(user.get('id', ''))
+            users['pemohon'] = [u for u in users.get('pemohon', []) if str(u.get('id', '')) != target_id]
+            # Hapus dari SQLite (sumber utama yang dibaca load_db_users())
+            try:
+                database.delete_user_by_id(user.get('id'))
+            except Exception as e_del:
+                print(f"[!] Gagal hapus akun dari SQLite: {e_del}")
+            # Tulis ulang JSON & sinkronkan sisa akun ke SQLite
+            save_db_users(users)
+
+            # Bersihkan draf formulir milik akun ini supaya tidak tersisa
+            try:
+                database.clear_form_draft(_pemohon_draft_identifier(sess))
+                legacy = _legacy_pemohon_draft_identifier(sess)
+                if legacy:
+                    database.clear_form_draft(legacy)
+            except Exception:
+                pass
+
+            database.log_activity(
+                user.get('nama') or user.get('phone') or user.get('username') or acct_key,
+                'pemohon', 'AKUN_PEMOHON_DIHAPUS',
+                detail=f'Alasan: {reason}', target_id=target_id
+            )
+
+            # Hapus sesi aktif & setel cookie logout
+            if token and token in AUTH_SESSIONS:
+                del AUTH_SESSIONS[token]
+
+            self._send_json_response({
+                'status': 'ok',
+                'message': 'Akun Anda berhasil dihapus. Terima kasih telah menggunakan layanan PENGSEM KBM.'
+            }, cookie_header='session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT')
             return
 
         # Webhook Pesan Masuk dari Self-Hosted WhatsApp Gateway (Baileys Mac Mini)

@@ -475,6 +475,34 @@ def update_user_password(identifier, new_password):
     conn.close()
     return True
 
+def delete_user_by_id(user_id):
+    """Menghapus baris akun pengguna dari tabel `users` SQLite secara permanen.
+
+    Mencocokkan berdasarkan `id` (integer autoincrement SQLite). Sebagai jaring
+    pengaman kalau id yang diberikan bukan integer (mis. id gaya JSON lama seperti
+    'USR-PEMOHON-001'), fallback mencocokkan username/phone/email/nik/nip.
+    """
+    if user_id is None:
+        return False
+    sid = str(user_id)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM users WHERE id = ?", (int(user_id),))
+        except (TypeError, ValueError):
+            cursor.execute(
+                "DELETE FROM users WHERE username = ? OR phone = ? OR email = ? OR nik = ? OR nip = ?",
+                (sid, sid, sid, sid, sid)
+            )
+        conn.commit()
+        deleted = cursor.rowcount > 0
+        conn.close()
+        return deleted
+    except Exception as e:
+        logger.error("Error deleting user %s: %s", user_id, e)
+        return False
+
 # ================= OTP MANAGEMENT =================
 
 def save_otp_session(identifier, otp_code, channel='whatsapp', duration_minutes=5):
