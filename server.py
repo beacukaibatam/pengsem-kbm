@@ -3665,7 +3665,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             otps = load_db_otp()
             otp_key = 'delete_account:' + acct_key
             nama = str(user.get('nama') or 'Pemohon KBM Batam')
-            phone = str(user.get('phone') or '').strip()
+            phone = _normalize_phone_id(user.get('phone')) or str(user.get('phone') or '').strip()
             email = str(user.get('email') or '').strip().lower()
 
             # Pakai OTP yang sama bila belum kedaluwarsa, supaya kirim ke WA lalu ke Email
@@ -3708,6 +3708,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 })
                 return
 
+            if not phone:
+                self._send_json_error(400, 'Nomor WhatsApp tidak ditemukan pada akun Anda. Mohon gunakan opsi "Kirim ke Email".')
+                return
+
             wa_msg = (
                 f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                 f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
@@ -3718,21 +3722,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
             )
             meta_res = None
-            if phone:
-                try:
-                    meta_res = send_whatsapp_otp_template(phone, otp_code, wa_msg)
-                    log_chat_message(phone, 'bot', wa_msg, name=nama)
-                    print(f"[+] OTP hapus akun diproses untuk WhatsApp {phone} (Kode: {otp_code}) - Meta: {meta_res}")
-                except Exception as e_wa:
-                    print(f"[!] Gagal kirim OTP hapus akun ke WA {phone}: {e_wa}")
+            try:
+                meta_res = send_whatsapp_otp_template(phone, otp_code, wa_msg)
+                log_chat_message(phone, 'bot', wa_msg, name=nama)
+                print(f"[+] OTP hapus akun diproses untuk WhatsApp {phone} (Kode: {otp_code}) - Meta: {meta_res}")
+            except Exception as e_wa:
+                print(f"[!] Gagal kirim OTP hapus akun ke WA {phone}: {e_wa}")
+
             is_sent = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
             masked = _mask_phone(phone)
+
+            if is_sent:
+                msg = f"OTP telah dikirim ke {masked}."
+            elif isinstance(meta_res, dict) and meta_res.get('status') == 'logged_offline':
+                msg = 'WhatsApp sedang tidak tersedia saat ini. Mohon gunakan opsi "Kirim ke Email" atau coba lagi beberapa saat lagi.'
+            elif isinstance(meta_res, dict) and meta_res.get('message'):
+                msg = 'Gagal mengirim OTP ke WhatsApp: ' + str(meta_res.get('message'))
+            else:
+                msg = 'Gagal mengirim OTP ke WhatsApp. Mohon coba lagi atau gunakan opsi "Kirim ke Email".'
+
             self._send_json_response({
                 'status': 'ok',
                 'channel': 'whatsapp',
                 'masked_contact': masked,
                 'delivered': is_sent,
-                'message': f"OTP telah dikirim ke {masked}." if is_sent else 'Kode OTP sedang diproses. Mohon cek WhatsApp Anda.'
+                'message': msg
             })
             return
 
