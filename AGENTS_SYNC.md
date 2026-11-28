@@ -400,3 +400,11 @@
     - *Tahap 4 (`#page-4`)*: Grid 4 kartu (SIM Pengemudi, Foto Kendaraan 4 sisi [Depan, Belakang, Samping Kiri, Samping Kanan], Hasil Gesekan Rangka & Mesin [opsional/non-blocking], Surat Pernyataan Komitmen [tombol Unduh Draf PDF & kotak unggah bermeterai]). Dilengkapi Progress Bar Kelengkapan Berkas (0 s.d. 8 dokumen lengkap) yang mengontrol status aktif tombol `Ajukan Permohonan ➔`.
     - *Status Tracker Pasca-Submit (`mockup_page_10.png`)*: Kartu stepper vertikal 9-tahap lengkap dengan checkmark hijau, status aktif biru dengan highlight box kuning Kode Billing & Jaminan, tahapan mendatang abu-abu, dan notifikasi WA otomatis. Terintegrasi langsung di dashboard pemohon (`#pemohonStatusTrackerContainer`).
   - **Kepatuhan Protokol**: Zero-diff `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `python3 -m py_compile server.py database.py` OK, node inline syntax check OK, verifikasi visual 4 screenshot Playwright (`verify_tahap2.png`, `verify_tahap3.png`, `verify_tahap4.png`, `verify_status_tracker.png`) lolos 100%.
+- [ ] Poin 61 (Cline @ MacBook Air, DeepSeek V4 Pro): **ESTAFET TUGAS: IMPLEMENTASI UNGGAH BERTAHAP MODEL 2 (AKORDION VERTIKAL PROGRESIF) & STANDARDISASI ISTILAH PEMOHON/KUASA**:
+  - **Objektif**: Mengubah tampilan pengunggahan berkas yang sebelumnya bertumpuk banyak sekaligus dalam 1 halaman menjadi alur bertahap Model 2 (Akordion Vertikal Progresif). Berkas yang telah lengkap otomatis menciut rapi dengan centang hijau `✓ Lengkap` dan ringkasan teks identitas, berkas aktif terbuka lebar untuk interaksi, dan berkas selanjutnya menunggu giliran.
+  - **Standardisasi Istilah Ringkas (Opsi 1 Disetujui)**:
+    - *Utama*: "Pemohon (Pemilik Kendaraan / Pemberi Kuasa)".
+    - *Pendamping*: "Penerima Kuasa (Wakil)" (hanya tampil jika memilih opsi Dikuasakan).
+  - **Eliminasi Kolom NPWP Ganda**: Kolom NPWP tunggal (`pemohon_npwp`). Hapus field `npwp_pemberi_kuasa` karena Pemohon = Pemberi Kuasa. Penerima Kuasa hanya wajib KTP & Surat Kuasa.
+  - **Autosave Reaktif**: Tiap berkas selesai diunggah/OCR, panggil autosave ke backend server, didukung tombol manual *"Simpan Draf"*.
+  - **Protokol**: `git pull origin main`, jaga `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, verifikasi sintaks JS & Python, update log estafet setelah selesai.

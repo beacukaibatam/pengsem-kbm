@@ -77,6 +77,17 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Estafet ke Cline (VS Code / MacBook Air, Model DeepSeek V4 Pro): Implementasi Unggah Bertahap Model 2 (Akordion Vertikal Progresif) & Standardisasi Istilah Pemohon/Kuasa** (Antigravity — 28 Nov 2026 ~20:35 WIB)
+  - **Status**: Siap dikerjakan oleh Cline di MacBook Air setelah `git pull origin main`.
+  - **Keputusan Arsitektur UX yang Disetujui**:
+    1. **Model 2 (Akordion Vertikal Progresif)**: Mengubah tampilan form unggah berkas yang padat/panjang menjadi akordion mengalir ke bawah. Berkas yang sudah selesai otomatis menciut rapi dengan badge `✓ Lengkap` + ringkasan teks, berkas aktif terbuka lebar untuk interaksi, dan berkas selanjutnya menunggu giliran.
+    2. **Standardisasi Istilah Ringkas (Opsi 1)**:
+       - Utama: *"Pemohon (Pemilik Kendaraan / Pemberi Kuasa)"*.
+       - Pendamping: *"Penerima Kuasa (Wakil)"* (hanya jika memilih opsi Dikuasakan).
+    3. **Eliminasi Kolom NPWP Ganda**: NPWP dijadikan 1 kolom tunggal (`pemohon_npwp` milik Pemohon/Pemilik). Kolom `npwp_pemberi_kuasa` dihapus karena Pemohon = Pemberi Kuasa. Penerima Kuasa hanya wajib KTP Penerima Kuasa & Surat Kuasa.
+    4. **Autosave Reaktif & Tombol Simpan Draf**: Draf tersimpan otomatis ke server tiap aksi berkas selesai, didukung tombol manual *"Simpan Draf"* dengan modal konfirmasi instan.
+  - **Protokol Wajib Cline**: Jalankan `git pull origin main`, jaga `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html = 0`, verifikasi JS syntax dengan `node --check`, py_compile `server.py`, dan update `AGENTS_SYNC.md` & `HANDOFF.md` setelah selesai.
+
 - **Implementasi 6 Langkah Mockup Redesain Resmi V2 (`Mockup_Redesain_PENGSEM_KBM_v2.pdf`) & Flowchart IK No. 001/KPUB.02/2025** (Antigravity — 28 Nov 2026 ~20:15 WIB)
   - **Langkah 1 (Penerbit PPFTZ-01 di server.py)**: `/api/loket/approve` kini mengekstrak `no_skep` dan `no_bpj` dari `target_item`, mencantumkannya ke dasar penerbitan PPFTZ-01, log audit, notifikasi WA pemohon, dan response JSON.
   - **Langkah 2 (Validasi Silang Nama OCR Surat Kuasa)**: Menambahkan prompt AI Vision `'suratKuasa'` di `server.py` dan validasi silang di frontend antara KTP Pemilik vs Pemberi Kuasa, serta KTP Wakil vs Penerima Kuasa (banner non-blocking).
