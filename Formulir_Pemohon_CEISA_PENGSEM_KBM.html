@@ -4670,7 +4670,7 @@
                     <div style="background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:8px; padding:10px 14px; font-size:0.73rem; color:#1E40AF; display:flex; align-items:center; gap:8px;">
                         <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         <div>
-                            <strong>Validasi Silang:</strong> Nomor Rangka &amp; Nomor Mesin pada BPKB akan dicocokkan otomatis dengan STNK (Tahap 3) dan hasil gesekan fisik saat pemeriksaan di lapangan.
+                            <strong>Validasi Silang:</strong> Nomor Rangka &amp; Nomor Mesin pada BPKB akan dicocokkan otomatis dengan STNK (Tahap 3) dan dengan foto nomor rangka &amp; mesin pada saat pemeriksaan fisik di lapangan.
                         </div>
                     </div>
 
@@ -5074,7 +5074,7 @@
                         Tahap 4 — Berkas Pendukung &amp; Pengajuan
                     </h2>
                     <p style="font-size:0.75rem; color:#64748B; margin:0; line-height:1.35;">
-                        Lengkapi berkas pendukung pengemudi, foto fisik kendaraan 4 sisi, hasil gesekan fisik, dan unggah Surat Pernyataan komitmen bermeterai.
+                        Lengkapi berkas pendukung pengemudi, foto fisik kendaraan 4 sisi, foto nomor rangka &amp; mesin, dan unggah Surat Pernyataan komitmen bermeterai.
                     </p>
                 </div>
                 <span class="pabean-badge-ok" style="font-size:0.72rem;">Tahap 4 dari 4</span>
@@ -5134,27 +5134,27 @@
                     </div>
                 </div>
 
-                <!-- KARTU 3: HASIL GESEKAN RANGKA & MESIN (OPSIONAL) -->
-                <div id="accCardGesekan" data-acc-key="gesekan" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <!-- KARTU 3: FOTO NOMOR RANGKA & NOMOR MESIN (OPSIONAL) -->
+                <div id="accCardFotoRangkaMesin" data-acc-key="fotoRangkaMesin" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                             <div style="font-weight:800; font-size:0.84rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
                                 <svg class="flat-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                                Hasil Gesekan Rangka &amp; Mesin
+                                Foto Nomor Rangka &amp; Nomor Mesin
                             </div>
-                            <span id="badgeGesekanStatus" style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#FEF3C7; color:#92400E;">Belum (Opsional)</span>
+                            <span id="badgeFotoRangkaMesinStatus" style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#FEF3C7; color:#92400E;">Belum (Opsional)</span>
                         </div>
                         <div style="font-size:0.68rem; color:#64748B; line-height:1.35; margin-bottom:8px;">
-                            Akan diambil ulang &amp; dicocokkan oleh Petugas Pemeriksa Fisik saat pemeriksaan kendaraan — unggah draf awal jika sudah tersedia.
+                            Foto biasa Nomor Rangka &amp; Nomor Mesin kendaraan (bagian dari berkas legalitas kendaraan). Opsional di tahap ini — akan dicocokkan kembali oleh Petugas Pemeriksa Fisik saat pemeriksaan kendaraan.
                         </div>
                     </div>
-                    <div class="preview-box" id="previewGesekanBox" onclick="document.getElementById('fileGesekanInput').click()" style="aspect-ratio:2.6/1; width:100%; cursor:pointer; background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
-                        <div id="phGesekan" style="font-size:0.72rem; color:#64748B; text-align:center;">
-                            📷 Foto Gesekan (opsional di tahap ini)
+                    <div class="preview-box" id="previewFotoRangkaMesinBox" onclick="document.getElementById('fileFotoRangkaMesinInput').click()" style="aspect-ratio:2.6/1; width:100%; cursor:pointer; background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                        <div id="phFotoRangkaMesin" style="font-size:0.72rem; color:#64748B; text-align:center;">
+                            📷 Foto Nomor Rangka &amp; Nomor Mesin (opsional di tahap ini)
                         </div>
-                        <img decoding="async" id="imgGesekanPreview" src="" alt="Gesekan" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
+                        <img decoding="async" id="imgFotoRangkaMesinPreview" src="" alt="Foto Nomor Rangka &amp; Mesin" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
                     </div>
-                    <input type="file" id="fileGesekanInput" accept="image/*,application/pdf" style="display:none;" onchange="handleGesekanUpload(event)">
+                    <input type="file" id="fileFotoRangkaMesinInput" accept="image/*,application/pdf" style="display:none;" onchange="handleFotoRangkaMesinUpload(event)">
                 </div>
 
                 <!-- KARTU 4: SURAT PERNYATAAN KOMITMEN -->
@@ -5691,7 +5691,7 @@
                         <li>Lembar PKB / Ketetapan Pajak Bapenda.</li>
                         <li>Foto Tampak Depan &amp; Belakang Kendaraan.</li>
                         <li>Foto Tampak Samping Kanan &amp; Kiri Kendaraan.</li>
-                        <li>Hasil Gesekan Nomor Rangka &amp; Mesin.</li>
+                        <li>Foto Nomor Rangka &amp; Nomor Mesin.</li>
                     </ol>
                 </div>
                 <div style="background:#FFFBEB; border:1px solid #FCD34D; color:#92400E; padding:10px 12px; border-radius:6px;">
@@ -6687,7 +6687,7 @@
                 },
                 {
                     nama: 'Foto Fisik Kendaraan',
-                    ket: '6 Sudut: Tampak Depan, Belakang, Kanan, Kiri, Gesekan/Foto No. Rangka, Foto No. Mesin',
+                    ket: '6 Sudut: Tampak Depan, Belakang, Kanan, Kiri, Foto No. Rangka, Foto No. Mesin',
                     sifat: 'Wajib Universal'
                 }
             ];
@@ -7577,7 +7577,7 @@
                 return 'ownership_leasing_' + idx;
             }
             if (id === 'previewSimBox') return 'sim';
-            if (id === 'previewGesekanBox') return 'gesekan';
+            if (id === 'previewFotoRangkaMesinBox') return 'fotoRangkaMesin';
             if (id === 'previewBermeteraiBox') return 'pernyataan';
             if (id.startsWith('preview') && id.endsWith('Box')) {
                 const base = id.replace('preview', '').replace('Box', '');
@@ -8930,12 +8930,12 @@
                 const badge = document.getElementById('badgeSimStatus');
                 if (badge) { badge.innerText = 'Belum'; badge.style.background = '#FEF3C7'; badge.style.color = '#92400E'; }
                 updateKelengkapanProgress();
-            } else if (target === 'gesekan') {
-                const img = document.getElementById('imgGesekanPreview');
+            } else if (target === 'fotoRangkaMesin') {
+                const img = document.getElementById('imgFotoRangkaMesinPreview');
                 if (img) { img.src = ''; img.removeAttribute('src'); img.style.display = 'none'; }
-                const ph = document.getElementById('phGesekan');
+                const ph = document.getElementById('phFotoRangkaMesin');
                 if (ph) ph.style.display = 'block';
-                const badge = document.getElementById('badgeGesekanStatus');
+                const badge = document.getElementById('badgeFotoRangkaMesinStatus');
                 if (badge) { badge.innerText = 'Belum (Opsional)'; badge.style.background = '#FEF3C7'; badge.style.color = '#92400E'; }
             } else if (target === 'pernyataan') {
                 uploadedBermeteraiDataUrl = null;
@@ -9186,7 +9186,7 @@
             bpkb:       { page: 2, container: 'accWrapBpkb',       title: 'Unggah BPKB / Surat Keterangan Leasing' },
             sim:        { page: 4, container: 'accCardSim',        title: 'SIM Pengemudi' },
             foto:       { page: 4, container: 'accCardFoto',       title: 'Foto Fisik Kendaraan (4 Sisi)' },
-            gesekan:    { page: 4, container: 'accCardGesekan',    title: 'Hasil Gesekan Rangka & Mesin (Opsional)' },
+            fotoRangkaMesin: { page: 4, container: 'accCardFotoRangkaMesin', title: 'Foto Nomor Rangka & Nomor Mesin (Opsional)', optional: true },
             pernyataan: { page: 4, container: 'accCardPernyataan', title: 'Surat Pernyataan Komitmen Bermeterai' }
         };
 
@@ -9202,7 +9202,7 @@
                 case 'bpkb':       return accGetImg('imgOwnershipPreview') || accGetImg('imgSuratLeasingPreview');
                 case 'sim':        return accGetImg('imgSimPreview');
                 case 'foto':       return (typeof carPhotosData !== 'undefined') && [0, 1, 2, 3].filter(i => !!carPhotosData[i]).length === 4;
-                case 'gesekan':    return accGetImg('imgGesekanPreview');
+                case 'fotoRangkaMesin': return accGetImg('imgFotoRangkaMesinPreview');
                 case 'pernyataan': return !!uploadedBermeteraiDataUrl;
             }
             return false;
@@ -9216,7 +9216,7 @@
                 case 'bpkb': { const o = docOcrStore.bpkb || {}; return [o.nopol, o.no_bpkb || o.no_rangka].filter(Boolean).join(' • ') || 'Dokumen kepemilikan terunggah'; }
                 case 'sim': return 'SIM Pengemudi terunggah';
                 case 'foto': return '4 sisi foto kendaraan lengkap';
-                case 'gesekan': return 'Foto gesekan rangka & mesin terunggah';
+                case 'fotoRangkaMesin': return 'Foto nomor rangka & mesin terunggah';
                 case 'pernyataan': return 'Surat pernyataan bermeterai terunggah';
             }
             return '';
@@ -9274,8 +9274,11 @@
             Object.keys(pages).forEach(pageStr => {
                 const page = parseInt(pageStr, 10);
                 const keys = pages[page];
+                // Item opsional (non-blocking) dikeluarkan dari rantai kunci berurutan,
+                // supaya tidak menjadi penentu "aktif" untuk item sesudahnya.
+                const gatingKeys = keys.filter(k => !ACC_CONFIG[k].optional);
                 let activeKey = null;
-                for (const k of keys) {
+                for (const k of gatingKeys) {
                     if (!document.getElementById(ACC_CONFIG[k].container)) continue;
                     if (!accIsDone(k)) { activeKey = k; break; }
                 }
@@ -9283,18 +9286,22 @@
                     const el = accInitItem(k);
                     if (!el) return;
                     const done = accIsDone(k);
-                    const isActive = (k === activeKey);
+                    const optional = !!ACC_CONFIG[k].optional;
+                    const isActive = !optional && (k === activeKey);
+                    const openState = optional ? !done : (isActive && !done);
+                    const lockedState = optional ? false : (!done && !isActive);
+                    const collapsedState = optional ? done : (done && !isActive);
                     el.classList.toggle('done', done);
-                    el.classList.toggle('open', isActive && !done);
-                    el.classList.toggle('locked', !done && !isActive);
-                    el.classList.toggle('collapsed', done && !isActive);
+                    el.classList.toggle('open', openState);
+                    el.classList.toggle('locked', lockedState);
+                    el.classList.toggle('collapsed', collapsedState);
                     const summary = el.querySelector('.acc-summary');
                     if (summary) summary.innerText = done ? accSummary(k) : '';
                     const lockhint = el.querySelector('.acc-lockhint');
                     if (lockhint) {
-                        if (!done && !isActive) {
-                            const prevIdx = keys.indexOf(k) - 1;
-                            const prevKey = prevIdx >= 0 ? keys[prevIdx] : null;
+                        if (lockedState) {
+                            const prevIdx = gatingKeys.indexOf(k) - 1;
+                            const prevKey = prevIdx >= 0 ? gatingKeys[prevIdx] : null;
                             lockhint.innerText = prevKey ? ('🔒 Terkunci — lengkapi "' + ACC_CONFIG[prevKey].title + '" terlebih dahulu.') : '🔒 Terkunci';
                         } else {
                             lockhint.innerText = '';
@@ -9307,12 +9314,13 @@
         const SMART_RESUME_ORDER = [
             { key: 'ktp', page: 1 }, { key: 'npwp', page: 1 }, { key: 'wakil', page: 1 },
             { key: 'bpkb', page: 2 }, { key: 'stnk', page: 3 },
-            { key: 'sim', page: 4 }, { key: 'foto', page: 4 }, { key: 'gesekan', page: 4 }, { key: 'pernyataan', page: 4 }
+            { key: 'sim', page: 4 }, { key: 'foto', page: 4 }, { key: 'fotoRangkaMesin', page: 4 }, { key: 'pernyataan', page: 4 }
         ];
 
         function findFirstIncompleteAccordion() {
             for (const item of SMART_RESUME_ORDER) {
                 if (item.key === 'wakil' && onboardingState.pengurusan !== 'kuasa') continue;
+                if (ACC_CONFIG[item.key] && ACC_CONFIG[item.key].optional) continue;
                 if (item.key === 'stnk') {
                     if (!accGetImg('imgStnkPreview')) return item;
                     continue;
@@ -12088,7 +12096,7 @@
                 } catch (e) {}
             }
 
-            // Hal 7 s.d. 10: PKB, Foto Depan/Belakang, Samping, Gesekan Rangka
+            // Hal 7 s.d. 10: PKB, Foto Depan/Belakang, Samping, Foto Nomor Rangka & Mesin
             doc.addPage();
             doc.text('LAMPIRAN 5: LEMBAR PKB / KETETAPAN PAJAK DAERAH', 20, 20);
             doc.addPage();
@@ -12096,7 +12104,7 @@
             doc.addPage();
             doc.text('LAMPIRAN 7: FOTO KBM TAMPAK SAMPING KANAN & KIRI', 20, 20);
             doc.addPage();
-            doc.text('LAMPIRAN 8: HASIL GESEKAN NOMOR RANGKA & MESIN KBM', 20, 20);
+            doc.text('LAMPIRAN 8: FOTO NOMOR RANGKA & MESIN KBM', 20, 20);
 
             doc.save('Surat_Permohonan_KBM_Batam_Fullset.pdf');
 
@@ -12180,7 +12188,7 @@
                 ['foto_rangka', 'imgPhRangka'],
                 ['foto_mesin', 'imgPhMesin'],
                 ['sim', 'imgSimPreview'],
-                ['gesekan', 'imgGesekanPreview'],
+                ['fotoRangkaMesin', 'imgFotoRangkaMesinPreview'],
                 ['pernyataan', 'imgBermeteraiTahap4Preview'],
             ];
             for (const [k, imgId] of _berkasMap) {
@@ -12419,7 +12427,7 @@
             syncValues();
         }
 
-        // Penanganan Foto Fisik Mobil & Gesekan (Kiriman Pemohon / WA)
+        // Penanganan Foto Fisik Mobil & Foto Nomor Rangka & Mesin (Kiriman Pemohon / WA)
         const carPhotosData = [null, null, null, null, null, null];
         const carPhotoElements = ['imgPhDepan', 'imgPhBelakang', 'imgPhKanan', 'imgPhKiri', 'imgPhRangka', 'imgPhMesin'];
         const carPhotoLabels = ['phDepan', 'phBelakang', 'phKanan', 'phKiri', 'phRangka', 'phMesin'];
@@ -12505,15 +12513,15 @@
             reader.readAsDataURL(file);
         }
 
-        async function handleGesekanUpload(event) {
+        async function handleFotoRangkaMesinUpload(event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const compressed = await compressImageUnder400KB(e.target.result);
-                const img = document.getElementById('imgGesekanPreview');
-                const ph = document.getElementById('phGesekan');
-                const badge = document.getElementById('badgeGesekanStatus');
+                const img = document.getElementById('imgFotoRangkaMesinPreview');
+                const ph = document.getElementById('phFotoRangkaMesin');
+                const badge = document.getElementById('badgeFotoRangkaMesinStatus');
                 if (img) {
                     img.src = compressed;
                     img.style.display = 'block';
