@@ -2521,11 +2521,58 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             identifier = _pemohon_draft_identifier(sess)
             draft = database.load_form_draft(identifier) if identifier else {}
-            # Fallback backward-compatible ke legacy identifier jika belum ada di key baru
-            if not draft and sess:
+            if not isinstance(draft, dict):
+                draft = {}
+            # Migrasi draf skema lama (kunci NIK/No.WA) ke skema baru (kunci UID).
+            # PENTING: digabung (merge), BUKAN cuma dipakai kalau draf baru kosong total —
+            # supaya draf baru yang baru punya sebagian data kecil (mis. baru ke-autosave
+            # nama/telp hasil auto-fill) tidak pernah "menutupi" draf lama yang lebih
+            # lengkap (foto KTP/NPWP, NIK, NPWP, alamat yang sudah diunggah pemohon).
+            if sess:
                 legacy_ident = _legacy_pemohon_draft_identifier(sess)
                 if legacy_ident and legacy_ident != identifier:
-                    draft = database.load_form_draft(legacy_ident)
+                    legacy_draft = database.load_form_draft(legacy_ident)
+                    if isinstance(legacy_draft, dict) and legacy_draft:
+                        migrated = False
+                        for section in ('fields', 'images'):
+                            legacy_section = legacy_draft.get(section) or {}
+                            if not isinstance(legacy_section, dict):
+                                continue
+                            cur_section = draft.get(section)
+                            if not isinstance(cur_section, dict):
+                                cur_section = {}
+                            for k, v in legacy_section.items():
+                                if v and not cur_section.get(k):
+                                    cur_section[k] = v
+                                    migrated = True
+                            if cur_section:
+                                draft[section] = cur_section
+                        legacy_ocr = legacy_draft.get('ocr') or {}
+                        if isinstance(legacy_ocr, dict):
+                            cur_ocr = draft.get('ocr')
+                            if not isinstance(cur_ocr, dict):
+                                cur_ocr = {}
+                            for doc_key, doc_val in legacy_ocr.items():
+                                if not isinstance(doc_val, dict):
+                                    continue
+                                cur_doc = cur_ocr.get(doc_key)
+                                if not isinstance(cur_doc, dict):
+                                    cur_doc = {}
+                                for k, v in doc_val.items():
+                                    if v and not cur_doc.get(k):
+                                        cur_doc[k] = v
+                                        migrated = True
+                                if cur_doc:
+                                    cur_ocr[doc_key] = cur_doc
+                            if cur_ocr:
+                                draft['ocr'] = cur_ocr
+                        if migrated:
+                            # Simpan hasil gabungan ke kunci BARU supaya migrasi final —
+                            # kunci lama tidak perlu dibaca lagi setelah ini.
+                            try:
+                                database.save_form_draft(identifier, draft)
+                            except Exception:
+                                pass
 
             # Anti-Kebocoran Server: Validasi bahwa draf benar milik akun yang sedang login
             sess_user = (sess or {}).get('user', {}) or {}
@@ -2586,6 +2633,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if 'fields' in draft and isinstance(draft['fields'], dict):
                         draft['fields'].pop('pemohon_nik', None)
                         draft['fields'].pop('pemohon_npwp', None)
+                        draft['fields'].pop('pemohon_alamat', None)
                     if 'images' in draft and isinstance(draft['images'], dict):
                         draft['images'].pop('imgKtpPreview', None)
                         draft['images'].pop('imgNpwpPreview', None)
