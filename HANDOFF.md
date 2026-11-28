@@ -77,6 +77,13 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Root Cause & Fix: OTP Hapus Akun Gagal Terkirim ke WhatsApp (nomor tidak dinormalisasi)** (Cline — 28 Nov 2026 ~23:15 WIB)
+  - **Root cause**: Di `delete-account-request-otp`, nomor WA diambil dari `user.get('phone')` lalu dikirim apa adanya ke `send_whatsapp_otp_template()`. Nomor tersimpan format lokal `081229783836` (awalan 0), sedangkan Meta WA wajib `6281229783836`. Ini satu-satunya titik pengiriman OTP yang tidak menormalisasi (registrasi & reset password sudah normalisasi via `_normalize_phone_id`).
+  - **Perbaikan**: `phone = _normalize_phone_id(user.get('phone') or '')` dipakai konsisten untuk seluruh pemakaian `phone` di endpoint (simpan ke `otps[otp_key]['phone']`, `send_whatsapp_otp_template`, `log_chat_message`, `_mask_phone`). Tidak membuat fungsi normalisasi baru — memakai helper `_normalize_phone_id()` yang sudah ada.
+  - **Pesan status anti-halusinasi**: "terkirim" hanya diklaim saat API benar-benar konfirmasi (ada `messages`/`status: success`); kegagalan pasti (`error`/`logged_offline`/`rate_limited`/exception) → "Gagal mengirim kode OTP ke WhatsApp. Coba lagi atau gunakan opsi Kirim ke Email."; status ambigu → pesan lunak "Kode OTP sedang diproses…".
+  - **Audit titik lain**: Fitur hapus akun hanya punya 1 titik kirim WA (`delete-account-request-otp`); `delete-account` tidak mengirim WA, jadi tidak ada titik normalisasi yang terlewat.
+  - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` OK, `python3 -m py_compile server.py database.py` OK.
+
 - **Penyempurnaan Hapus Akun Pemohon (alasan wajib dulu, opsi WA/Email, kontak tersensor, anti-spam email)** (Cline — 28 Nov 2026 ~22:45 WIB)
   - **Alasan wajib dulu**: tombol request OTP (WA maupun Email) dinonaktifkan sampai kolom alasan terisi ≥5 karakter; backend `delete-account-request-otp` juga menolak permintaan tanpa `reason`.
   - **WA utama + opsi Email**: endpoint `delete-account-request-otp` kini menerima `channel` (`whatsapp`/`email`), mengirim OTP ke kanal yang dipilih, dan memakai ulang kode yang sama bila belum kedaluwarsa (kirim WA lalu Email tetap satu kode). UI menampilkan tombol "Kirim Kode OTP (WA)" + tombol opsional "Kirim ke Email".

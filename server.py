@@ -3665,7 +3665,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             otps = load_db_otp()
             otp_key = 'delete_account:' + acct_key
             nama = str(user.get('nama') or 'Pemohon KBM Batam')
-            phone = _normalize_phone_id(user.get('phone')) or str(user.get('phone') or '').strip()
+            phone = _normalize_phone_id(user.get('phone') or '')
             email = str(user.get('email') or '').strip().lower()
 
             # Pakai OTP yang sama bila belum kedaluwarsa, supaya kirim ke WA lalu ke Email
@@ -3732,14 +3732,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             is_sent = isinstance(meta_res, dict) and (meta_res.get('status') not in ('error', 'logged_offline', 'rate_limited')) and ('messages' in meta_res or meta_res.get('status') == 'success')
             masked = _mask_phone(phone)
 
+            # Anti-halusinasi status: hanya klaim "terkirim" jika API benar-benar mengonfirmasi
+            # sukses (ada 'messages' atau status 'success'). Kegagalan eksplisit (error /
+            # logged_offline / rate_limited / exception) dilaporkan JUJUR. Status ambigu
+            # (tak bisa dipastikan) diberi pesan lunak agar tidak menakuti user.
             if is_sent:
                 msg = f"OTP telah dikirim ke {masked}."
-            elif isinstance(meta_res, dict) and meta_res.get('status') == 'logged_offline':
-                msg = 'WhatsApp sedang tidak tersedia saat ini. Mohon gunakan opsi "Kirim ke Email" atau coba lagi beberapa saat lagi.'
-            elif isinstance(meta_res, dict) and meta_res.get('message'):
-                msg = 'Gagal mengirim OTP ke WhatsApp: ' + str(meta_res.get('message'))
+            elif meta_res is None:
+                msg = 'Gagal mengirim kode OTP ke WhatsApp. Coba lagi atau gunakan opsi "Kirim ke Email".'
+            elif isinstance(meta_res, dict) and meta_res.get('status') in ('error', 'logged_offline', 'rate_limited'):
+                if meta_res.get('message'):
+                    msg = 'Gagal mengirim kode OTP ke WhatsApp: ' + str(meta_res.get('message')) + ' Coba lagi atau gunakan opsi "Kirim ke Email".'
+                else:
+                    msg = 'Gagal mengirim kode OTP ke WhatsApp. Coba lagi atau gunakan opsi "Kirim ke Email".'
             else:
-                msg = 'Gagal mengirim OTP ke WhatsApp. Mohon coba lagi atau gunakan opsi "Kirim ke Email".'
+                msg = 'Kode OTP sedang diproses. Jika belum diterima dalam 1 menit, coba lagi atau gunakan opsi "Kirim ke Email".'
 
             self._send_json_response({
                 'status': 'ok',
