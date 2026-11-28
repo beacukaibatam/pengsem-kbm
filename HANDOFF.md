@@ -84,6 +84,12 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
   - **Autosave reaktif & Simpan Draf**: `renderProgressiveAccordion()` dipicu tiap OCR/unggah selesai; tombol permanen "💾 Simpan Draf" ditambahkan di Tahap 2 & 3 (Tahap 1 & 4 sudah ada, teks diseragamkan). Smart resume `openFirstIncompleteAccordion()` membuka halaman + akordion pada berkas pertama yang belum lengkap saat draf dipulihkan.
   - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` blok `<script>` OK, `python3 -m py_compile server.py database.py` OK.
 
+- **Audit Claude atas commit `bc3c3a1` (6 Langkah Mockup Redesain Resmi V2)** (Claude — 28 Nov 2026 ~21:15 WIB)
+  - Keenam klaim Antigravity di Poin 60 AGENTS_SYNC.md diverifikasi langsung di kode (bukan dipercaya dari commit message begitu saja). Hasil: 6/6 BENAR.
+  - PPFTZ-01 kini benar mencantumkan No. KEP + No. BPJ + No. Surat Jalan di 4 titik sekaligus: `target_item`, `catatan_petugas`, notifikasi WA, dan dokumen PDF `generatePPFTZ01PDF()`.
+  - Validasi silang nama OCR Surat Kuasa (`checkSuratKuasaCrossValidation()`) nyata berfungsi dan non-blocking.
+  - Registrasi, grid 60/40, redesain Tahap 2/3/4, dan Status Tracker 9-tahap semuanya sesuai mockup dan berbasis data asli (bukan dummy/hardcode).
+
 - **Estafet ke Cline (VS Code / MacBook Air, Model DeepSeek V4 Pro): Implementasi Unggah Bertahap Model 2 (Akordion Vertikal Progresif) & Standardisasi Istilah Pemohon/Kuasa** (Antigravity — 28 Nov 2026 ~20:35 WIB)
   - **Status**: Siap dikerjakan oleh Cline di MacBook Air setelah `git pull origin main`.
   - **Keputusan Arsitektur UX yang Disetujui**:
