@@ -4157,6 +4157,19 @@
                 <span class="pabean-badge-waiting" style="font-size:0.72rem;">Tahap 1 dari 4</span>
             </div>
 
+            <!-- Banner Ringkasan Status Onboarding & Tombol Ubah Jawaban -->
+            <div id="onboardingSummaryBanner" style="display:flex; align-items:center; justify-content:space-between; background:#F8FAFC; border:1.5px solid #E2E8F0; border-radius:8px; padding:8px 14px; margin-bottom:14px; font-size:0.76rem; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px; color:#1E293B; font-weight:700;">
+                    <span style="background:#005FAC; color:#FFFFFF; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                        STATUS
+                    </span>
+                    <span id="onboardingSummaryText">Diurus Sendiri • Milik Sendiri (Sudah Balik Nama)</span>
+                </div>
+                <button type="button" onclick="editOnboardingAnswers()" class="btn btn-secondary" style="font-size:0.70rem; padding:3px 10px; border-color:#CBD5E1; color:#005FAC; background:#FFFFFF; font-weight:700; cursor:pointer;">
+                    ✎ Ubah Status Pengurusan &amp; Kepemilikan ➔
+                </button>
+            </div>
+
             <div class="split-screen-grid">
                 <!-- SISI KIRI: Area Unggah KTP & NPWP (Klik Kotak Langsung) -->
                 <div style="display:flex; flex-direction:column; gap:12px;">
@@ -6639,6 +6652,43 @@
                     elNama.value = sessUser.nama;
                     elNama.classList.add('filled');
                 }
+            }
+            updateOnboardingSummaryBanner();
+        }
+
+        function updateOnboardingSummaryBanner() {
+            const txt = document.getElementById('onboardingSummaryText');
+            if (!txt) return;
+            const textPengurusan = onboardingState.pengurusan === 'sendiri' ? 'Diurus Sendiri' : `Dikuasakan (${onboardingState.kuasaTipe === 'keluarga_inti' ? 'Keluarga Inti' : 'Bukan Keluarga'})`;
+            const textKepemilikan = onboardingState.kepemilikan === 'milik_sendiri' ? `Milik Sendiri (${onboardingState.balikNama === 'ya' ? 'Belum Balik Nama' : 'Sudah Balik Nama'})` : 'Sewa / Rental';
+            txt.innerText = `${textPengurusan} • ${textKepemilikan}`;
+        }
+
+        function editOnboardingAnswers() {
+            onboardingCompleted = false;
+            const p1 = document.getElementById('page-1');
+            if (p1) p1.classList.remove('active');
+            const wizardCard = document.getElementById('wizardStepBtn1')?.closest('.page-card');
+            if (wizardCard) wizardCard.style.display = 'none';
+
+            const s2 = document.getElementById('onboardingStep2');
+            const dg = document.getElementById('onboardingDocGuide');
+            if (s2) s2.style.display = 'none';
+            if (dg) dg.style.display = 'none';
+
+            const s1 = document.getElementById('onboardingStep1');
+            if (s1) {
+                s1.style.display = 'block';
+                s1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            selectPengurusanMode(onboardingState.pengurusan || 'sendiri');
+            if (onboardingState.pengurusan === 'kuasa' && onboardingState.kuasaTipe) {
+                selectKuasaSubTipe(onboardingState.kuasaTipe);
+            }
+            selectKepemilikanMode(onboardingState.kepemilikan || 'milik_sendiri');
+            if (onboardingState.kepemilikan === 'milik_sendiri' && onboardingState.balikNama) {
+                selectBalikNamaOption(onboardingState.balikNama);
             }
         }
 

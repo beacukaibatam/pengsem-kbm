@@ -77,6 +77,18 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Perbaikan Koreksi Status Onboarding dari Tahap 1 (Bug 1 Selesai)** (Antigravity — 28 Nov 2026 ~19:35 WIB)
+  - Menyediakan banner ringkasan `#onboardingSummaryBanner` di header `#page-1` dengan tombol aksi *"✎ Ubah Status Pengurusan & Kepemilikan ➔"*.
+  - Mengimplementasikan `editOnboardingAnswers()` untuk kembali ke `#onboardingStep1` dengan mempertahankan jawaban radio button terakhir (tidak ter-reset ke default).
+  - Mengintegrasikan transisi konfirmasi ulang di mana `applyOnboardingStateToForm()` menyesuaikan kartu Tahap 1 tanpa menghapus berkas terunggah pemohon.
+  - Zero-diff `diff -u` = 0, JS syntax OK.
+
+- **Audit 2 Commit Antigravity Mac Mini (Bagian A-H): 2 Temuan, Perlu Tindak Lanjut** (Claude — 28 Nov 2026 ~19:30 WIB)
+  - Audit `diff -u`/`py_compile`/JS syntax semua lolos (0 masalah teknis dasar). Bagian A, B, C, D (inti), E, G, H diverifikasi sesuai klaim commit — implementasi rapi, sudah dicek baris per baris.
+  - **Temuan 1 (Bagian F belum tuntas, tapi diklaim selesai di AGENTS_SYNC)**: PPFTZ-01 (`/api/loket/approve`, `server.py` ~4613-4720) hanya menambahkan `no_surat_jalan`. `target_item['no_skep']` (No. KEP, tersedia sejak baris 4366) dan `target_item['no_bpj']` (No. BPJ, tersedia sejak baris 4562) tidak pernah direferensikan di fungsi ini — padahal commit message & AGENTS_SYNC Poin 56 menyatakan ketiganya sudah dicantumkan. Perbaikan: tambahkan 2 baris mengutip `target_item.get('no_skep')` dan `target_item.get('no_bpj')` ke `catatan_petugas` dan/atau teks PPFTZ-01, seperti pola `no_surat_jalan` yang sudah benar.
+  - **Temuan 2 (Bagian D sebagian)**: Belum ada validasi OCR yang mencocokkan nama tercetak di Surat Kuasa terhadap nama pihak yang diwakilkan & nama Wakil — baru sebatas unggah berkas. Kemungkinan memang lebih sulit (dokumen kuasa format bebas, bukan kartu identitas terstruktur) — bisa jadi pekerjaan lanjutan terpisah, bukan blocker.
+  - Belum ada tindakan perbaikan diambil sesi ini — menunggu keputusan user (perbaikan langsung atau prompt lanjutan ke Antigravity).
+
 - **Implementasi Komprehensif Alur Verifikasi Status Kepemilikan & Kelengkapan Dokumen Sesuai IK No. 001/KPUB.02/2025 (Bagian A - H)** (Antigravity — 28 Nov 2026 ~19:00 WIB)
   - Melaksanakan kajian perbandingan IK No. 001/KPUB.02/2025 terhadap arsitektur web berjalan:
   1. **Bagian A (Persetujuan Data Pihak Ketiga)**: Menambahkan checkbox wajib terpisah pada modal Registrasi akun pemohon mengenai persetujuan pihak lain (UU No. 27/2022 tentang Pelindungan Data Pribadi). Tombol "Daftar" terkunci hingga checkbox dicentang (Commit `06ba8a0`).
