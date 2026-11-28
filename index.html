@@ -8311,8 +8311,9 @@
                 if (currentAuthSession && currentAuthSession.user) {
                     const sessNama = _normCmp(currentAuthSession.user.nama || '');
                     const sessPhone = (currentAuthSession.user.phone || '').replace(/[^0-9]/g, '');
+                    const sessNik = _normCmp(currentAuthSession.user.nik || '');
                     const draftFields = draft.fields || {};
-                    const draftNama = _normCmp(draftFields.pemohon_nama || (draft.ocr && draft.ocr.ktp && draft.ocr.ktp.nama) || '');
+                    const draftNama = _normCmp(draftFields.pemohon_nama || '');
                     const draftPhone = (draftFields.pemohon_telp || '').replace(/[^0-9]/g, '');
 
                     // Tolak jika draf memuat nama pemohon lain yang bertolak belakang
@@ -8327,6 +8328,47 @@
                         if (!sessPhone.endsWith(draftPhone.slice(-8)) && !draftPhone.endsWith(sessPhone.slice(-8))) {
                             console.warn(`[SECURITY] Draf ditolak: No WA sesi '${sessPhone}' tidak cocok dengan no WA draf '${draftPhone}'`);
                             return;
+                        }
+                    }
+
+                    // Anti-Kontaminasi Dokumen PII: Deteksi jika draf memuat dokumen/identitas KTP orang lain
+                    // 1. Bandingkan nama sesi vs nama hasil OCR KTP di draf
+                    const ocrKtpNama = _normCmp((draft.ocr && draft.ocr.ktp && draft.ocr.ktp.nama) || '');
+                    let isPiiContaminated = false;
+                    if (sessNama && ocrKtpNama && sessNama.length >= 3 && ocrKtpNama.length >= 3) {
+                        if (!ocrKtpNama.includes(sessNama) && !sessNama.includes(ocrKtpNama)) {
+                            console.warn(`[SECURITY] Terdeteksi kontaminasi PII! Nama OCR KTP '${ocrKtpNama}' beda dengan nama akun sesi '${sessNama}'. Mengosongkan data KTP/NPWP tercemar.`);
+                            isPiiContaminated = true;
+                        }
+                    }
+
+                    // 2. Bandingkan NIK akun sesi (jika ada) vs NIK draf / NIK OCR KTP
+                    const draftNik = _normCmp(draftFields.pemohon_nik || '');
+                    const ocrKtpNik = _normCmp((draft.ocr && draft.ocr.ktp && draft.ocr.ktp.nik) || '');
+                    if (sessNik) {
+                        if (draftNik && draftNik !== sessNik) {
+                            console.warn(`[SECURITY] Terdeteksi NIK draf '${draftNik}' beda dengan NIK akun sesi '${sessNik}'.`);
+                            isPiiContaminated = true;
+                        }
+                        if (ocrKtpNik && ocrKtpNik !== sessNik) {
+                            console.warn(`[SECURITY] Terdeteksi NIK OCR KTP '${ocrKtpNik}' beda dengan NIK akun sesi '${sessNik}'.`);
+                            isPiiContaminated = true;
+                        }
+                    }
+
+                    // Bersihkan hanya data identitas tercemar, pertahankan field kendaraan dan berkas lainnya
+                    if (isPiiContaminated) {
+                        if (draft.fields) {
+                            delete draft.fields.pemohon_nik;
+                            delete draft.fields.pemohon_npwp;
+                        }
+                        if (draft.images) {
+                            delete draft.images.imgKtpPreview;
+                            delete draft.images.imgNpwpPreview;
+                        }
+                        if (draft.ocr) {
+                            draft.ocr.ktp = {};
+                            draft.ocr.npwp = {};
                         }
                     }
                 }

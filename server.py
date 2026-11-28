@@ -2530,6 +2530,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             # Anti-Kebocoran Server: Validasi bahwa draf benar milik akun yang sedang login
             sess_user = (sess or {}).get('user', {}) or {}
             sess_nama = str(sess_user.get('nama', '')).strip().upper()
+            sess_nik = re.sub(r'[^A-Z0-9]', '', str(sess_user.get('nik', '')).strip().upper())
             sess_phone = str(sess_user.get('phone', '')).strip().replace('+', '').replace('-', '').replace(' ', '')
             if sess_phone.startswith('0'):
                 sess_phone = '62' + sess_phone[1:]
@@ -2554,6 +2555,43 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if sess_nama not in draft_nama and draft_nama not in sess_nama:
                         print(f"[!] [SECURITY ALERT] Menolak draf karena nama pemohon bertolak belakang! Sesi: '{sess_nama}' vs Draf: '{draft_nama}'")
                         draft = {}
+
+                # Periksa kontaminasi internal PII (KTP/NPWP orang lain dalam draf akun sendiri):
+                # 1. Bandingkan nama di OCR KTP draf vs nama akun sesi
+                draft_ocr = draft.get('ocr', {}) or {}
+                ktp_ocr = (draft_ocr.get('ktp', {}) if isinstance(draft_ocr, dict) else {}) or {}
+                ocr_ktp_nama = re.sub(r'[^A-Z0-9]', '', str(ktp_ocr.get('nama', '')).strip().upper())
+                norm_sess_nama = re.sub(r'[^A-Z0-9]', '', sess_nama)
+                
+                is_pii_contaminated = False
+                if norm_sess_nama and ocr_ktp_nama and len(norm_sess_nama) >= 3 and len(ocr_ktp_nama) >= 3:
+                    if norm_sess_nama not in ocr_ktp_nama and ocr_ktp_nama not in norm_sess_nama:
+                        print(f"[!] [SECURITY ALERT] Terdeteksi kontaminasi PII di draf! Nama OCR KTP '{ktp_ocr.get('nama')}' bertolak belakang dengan nama akun sesi '{sess_user.get('nama')}'.")
+                        is_pii_contaminated = True
+
+                # 2. Bandingkan NIK draf / NIK OCR KTP vs NIK akun sesi jika akun sesi memiliki NIK terdaftar
+                draft_nik = re.sub(r'[^A-Z0-9]', '', str(draft_fields.get('pemohon_nik') or '').strip().upper())
+                ocr_nik = re.sub(r'[^A-Z0-9]', '', str(ktp_ocr.get('nik') or '').strip().upper())
+                if sess_nik:
+                    if draft_nik and draft_nik != sess_nik:
+                        print(f"[!] [SECURITY ALERT] Terdeteksi NIK draf '{draft_nik}' beda dengan NIK akun sesi '{sess_nik}'.")
+                        is_pii_contaminated = True
+                    if ocr_nik and ocr_nik != sess_nik:
+                        print(f"[!] [SECURITY ALERT] Terdeteksi NIK OCR KTP '{ocr_nik}' beda dengan NIK akun sesi '{sess_nik}'.")
+                        is_pii_contaminated = True
+
+                # Jika draf terbukti terkontaminasi dokumen/PII orang lain, bersihkan HANYA field identitas tersebut
+                # Pertahankan field non-identitas (data kendaraan, STNK/BPKB jika sah)
+                if is_pii_contaminated and draft:
+                    if 'fields' in draft and isinstance(draft['fields'], dict):
+                        draft['fields'].pop('pemohon_nik', None)
+                        draft['fields'].pop('pemohon_npwp', None)
+                    if 'images' in draft and isinstance(draft['images'], dict):
+                        draft['images'].pop('imgKtpPreview', None)
+                        draft['images'].pop('imgNpwpPreview', None)
+                    if 'ocr' in draft and isinstance(draft['ocr'], dict):
+                        draft['ocr']['ktp'] = {}
+                        draft['ocr']['npwp'] = {}
 
             self._send_json_response({'status': 'ok', 'draft': draft})
             return

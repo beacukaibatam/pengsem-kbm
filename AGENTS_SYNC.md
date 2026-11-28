@@ -332,3 +332,17 @@
   - Logika pemulihan data draf (`restoreFormDraft()`: fields snapshot, image preview dataUrl, store OCR, badge status '✓ Terbaca Otomatis' / '✓ Tersimpan') tetap berjalan 100% di background tanpa notifikasi banner yang mengganggu.
   - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0.
   - Verifikasi otomatis Playwright: `#draftRestoredBanner` tidak ada lagi di DOM (`count == 0`), data draf dan foto KTP pulih utuh tanpa pesan banner (screenshot `clean_draft_restored_no_banner.png`).
+- [x] Poin 55 (Antigravity): **REMEDIASI PENUH DRAF TERKONTAMINASI PII: SCRIPT PEMBERSIHAN DATA & PERKUATAN MULTI-TIER VALIDASI KTP/NPWP**:
+  - **Latar Belakang**: Kasus draf historis yang tersimpan sebelum perbaikan pembersihan sesi diaplikasikan (27 Nov 23:30). Draf sah milik akun pemohon tertentu dapat memuat NIK/NPWP/OCR/foto KTP orang lain karena autosave lama. Validasi nama sesi vs nama draf lolos karena `fields.pemohon_nama` cocok dengan akun pemilik, namun data identitas di dalamnya tercemar.
+  - **Tugas 1: Script Pembersihan Satu Kali (`cleanup_contaminated_drafts.py`)**:
+    - Memindai seluruh baris tabel `form_drafts` di `kbm_batam.db`.
+    - Membandingkan: (1) `ocr.ktp.nama` vs nama akun / nama pemohon draf, (2) `ocr.ktp.nik` & `fields.pemohon_nik` vs NIK akun terdaftar.
+    - Menampilkan tabel interaktif anomali draf untuk review manual oleh operator dengan perlindungan anti auto-hapus tanpa konfirmasi. Mendukung opsi `--dry-run`, `--all`, dan `--clean-id`.
+    - Eksekusi pembersihan HANYA menghapus field PII tercemar (`pemohon_nik`, `pemohon_npwp`, `imgKtpPreview`, `imgNpwpPreview`, `ocr.ktp`, `ocr.npwp`), sedangkan data kendaraan (`kbm_*`), STNK, dan BPKB tetap utuh 100%.
+  - **Tugas 2: Penguatan Validasi Anti-Tercemar di Server (`server.py`) & Klien (`index.html`)**:
+    - Pada handler `/api/permohonan/draft-load` (`server.py`): memeriksa `ocr.ktp.nama` vs `session.user.nama` serta `ocr.ktp.nik` / `fields.pemohon_nik` vs `session.user.nik`. Jika terdeteksi tidak cocok / bertolak belakang, server secara otomatis mencabut field KTP & NPWP tercemar dari payload respon sebelum dikirim ke klien, sementara field kendaraan tetap dipulihkan.
+    - Pada `restoreFormDraft()` (`index.html`): perlindungan lapis kedua di browser memvalidasi nama sesi vs `ocr.ktp.nama` dan NIK sesi vs NIK draf. Jika terdeteksi kontaminasi, field identitas tercemar dibatalkan dan tidak pernah ditampilkan ke form/kotak pratinjau.
+  - **Verifikasi Empiris**:
+    - Script CLI `cleanup_contaminated_drafts.py` diverifikasi dry-run dan eksekusi riil.
+    - Test integrasi backend HTTP `/api/permohonan/draft-load` membuktikan draf terkontaminasi otomatis terfilter bersih (0 bocoran NIK/foto/OCR KTP, data kendaraan Avanza & BPKB tetap utuh).
+    - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `python3 -m py_compile server.py database.py cleanup_contaminated_drafts.py` OK, inline JS syntax valid. Tanpa pencatatan PII nyata siapapun di commit / dokumentasi.
