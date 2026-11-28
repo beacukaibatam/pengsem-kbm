@@ -77,6 +77,12 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Hapus Kotak Checkbox Persetujuan Pihak Ketiga Ganda (Registrasi)** (Antigravity — 29 Nov 2026 ~00:05 WIB, atas instruksi langsung Bapak: *"yang di bawah hilangkan aja, ngapain jadi double gitu"*)
+  - Kotak checkbox terpisah `#landingRegThirdPartyAgree` (kotak hijau di bagian bawah) **DIHAPUS SEPENUHNYA** sehingga pemohon tidak perlu mencentang 2 kotak berbeda yang redundan.
+  - Butir ke-4 di dalam *"Lihat Rincian Pernyataan & Ketentuan"* memuat pernyataan lengkap persetujuan data pihak ketiga, sehingga seluruh persetujuan otomatis terikat di bawah satu-satunya checkbox utama `#landingRegTermsAgree`.
+  - Fungsi JavaScript `updateLandingRegButtonState()` dan `submitLandingRegisterOtp()` kini hanya memvalidasi checkbox utama Syarat & Ketentuan.
+  - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `python3 -m py_compile server.py database.py` OK, commit `63d4c81` dipush ke GitHub `origin/main`.
+
 - **Rapikan Duplikasi Teks Persetujuan Data Pihak Ketiga (Registrasi)** (Claude — 28 Nov 2026 ~23:40 WIB, dikerjakan langsung atas izin eksplisit user)
   - Commit `aa10894` (Cline) membuat paragraf persetujuan data pihak ketiga muncul 2x identik di halaman Registrasi: sebagai butir ke-4 di dalam "Lihat Rincian Pernyataan & Ketentuan" DAN sebagai label penuh checkbox `#landingRegThirdPartyAgree` di bawahnya. Bukan bug fungsional, tapi redundan.
   - Butir ke-4 dipersingkat jadi rujukan ke checkbox, teks lengkap & mengikat secara hukum tetap hanya ada satu kali (di label checkbox).
