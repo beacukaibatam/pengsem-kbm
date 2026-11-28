@@ -3372,9 +3372,9 @@
                             </div>
 
                             <!-- ================= SYARAT & KETENTUAN PERNYATAAN INTEGRITAS LAYANAN ================= -->
-                            <div class="landing-terms-box" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:10px; padding:8px 12px; margin-bottom:10px;">
+                            <div class="landing-terms-box" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:10px; padding:8px 12px; margin-bottom:8px;">
                                 <label class="landing-terms-check-label" style="display:flex; align-items:flex-start; gap:8px; font-size:0.72rem; font-weight:700; color:#1E293B; cursor:pointer; line-height:1.3;">
-                                    <input type="checkbox" id="landingRegTermsAgree" style="width:16px; height:16px; margin-top:1px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
+                                    <input type="checkbox" id="landingRegTermsAgree" onchange="updateLandingRegButtonState()" style="width:16px; height:16px; margin-top:1px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
                                     <span>Dengan melakukan registrasi ini, saya menyatakan telah membaca, memahami, dan menyetujui seluruh Syarat dan Ketentuan.</span>
                                 </label>
                                 <details class="landing-terms-details" style="margin-top:5px; padding-left:24px;">
@@ -3389,7 +3389,15 @@
                                 </details>
                             </div>
 
-                            <button type="button" class="landing-btn-submit" id="btnLandingRegSubmit" onclick="submitLandingRegisterOtp()" style="background:#059669; box-shadow:0 4px 12px rgba(5,150,105,0.25);">
+                            <!-- ================= PERSETUJUAN PENGGUNAAN DATA PIHAK KETIGA ================= -->
+                            <div class="landing-thirdparty-box" style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:8px 12px; margin-bottom:12px;">
+                                <label class="landing-thirdparty-check-label" style="display:flex; align-items:flex-start; gap:8px; font-size:0.71rem; font-weight:600; color:#14532D; cursor:pointer; line-height:1.35;">
+                                    <input type="checkbox" id="landingRegThirdPartyAgree" onchange="updateLandingRegButtonState()" style="width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
+                                    <span>Apabila permohonan ini memuat data pihak lain (seperti pemilik kendaraan, penyewa, pemberi sewa, pemberi kuasa, dan/atau anggota keluarga, atau lainnya), saya menyatakan telah mendapat persetujuan dari pihak yang bersangkutan untuk mengunggah dan menggunakan data identitasnya dalam permohonan ini, dan bertanggung jawab penuh atas keabsahan persetujuan tersebut.</span>
+                                </label>
+                            </div>
+
+                            <button type="button" class="landing-btn-submit" id="btnLandingRegSubmit" onclick="submitLandingRegisterOtp()" disabled style="background:#059669; box-shadow:0 4px 12px rgba(5,150,105,0.25); opacity:0.5; cursor:not-allowed;">
                                 Daftar & Kirim Kode OTP ➔
                             </button>
                         </div>
@@ -13391,6 +13399,17 @@
         // ================= 2. REGISTRASI PEMOHON (KHUSUS PEMOHON) =================
         let landingRegPendingPassword = '';
 
+        function updateLandingRegButtonState() {
+            const termsAgree = document.getElementById('landingRegTermsAgree')?.checked;
+            const thirdPartyAgree = document.getElementById('landingRegThirdPartyAgree')?.checked;
+            const btn = document.getElementById('btnLandingRegSubmit');
+            if (!btn) return;
+            const isReady = termsAgree && thirdPartyAgree;
+            btn.disabled = !isReady;
+            btn.style.opacity = isReady ? '1' : '0.5';
+            btn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+        }
+
         async function submitLandingRegisterOtp() {
             const nama = (document.getElementById('landingRegNama')?.value || '').trim().toUpperCase();
             let rawPhone = (document.getElementById('landingRegPhone')?.value || '').trim();
@@ -13398,6 +13417,7 @@
             const password = (document.getElementById('landingRegPassword')?.value || '').trim();
             const confirmPassword = (document.getElementById('landingRegConfirmPassword')?.value || '').trim();
             const termsAgree = document.getElementById('landingRegTermsAgree')?.checked;
+            const thirdPartyAgree = document.getElementById('landingRegThirdPartyAgree')?.checked;
             const btn = document.getElementById('btnLandingRegSubmit');
             const nik = '';
 
@@ -13444,6 +13464,12 @@
             if (!termsAgree) {
                 showLandingAlert('Anda wajib mencentang persetujuan Syarat, Ketentuan, dan Pernyataan Integritas Layanan sebelum melanjutkan registrasi.', 'error');
                 document.getElementById('landingRegTermsAgree')?.focus();
+                return;
+            }
+
+            if (!thirdPartyAgree) {
+                showLandingAlert('Anda wajib mencentang pernyataan persetujuan penggunaan data pihak ketiga sebelum melanjutkan registrasi.', 'error');
+                document.getElementById('landingRegThirdPartyAgree')?.focus();
                 return;
             }
 
