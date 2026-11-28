@@ -77,6 +77,31 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Implementasi Komprehensif Alur Verifikasi Status Kepemilikan & Kelengkapan Dokumen Sesuai IK No. 001/KPUB.02/2025 (Bagian A - H)** (Antigravity — 28 Nov 2026 ~19:00 WIB)
+  - Melaksanakan kajian perbandingan IK No. 001/KPUB.02/2025 terhadap arsitektur web berjalan:
+  1. **Bagian A (Persetujuan Data Pihak Ketiga)**: Menambahkan checkbox wajib terpisah pada modal Registrasi akun pemohon mengenai persetujuan pihak lain (UU No. 27/2022 tentang Pelindungan Data Pribadi). Tombol "Daftar" terkunci hingga checkbox dicentang (Commit `06ba8a0`).
+  2. **Bagian B & C (Pertanyaan Status 2-Langkah & Checklist Panduan Dokumen)**:
+     - Mengubah alur reaktif lama (pertanyaan kepemilikan tertunda di Tahap 2 setelah OCR) menjadi proaktif sebelum masuk formulir Tahap 1.
+     - Pertanyaan 1: Status Pengurusan Permohonan (`Diurus Sendiri` [wajib hadir fisik di seluruh tahap] vs `Dikuasakan` [sub-pilihan: `Keluarga Inti` vs `Bukan Keluarga`]).
+     - Pertanyaan 2: Status Kepemilikan Kendaraan (`Milik Sendiri` [sub-opsi Balik Nama] vs `Sewa / Rental` [wajib KTP Pemilik Rental + Surat Sewa]). Status pembiayaan BPKB vs Leasing tetap independen di Tahap 2.
+     - Checklist Panduan Dokumen dinamis (`#onboardingDocGuide`) menampilkan Tabel B.3 (6 dokumen universal + dokumen spesifik per kombinasi status) sebelum form Tahap 1 dibuka.
+  3. **Bagian D (Restrukturisasi Tahap 1 Kasus Dikuasakan)**:
+     - Jika Dikuasakan: Akun web dioperasikan oleh Wakil (penerima kuasa). Tahap 1 menangkap 4 berkas: KTP Pihak yang Diwakilkan, NPWP Pihak yang Diwakilkan (NPWP resmi pabean), KTP Wakil (divalidasi NIK KTP == NIK akun login), dan Surat Kuasa (+ KK/Buku Nikah jika Keluarga Inti).
+     - Surat Kuasa dipindahkan dari Tahap 2 ke Tahap 1. Dropzone Surat Kuasa diperbaiki agar selalu berstatus `display: flex`.
+     - Identitas resmi pemohon terkunci di permohonan & dokumen cetak tetap Pemohon (Pihak yang Diwakilkan), bukan Wakil.
+  4. **Bagian E (Akurasi NJKB Bapenda Kepri & Fallback Berlabel)**:
+     - `NJKB_BAPENDA_DATABASE` diperbarui: Toyota Avanza 2022 disesuaikan menjadi Rp188.000.000 (bukan 190.000.000), serta penambahan seri Suzuki APV dan Carry.
+     - Status NJKB transparan: badge kuning "⚠️ Estimasi Tabel Bapenda (Perlu Verifikasi Manual Petugas)" jika berasal dari fallback tabel; badge hijau "Terbaca Otomatis dari STNK (TBPKP)" jika dari OCR asli.
+  5. **Bagian F & G (Kelengkapan PPFTZ-01, Notifikasi WA SPF & IP)**:
+     - Pada dokumen cetak PPFTZ-01 dicantumkan: `No. Surat Jalan Polda Kepri`, `No. KEP Persetujuan Pengeluaran`, dan `No. Bukti Penerimaan Jaminan (BPJ)`.
+     - Ditambahkan input No. Surat Jalan Polda Kepri (`actionLoketNoSuratJalan`) pada tindakan Petugas Loket.
+     - Pesan WhatsApp persetujuan Loket mencantumkan secara gamblang `No. SPF` dan `No. IP`.
+  6. **Bagian H (Nota Permintaan Dokumen / NPD di PFPD)**:
+     - Sesuai IK, pada tahap PFPD tidak ada penolakan permanen (hanya Setuju -> SPPB atau NPD jika butuh kelengkapan).
+     - Endpoint backend: `POST /api/pemeriksaan/terbitkan-npd` dan `POST /api/pemeriksaan/unggah-dokumen-npd`.
+     - Tombol NPD di drawer PFPD dan form unggah dokumen susulan respons NPD di dashboard pemohon ("Status Permohonan Saya").
+  - **Verifikasi**: Zero-diff `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `py_compile` OK, `node --check` inline script OK. Verifikasi visual via Browser subagent sukses di dashboard pemohon & kartu Tahap 1. Tanpa kebocoran PII pada commit maupun dokumentasi.
+
 - **Perbaikan Lanjutan: Field Alamat Lupa Dibersihkan & Draf Lama Tertutup Permanen** (Claude — 28 Nov 2026 ~11:00 WIB)
   - Lanjutan dari 2 perbaikan sebelumnya (Antigravity, 27 Nov 23:30 & 28 Nov 10:24) yang ternyata belum tuntas — ditemukan lewat audit kode langsung + laporan reproduksi nyata dari user (2 akun pemohon berbeda, data masih saling tertukar/hilang setelah 2 fix sebelumnya).
   - **Celah 1 — `pemohon_alamat` lupa ikut disaring**: validasi anti-kontaminasi PII (server `draft-load` & klien `restoreFormDraft()`) sebelumnya cuma menghapus `pemohon_nik`/`pemohon_npwp`/foto KTP-NPWP/OCR saat kontaminasi terdeteksi — padahal `pemohon_alamat` JUGA diisi dari hasil OCR KTP yang sama (`applyMasterFullsetData()` baris ~7140). Akibatnya alamat milik akun lain tetap nongol meski NIK/NPWP/foto sudah bersih. Diperbaiki: `pemohon_alamat` kini ikut dihapus di ketiga titik (server.py + index.html + Formulir_...html).

@@ -347,3 +347,25 @@
     - Script CLI `cleanup_contaminated_drafts.py` diverifikasi dry-run dan eksekusi riil.
     - Test integrasi backend HTTP `/api/permohonan/draft-load` membuktikan draf terkontaminasi otomatis terfilter bersih (0 bocoran NIK/foto/OCR KTP, data kendaraan Avanza & BPKB tetap utuh).
     - Zero-diff: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `python3 -m py_compile server.py database.py cleanup_contaminated_drafts.py` OK, inline JS syntax valid. Tanpa pencatatan PII nyata siapapun di commit / dokumentasi.
+- [x] Poin 56 (Antigravity): **RESTRUKTURISASI ALUR VERIFIKASI STATUS KEPEMILIKAN & KELENGKAPAN DOKUMEN PENGSEM KBM SESUAI IK NO. 001/KPUB.02/2025 (BAGIAN A - H)**:
+  - **Bagian A (Persetujuan Data Pihak Ketiga)**: Checkbox wajib terpisah di layar Registrasi akun pemohon mengenai persetujuan pemilik data sebelum pengunggahan (UU PDP No. 27/2022). Tombol Daftar nonaktif sebelum dicentang. (Commit `06ba8a0`).
+  - **Bagian B & C (Pertanyaan Status 2-Langkah & Layar Panduan Dokumen)**:
+    - Langkah 1: Status Pengurusan Permohonan (`Diurus Sendiri` vs `Dikuasakan`). Sub-pilihan Dikuasakan: `Keluarga Inti` vs `Bukan Keluarga`.
+    - Langkah 2: Status Kepemilikan Kendaraan (`Milik Sendiri` [sub-opsi Belum Balik Nama] vs `Sewa/Rental`). Toggle Pembiayaan (BPKB vs Leasing) tetap independen di Tahap 2.
+    - Panduan Dokumen: Checklist dinamis (Tabel B.3 di IK No. 001/KPUB.02/2025) yang merinci seluruh berkas wajib disiapkan pemohon sebelum masuk formulir Tahap 1.
+  - **Bagian D (Restrukturisasi Tahap 1 Kasus Dikuasakan)**:
+    - Akun didaftarkan oleh Wakil (penerima kuasa). Tahap 1 menampilkan 4 berkas identitas: (1) KTP Pihak yang Diwakilkan, (2) NPWP Pihak yang Diwakilkan (NPWP resmi pabean), (3) KTP Wakil (divalidasi NIK KTP == NIK akun login), (4) Surat Kuasa (+ KK/Buku Nikah jika Keluarga Inti).
+    - Surat Kuasa dipindahkan dari Tahap 2 ke Tahap 1 sebagai dokumen identitas/otorisasi.
+    - Data pemohon resmi yang terkunci di permohonan & dokumen cetak adalah identitas Pihak yang Diwakilkan, bukan Wakil.
+  - **Bagian E (Akurasi NJKB Bapenda Kepri & Fallback Berlabel)**:
+    - Database `NJKB_BAPENDA_DATABASE` diperbarui: Toyota Avanza 2022 = Rp188.000.000; penambahan seri Suzuki APV dan Carry.
+    - Penandaan transparan: badge kuning "⚠️ Estimasi Tabel Bapenda (Perlu Verifikasi Manual Petugas)" jika berasal dari fallback tabel; badge hijau "Terbaca Otomatis dari STNK (TBPKP)" jika dari OCR STNK asli.
+  - **Bagian F & G (Kelengkapan PPFTZ-01, Notifikasi WA SPF & IP)**:
+    - Pada cetak PPFTZ-01 dicantumkan: `No. Surat Jalan Polda Kepri`, `No. KEP Persetujuan Pengeluaran`, `No. Bukti Penerimaan Jaminan (BPJ)`.
+    - Input `actionLoketNoSuratJalan` di form aksi Petugas Loket dan tersimpan di database.
+    - Notifikasi WhatsApp Loket ke pemohon mencantumkan secara eksplisit `No. SPF` dan `No. IP`.
+  - **Bagian H (Nota Permintaan Dokumen / NPD di Jalur PFPD)**:
+    - Sesuai IK, pada tahap Pemeriksaan Dokumen tidak ada penolakan permanen (hanya Setuju -> SPPB atau NPD jika butuh kelengkapan).
+    - Endpoint baru `POST /api/pemeriksaan/terbitkan-npd` dan `POST /api/pemeriksaan/unggah-dokumen-npd`.
+    - Tombol "📄 Terbitkan NPD" di drawer PFPD dan form unggah dokumen susulan respons NPD di dashboard pemohon ("Status Permohonan Saya").
+  - **Kepatuhan Protokol**: Zero-diff `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, Python py_compile OK, JS inline syntax OK, zero PII disclosure.

@@ -4662,6 +4662,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 # 4. Terbit IP (Instruksi Pemeriksaan) penunjukan Pemeriksa Barang
                 no_ip = f"IP-{rand3}/KPU.02/2026"
 
+                no_surat_jalan = str(body.get('no_surat_jalan', '')).strip()
+                if no_surat_jalan:
+                    target_item['no_surat_jalan'] = no_surat_jalan
+
                 target_item['status'] = 'PPFTZ_CEK_FISIK'
                 target_item['no_ppftz'] = no_ppftz
                 target_item['no_proforma_ppftz03'] = no_proforma_ppftz03
@@ -4678,16 +4682,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'chk_bundel_permohonan': True,
                     'chk_bundel_skep': True,
                     'chk_bundel_jaminan': True,
+                    'no_surat_jalan': no_surat_jalan,
                     'petugas_loket': sess.get('user', {}).get('nama', 'Petugas Loket'),
                     'approved_at': now_str
                 }
                 target_item['catatan_petugas'] = (
                     f"Approval Loket selesai. Terbit otomatis: PPFTZ-01 ({no_ppftz}), Proforma PPFTZ-03 ({no_proforma_ppftz03}), "
-                    f"SPF ({no_spf}), IP ({no_ip}). Pemeriksa Barang: {pbrg_nama}; Pemeriksa Dokumen: {pfpd_nama}."
+                    f"SPF ({no_spf}), IP ({no_ip}). Surat Jalan Polda: {no_surat_jalan or '-'}. "
+                    f"Pemeriksa Barang: {pbrg_nama}; Pemeriksa Dokumen: {pfpd_nama}."
                 )
                 save_db_permohonan(db)
                 backup_sqlite_to_gdrive_async()
-                _log_officer_action(sess, 'LOKET_APPROVAL_4_OUTPUT', pid, f"PPFTZ {no_ppftz} | SPF {no_spf} | IP {no_ip} | PFPD {pfpd_nama} | PBrg {pbrg_nama}")
+                _log_officer_action(sess, 'LOKET_APPROVAL_4_OUTPUT', pid, f"PPFTZ {no_ppftz} | SPF {no_spf} | IP {no_ip} | SJ {no_surat_jalan} | PFPD {pfpd_nama}")
                 _notify_pemohon_wa(target_item, (
                     f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
                     f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
@@ -4695,13 +4701,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     f"Berkas permohonan kendaraan Anda ({target_item.get('nopol', '-')}) telah *DISETUJUI PETUGAS LOKET*.\n"
                     f"• No. PPFTZ-01: *{no_ppftz}*\n"
                     f"• Proforma PPFTZ-03: *{no_proforma_ppftz03}*\n"
-                    f"• No. SPF: *{no_spf}*\n\n"
+                    f"• No. SPF: *{no_spf}*\n"
+                    f"• No. IP: *{no_ip}*\n\n"
                     f"📌 *WAJIB HADIR PEMERIKSAAN FISIK KENDARAAN* dengan membawa berkas *ASLI* berikut:\n"
                     f"1. KTP Asli\n"
                     f"2. NPWP Asli\n"
                     f"3. BPKB Asli / Surat Keterangan Asli dari Leasing\n"
                     f"4. STNK Asli\n"
-                    f"5. Surat Jalan Asli dari Polda\n\n"
+                    f"5. Surat Jalan Asli dari Polda" + (f" (No: {no_surat_jalan})" if no_surat_jalan else "") + "\n\n"
                     f"Dokumen SPF dapat dilihat/diunduh di Portal PENGSEM.\n"
                     f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
                 ))
@@ -4882,6 +4889,108 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 })
             except Exception as e:
                 self._send_json_error(500, f'Gagal menerbitkan SPPB: {str(e)}')
+            return
+
+        # 5b. Endpoint Pemeriksa Dokumen: Terbitkan NPD (Nota Permintaan Dokumen)
+        if self.path == '/api/pemeriksaan/terbitkan-npd':
+            token, sess = get_session_from_request(self)
+            if not _is_role_allowed(sess, ['pemeriksadokumen']):
+                self._send_json_error(403, 'Akses Ditolak: Hanya Pejabat Pemeriksa Dokumen (PFPD) yang berwenang menerbitkan NPD.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                pid = body.get('id')
+                alasan_npd = str(body.get('alasan_npd', '')).strip()
+                dokumen_diminta = str(body.get('dokumen_diminta', '')).strip()
+                if not alasan_npd or not dokumen_diminta:
+                    self._send_json_error(400, 'Alasan penerbitan NPD dan rincian dokumen yang diminta wajib diisi.')
+                    return
+
+                db = load_db_permohonan()
+                target_item = next((item for item in db if item.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                rand3 = random.randint(100, 999)
+                no_npd = f"NPD-{rand3}/KPU.02/2026"
+                now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                target_item['status'] = 'MENUNGGU_DOKUMEN_TAMBAHAN'
+                target_item['no_npd'] = no_npd
+                target_item['tgl_npd'] = now_str
+                target_item['npd_data'] = {
+                    'no_npd': no_npd,
+                    'tgl': now_str,
+                    'alasan': alasan_npd,
+                    'dokumen_diminta': dokumen_diminta,
+                    'petugas': sess.get('user', {}).get('nama', 'Pejabat Pemeriksa Dokumen')
+                }
+                target_item['catatan_petugas'] = f"Pemeriksa Dokumen menerbitkan NPD ({no_npd}). Dokumen yang diminta: {dokumen_diminta}. Alasan: {alasan_npd}."
+                save_db_permohonan(db)
+                backup_sqlite_to_gdrive_async()
+                _log_officer_action(sess, 'NPD_TERBIT', pid, f"NPD {no_npd} | Dokumen: {dokumen_diminta}")
+                _notify_pemohon_wa(target_item, (
+                    f"🏛️ *KPU BEA DAN CUKAI TIPE B BATAM*\n"
+                    f"Layanan Pengeluaran Sementara Kendaraan Bermotor (KBM) Ke TLDDP\n\n"
+                    f"Halo *{target_item.get('nama_pemohon', 'Pemohon')}*,\n\n"
+                    f"Pejabat Pemeriksa Dokumen (PFPD) menerbitkan *Nota Permintaan Dokumen (NPD)* untuk permohonan kendaraan Anda ({target_item.get('nopol', '-')}).\n"
+                    f"• No. NPD: *{no_npd}*\n"
+                    f"• Dokumen yang Diminta: *{dokumen_diminta}*\n"
+                    f"• Penjelasan/Alasan: _{alasan_npd}_\n\n"
+                    f"Silakan masuk ke Portal PENGSEM → *Status Permohonan Saya* untuk mengunggah dokumen susulan yang diminta agar berkas dapat diteliti kembali dan diproses ke SPPB.\n\n"
+                    f"Informasi Lebih Lanjut Hub: 0851-5814-8448 (Client Coordinator)"
+                ))
+
+                self._send_json_response({
+                    'status': 'ok',
+                    'message': f'NPD ({no_npd}) berhasil diterbitkan dan notifikasi telah dikirimkan ke pemohon.',
+                    'no_npd': no_npd,
+                    'permohonan': target_item
+                })
+            except Exception as e:
+                self._send_json_error(500, f'Gagal menerbitkan NPD: {str(e)}')
+            return
+
+        # 5c. Endpoint Pemohon: Kirim Dokumen Tambahan Respons NPD
+        if self.path == '/api/pemeriksaan/unggah-dokumen-npd':
+            token, sess = get_session_from_request(self)
+            if not _is_role_allowed(sess, ['pemohon']):
+                self._send_json_error(403, 'Akses Ditolak: Hanya pemohon yang dapat mengunggah dokumen respons NPD.')
+                return
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                body = json.loads(post_data.decode('utf-8'))
+                pid = body.get('id')
+                doc_url = body.get('dokumen_url')
+                keterangan = str(body.get('keterangan', '')).strip()
+
+                db = load_db_permohonan()
+                target_item = next((item for item in db if item.get('id') == pid), None)
+                if not target_item:
+                    self._send_json_error(404, f'Permohonan {pid} tidak ditemukan.')
+                    return
+
+                now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                target_item['status'] = 'PEMERIKSA_DOKUMEN'
+                target_item['dokumen_tambahan_npd'] = {
+                    'url': doc_url,
+                    'keterangan': keterangan,
+                    'uploaded_at': now_str
+                }
+                target_item['catatan_petugas'] = "Pemohon telah mengunggah dokumen tambahan pemenuhan NPD. Berkas kembali ke antrean PFPD untuk diteliti."
+                save_db_permohonan(db)
+                backup_sqlite_to_gdrive_async()
+                self._send_json_response({
+                    'status': 'ok',
+                    'message': 'Dokumen susulan berhasil diunggah. Berkas Anda telah dikembalikan ke Pejabat Pemeriksa Dokumen.',
+                    'permohonan': target_item
+                })
+            except Exception as e:
+                self._send_json_error(500, f'Gagal mengirim dokumen susulan: {str(e)}')
             return
 
         # 6a. Endpoint Gate: Scan QR SPPB untuk menampilkan data kendaraan (read-only,

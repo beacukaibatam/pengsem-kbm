@@ -3915,6 +3915,187 @@
 
     <div class="main-container">
 
+        <!-- ================= ONBOARDING PERTANYAAN STATUS & PANDUAN DOKUMEN (BAGIAN B & C) ================= -->
+        <!-- Langkah 1: Status Pengurusan Permohonan -->
+        <section class="page-card" id="onboardingStep1" style="display:none; padding:20px 24px; margin-bottom:16px;">
+            <div style="border-bottom:1.5px solid #E2E8F0; padding-bottom:12px; margin-bottom:16px;">
+                <div style="display:inline-block; font-size:0.68rem; font-weight:800; color:#005FAC; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:2px 8px; margin-bottom:6px; text-transform:uppercase;">
+                    Langkah Awal 1 dari 2
+                </div>
+                <h2 style="font-size:1.05rem; font-weight:800; color:#0F172A; margin:0 0 4px 0;">
+                    Status Pengurusan Permohonan
+                </h2>
+                <p style="font-size:0.78rem; color:#64748B; margin:0;">
+                    Tentukan apakah pengurusan permohonan pengeluaran sementara kendaraan ini dilakukan sendiri secara langsung atau dikuasakan kepada pihak lain.
+                </p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+                <!-- Pilihan Diurus Sendiri -->
+                <div id="cardPengurusanSendiri" onclick="selectPengurusanMode('sendiri')" style="cursor:pointer; border:2px solid #CBD5E1; background:#FFFFFF; border-radius:10px; padding:16px; transition:all 0.15s ease;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="radio" name="radioPengurusan" id="rbPengurusanSendiri" value="sendiri" style="width:18px; height:18px; accent-color:#005FAC; cursor:pointer;">
+                        <span style="font-weight:800; font-size:0.92rem; color:#0F172A;">Diurus Sendiri</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#475569; line-height:1.45; padding-left:26px;">
+                        <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:6px; padding:6px 10px; color:#166534; font-weight:700; margin-top:4px;">
+                            ⚠️ Anda wajib mengikuti seluruh tahapan proses secara langsung, termasuk saat pemeriksaan fisik kendaraan.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pilihan Dikuasakan -->
+                <div id="cardPengurusanKuasa" onclick="selectPengurusanMode('kuasa')" style="cursor:pointer; border:2px solid #CBD5E1; background:#FFFFFF; border-radius:10px; padding:16px; transition:all 0.15s ease;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="radio" name="radioPengurusan" id="rbPengurusanKuasa" value="kuasa" style="width:18px; height:18px; accent-color:#005FAC; cursor:pointer;">
+                        <span style="font-weight:800; font-size:0.92rem; color:#0F172A;">Dikuasakan</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#475569; line-height:1.45; padding-left:26px;">
+                        <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:6px 10px; color:#92400E; font-weight:600; margin-top:4px;">
+                            Anda akan mengisi data diri Anda sendiri sebagai Wakil dan mengunggah Surat Kuasa di Tahap 1.
+                        </div>
+                        
+                        <!-- Sub-pilihan Kuasa: Keluarga Inti vs Bukan Keluarga -->
+                        <div id="subPilihanKuasaWrap" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #CBD5E1;">
+                            <label style="font-size:0.73rem; font-weight:800; color:#334155; display:block; margin-bottom:6px;">Hubungan Pemberi &amp; Penerima Kuasa:</label>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <label style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:6px; padding:6px 12px; font-size:0.74rem; font-weight:700; color:#334155; cursor:pointer; display:flex; align-items:center; gap:6px;" id="lblKuasaKeluarga">
+                                    <input type="radio" name="radioKuasaTipe" id="rbKuasaKeluarga" value="keluarga_inti" onchange="selectKuasaSubTipe('keluarga_inti')">
+                                    <span>Keluarga Inti (KK / Buku Nikah)</span>
+                                </label>
+                                <label style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:6px; padding:6px 12px; font-size:0.74rem; font-weight:700; color:#334155; cursor:pointer; display:flex; align-items:center; gap:6px;" id="lblKuasaNonKeluarga">
+                                    <input type="radio" name="radioKuasaTipe" id="rbKuasaNonKeluarga" value="bukan_keluarga" onchange="selectKuasaSubTipe('bukan_keluarga')">
+                                    <span>Bukan Keluarga (Surat Kuasa Khusus)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="button" class="btn btn-primary" id="btnNextOnboarding1" onclick="submitOnboardingStep1()" disabled style="opacity:0.5; cursor:not-allowed;">
+                    Lanjut ke Langkah 2: Status Kepemilikan ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Langkah 2: Status Kepemilikan Kendaraan -->
+        <section class="page-card" id="onboardingStep2" style="display:none; padding:20px 24px; margin-bottom:16px;">
+            <div style="border-bottom:1.5px solid #E2E8F0; padding-bottom:12px; margin-bottom:16px;">
+                <div style="display:inline-block; font-size:0.68rem; font-weight:800; color:#005FAC; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:2px 8px; margin-bottom:6px; text-transform:uppercase;">
+                    Langkah Awal 2 dari 2
+                </div>
+                <h2 style="font-size:1.05rem; font-weight:800; color:#0F172A; margin:0 0 4px 0;">
+                    Status Kepemilikan Kendaraan
+                </h2>
+                <p style="font-size:0.78rem; color:#64748B; margin:0;">
+                    Pilih status kepemilikan kendaraan yang akan dikeluarkan sementara ke Luar Batam.
+                </p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+                <!-- Pilihan Milik Sendiri -->
+                <div id="cardKepemilikanSendiri" onclick="selectKepemilikanMode('milik_sendiri')" style="cursor:pointer; border:2px solid #CBD5E1; background:#FFFFFF; border-radius:10px; padding:16px; transition:all 0.15s ease;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="radio" name="radioKepemilikan" id="rbKepemilikanSendiri" value="milik_sendiri" style="width:18px; height:18px; accent-color:#005FAC; cursor:pointer;">
+                        <span style="font-weight:800; font-size:0.92rem; color:#0F172A;">Milik Sendiri</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#475569; padding-left:26px;">
+                        Kendaraan pribadi pemohon/pemberi kuasa (bukan sewa/rental).
+                        
+                        <!-- Pertanyaan Biner Balik Nama BPKB/STNK -->
+                        <div id="subBalikNamaWrap" style="display:none; margin-top:12px; padding:10px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px;">
+                            <label style="font-size:0.73rem; font-weight:800; color:#0F172A; display:block; margin-bottom:6px;">
+                                Apakah dokumen kepemilikan kendaraan (BPKB + STNK) belum balik nama?
+                            </label>
+                            <div style="display:flex; gap:10px;">
+                                <label style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:6px; padding:6px 14px; font-size:0.74rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;" id="lblBalikNamaYa">
+                                    <input type="radio" name="radioBalikNama" id="rbBalikNamaYa" value="ya" onchange="selectBalikNamaOption('ya')">
+                                    <span>Ya (Ada Kwitansi Jual Beli)</span>
+                                </label>
+                                <label style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:6px; padding:6px 14px; font-size:0.74rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;" id="lblBalikNamaTidak">
+                                    <input type="radio" name="radioBalikNama" id="rbBalikNamaTidak" value="tidak" onchange="selectBalikNamaOption('tidak')">
+                                    <span>Tidak (Sudah Balik Nama / Tangan Pertama)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pilihan Sewa -->
+                <div id="cardKepemilikanSewa" onclick="selectKepemilikanMode('sewa')" style="cursor:pointer; border:2px solid #CBD5E1; background:#FFFFFF; border-radius:10px; padding:16px; transition:all 0.15s ease;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="radio" name="radioKepemilikan" id="rbKepemilikanSewa" value="sewa" style="width:18px; height:18px; accent-color:#005FAC; cursor:pointer;">
+                        <span style="font-weight:800; font-size:0.92rem; color:#0F172A;">Sewa / Rental</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#475569; padding-left:26px;">
+                        Kendaraan rental resmi berizin operasional di Batam. Anda akan mengunggah KTP Pemilik/PIC Rental dan Surat Perjanjian Sewa bermeterai.
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-secondary" onclick="backToOnboardingStep1()">
+                    ◂ Kembali ke Langkah 1
+                </button>
+                <button type="button" class="btn btn-primary" id="btnNextOnboarding2" onclick="submitOnboardingStep2()" disabled style="opacity:0.5; cursor:not-allowed;">
+                    Lihat Panduan Dokumen ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Layar Panduan Dokumen (Sesuai Tabel B.3 Flowchart) -->
+        <section class="page-card" id="onboardingDocGuide" style="display:none; padding:20px 24px; margin-bottom:16px;">
+            <div style="border-bottom:1.5px solid #E2E8F0; padding-bottom:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <div style="display:inline-block; font-size:0.68rem; font-weight:800; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; border-radius:6px; padding:2px 8px; margin-bottom:4px; text-transform:uppercase;">
+                        Checklist Persiapan Berkas
+                    </div>
+                    <h2 style="font-size:1.05rem; font-weight:800; color:#0F172A; margin:0 0 3px 0;">
+                        Panduan Dokumen yang Harus Disiapkan
+                    </h2>
+                    <p style="font-size:0.76rem; color:#64748B; margin:0;" id="docGuideSubtitle">
+                        Berdasarkan kombinasi status yang Anda pilih, berikut daftar berkas fisik dan pindaian yang wajib disiapkan sebelum mengisi formulir:
+                    </p>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="backToOnboardingStep2()" style="font-size:0.72rem; padding:5px 10px;">
+                    Ubah Status Pengurusan
+                </button>
+            </div>
+
+            <!-- Tabel Dinamis Checklist Dokumen -->
+            <div style="overflow-x:auto; margin-bottom:16px; border:1.5px solid #E2E8F0; border-radius:8px;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; text-align:left;">
+                    <thead style="background:#F8FAFC; border-bottom:1.5px solid #CBD5E1;">
+                        <tr>
+                            <th style="padding:10px 14px; font-weight:800; color:#334155; width:35px;">No</th>
+                            <th style="padding:10px 14px; font-weight:800; color:#334155;">Dokumen Persyaratan</th>
+                            <th style="padding:10px 14px; font-weight:800; color:#334155;">Keterangan &amp; Peruntukan</th>
+                            <th style="padding:10px 14px; font-weight:800; color:#334155; width:110px; text-align:center;">Sifat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="docGuideTableBody">
+                        <!-- Di-generate dinamis oleh renderDocGuideTable() -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:10px 14px; font-size:0.74rem; color:#14532D; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span>Pastikan seluruh berkas difoto/dipindai berwarna dan tulisan terbaca jelas untuk mempercepat proses OCR dan verifikasi petugas.</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-secondary" onclick="backToOnboardingStep2()">
+                    ◂ Ubah Jawaban
+                </button>
+                <button type="button" class="btn btn-primary" onclick="proceedFromDocGuideToForm()" style="background:#059669; font-weight:800;">
+                    Saya Sudah Siapkan Berkas, Lanjut ke Tahap 1 ➔
+                </button>
+            </div>
+        </section>
+
         <!-- Bilah Wizard 4 Tahap Pemohon (Opsi 1) -->
         <div class="page-card" style="margin-bottom:12px; padding:8px 12px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px;">
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
@@ -3979,7 +4160,50 @@
             <div class="split-screen-grid">
                 <!-- SISI KIRI: Area Unggah KTP & NPWP (Klik Kotak Langsung) -->
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <!-- Scanner Card 1: KTP Pemohon -->
+                    <!-- [KHUSUS DIKUASAKAN] Card 0: KTP Wakil (Diri Sendiri yang Login) -->
+                    <div class="scanner-card" id="accWrapKtpWakil" style="display:none; background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:10px; padding:12px; flex-direction:column; box-sizing:border-box;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#14532D; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="8.5" cy="7" r="4"></circle>
+                                    <polyline points="17 11 19 13 23 9"></polyline>
+                                </svg>
+                                KTP Wakil (Diri Sendiri yang Login)
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span id="badgeKtpWakilStatus" class="pabean-badge-waiting">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    Wajib Verifikasi
+                                </span>
+                            </div>
+                        </div>
+                        <div style="font-size:0.70rem; color:#166534; margin-bottom:6px;">
+                            NIK KTP Wakil wajib cocok 100% dengan NIK akun yang sedang login saat ini.
+                        </div>
+                        <div class="preview-box" id="previewKtpWakilBox" onclick="pickFile('ktpWakil')" title="Klik kotak ini untuk unggah foto KTP Wakil" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#FFFFFF; border:1.5px dashed #86EFAC; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                            <div class="laser-line" id="laserKtpWakil" style="display:none;">
+                                <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
+                                <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
+                                <div class="beam-opt1"></div>
+                            </div>
+                            <div id="phKtpWakil" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#15803D; text-align:center; padding:8px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                <span style="font-size:0.74rem; font-weight:700; color:#166534;">Klik di sini untuk unggah foto KTP Wakil</span>
+                                <span style="font-size:0.66rem; color:#4ADE80;">Wajib KTP Asli Berwarna</span>
+                            </div>
+                            <img decoding="async" id="imgKtpWakilPreview" src="" alt="" style="display:none;">
+                            <span class="click-upload-hint" id="hintKtpWakilBox" style="display:none;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                Klik kotak untuk ganti KTP Wakil
+                            </span>
+                        </div>
+                        <!-- Cuplikan Data Hasil OCR KTP Wakil -->
+                        <div id="snippetKtpWakil" class="ocr-snippet-box">Menunggu berkas KTP Wakil diunggah...</div>
+                        <input type="file" id="fileKtpWakilInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ktpWakil')">
+                    </div>
+
+                    <!-- Scanner Card 1: KTP Pemohon / Pihak yang Diwakilkan -->
                     <div class="scanner-card" id="accWrapKtp" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                             <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
@@ -3990,7 +4214,7 @@
                                     <line x1="15" y1="12" x2="17" y2="12"></line>
                                     <line x1="7" y1="16" x2="17" y2="16"></line>
                                 </svg>
-                                KTP Pemohon
+                                <span id="labelKtpTitle">KTP Pemohon</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <span id="accSaveStatusKtp" class="acc-save-status"></span>
@@ -4003,7 +4227,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
+                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;" id="labelKtpSubtitle">
                             Identitas Kependudukan Asli (Wajib Berwarna)
                         </div>
                         <div class="preview-box" id="previewKtpBox" onclick="pickFile('ktp')" title="Klik kotak ini untuk unggah atau ganti foto KTP" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
@@ -4028,7 +4252,7 @@
                         <input type="file" id="fileKtpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'ktp')">
                     </div>
 
-                    <!-- Scanner Card 2: NPWP Pemohon -->
+                    <!-- Scanner Card 2: NPWP Pemohon / Pihak yang Diwakilkan -->
                     <div class="scanner-card" id="accWrapNpwp" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px; padding:12px; display:flex; flex-direction:column; box-sizing:border-box;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
                             <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
@@ -4036,7 +4260,7 @@
                                     <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                                     <line x1="2" y1="10" x2="22" y2="10"></line>
                                 </svg>
-                                NPWP Pemohon
+                                <span id="labelNpwpTitle">NPWP Pemohon</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <span id="accSaveStatusNpwp" class="acc-save-status"></span>
@@ -4049,7 +4273,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;">
+                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;" id="labelNpwpSubtitle">
                             Nomor Pokok Wajib Pajak (15 digit lama atau 16 digit NIK Coretax)
                         </div>
                         <div class="preview-box" id="previewNpwpBox" onclick="pickFile('npwp')" title="Klik kotak ini untuk unggah atau ganti foto NPWP" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#F8FAFC; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
@@ -4073,6 +4297,47 @@
                         <div id="snippetNpwp" class="ocr-snippet-box">Menunggu berkas NPWP diunggah...</div>
                         <input type="file" id="fileNpwpInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'npwp')">
                     </div>
+
+                    <!-- [KHUSUS DIKUASAKAN] Card 3: Surat Kuasa (+ KK / Buku Nikah jika Keluarga Inti) -->
+                    <div class="scanner-card" id="accWrapSuratKuasa" style="display:none; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:10px; padding:12px; flex-direction:column; box-sizing:border-box;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; min-height:24px;">
+                            <div style="font-weight:800; font-size:0.86rem; color:#0F172A; display:flex; align-items:center; gap:6px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <span id="labelSuratKuasaTitle">Surat Kuasa Pengurusan</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span id="badgeSuratKuasaStatus" class="pabean-badge-waiting">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    Menunggu Unggah
+                                </span>
+                            </div>
+                        </div>
+                        <div style="font-size:0.70rem; color:#64748B; margin-bottom:6px;" id="labelSuratKuasaSubtitle">
+                            Surat Kuasa Bermeterai Rp 10.000 (+ KK/Buku Nikah untuk Keluarga Inti)
+                        </div>
+                        <div class="preview-box" id="previewSuratKuasaBox" onclick="pickFile('suratKuasa')" title="Klik kotak ini untuk unggah Surat Kuasa" style="aspect-ratio:1.58/1; border-radius:8px; overflow:hidden; position:relative; background:#FFFFFF; border:1.5px dashed #CBD5E1; display:flex; align-items:center; justify-content:center; margin:0 0 6px 0; cursor:pointer;">
+                            <div class="laser-line" id="laserSuratKuasa" style="display:none;">
+                                <div class="reticle-bracket rb-tl"></div><div class="reticle-bracket rb-tr"></div>
+                                <div class="reticle-bracket rb-bl"></div><div class="reticle-bracket rb-br"></div>
+                                <div class="beam-opt1"></div>
+                            </div>
+                            <div id="phSuratKuasa" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#94A3B8; text-align:center; padding:8px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                <span style="font-size:0.74rem; font-weight:700; color:#005FAC;">Klik di sini untuk unggah Surat Kuasa</span>
+                                <span style="font-size:0.66rem; color:#64748B;">Format PDF atau Foto Berwarna</span>
+                            </div>
+                            <img decoding="async" id="imgSuratKuasaPreview" src="" alt="" style="display:none;">
+                            <span class="click-upload-hint" id="hintSuratKuasaBox" style="display:none;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                Klik kotak untuk ganti Surat Kuasa
+                            </span>
+                        </div>
+                        <div id="snippetSuratKuasa" class="ocr-snippet-box">Menunggu berkas Surat Kuasa diunggah...</div>
+                        <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onFileSelected(event, 'suratKuasa')">
+                    </div>
                 </div>
 
                 <!-- SISI KANAN: Form Identitas & Patokan Terkunci -->
@@ -4089,33 +4354,46 @@
                         </div>
 
                         <div class="form-grid" style="margin-bottom:12px;">
-                            <div class="form-group">
-                                <label class="form-label" for="pemohon_nik">
-                                    NIK (16 Digit)
+                            <div class="form-group" id="groupPemohonNik">
+                                <label class="form-label" for="pemohon_nik" id="labelPemohonNik">
+                                    NIK Pemohon (16 Digit)
                                     <span class="tag-auto" id="tagNikAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
                                 </label>
                                 <input type="text" id="pemohon_nik" class="form-input mono" placeholder="16 digit angka NIK" maxlength="16" oninput="syncValues()">
                             </div>
-                            <div class="form-group">
-                                <label class="form-label" for="pemohon_npwp">
-                                    Nomor NPWP
+                            <div class="form-group" id="groupPemohonNpwp">
+                                <label class="form-label" for="pemohon_npwp" id="labelPemohonNpwp">
+                                    Nomor NPWP Pemohon
                                     <span class="tag-auto" id="tagNpwpAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
                                 </label>
                                 <input type="text" id="pemohon_npwp" class="form-input mono" placeholder="Masukkan 15/16 digit NPWP" oninput="syncValues()">
                             </div>
-                            <div class="form-group full">
-                                <label class="form-label" for="pemohon_nama">
+
+                            <!-- [KHUSUS DIKUASAKAN] Field NPWP Pemberi Kuasa (IK 10.a langkah b) -->
+                            <div class="form-group full" id="groupNpwpPemberiKuasa" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px;">
+                                <label class="form-label" for="npwp_pemberi_kuasa" style="color:#92400E; font-weight:800;">
+                                    NPWP Pemberi Kuasa (Wajib Sesuai IK No. 001/KPUB.02/2025):
+                                    <span class="tag-auto" id="tagNpwpKuasaAuto" style="display:none;">Terisi Otomatis</span>
+                                </label>
+                                <div style="font-size:0.69rem; color:#78350F; margin-bottom:5px;">
+                                    Sesuai IK bagian 10.a langkah b, pada permohonan yang dikuasakan, NPWP yang digunakan secara resmi dalam dokumen kepabeanan adalah NPWP Pemberi Kuasa, bukan NPWP Wakil.
+                                </div>
+                                <input type="text" id="npwp_pemberi_kuasa" class="form-input mono" placeholder="15 atau 16 digit NPWP pemilik kendaraan" style="width:100%; box-sizing:border-box;" oninput="syncValues()">
+                            </div>
+
+                            <div class="form-group full" id="groupPemohonNama">
+                                <label class="form-label" for="pemohon_nama" id="labelPemohonNama">
                                     Nama Lengkap Sesuai KTP
                                     <span class="tag-auto" id="tagNamaAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
                                 </label>
                                 <input type="text" id="pemohon_nama" class="form-input" placeholder="Nama lengkap pemohon sesuai KTP" style="text-transform:uppercase;" oninput="this.value = this.value.toUpperCase(); syncValues();">
                             </div>
-                            <div class="form-group full">
+                            <div class="form-group full" id="groupPemohonTelp">
                                 <label class="form-label" for="pemohon_telp">No. WhatsApp / HP Aktif</label>
                                 <input type="text" id="pemohon_telp" class="form-input mono" placeholder="Contoh: 0812xxxxxxxx" oninput="syncValues()">
                             </div>
-                            <div class="form-group full">
-                                <label class="form-label" for="pemohon_alamat">
+                            <div class="form-group full" id="groupPemohonAlamat">
+                                <label class="form-label" for="pemohon_alamat" id="labelPemohonAlamat">
                                     Alamat Domisili KTP di Batam
                                     <span class="tag-auto" id="tagAlamatAuto" style="display:none;">Terisi Otomatis - Ketik Untuk Perbaiki</span>
                                 </label>
@@ -4255,101 +4533,29 @@
                             <div>
                                 <div style="font-weight:800; font-size:0.86rem; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
                                     <svg class="flat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#005FAC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                                    Status Hubungan Kepemilikan Kendaraan
+                                    Status Dokumen Kendaraan (Kesesuaian BPKB / STNK)
                                 </div>
                                 <div style="font-size:0.70rem; color:var(--text-muted); margin-top:2px;">
-                                    Sesuai <strong>IK No: 001/KPUB.02/2025</strong>, prinsipnya seluruh dokumen atas 1 nama yang sama.
+                                    Sesuai <strong>IK No: 001/KPUB.02/2025</strong>, status pengurusan &amp; kepemilikan telah ditentukan di awal.
                                 </div>
                             </div>
                             <span id="badgeKesesuaianNama" style="font-size:0.68rem; background:#DCFCE7; color:#166534; font-weight:800; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                                ✓ Nama Sesuai (Prinsip 1 Nama)
+                                ✓ Terverifikasi di Awal
                             </span>
                         </div>
 
-                        <!-- Pilihan Radio / Segmented Options -->
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:6px; margin-bottom:10px;">
-                            <label style="cursor:pointer; background:#FFFFFF; border:2px solid #005FAC; border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptMilikSendiri">
-                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanSendiri" value="milik_sendiri" checked onchange="onSwitchStatusKepemilikan('milik_sendiri')">
-                                <div>
-                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Mobil Milik Sendiri</div>
-                                    <div style="font-size:0.65rem; color:var(--text-muted);">Nama Pemohon = Nama BPKB</div>
-                                </div>
-                            </label>
-
-                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptKeluarga">
-                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanKeluarga" value="keluarga" onchange="onSwitchStatusKepemilikan('keluarga')">
-                                <div>
-                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Hubungan Keluarga</div>
-                                    <div style="font-size:0.65rem; color:var(--text-muted);">Suami/Istri/Orang Tua/Anak</div>
-                                </div>
-                            </label>
-
-                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptJualBeli">
-                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanJualBeli" value="jual_beli" onchange="onSwitchStatusKepemilikan('jual_beli')">
-                                <div>
-                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Beli Belum Balik Nama</div>
-                                    <div style="font-size:0.65rem; color:var(--text-muted);">Ada Kwitansi Jual Beli Asli</div>
-                                </div>
-                            </label>
-
-                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptSewa">
-                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanSewa" value="sewa" onchange="onSwitchStatusKepemilikan('sewa')">
-                                <div>
-                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Mobil Sewa / Rental</div>
-                                    <div style="font-size:0.65rem; color:var(--text-muted);">Izin Sewa Rental Resmi</div>
-                                </div>
-                            </label>
-
-                            <label style="cursor:pointer; background:#FFFFFF; border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; align-items:flex-start; gap:6px;" id="lblOptKuasa">
-                                <input type="radio" name="optStatusKepemilikan" id="optKepemilikanKuasa" value="kuasa" onchange="onSwitchStatusKepemilikan('kuasa')">
-                                <div>
-                                    <div style="font-weight:700; font-size:0.76rem; color:var(--text-dark);">Surat Kuasa</div>
-                                    <div style="font-size:0.65rem; color:var(--text-muted);">Surat Kuasa Bermeterai</div>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Bagian Dinamis 1: Hubungan Keluarga -->
-                        <div id="subSectionKeluarga" style="display:none; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:10px; margin-bottom:8px;">
-                            <div style="font-weight:700; font-size:0.78rem; color:#1E40AF; margin-bottom:6px;">
-                                Bukti Legalitas Hubungan Keluarga (Suami-Istri / Orang Tua-Anak):
+                        <!-- Info Singkat Status Terpilih -->
+                        <div id="summaryStatusKepemilikanBox" style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="color:#64748B;">Pengurusan: <strong id="summaryPengurusanText" style="color:#005FAC;">Diurus Sendiri</strong></span>
+                                <span style="color:#64748B;">Kepemilikan: <strong id="summaryKepemilikanText" style="color:#005FAC;">Milik Sendiri</strong></span>
                             </div>
-                            <div class="form-grid" style="margin-bottom:8px;">
-                                <div class="form-group">
-                                    <label class="form-label" for="kel_nama_pemilik">Nama Pemilik Tertera di BPKB/STNK</label>
-                                    <input type="text" id="kel_nama_pemilik" class="form-input" placeholder="Contoh: Nama Suami / Istri sesuai BPKB">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="kel_hubungan">Hubungan Pemohon dengan Pemilik</label>
-                                    <select id="kel_hubungan" class="form-input">
-                                        <option value="Istri Sah (Nama di STNK Suami)">Istri Sah (BPKB atas nama Suami)</option>
-                                        <option value="Suami Sah (Nama di STNK Istri)">Suami Sah (BPKB atas nama Istri)</option>
-                                        <option value="Anak Kandung (Nama di STNK Orang Tua)">Anak Kandung (BPKB atas nama Orang Tua)</option>
-                                        <option value="Orang Tua (Nama di STNK Anak)">Orang Tua (BPKB atas nama Anak)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
-                                <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:8px;">
-                                    <div style="font-size:0.72rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">1. Buku Nikah / Kartu Keluarga</div>
-                                    <div class="preview-box" id="previewBukuNikahBox" onclick="openUploadSourceModal('bukuNikah')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
-                                        <img decoding="async" id="imgBukuNikahPreview" src="" alt="Pratinjau Buku Nikah / KK">
-                                    </div>
-                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('bukuNikah')">Pilih Berkas Buku Nikah / KK</button>
-                                    <input type="file" id="fileBukuNikahInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'bukuNikah')">
-                                </div>
-                                <div style="background:#FFFFFF; border:1px solid #93C5FD; border-radius:6px; padding:8px;">
-                                    <div style="font-size:0.72rem; font-weight:700; color:#1E3A8A; margin-bottom:4px;">2. KTP Pemilik Asli (Suami / Istri)</div>
-                                    <div class="preview-box" id="previewKtpPasanganBox" onclick="openUploadSourceModal('ktpPasangan')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
-                                        <img decoding="async" id="imgKtpPasanganPreview" src="" alt="Pratinjau KTP Pasangan">
-                                    </div>
-                                    <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('ktpPasangan')">Pilih Berkas KTP Pasangan</button>
-                                    <input type="file" id="fileKtpPasanganInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'ktpPasangan')">
-                                </div>
+                            <div id="summaryDetailKetentuan" style="color:#475569; font-size:0.71rem; line-height:1.4;">
+                                Seluruh dokumen kepemilikan atas nama pemohon langsung.
                             </div>
                         </div>
 
-                        <!-- Bagian Dinamis 2: Beli Belum Balik Nama -->
+                        <!-- Bagian Dinamis: Beli Belum Balik Nama -->
                         <div id="subSectionJualBeli" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px; margin-bottom:8px;">
                             <div style="font-weight:700; font-size:0.78rem; color:#92400E; margin-bottom:6px;">
                                 Bukti Transaksi Jual Beli (IK 001/KPUB.02/2025 Bagian 5.a.2.e):
@@ -4384,7 +4590,7 @@
                             </div>
                         </div>
 
-                        <!-- Bagian Dinamis 3: Mobil Sewa / Rental -->
+                        <!-- Bagian Dinamis: Mobil Sewa / Rental -->
                         <div id="subSectionSewa" style="display:none; background:#F5F3FF; border:1px solid #DDD6FE; border-radius:6px; padding:10px; margin-bottom:8px;">
                             <div style="font-weight:700; font-size:0.78rem; color:#6D28D9; margin-bottom:6px;">
                                 Bukti Perjanjian Sewa Kendaraan (IK 001/KPUB.02/2025 Bagian 10.b.4):
@@ -4418,31 +4624,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Bagian Dinamis 4: Dikuasakan -->
-                        <div id="subSectionKuasa" style="display:none; background:#F8FAFC; border:1px solid #CBD5E1; border-radius:6px; padding:10px; margin-bottom:8px;">
-                            <div style="font-weight:700; font-size:0.78rem; color:#334155; margin-bottom:6px;">
-                                Surat Kuasa Khusus Pengurusan (IK 001/KPUB.02/2025 Bagian 10.b.4 &amp; 10.g.2):
-                            </div>
-                            <div class="form-grid" style="margin-bottom:8px;">
-                                <div class="form-group">
-                                    <label class="form-label" for="kuasa_nama_pemberi">Nama Pemberi Kuasa (Sesuai BPKB)</label>
-                                    <input type="text" id="kuasa_nama_pemberi" class="form-input" placeholder="Nama pemilik sah pemberi kuasa">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="kuasa_nomor_surat">Nomor / Tanggal Surat Kuasa</label>
-                                    <input type="text" id="kuasa_nomor_surat" class="form-input" placeholder="Contoh: SK-01/X/2026">
-                                </div>
-                            </div>
-                            <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; padding:8px;">
-                                <div style="font-size:0.72rem; font-weight:700; color:#334155; margin-bottom:4px;">Surat Kuasa Khusus Bermeterai Rp 10.000</div>
-                                <div class="preview-box" id="previewSuratKuasaBox" onclick="openUploadSourceModal('suratKuasa')" style="display:none; aspect-ratio:1.58/1; margin-bottom:4px; cursor:pointer;">
-                                    <img decoding="async" id="imgSuratKuasaPreview" src="" alt="Pratinjau Surat Kuasa">
-                                </div>
-                                <button type="button" class="btn btn-outline" style="width:100%; justify-content:center; font-size:0.70rem;" onclick="openUploadSourceModal('suratKuasa')">Pilih Berkas Surat Kuasa</button>
-                                <input type="file" id="fileSuratKuasaInput" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="onSupportingDocSelected(event, 'suratKuasa')">
-                            </div>
-                        </div>
+                    </div>
                     </div>
                 </div>
 
@@ -6092,6 +6274,374 @@
             goToPage(4);
         }
 
+        // ================= VARIABEL & FUNGSI ONBOARDING STATUS & PANDUAN DOKUMEN (BAGIAN B, C, D) =================
+        let onboardingState = {
+            pengurusan: 'sendiri',
+            kuasaTipe: '',
+            kepemilikan: 'milik_sendiri',
+            balikNama: 'tidak'
+        };
+        let onboardingCompleted = false;
+        let uploadedKtpWakilDataUrl = '';
+        let uploadedSuratKuasaDataUrl = '';
+
+        function selectPengurusanMode(mode) {
+            onboardingState.pengurusan = mode;
+            const cardSendiri = document.getElementById('cardPengurusanSendiri');
+            const cardKuasa = document.getElementById('cardPengurusanKuasa');
+            const rbSendiri = document.getElementById('rbPengurusanSendiri');
+            const rbKuasa = document.getElementById('rbPengurusanKuasa');
+            const subWrap = document.getElementById('subPilihanKuasaWrap');
+            const btnNext = document.getElementById('btnNextOnboarding1');
+
+            if (mode === 'sendiri') {
+                if (cardSendiri) { cardSendiri.style.borderColor = '#005FAC'; cardSendiri.style.background = '#EFF6FF'; }
+                if (cardKuasa) { cardKuasa.style.borderColor = '#CBD5E1'; cardKuasa.style.background = '#FFFFFF'; }
+                if (rbSendiri) rbSendiri.checked = true;
+                if (rbKuasa) rbKuasa.checked = false;
+                if (subWrap) subWrap.style.display = 'none';
+                onboardingState.kuasaTipe = '';
+                if (btnNext) {
+                    btnNext.disabled = false;
+                    btnNext.style.opacity = '1';
+                    btnNext.style.cursor = 'pointer';
+                }
+            } else if (mode === 'kuasa') {
+                if (cardKuasa) { cardKuasa.style.borderColor = '#005FAC'; cardKuasa.style.background = '#EFF6FF'; }
+                if (cardSendiri) { cardSendiri.style.borderColor = '#CBD5E1'; cardSendiri.style.background = '#FFFFFF'; }
+                if (rbKuasa) rbKuasa.checked = true;
+                if (rbSendiri) rbSendiri.checked = false;
+                if (subWrap) subWrap.style.display = 'block';
+                if (!onboardingState.kuasaTipe) {
+                    selectKuasaSubTipe('keluarga_inti');
+                } else {
+                    if (btnNext) {
+                        btnNext.disabled = false;
+                        btnNext.style.opacity = '1';
+                        btnNext.style.cursor = 'pointer';
+                    }
+                }
+            }
+        }
+
+        function selectKuasaSubTipe(tipe) {
+            onboardingState.kuasaTipe = tipe;
+            const lblKeluarga = document.getElementById('lblKuasaKeluarga');
+            const lblNonKeluarga = document.getElementById('lblKuasaNonKeluarga');
+            const rbKeluarga = document.getElementById('rbKuasaKeluarga');
+            const rbNonKeluarga = document.getElementById('rbKuasaNonKeluarga');
+            const btnNext = document.getElementById('btnNextOnboarding1');
+
+            if (tipe === 'keluarga_inti') {
+                if (lblKeluarga) { lblKeluarga.style.borderColor = '#005FAC'; lblKeluarga.style.background = '#EFF6FF'; lblKeluarga.style.color = '#005FAC'; }
+                if (lblNonKeluarga) { lblNonKeluarga.style.borderColor = '#CBD5E1'; lblNonKeluarga.style.background = '#FFFFFF'; lblNonKeluarga.style.color = '#334155'; }
+                if (rbKeluarga) rbKeluarga.checked = true;
+                if (rbNonKeluarga) rbNonKeluarga.checked = false;
+            } else {
+                if (lblNonKeluarga) { lblNonKeluarga.style.borderColor = '#005FAC'; lblNonKeluarga.style.background = '#EFF6FF'; lblNonKeluarga.style.color = '#005FAC'; }
+                if (lblKeluarga) { lblKeluarga.style.borderColor = '#CBD5E1'; lblKeluarga.style.background = '#FFFFFF'; lblKeluarga.style.color = '#334155'; }
+                if (rbNonKeluarga) rbNonKeluarga.checked = true;
+                if (rbKeluarga) rbKeluarga.checked = false;
+            }
+            if (btnNext) {
+                btnNext.disabled = false;
+                btnNext.style.opacity = '1';
+                btnNext.style.cursor = 'pointer';
+            }
+        }
+
+        function submitOnboardingStep1() {
+            if (!onboardingState.pengurusan) return;
+            const s1 = document.getElementById('onboardingStep1');
+            const s2 = document.getElementById('onboardingStep2');
+            if (s1) s1.style.display = 'none';
+            if (s2) {
+                s2.style.display = 'block';
+                s2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function backToOnboardingStep1() {
+            const s1 = document.getElementById('onboardingStep1');
+            const s2 = document.getElementById('onboardingStep2');
+            const dg = document.getElementById('onboardingDocGuide');
+            if (s2) s2.style.display = 'none';
+            if (dg) dg.style.display = 'none';
+            if (s1) {
+                s1.style.display = 'block';
+                s1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function selectKepemilikanMode(mode) {
+            onboardingState.kepemilikan = mode;
+            const cardSendiri = document.getElementById('cardKepemilikanSendiri');
+            const cardSewa = document.getElementById('cardKepemilikanSewa');
+            const rbSendiri = document.getElementById('rbKepemilikanSendiri');
+            const rbSewa = document.getElementById('rbKepemilikanSewa');
+            const subWrap = document.getElementById('subBalikNamaWrap');
+            const btnNext = document.getElementById('btnNextOnboarding2');
+
+            if (mode === 'milik_sendiri') {
+                if (cardSendiri) { cardSendiri.style.borderColor = '#005FAC'; cardSendiri.style.background = '#EFF6FF'; }
+                if (cardSewa) { cardSewa.style.borderColor = '#CBD5E1'; cardSewa.style.background = '#FFFFFF'; }
+                if (rbSendiri) rbSendiri.checked = true;
+                if (rbSewa) rbSewa.checked = false;
+                if (subWrap) subWrap.style.display = 'block';
+                if (!onboardingState.balikNama) {
+                    selectBalikNamaOption('tidak');
+                } else {
+                    if (btnNext) {
+                        btnNext.disabled = false;
+                        btnNext.style.opacity = '1';
+                        btnNext.style.cursor = 'pointer';
+                    }
+                }
+            } else if (mode === 'sewa') {
+                if (cardSewa) { cardSewa.style.borderColor = '#005FAC'; cardSewa.style.background = '#EFF6FF'; }
+                if (cardSendiri) { cardSendiri.style.borderColor = '#CBD5E1'; cardSendiri.style.background = '#FFFFFF'; }
+                if (rbSewa) rbSewa.checked = true;
+                if (rbSendiri) rbSendiri.checked = false;
+                if (subWrap) subWrap.style.display = 'none';
+                onboardingState.balikNama = '';
+                if (btnNext) {
+                    btnNext.disabled = false;
+                    btnNext.style.opacity = '1';
+                    btnNext.style.cursor = 'pointer';
+                }
+            }
+        }
+
+        function selectBalikNamaOption(opt) {
+            onboardingState.balikNama = opt;
+            const lblYa = document.getElementById('lblBalikNamaYa');
+            const lblTidak = document.getElementById('lblBalikNamaTidak');
+            const rbYa = document.getElementById('rbBalikNamaYa');
+            const rbTidak = document.getElementById('rbBalikNamaTidak');
+            const btnNext = document.getElementById('btnNextOnboarding2');
+
+            if (opt === 'ya') {
+                if (lblYa) { lblYa.style.borderColor = '#005FAC'; lblYa.style.background = '#EFF6FF'; lblYa.style.color = '#005FAC'; }
+                if (lblTidak) { lblTidak.style.borderColor = '#CBD5E1'; lblTidak.style.background = '#FFFFFF'; lblTidak.style.color = '#334155'; }
+                if (rbYa) rbYa.checked = true;
+                if (rbTidak) rbTidak.checked = false;
+            } else {
+                if (lblTidak) { lblTidak.style.borderColor = '#005FAC'; lblTidak.style.background = '#EFF6FF'; lblTidak.style.color = '#005FAC'; }
+                if (lblYa) { lblYa.style.borderColor = '#CBD5E1'; lblYa.style.background = '#FFFFFF'; lblYa.style.color = '#334155'; }
+                if (rbTidak) rbTidak.checked = true;
+                if (rbYa) rbYa.checked = false;
+            }
+            if (btnNext) {
+                btnNext.disabled = false;
+                btnNext.style.opacity = '1';
+                btnNext.style.cursor = 'pointer';
+            }
+        }
+
+        function submitOnboardingStep2() {
+            if (!onboardingState.kepemilikan) return;
+            const s2 = document.getElementById('onboardingStep2');
+            const dg = document.getElementById('onboardingDocGuide');
+            if (s2) s2.style.display = 'none';
+            renderDocGuideTable();
+            if (dg) {
+                dg.style.display = 'block';
+                dg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function backToOnboardingStep2() {
+            const s2 = document.getElementById('onboardingStep2');
+            const dg = document.getElementById('onboardingDocGuide');
+            if (dg) dg.style.display = 'none';
+            if (s2) {
+                s2.style.display = 'block';
+                s2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function renderDocGuideTable() {
+            const tbody = document.getElementById('docGuideTableBody');
+            const subTitle = document.getElementById('docGuideSubtitle');
+            if (!tbody) return;
+
+            let items = [
+                {
+                    nama: 'KTP Asli',
+                    ket: onboardingState.pengurusan === 'kuasa' ? 'KTP Pihak yang Diwakilkan (Pemilik / Penyewa Kendaraan)' : 'KTP Pemohon Pribadi (Asli Berwarna, Masih Berlaku)',
+                    sifat: 'Wajib Universal'
+                },
+                {
+                    nama: 'NPWP Asli',
+                    ket: onboardingState.pengurusan === 'kuasa' ? 'NPWP Pihak yang Diwakilkan (15 atau 16 Digit NIK Coretax)' : 'NPWP Pemohon Pribadi (15 atau 16 Digit NIK Coretax)',
+                    sifat: 'Wajib Universal'
+                },
+                {
+                    nama: 'STNK Asli (2 Lembar)',
+                    ket: 'Lembar 1 (PKB / TBPKP Penetapan Pajak) & Lembar 2 (Identitas Kendaraan Bermotor)',
+                    sifat: 'Wajib Universal'
+                },
+                {
+                    nama: 'BPKB / Surat Leasing',
+                    ket: 'BPKB Asli atau Surat Keterangan / Rekomendasi Resmi Asli dari Leasing / Bank',
+                    sifat: 'Wajib Universal'
+                },
+                {
+                    nama: 'SIM Pengemudi',
+                    ket: 'Surat Izin Mengemudi (SIM A/C) yang masih berlaku sesuai jenis kendaraan',
+                    sifat: 'Wajib Universal'
+                },
+                {
+                    nama: 'Foto Fisik Kendaraan',
+                    ket: '6 Sudut: Tampak Depan, Belakang, Kanan, Kiri, Gesekan/Foto No. Rangka, Foto No. Mesin',
+                    sifat: 'Wajib Universal'
+                }
+            ];
+
+            if (onboardingState.pengurusan === 'kuasa') {
+                items.push({
+                    nama: 'KTP Penerima Kuasa (Wakil)',
+                    ket: 'KTP Asli milik Anda sendiri yang sedang login (NIK harus cocok 100% dengan akun login)',
+                    sifat: 'Khusus Kuasa'
+                });
+                if (onboardingState.kuasaTipe === 'keluarga_inti') {
+                    items.push({
+                        nama: 'Surat Kuasa & Dokumen Keluarga',
+                        ket: 'Surat Kuasa Sederhana bermeterai Rp 10.000 + Kartu Keluarga (KK) / Buku Nikah Asli',
+                        sifat: 'Keluarga Inti'
+                    });
+                } else {
+                    items.push({
+                        nama: 'Surat Kuasa Khusus',
+                        ket: 'Surat Kuasa Khusus bermeterai Rp 10.000 (menyebutkan spesifik unit kendaraan & rute)',
+                        sifat: 'Bukan Keluarga'
+                    });
+                }
+            }
+
+            if (onboardingState.kepemilikan === 'milik_sendiri' && onboardingState.balikNama === 'ya') {
+                items.push({
+                    nama: 'Bukti Peralihan Hak',
+                    ket: 'Kwitansi Jual Beli bermeterai Rp 10.000 (+ Fotokopi KTP Pemilik lama sesuai BPKB/STNK)',
+                    sifat: 'Belum Balik Nama'
+                });
+            } else if (onboardingState.kepemilikan === 'sewa') {
+                items.push({
+                    nama: 'KTP Pemilik / PIC Rental',
+                    ket: 'KTP Asli pemilik rental mobil / penanggung jawab operasional rental di Batam',
+                    sifat: 'Khusus Rental'
+                });
+                items.push({
+                    nama: 'Surat Perjanjian Sewa',
+                    ket: 'Surat Perjanjian Sewa Menyewa bermeterai Rp 10.000 berizin resmi operasional Batam',
+                    sifat: 'Khusus Rental'
+                });
+            }
+
+            let rowsHtml = '';
+            items.forEach((it, idx) => {
+                const isUniversal = it.sifat.includes('Universal');
+                const badgeColor = isUniversal ? 'background:#EFF6FF; color:#005FAC; border:1px solid #BFDBFE;' : 'background:#FEF3C7; color:#92400E; border:1px solid #FDE68A;';
+                rowsHtml += `
+                    <tr style="border-bottom:1px solid #E2E8F0; ${idx % 2 === 1 ? 'background:#F8FAFC;' : ''}">
+                        <td style="padding:10px 14px; font-weight:800; color:#64748B;">${idx + 1}</td>
+                        <td style="padding:10px 14px; font-weight:700; color:#0F172A;">${it.nama}</td>
+                        <td style="padding:10px 14px; color:#475569; font-size:0.75rem;">${it.ket}</td>
+                        <td style="padding:10px 14px; text-align:center;">
+                            <span style="display:inline-block; font-size:0.68rem; font-weight:800; padding:3px 8px; border-radius:6px; ${badgeColor}">
+                                ${it.sifat}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            if (subTitle) {
+                const textPengurusan = onboardingState.pengurusan === 'sendiri' ? 'Diurus Sendiri Secara Langsung' : `Dikuasakan (${onboardingState.kuasaTipe === 'keluarga_inti' ? 'Keluarga Inti' : 'Bukan Keluarga'})`;
+                const textKepemilikan = onboardingState.kepemilikan === 'milik_sendiri' ? `Milik Sendiri (${onboardingState.balikNama === 'ya' ? 'Belum Balik Nama' : 'Sudah Balik Nama'})` : 'Sewa / Rental';
+                subTitle.innerHTML = `Status Anda: <strong>${textPengurusan}</strong> • Kepemilikan: <strong>${textKepemilikan}</strong>. Total <strong>${items.length} berkas</strong> wajib disiapkan:`;
+            }
+        }
+
+        function proceedFromDocGuideToForm() {
+            onboardingCompleted = true;
+            const dg = document.getElementById('onboardingDocGuide');
+            if (dg) dg.style.display = 'none';
+
+            const wizardCard = document.getElementById('wizardStepBtn1')?.closest('.page-card');
+            if (wizardCard) wizardCard.style.display = 'block';
+
+            applyOnboardingStateToForm();
+            goToPage(1);
+            scheduleAutosave();
+        }
+
+        function applyOnboardingStateToForm() {
+            const wrapKtpWakil = document.getElementById('accWrapKtpWakil');
+            const wrapSuratKuasa = document.getElementById('accWrapSuratKuasa');
+            const grpNpwpKuasa = document.getElementById('groupNpwpPemberiKuasa');
+            const lblKtpTitle = document.getElementById('labelKtpTitle');
+            const lblNpwpTitle = document.getElementById('labelNpwpTitle');
+            const lblNama = document.getElementById('labelPemohonNama');
+            const lblNik = document.getElementById('labelPemohonNik');
+            const lblSuratKuasaSub = document.getElementById('labelSuratKuasaSubtitle');
+
+            if (onboardingState.pengurusan === 'kuasa') {
+                if (wrapKtpWakil) wrapKtpWakil.style.display = 'flex';
+                if (wrapSuratKuasa) wrapSuratKuasa.style.display = 'flex';
+                const boxSk = document.getElementById('previewSuratKuasaBox');
+                if (boxSk) boxSk.style.display = 'flex';
+                if (grpNpwpKuasa) grpNpwpKuasa.style.display = 'block';
+
+                if (lblKtpTitle) lblKtpTitle.innerText = 'KTP Pihak yang Diwakilkan (Pemilik/Penyewa)';
+                if (lblNpwpTitle) lblNpwpTitle.innerText = 'NPWP Pihak yang Diwakilkan (Pemilik/Penyewa)';
+                if (lblNama) lblNama.innerText = 'Nama Pihak yang Diwakilkan Sesuai KTP';
+                if (lblNik) lblNik.innerText = 'NIK Pihak yang Diwakilkan (16 Digit)';
+
+                // Pada kasus Dikuasakan, jangan isi otomatis data pihak yang diwakilkan dengan akun Wakil
+                const elNik = document.getElementById('pemohon_nik');
+                const elNama = document.getElementById('pemohon_nama');
+                const sessUser = (currentAuthSession && currentAuthSession.user) || {};
+                if (elNik && sessUser.nik && elNik.value === sessUser.nik) {
+                    elNik.value = (docOcrStore.ktp && docOcrStore.ktp.nik) || '';
+                    if (!elNik.value) elNik.classList.remove('filled');
+                }
+                if (elNama && sessUser.nama && elNama.value.toUpperCase() === (sessUser.nama || '').toUpperCase()) {
+                    elNama.value = (docOcrStore.ktp && docOcrStore.ktp.nama) || '';
+                    if (!elNama.value) elNama.classList.remove('filled');
+                }
+
+                if (lblSuratKuasaSub) {
+                    lblSuratKuasaSub.innerText = (onboardingState.kuasaTipe === 'keluarga_inti')
+                        ? 'Surat Kuasa Bermeterai Rp 10.000 + Wajib Lampirkan KK / Buku Nikah'
+                        : 'Surat Kuasa Khusus Bermeterai Rp 10.000 (Menyebutkan Unit & Rute)';
+                }
+            } else {
+                if (wrapKtpWakil) wrapKtpWakil.style.display = 'none';
+                if (wrapSuratKuasa) wrapSuratKuasa.style.display = 'none';
+                if (grpNpwpKuasa) grpNpwpKuasa.style.display = 'none';
+
+                if (lblKtpTitle) lblKtpTitle.innerText = 'KTP Pemohon';
+                if (lblNpwpTitle) lblNpwpTitle.innerText = 'NPWP Pemohon';
+                if (lblNama) lblNama.innerText = 'Nama Lengkap Sesuai KTP';
+                if (lblNik) lblNik.innerText = 'NIK Pemohon (16 Digit)';
+
+                // Pada kasus Diurus Sendiri, pulihkan kembali dari akun jika field masih kosong
+                const elNik = document.getElementById('pemohon_nik');
+                const elNama = document.getElementById('pemohon_nama');
+                const sessUser = (currentAuthSession && currentAuthSession.user) || {};
+                if (elNik && !elNik.value && sessUser.nik) {
+                    elNik.value = sessUser.nik;
+                    elNik.classList.add('filled');
+                }
+                if (elNama && !elNama.value && sessUser.nama) {
+                    elNama.value = sessUser.nama;
+                    elNama.classList.add('filled');
+                }
+            }
+        }
+
         function setStepActive(pageNum) {
             currentPage = pageNum;
             for (let i = 1; i <= 4; i++) {
@@ -7534,16 +8084,17 @@
                 document.getElementById('tagBpkbAuto').style.display = 'none';
             }
 
-            const mainTargets = ['ktp', 'npwp', 'ownership', 'stnk', 'stnk_2'];
+            const mainTargets = ['ktp', 'npwp', 'ownership', 'stnk', 'stnk_2', 'ktpWakil'];
             const isOwnershipExtra = (target === 'ownership_2' || target === 'ownership_3' || /^ownership_leasing_\d+$/.test(target));
             if (mainTargets.includes(target)) {
-                const boxMap = { ktp: 'previewKtpBox', npwp: 'previewNpwpBox', ownership: 'previewOwnershipBox', stnk: 'previewStnkBox', stnk_2: 'previewStnk2Box' };
+                const boxMap = { ktp: 'previewKtpBox', npwp: 'previewNpwpBox', ownership: 'previewOwnershipBox', stnk: 'previewStnkBox', stnk_2: 'previewStnk2Box', ktpWakil: 'previewKtpWakilBox' };
                 const box = document.getElementById(boxMap[target]);
                 if (box) box.style.display = 'flex';
             }
 
             const docLabels = {
                 'ktp': 'KTP Pemohon',
+                'ktpWakil': 'KTP Wakil (Penerima Kuasa)',
                 'npwp': 'Kartu NPWP',
                 'ownership': (currentOwnershipDocType === 'bpkb' ? 'BPKB Hal. 1' : 'Surat Keterangan Leasing/Bank Lembar 1'),
                 'ownership_2': (currentOwnershipDocType === 'bpkb' ? 'BPKB Hal. 2' : 'Surat Keterangan Leasing/Bank Lembar 2'),
@@ -7611,6 +8162,19 @@
                             if (box && img) {
                                 img.src = finalDocUrl;
                                 box.style.display = 'block';
+                            }
+                            if (target === 'suratKuasa') {
+                                uploadedSuratKuasaDataUrl = finalDocUrl;
+                                const b = document.getElementById('badgeSuratKuasaStatus');
+                                if (b) {
+                                    b.className = 'pabean-badge-verified';
+                                    b.innerText = '✓ Terunggah';
+                                    b.style.background = '#DCFCE7';
+                                    b.style.color = '#166534';
+                                }
+                                const sn = document.getElementById('snippetSuratKuasa');
+                                if (sn) sn.innerText = 'Surat Kuasa siap dilampirkan.';
+                                scheduleAutosave();
                             }
                         }
                     });
@@ -7824,11 +8388,13 @@
                 if (ph) ph.style.color = '#005FAC';
             });
 
-            // Sembunyikan kotak dokumen pendukung
-            ['previewBukuNikahBox', 'previewKtpPasanganBox', 'previewKwitansiBox', 'previewKtpPenjualBox', 'previewSuratSewaBox', 'previewKtpRentalBox', 'previewSuratKuasaBox'].forEach(boxId => {
+            // Sembunyikan kotak dokumen pendukung Tahap 2
+            ['previewBukuNikahBox', 'previewKtpPasanganBox', 'previewKwitansiBox', 'previewKtpPenjualBox', 'previewSuratSewaBox', 'previewKtpRentalBox'].forEach(boxId => {
                 const box = document.getElementById(boxId);
                 if (box) box.style.display = 'none';
             });
+            const boxSk = document.getElementById('previewSuratKuasaBox');
+            if (boxSk) boxSk.style.display = 'flex';
 
             // Sembunyikan hint ganti
             document.querySelectorAll('.click-upload-hint').forEach(hint => {
@@ -8224,7 +8790,7 @@
         let _draftRestoring = false;
 
         function _collectDraftFieldsSnapshot() {
-            const ids = ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'pemohon_alamat', 'pemohon_telp',
+            const ids = ['pemohon_nik', 'pemohon_nama', 'pemohon_npwp', 'npwp_pemberi_kuasa', 'pemohon_alamat', 'pemohon_telp',
                 'kbm_nopol', 'kbm_nostnk', 'kbm_nobpkb', 'kbm_norangka', 'kbm_nomesin', 'kbm_merek',
                 'kbm_tahun', 'kbm_warna', 'kbm_njkb',
                 'rute_tujuan', 'tgl_keluar', 'tgl_kembali', 'keperluan'];
@@ -8237,7 +8803,8 @@
         }
 
         function _collectDraftImagesSnapshot() {
-            const imgIds = ['imgKtpPreview', 'imgNpwpPreview', 'imgStnkPreview', 'imgStnk2Preview',
+            const imgIds = ['imgKtpPreview', 'imgNpwpPreview', 'imgKtpWakilPreview', 'imgSuratKuasaPreview',
+                'imgStnkPreview', 'imgStnk2Preview',
                 'imgOwnershipPreview', 'imgOwnership2Preview', 'imgOwnership3Preview',
                 'imgPhDepan', 'imgPhBelakang', 'imgPhKanan', 'imgPhKiri', 'imgPhRangka', 'imgPhMesin'];
             for (let i = 1; i <= 10; i++) {
@@ -8264,6 +8831,7 @@
                 if (!token) return false;
                 if (!currentAuthSession || currentAuthSession.role !== 'pemohon') return false;
                 const patch = {
+                    onboarding_state: onboardingState,
                     fields: _collectDraftFieldsSnapshot(),
                     ocr: docOcrStore,
                     images: _collectDraftImagesSnapshot(),
@@ -8315,8 +8883,35 @@
                 const draft = data.draft || {};
                 if (!draft || (!draft.fields && !draft.ocr && !draft.images)) return;
 
+                // Pulihkan State Onboarding Pengurusan & Kepemilikan jika tersimpan di draf
+                const draftOnboard = draft.onboarding_state || {};
+                const isKuasaMode = draftOnboard.pengurusan === 'kuasa' || onboardingState.pengurusan === 'kuasa';
+                if (draftOnboard.pengurusan && draftOnboard.kepemilikan) {
+                    onboardingState = Object.assign(onboardingState, draftOnboard);
+                    onboardingCompleted = true;
+                    const s1 = document.getElementById('onboardingStep1');
+                    const s2 = document.getElementById('onboardingStep2');
+                    const dg = document.getElementById('onboardingDocGuide');
+                    if (s1) s1.style.display = 'none';
+                    if (s2) s2.style.display = 'none';
+                    if (dg) dg.style.display = 'none';
+                    const wizardCard = document.getElementById('wizardStepBtn1')?.closest('.page-card');
+                    if (wizardCard) wizardCard.style.display = 'block';
+                    applyOnboardingStateToForm();
+                    try { setStepActive(currentPage || 1); } catch (e) {}
+                }
+
+                // Pada mode Dikuasakan, pastikan data NIK & Nama pihak yang diwakilkan tidak terkontaminasi akun Wakil
+                if (isKuasaMode && currentAuthSession && currentAuthSession.user) {
+                    const sessUser = currentAuthSession.user;
+                    if (draft.fields) {
+                        if (draft.fields.pemohon_nik === sessUser.nik) delete draft.fields.pemohon_nik;
+                        if (draft.fields.pemohon_nama && draft.fields.pemohon_nama.toUpperCase() === (sessUser.nama || '').toUpperCase()) delete draft.fields.pemohon_nama;
+                    }
+                }
+
                 // Anti-Kebocoran Data: Validasi identitas pemilik draf sebelum dipulihkan
-                if (currentAuthSession && currentAuthSession.user) {
+                if (currentAuthSession && currentAuthSession.user && !isKuasaMode) {
                     const sessNama = _normCmp(currentAuthSession.user.nama || '');
                     const sessPhone = (currentAuthSession.user.phone || '').replace(/[^0-9]/g, '');
                     const sessNik = _normCmp(currentAuthSession.user.nik || '');
@@ -8430,6 +9025,30 @@
                         }
                         if (id === 'imgOwnershipPreview') {
                             uploadedOwnershipDataUrl = src;
+                        }
+                        if (id === 'imgKtpWakilPreview') {
+                            uploadedKtpWakilDataUrl = src;
+                            const snip = document.getElementById('snippetKtpWakil');
+                            if (snip) snip.innerText = 'KTP Wakil dipulihkan dari draf.';
+                            const badge = document.getElementById('badgeKtpWakilStatus');
+                            if (badge) {
+                                badge.className = 'pabean-badge-verified';
+                                badge.innerText = '✓ Terverifikasi';
+                                badge.style.background = '#DCFCE7';
+                                badge.style.color = '#166534';
+                            }
+                        }
+                        if (id === 'imgSuratKuasaPreview') {
+                            uploadedSuratKuasaDataUrl = src;
+                            const snip = document.getElementById('snippetSuratKuasa');
+                            if (snip) snip.innerText = 'Surat Kuasa dipulihkan dari draf.';
+                            const badge = document.getElementById('badgeSuratKuasaStatus');
+                            if (badge) {
+                                badge.className = 'pabean-badge-verified';
+                                badge.innerText = '✓ Terunggah';
+                                badge.style.background = '#DCFCE7';
+                                badge.style.color = '#166534';
+                            }
                         }
                         if (typeof carPhotoElements !== 'undefined' && Array.isArray(carPhotoElements)) {
                             const carIdx = carPhotoElements.indexOf(id);
@@ -8657,6 +9276,73 @@
 
         async function runRealOCR(target, imgUrl, rawPdfUrlForOcr = null) {
             const ocrPayloadUrl = rawPdfUrlForOcr || imgUrl;
+
+            if (target === 'ktpWakil') {
+                uploadedKtpWakilDataUrl = imgUrl;
+                const box = document.getElementById('previewKtpWakilBox');
+                const img = document.getElementById('imgKtpWakilPreview');
+                const ph = document.getElementById('phKtpWakil');
+                const laser = document.getElementById('laserKtpWakil');
+                const snip = document.getElementById('snippetKtpWakil');
+                const badge = document.getElementById('badgeKtpWakilStatus');
+
+                if (ph) ph.style.display = 'none';
+                if (img) { img.style.display = 'block'; img.src = imgUrl; }
+                if (box) box.style.display = 'flex';
+                if (laser) laser.style.display = 'block';
+                if (badge) {
+                    badge.innerText = 'Memindai KTP Wakil...';
+                    badge.style.background = '#FEF3C7';
+                    badge.style.color = '#92400E';
+                }
+
+                try {
+                    const ocrRes = await fetchOCR('ktp', ocrPayloadUrl);
+                    const bestCropped = await resolveBestCrop(ocrRes, imgUrl, rawPdfUrlForOcr, 'ktp');
+                    if (bestCropped && img) {
+                        uploadedKtpWakilDataUrl = bestCropped;
+                        img.src = bestCropped;
+                    }
+                    const rawText = (ocrRes && ocrRes.text) ? ocrRes.text : '';
+                    const serverParsed = (ocrRes && ocrRes.parsed) ? ocrRes.parsed : {};
+                    const clientParsed = parseKtpTextRobust(rawText);
+                    const finalData = Object.assign({}, clientParsed, serverParsed);
+
+                    // Validasi Kritis: NIK KTP Wakil WAJIB COCOK dengan NIK akun sesi login
+                    const sessNik = (currentAuthSession && currentAuthSession.user && currentAuthSession.user.nik) ? String(currentAuthSession.user.nik).trim() : '';
+                    const ocrNik = (finalData.nik) ? String(finalData.nik).trim() : '';
+
+                    if (sessNik && ocrNik && sessNik !== ocrNik) {
+                        await showAppAlert(`⛔ NIK pada KTP Wakil (${ocrNik}) TIDAK COCOK dengan NIK akun login Anda (${sessNik}). Sesuai IK No. 001/KPUB.02/2025, Penerima Kuasa wajib mengunggah KTP miliknya sendiri yang terdaftar pada akun portal ini.`, 'error');
+                        if (img) { img.style.display = 'none'; img.src = ''; }
+                        if (ph) ph.style.display = 'flex';
+                        uploadedKtpWakilDataUrl = null;
+                        if (snip) snip.innerText = '⛔ Ditolak: NIK KTP tidak cocok dengan akun login.';
+                        if (badge) {
+                            badge.className = 'pabean-badge-waiting';
+                            badge.innerText = 'NIK Tidak Cocok';
+                            badge.style.background = '#FEE2E2';
+                            badge.style.color = '#991B1B';
+                        }
+                        return;
+                    }
+
+                    if (snip) snip.innerHTML = `<strong>KTP Wakil Terbaca:</strong> ${finalData.nama || '-'} (NIK: ${finalData.nik || '-'})`;
+                    if (badge) {
+                        badge.className = 'pabean-badge-verified';
+                        badge.innerText = '✓ Terverifikasi';
+                        badge.style.background = '#DCFCE7';
+                        badge.style.color = '#166534';
+                    }
+                    scheduleAutosave();
+                } catch (err) {
+                    console.warn('OCR error KTP Wakil:', err);
+                    if (snip) snip.innerText = 'KTP Wakil terunggah. Silakan pastikan foto terbaca jelas.';
+                } finally {
+                    if (laser) laser.style.display = 'none';
+                }
+                return;
+            }
 
             if (target === 'ktp') {
                 uploadedKtpDataUrl = imgUrl;
@@ -9818,7 +10504,7 @@
             'TOYOTA': {
                 'AGYA': { 2013: 52000000, 2014: 58000000, 2015: 64000000, 2016: 70000000, 2017: 76000000, 2018: 82000000, 2019: 88000000, 2020: 95000000, 2021: 102000000, 2022: 110000000, 2023: 120000000, 2024: 130000000 },
                 'CALYA': { 2016: 74000000, 2017: 80000000, 2018: 88000000, 2019: 95000000, 2020: 102000000, 2021: 110000000, 2022: 118000000, 2023: 126000000, 2024: 135000000 },
-                'AVANZA': { 2012: 80000000, 2013: 88000000, 2014: 98000000, 2015: 108000000, 2016: 118000000, 2017: 128000000, 2018: 138000000, 2019: 148000000, 2020: 158000000, 2021: 170000000, 2022: 190000000, 2023: 205000000, 2024: 220000000 },
+                'AVANZA': { 2012: 80000000, 2013: 88000000, 2014: 98000000, 2015: 108000000, 2016: 118000000, 2017: 128000000, 2018: 138000000, 2019: 148000000, 2020: 158000000, 2021: 170000000, 2022: 188000000, 2023: 205000000, 2024: 220000000 },
                 'VELOZ': { 2015: 125000000, 2016: 135000000, 2017: 145000000, 2018: 158000000, 2019: 170000000, 2020: 182000000, 2021: 198000000, 2022: 225000000, 2023: 242000000, 2024: 258000000 },
                 'RUSH': { 2012: 95000000, 2013: 105000000, 2014: 115000000, 2015: 125000000, 2016: 135000000, 2017: 148000000, 2018: 172000000, 2019: 185000000, 2020: 198000000, 2021: 212000000, 2022: 228000000, 2023: 242000000, 2024: 258000000 },
                 'INNOVA': { 2012: 120000000, 2013: 135000000, 2014: 150000000, 2015: 168000000, 2016: 210000000, 2017: 230000000, 2018: 250000000, 2019: 275000000, 2020: 295000000, 2021: 320000000, 2022: 345000000, 2023: 375000000, 2024: 405000000 },
@@ -9839,7 +10525,9 @@
             'SUZUKI': {
                 'ERTIGA': { 2012: 78000000, 2013: 86000000, 2014: 95000000, 2015: 105000000, 2016: 115000000, 2017: 125000000, 2018: 140000000, 2019: 152000000, 2020: 164000000, 2021: 176000000, 2022: 190000000, 2023: 205000000, 2024: 220000000 },
                 'XL7': { 2020: 165000000, 2021: 178000000, 2022: 192000000, 2023: 208000000, 2024: 224000000 },
-                'IGNIS': { 2017: 85000000, 2018: 94000000, 2019: 102000000, 2020: 110000000, 2021: 118000000, 2022: 126000000, 2023: 135000000 }
+                'IGNIS': { 2017: 85000000, 2018: 94000000, 2019: 102000000, 2020: 110000000, 2021: 118000000, 2022: 126000000, 2023: 135000000 },
+                'APV': { 2012: 65000000, 2013: 72000000, 2014: 80000000, 2015: 88000000, 2016: 95000000, 2017: 104000000, 2018: 112000000, 2019: 120000000, 2020: 128000000, 2021: 136000000, 2022: 145000000, 2023: 155000000, 2024: 165000000 },
+                'CARRY': { 2015: 55000000, 2016: 62000000, 2017: 70000000, 2018: 78000000, 2019: 86000000, 2020: 95000000, 2021: 105000000, 2022: 115000000, 2023: 125000000, 2024: 135000000 }
             }
         };
 
@@ -10035,10 +10723,12 @@
             // Hitung NJKB & Jaminan PPN 11% — HANYA jika tahun pembuatan benar-benar terdeteksi/terisi,
             // jangan menebak tahun dengan angka contoh kalau datanya memang belum ada.
             let njkbVal = data.njkb;
+            let isNjkbFallback = false;
             if (!njkbVal) {
                 const yr = (data.tahun || document.getElementById('kbm_tahun').value || '').match(/\d{4}/);
                 if (yr) {
                     njkbVal = lookupNjkbBapenda(data.merek || data.merk || document.getElementById('kbm_merek').value, yr[0]);
+                    if (njkbVal) isNjkbFallback = true;
                 }
             }
 
@@ -10049,10 +10739,22 @@
                 const formattedPpn = 'Rp ' + ppn.toLocaleString('id-ID');
                 
                 const elNjkb = document.getElementById('kbm_njkb');
+                const tagNjkb = document.getElementById('tagNjkbAuto');
                 if (elNjkb) {
                     elNjkb.value = formattedNjkb;
                     elNjkb.classList.add('filled');
-                    document.getElementById('tagNjkbAuto').style.display = 'inline-flex';
+                    if (tagNjkb) {
+                        tagNjkb.style.display = 'inline-flex';
+                        if (isNjkbFallback) {
+                            tagNjkb.innerText = '⚠️ Estimasi Tabel Bapenda (Perlu Verifikasi Manual Petugas)';
+                            tagNjkb.style.background = '#FEF3C7';
+                            tagNjkb.style.color = '#92400E';
+                        } else {
+                            tagNjkb.innerText = 'Terbaca Otomatis dari STNK (TBPKP)';
+                            tagNjkb.style.background = '#DCFCE7';
+                            tagNjkb.style.color = '#166534';
+                        }
+                    }
                 }
 
                 document.getElementById('lblNjkbInfo').innerText = 'Rp ' + formattedNjkb;
@@ -10826,6 +11528,7 @@
             const berkasPemohon = {};
             const _berkasMap = [
                 ['ktp', 'imgKtpPreview'],
+                ['ktp_wakil', 'imgKtpWakilPreview'],
                 ['npwp', 'imgNpwpPreview'],
                 ['stnk', 'imgStnkPreview'],
                 ['stnk_2', 'imgStnk2Preview'],
@@ -10862,9 +11565,11 @@
             }
 
             const payload = {
+                onboarding_state: onboardingState,
                 nama_pemohon: (document.getElementById('pemohon_nama')?.value || user.nama || 'Pemohon').trim(),
                 nik: (document.getElementById('pemohon_nik')?.value || user.nik || '').trim(),
                 npwp: (document.getElementById('pemohon_npwp')?.value || '-').trim(),
+                npwp_pemberi_kuasa: (document.getElementById('npwp_pemberi_kuasa')?.value || '').trim(),
                 no_wa_pemohon: (document.getElementById('pemohon_telp')?.value || user.phone || '').trim(),
                 nopol: (document.getElementById('kbm_nopol')?.value || 'BP - (Menunggu STNK)').trim(),
                 merek_tipe: (document.getElementById('kbm_merek')?.value || 'Kendaraan Bermotor').trim(),
@@ -11371,6 +12076,8 @@
                     badgeHtml = '<span style="background:#FFFBEB; color:#B45309; border:1px solid #FCD34D; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">4. Verifikasi Loket (3 Bundel)</span>';
                 } else if (p.status === 'PPFTZ_CEK_FISIK') {
                     badgeHtml = '<span style="background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> 4. PPFTZ &amp; Cek Fisik Lapangan</span>';
+                } else if (p.status === 'MENUNGGU_DOKUMEN_TAMBAHAN') {
+                    badgeHtml = '<span style="background:#FFFBEB; color:#D97706; border:1px solid #FCD34D; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Menunggu Dokumen Tambahan (NPD)</span>';
                 } else if (p.status === 'PEMERIKSA_DOKUMEN') {
                     badgeHtml = '<span style="background:#F0F9FF; color:#0284C7; border:1px solid #BAE6FD; font-size:0.72rem; font-weight:700; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> 5. Penetapan SPPB Dokumen</span>';
                 } else if (p.status === 'SPPB_GATE_OUT') {
@@ -11451,7 +12158,8 @@
                 { id: 'SPPB_GATE_OUT', num: '7', title: 'SPPB & Gate Pelabuhan', desc: 'Validasi QR SPPB keberangkatan di gate pelabuhan' }
             ];
 
-            const currentIdx = stagesOrder.findIndex(s => s.id === item.status);
+            const effStatus = item.status === 'MENUNGGU_DOKUMEN_TAMBAHAN' ? 'PEMERIKSA_DOKUMEN' : item.status;
+            const currentIdx = stagesOrder.findIndex(s => s.id === effStatus);
             const stepperEl = document.getElementById('drawerStepperPills');
             if (stepperEl) {
                 stepperEl.innerHTML = stagesOrder.map((s, idx) => {
@@ -11646,6 +12354,9 @@
             const row = (label, val) => { doc.text(`${label}`, 20, y); doc.text(`: ${val || '-'}`, 75, y); y += 7; };
             row('Nomor Pendaftaran PPFTZ-01', item.no_ppftz || '-');
             row('Tanggal', item.tgl_ppftz || '-');
+            row('No. Surat Jalan Polda Kepri', item.no_surat_jalan || '-');
+            row('No. KEP Persetujuan', item.no_skep || item.no_kep || '-');
+            row('No. Penerimaan Jaminan (BPJ)', item.no_bpj || '-');
             row('Lokasi', 'Lapangan KPU Bea Cukai Tipe B Batam');
             row('Jumlah & Jenis Barang Diperiksa', '1 unit kendaraan bermotor');
             y += 3;
@@ -12085,6 +12796,12 @@
                             </div>
                         </label>
                     </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:4px;">
+                            Nomor Surat Jalan Polda Kepri (Dari Berkas Fisik Pemohon):
+                        </label>
+                        <input type="text" id="actionLoketNoSuratJalan" class="form-input" placeholder="Contoh: B/123/IV/YAN.2.14/2026/Ditlantas" value="${escapeHtml(item.no_surat_jalan || '')}" style="font-size:0.78rem; padding:7px 10px; width:100%; box-sizing:border-box;">
+                    </div>
                     <button type="button" class="landing-btn-submit" onclick="eksekusiAksiLoketApprove('${item.id}')" style="background:#005FAC; padding:11px 14px; font-size:0.84rem;">
                         ✓ Approve Loket &amp; Terbitkan 4 Output Otomatis (PPFTZ, PFPD, SPF, IP) ➔
                     </button>
@@ -12168,9 +12885,35 @@
                         <label style="font-size:0.72rem; font-weight:700; color:#334155;">Nomor Dokumen SPPB Pabean:</label>
                         <input type="text" id="actionSppbNomor" value="Akan digenerate otomatis saat disetujui" readonly style="width:100%; padding:8px 10px; background:#F1F5F9; border:1.5px solid #CBD5E1; border-radius:6px; font-size:0.84rem; font-weight:800; color:#64748B; box-sizing:border-box;">
                     </div>
-                    <button type="button" class="landing-btn-submit" onclick="eksekusiAksiSppb('${item.id}')" style="background:#0284C7; padding:10px 14px; font-size:0.84rem;" ${(item.lhp_data?.kesesuaian_rangka!=='SESUAI' || item.lhp_data?.kesesuaian_mesin!=='SESUAI') ? 'disabled title="Tidak bisa terbit SPPB: ada ketidaksesuaian nomor rangka/mesin pada LHP"' : ''}>
-                        ✓ Setujui &amp; Terbitkan Dokumen SPPB (+QR Code) ➔
-                    </button>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="landing-btn-submit" onclick="bukaModalTerbitkanNpd('${item.id}')" style="background:#D97706; padding:10px 12px; font-size:0.80rem; flex:1;">
+                            📄 Terbitkan NPD (Minta Dokumen Tambahan)
+                        </button>
+                        <button type="button" class="landing-btn-submit" onclick="eksekusiAksiSppb('${item.id}')" style="background:#0284C7; padding:10px 12px; font-size:0.80rem; flex:1;" ${(item.lhp_data?.kesesuaian_rangka!=='SESUAI' || item.lhp_data?.kesesuaian_mesin!=='SESUAI') ? 'disabled title="Tidak bisa terbit SPPB: ada ketidaksesuaian nomor rangka/mesin pada LHP"' : ''}>
+                            ✓ Setujui &amp; Terbitkan SPPB (+QR) ➔
+                        </button>
+                    </div>
+                `;
+            } else if (item.status === 'MENUNGGU_DOKUMEN_TAMBAHAN') {
+                formFieldsHtml += `
+                    <div class="dash-drawer-section-title" style="color:#D97706;">📄 Status: Menunggu Dokumen Tambahan Pemohon (NPD)</div>
+                    <div style="background:#FFFBEB; border:1.5px solid #FCD34D; border-radius:8px; padding:12px; font-size:0.76rem; color:#92400E; margin-bottom:10px; line-height:1.5;">
+                        <strong>No. NPD:</strong> ${escapeHtml(item.no_npd || item.npd_data?.no_npd || '-')}<br>
+                        <strong>Dokumen yang Diminta:</strong> ${escapeHtml(item.npd_data?.dokumen_diminta || '-')}<br>
+                        <strong>Alasan / Catatan Petugas:</strong> ${escapeHtml(item.npd_data?.alasan || '-')}
+                    </div>
+                    ${role === 'pemohon' ? `
+                        <div style="background:#F8FAFC; border:1.5px dashed #005FAC; border-radius:8px; padding:12px; margin-bottom:10px;">
+                            <label style="font-size:0.75rem; font-weight:800; color:#005FAC; display:block; margin-bottom:6px;">Unggah Dokumen Tambahan / Susulan:</label>
+                            <input type="file" id="fileNpdTambahan" accept="image/*,application/pdf,.pdf" style="font-size:0.75rem; margin-bottom:8px; display:block;">
+                            <textarea id="ketNpdTambahan" rows="2" placeholder="Catatan untuk Pejabat Pemeriksa Dokumen..." style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.75rem; box-sizing:border-box; margin-bottom:8px;"></textarea>
+                            <button type="button" class="landing-btn-submit" onclick="kirimDokumenNpdPemohon('${item.id}')" style="background:#059669; padding:9px 12px; font-size:0.80rem;">
+                                ✓ Kirim Dokumen Tambahan ke PFPD
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="font-size:0.74rem; color:#64748B;">Menunggu pemohon mengunggah dokumen susulan melalui portal. Berkas akan otomatis kembali ke antrean PFPD setelah diunggah.</div>
+                    `}
                 `;
             } else if (item.status === 'SPPB_GATE_OUT') {
                 formFieldsHtml += `
@@ -12380,6 +13123,7 @@
             const c1 = document.getElementById('chkLoketBundel1')?.checked === true;
             const c2 = document.getElementById('chkLoketBundel2')?.checked === true;
             const c3 = document.getElementById('chkLoketBundel3')?.checked === true;
+            const noSuratJalan = (document.getElementById('actionLoketNoSuratJalan')?.value || '').trim();
             if (!c1 || !c2 || !c3) {
                 showAppAlert('Ketiga checklist verifikasi bundel (Permohonan & Lampiran, SKEP Fasilitas, dan Dokumen Jaminan Terverifikasi) wajib dicentang sebelum Approval.', 'warning');
                 return;
@@ -12393,7 +13137,8 @@
                             id,
                             chk_bundel_permohonan: c1,
                             chk_bundel_skep: c2,
-                            chk_bundel_jaminan: c3
+                            chk_bundel_jaminan: c3,
+                            no_surat_jalan: noSuratJalan
                         })
                     });
                     const data = await res.json();
@@ -12502,6 +13247,83 @@
                     showAppAlert('Kesalahan jaringan: ' + e.message, 'error');
                 }
             });
+        }
+
+        async function bukaModalTerbitkanNpd(id) {
+            const item = allPermohonan.find(p => p.id === id);
+            if (!item) return;
+
+            showAppPrompt('Dokumen yang diminta (misal: Kwitansi Jual Beli Asli / Surat Kuasa Khusus):', '', async function(dokumenDiminta) {
+                if (!dokumenDiminta || !dokumenDiminta.trim()) {
+                    showAppAlert('Rincian dokumen yang diminta wajib diisi.', 'warning');
+                    return;
+                }
+                showAppPrompt('Alasan penerbitan NPD / Catatan untuk pemohon:', '', async function(alasanNpd) {
+                    if (!alasanNpd || !alasanNpd.trim()) {
+                        showAppAlert('Alasan penerbitan NPD wajib diisi.', 'warning');
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/terbitkan-npd`, {
+                            method: 'POST',
+                            headers: _authJsonHeaders(),
+                            body: JSON.stringify({
+                                id,
+                                dokumen_diminta: dokumenDiminta.trim(),
+                                alasan_npd: alasanNpd.trim()
+                            })
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.status === 'ok') {
+                            showAppAlert(`✓ NOTA PERMINTAAN DOKUMEN (NPD) BERHASIL DITERBITKAN!\n\nNo. NPD: ${data.no_npd}\nNotifikasi telah dikirimkan ke WhatsApp pemohon. Status dialihkan ke MENUNGGU_DOKUMEN_TAMBAHAN.`, 'success', async () => {
+                                await loadPermohonanData();
+                                openDrawerDetail(id);
+                            });
+                        } else {
+                            showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                        }
+                    } catch (e) {
+                        showAppAlert('Kesalahan jaringan: ' + e.message, 'error');
+                    }
+                });
+            });
+        }
+
+        async function kirimDokumenNpdPemohon(id) {
+            const fileInput = document.getElementById('fileNpdTambahan');
+            const ketInput = document.getElementById('ketNpdTambahan');
+            const file = fileInput?.files?.[0];
+            if (!file) {
+                showAppAlert('Pilih file dokumen tambahan yang diminta sebelum mengirim.', 'warning');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const dataUrl = e.target.result;
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/pemeriksaan/unggah-dokumen-npd`, {
+                        method: 'POST',
+                        headers: _authJsonHeaders(),
+                        body: JSON.stringify({
+                            id,
+                            dokumen_url: dataUrl,
+                            keterangan: (ketInput?.value || '').trim()
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        showAppAlert('✓ ' + data.message, 'success', async () => {
+                            await loadPermohonanData();
+                            openDrawerDetail(id);
+                        });
+                    } else {
+                        showAppAlert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'), 'error');
+                    }
+                } catch (err) {
+                    showAppAlert('Kesalahan jaringan: ' + err.message, 'error');
+                }
+            };
+            reader.readAsDataURL(file);
         }
 
         function closeDrawerDirect() {
@@ -13128,6 +13950,7 @@
             'LOKET_JAMINAN': { roles: ['jaminan', 'adminutama'], name: 'Petugas Jaminan' },
             'LOKET_VERIFIKASI': { roles: ['loket', 'adminutama'], name: 'Petugas Loket Pelayanan' },
             'PPFTZ_CEK_FISIK': { roles: ['pemeriksabarang', 'adminutama'], name: 'Pejabat Pemeriksa Barang' },
+            'MENUNGGU_DOKUMEN_TAMBAHAN': { roles: ['pemohon', 'pemeriksadokumen', 'adminutama'], name: 'Pemohon / Pemeriksa Dokumen (NPD)' },
             'PEMERIKSA_DOKUMEN': { roles: ['pemeriksadokumen', 'adminutama'], name: 'Pejabat Pemeriksa Dokumen' },
             'SPPB_GATE_OUT': { roles: ['gate', 'adminutama'], name: 'Petugas Gate Pelabuhan' },
             'SELESAI_KELUAR_TLDDP': { roles: ['adminutama'], name: 'Pengeluaran KBM Selesai' }
@@ -13251,19 +14074,22 @@
                 }
                 if (btnLiveChat) btnLiveChat.style.display = 'none';
 
-                // Auto-fill awal identitas pemohon dari akun terdaftar — TETAP EDITABLE (tidak readOnly)
-                // agar pemohon bebas mengoreksi/mengetik manual sebelum submit final
-                if (user.nik && document.getElementById('pemohon_nik')) {
-                    document.getElementById('pemohon_nik').value = user.nik;
-                    document.getElementById('pemohon_nik').readOnly = false;
-                    document.getElementById('pemohon_nik').disabled = false;
-                    document.getElementById('pemohon_nik').classList.add('filled');
-                }
-                if (user.nama && document.getElementById('pemohon_nama')) {
-                    document.getElementById('pemohon_nama').value = user.nama;
-                    document.getElementById('pemohon_nama').readOnly = false;
-                    document.getElementById('pemohon_nama').disabled = false;
-                    document.getElementById('pemohon_nama').classList.add('filled');
+                // Auto-fill awal identitas pemohon dari akun terdaftar — HANYA jika bukan mode Dikuasakan
+                // (Pada kasus Dikuasakan, nama & NIK adalah milik pihak yang diwakilkan, bukan milik Wakil)
+                const isKuasaNow = typeof onboardingState !== 'undefined' && onboardingState.pengurusan === 'kuasa';
+                if (!isKuasaNow) {
+                    if (user.nik && document.getElementById('pemohon_nik')) {
+                        document.getElementById('pemohon_nik').value = user.nik;
+                        document.getElementById('pemohon_nik').readOnly = false;
+                        document.getElementById('pemohon_nik').disabled = false;
+                        document.getElementById('pemohon_nik').classList.add('filled');
+                    }
+                    if (user.nama && document.getElementById('pemohon_nama')) {
+                        document.getElementById('pemohon_nama').value = user.nama;
+                        document.getElementById('pemohon_nama').readOnly = false;
+                        document.getElementById('pemohon_nama').disabled = false;
+                        document.getElementById('pemohon_nama').classList.add('filled');
+                    }
                 }
                 if (user.phone && document.getElementById('pemohon_telp')) {
                     let ph = user.phone;
@@ -14371,7 +15197,18 @@
                 if (lockNotice) lockNotice.remove();
 
                 switchPortalView('formulir');
-                try { setStepActive(1); } catch(e){}
+                if (!onboardingCompleted) {
+                    const wizardCard = document.getElementById('wizardStepBtn1')?.closest('.page-card');
+                    if (wizardCard) wizardCard.style.display = 'none';
+                    for (let i = 1; i <= 4; i++) {
+                        const pageEl = document.getElementById('page-' + i);
+                        if (pageEl) pageEl.classList.remove('active');
+                    }
+                    const s1 = document.getElementById('onboardingStep1');
+                    if (s1) s1.style.display = 'block';
+                } else {
+                    try { setStepActive(1); } catch(e){}
+                }
                 try { restoreFormDraft(); } catch(e){}
             } else {
                 // KONDISI 2: Sudah ada permohonan yang diajukan & selesai
