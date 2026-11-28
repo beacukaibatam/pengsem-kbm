@@ -3646,8 +3646,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
             reason = str(body.get('reason', '')).strip()
             channel = str(body.get('channel', 'whatsapp')).strip().lower()
+            if not reason:
+                self._send_json_error(400, 'Alasan penghapusan belum diisi')
+                return
             if len(reason) < 5:
-                self._send_json_error(400, 'Alasan penghapusan akun wajib diisi (minimal 5 karakter) sebelum meminta kode OTP.')
+                self._send_json_error(400, 'Alasan penghapusan minimal 5 karakter sebelum meminta kode OTP.')
                 return
             if channel not in ('whatsapp', 'email'):
                 channel = 'whatsapp'
@@ -3752,8 +3755,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             reason = str(body.get('reason', '')).strip()
             user_otp = str(body.get('otp', '')).strip()
 
+            if not reason:
+                self._send_json_error(400, 'Alasan penghapusan belum diisi')
+                return
             if len(reason) < 5:
-                self._send_json_error(400, 'Alasan penghapusan akun wajib diisi (minimal 5 karakter).')
+                self._send_json_error(400, 'Alasan penghapusan minimal 5 karakter.')
                 return
             if not user_otp:
                 self._send_json_error(400, 'Kode OTP wajib diisi.')

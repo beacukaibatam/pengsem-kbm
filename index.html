@@ -16027,7 +16027,8 @@
             channel = channel === 'email' ? 'email' : 'whatsapp';
             const reason = document.getElementById('deleteAccountReason');
             const reasonVal = reason ? reason.value.trim() : '';
-            if (reasonVal.length < 5) { showAppAlert('Alasan penghapusan akun wajib diisi (minimal 5 karakter) sebelum meminta kode OTP.', 'warning'); return; }
+            if (!reasonVal) { showAppAlert('Alasan penghapusan belum diisi', 'warning'); return; }
+            if (reasonVal.length < 5) { showAppAlert('Alasan penghapusan minimal 5 karakter.', 'warning'); return; }
 
             const btnWa = document.getElementById('btnDeleteAccountSendOtp');
             const btnEmail = document.getElementById('btnDeleteAccountSendEmail');
@@ -16066,7 +16067,8 @@
             if (!reason || !otp) return;
             const reasonVal = reason.value.trim();
             const otpVal = otp.value.trim();
-            if (reasonVal.length < 5) { showAppAlert('Alasan penghapusan akun wajib diisi (minimal 5 karakter).', 'warning'); return; }
+            if (!reasonVal) { showAppAlert('Alasan penghapusan belum diisi', 'warning'); return; }
+            if (reasonVal.length < 5) { showAppAlert('Alasan penghapusan minimal 5 karakter.', 'warning'); return; }
             if (otpVal.length !== 6) { showAppAlert('Masukkan kode OTP 6 digit yang dikirim ke WhatsApp/Email Anda.', 'warning'); return; }
             if (btn) { btn.disabled = true; btn.innerText = '⏳ Menghapus...'; }
             try {
