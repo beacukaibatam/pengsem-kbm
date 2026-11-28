@@ -1,0 +1,138 @@
+{
+  "task": "Audit Poin 63 - Cline 9a508b5/dc29512/400046c (Hapus Akun Pemohon + OTP WA/Email)",
+  "root": ".",
+  "mechanical": {
+    "zero_diff_pairs": [["index.html", "Formulir_Pemohon_CEISA_PENGSEM_KBM.html"]],
+    "py_compile": ["server.py", "database.py"],
+    "node_check_inline_scripts": ["index.html"]
+  },
+  "existence_checks": [
+    {
+      "id": "delete_user_by_id_exists",
+      "description": "database.delete_user_by_id() harus ada",
+      "file": "database.py",
+      "pattern": "def delete_user_by_id",
+      "min_count": 1
+    },
+    {
+      "id": "delete_user_parameterized_query",
+      "description": "Query DELETE harus parameterized (anti SQL injection)",
+      "file": "database.py",
+      "pattern": "/DELETE FROM users WHERE/",
+      "min_count": 2
+    },
+    {
+      "id": "request_otp_endpoint_exists",
+      "description": "Endpoint delete-account-request-otp harus ada",
+      "file": "server.py",
+      "pattern": "/api/auth/delete-account-request-otp",
+      "min_count": 1
+    },
+    {
+      "id": "confirm_endpoint_exists",
+      "description": "Endpoint delete-account (konfirmasi) harus ada",
+      "file": "server.py",
+      "pattern": "if self.path == '/api/auth/delete-account':",
+      "min_count": 1
+    },
+    {
+      "id": "acct_key_from_session_not_body",
+      "description": "acct_key/target_id harus diturunkan dari sesi (user.get), bukan dari body request - cegah IDOR",
+      "file": "server.py",
+      "pattern": "/acct_key = str\\(user\\.get/",
+      "min_count": 2
+    },
+    {
+      "id": "role_pemohon_enforced",
+      "description": "Kedua endpoint harus menolak selain role pemohon",
+      "file": "server.py",
+      "pattern": "sess.get('role') != 'pemohon'",
+      "min_count": 2
+    },
+    {
+      "id": "reason_min_length_backend",
+      "description": "Validasi alasan >=5 karakter harus ada di backend (bukan cuma frontend)",
+      "file": "server.py",
+      "pattern": "/len\\(reason\\) < 5/",
+      "min_count": 2
+    },
+    {
+      "id": "otp_request_rate_limited",
+      "description": "Rate-limit permintaan OTP harus ada",
+      "file": "server.py",
+      "pattern": "DELETE_ACCOUNT_OTP_TRACKER",
+      "min_count": 3
+    },
+    {
+      "id": "otp_confirm_rate_limited",
+      "description": "Rate-limit percobaan konfirmasi OTP harus ada (anti brute-force)",
+      "file": "server.py",
+      "pattern": "DELETE_ACCOUNT_CONFIRM_TRACKER",
+      "min_count": 2
+    },
+    {
+      "id": "otp_expiry_checked",
+      "description": "Kedaluwarsa OTP harus dicek sebelum dipakai",
+      "file": "server.py",
+      "pattern": "/time\\.time\\(\\) > otp_info\\.get\\('expires_at'/",
+      "min_count": 1
+    },
+    {
+      "id": "otp_single_use",
+      "description": "OTP harus dihapus setelah dipakai (anti-replay)",
+      "file": "server.py",
+      "pattern": "otps.pop(otp_key, None)",
+      "min_count": 2
+    },
+    {
+      "id": "session_invalidated_on_delete",
+      "description": "Sesi harus dihapus dari AUTH_SESSIONS setelah akun dihapus",
+      "file": "server.py",
+      "pattern": "if token and token in AUTH_SESSIONS:",
+      "min_count": 1
+    },
+    {
+      "id": "permohonan_not_cascaded",
+      "description": "database.py tidak boleh ada DELETE FROM permohonan di fungsi delete_user_by_id",
+      "file": "database.py",
+      "pattern": "/DELETE FROM permohonan/",
+      "min_count": 0,
+      "max_count": 0
+    },
+    {
+      "id": "mask_phone_exists",
+      "description": "_mask_phone helper harus ada",
+      "file": "server.py",
+      "pattern": "def _mask_phone",
+      "min_count": 1
+    },
+    {
+      "id": "mask_email_exists",
+      "description": "_mask_email helper harus ada",
+      "file": "server.py",
+      "pattern": "def _mask_email",
+      "min_count": 1
+    },
+    {
+      "id": "email_subject_no_otp_no_emoji",
+      "description": "Subject email OTP tidak boleh mengandung kode OTP (anti-spam)",
+      "file": "server.py",
+      "pattern": "subject = f\"[KPU Bea Cukai Batam] Kode Verifikasi {purpose}\"",
+      "min_count": 1
+    },
+    {
+      "id": "delete_button_role_gated",
+      "description": "Tombol Hapus Akun harus hanya tampil untuk role pemohon",
+      "file": "index.html",
+      "pattern": "(role === 'pemohon') ? 'inline-flex' : 'none'",
+      "min_count": 1
+    },
+    {
+      "id": "otp_buttons_disabled_until_reason",
+      "description": "Tombol kirim OTP harus disabled sampai alasan terisi",
+      "file": "index.html",
+      "pattern": "b.disabled = !reasonOk;",
+      "min_count": 1
+    }
+  ]
+}

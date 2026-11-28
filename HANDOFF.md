@@ -77,10 +77,24 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Rapikan Duplikasi Teks Persetujuan Data Pihak Ketiga (Registrasi)** (Claude — 28 Nov 2026 ~23:40 WIB, dikerjakan langsung atas izin eksplisit user)
+  - Commit `aa10894` (Cline) membuat paragraf persetujuan data pihak ketiga muncul 2x identik di halaman Registrasi: sebagai butir ke-4 di dalam "Lihat Rincian Pernyataan & Ketentuan" DAN sebagai label penuh checkbox `#landingRegThirdPartyAgree` di bawahnya. Bukan bug fungsional, tapi redundan.
+  - Butir ke-4 dipersingkat jadi rujukan ke checkbox, teks lengkap & mengikat secara hukum tetap hanya ada satu kali (di label checkbox).
+  - **Verifikasi**: `diff -u` = 0, `node --check` OK (via `scripts/audit_check.py`), dikonfirmasi visual langsung di browser lokal.
+
 - **Tambah Pernyataan Data Pihak Ketiga ke "Rincian Pernyataan & Ketentuan" (Registrasi)** (Cline — 28 Nov 2026 ~23:25 WIB)
   - Menambahkan butir ke-4 "Persetujuan Penggunaan Data Pihak Ketiga" pada daftar `<ol>` di dalam details "Lihat Rincian Pernyataan & Ketentuan" (form registrasi). Teks lengkap: "Apabila permohonan ini memuat data pihak lain (seperti pemilik kendaraan, penyewa, pemberi sewa, pemberi kuasa, dan/atau anggota keluarga, atau lainnya), saya menyatakan telah mendapat persetujuan dari pihak yang bersangkutan untuk mengunggah dan menggunakan data identitasnya dalam permohonan ini, dan bertanggung jawab penuh atas keabsahan persetujuan tersebut."
   - Checkbox persetujuan data pihak ketiga terpisah (`#landingRegThirdPartyAgree`) tetap dipertahankan.
   - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` OK, `python3 -m py_compile server.py database.py` OK.
+
+- **Audit Claude atas commit `47551fe` (Fix normalisasi nomor WA, Cline)** (Claude — 28 Nov 2026 ~23:30 WIB)
+  - Bug dilaporkan user langsung (OTP tidak sampai ke WA saat coba hapus akun), bukan temuan audit — tapi akar masalahnya memang luput dari 2 audit saya sebelumnya pada fitur yang sama (fokus saya waktu itu keamanan, bukan format nomor telepon).
+  - Root cause dikonfirmasi: nomor WA dikirim mentah ke Meta API, padahal format tersimpan lokal (`0812...`) vs format wajib Meta (`6281...`).
+  - Fix diverifikasi `audit_check.py` (8/8 PASS) + bukti aritmatika: `_normalize_phone_id('081229783836')` dijalankan langsung → hasil persis `6281229783836`.
+  - Variabel `phone` yang sudah ternormalisasi dipakai konsisten di semua titik pemakaian berikutnya dalam endpoint yang sama — dicek satu-satu.
+  - Logika pesan status 3-tingkat (sukses/gagal pasti/ambigu) sudah benar menerapkan anti-halusinasi.
+  - **Kesimpulan: root cause benar, fix tuntas, tidak ada regresi baru.**
+  - Catatan untuk diri sendiri: tambahkan pengecekan format nomor telepon ke checklist standar audit fitur yang melibatkan WhatsApp.
 
 - **Root Cause & Fix: OTP Hapus Akun Gagal Terkirim ke WhatsApp (nomor tidak dinormalisasi)** (Cline — 28 Nov 2026 ~23:15 WIB)
   - **Root cause**: Di `delete-account-request-otp`, nomor WA diambil dari `user.get('phone')` lalu dikirim apa adanya ke `send_whatsapp_otp_template()`. Nomor tersimpan format lokal `081229783836` (awalan 0), sedangkan Meta WA wajib `6281229783836`. Ini satu-satunya titik pengiriman OTP yang tidak menormalisasi (registrasi & reset password sudah normalisasi via `_normalize_phone_id`).
@@ -88,6 +102,15 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
   - **Pesan status anti-halusinasi**: "terkirim" hanya diklaim saat API benar-benar konfirmasi (ada `messages`/`status: success`); kegagalan pasti (`error`/`logged_offline`/`rate_limited`/exception) → "Gagal mengirim kode OTP ke WhatsApp. Coba lagi atau gunakan opsi Kirim ke Email."; status ambigu → pesan lunak "Kode OTP sedang diproses…".
   - **Audit titik lain**: Fitur hapus akun hanya punya 1 titik kirim WA (`delete-account-request-otp`); `delete-account` tidak mengirim WA, jadi tidak ada titik normalisasi yang terlewat.
   - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` OK, `python3 -m py_compile server.py database.py` OK.
+
+- **Audit Claude atas commit `9a508b5`/`dc29512`/`400046c` (Fitur Hapus Akun Pemohon, Cline)** (Claude — 28 Nov 2026 ~23:00 WIB)
+  - Fitur baru di luar prompt manapun dari saya — audit penuh (keamanan + mekanis) via `audit_check.py` (22/22 PASS) + review manual.
+  - **Tidak ada IDOR**: identitas akun yang dihapus selalu dari sesi login, bukan dari body request.
+  - **Rate-limit ganda** (request-OTP 3x/5m, konfirmasi 5x/5m) berbasis akun, bukan IP.
+  - **Data permohonan resmi benar tidak ikut terhapus** — hanya baris `users`.
+  - OTP kedaluwarsa+anti-replay dicek, validasi alasan juga di backend (bukan cuma UI).
+  - 1 catatan minor non-blocking: perbandingan OTP pakai string compare biasa bukan `hmac.compare_digest`, tapi tidak eksploitabel karena sudah dibatasi rate-limit.
+  - **Kesimpulan: fitur aman & sesuai klaim, tidak ada bug/celah nyata.**
 
 - **Penyempurnaan Hapus Akun Pemohon (alasan wajib dulu, opsi WA/Email, kontak tersensor, anti-spam email)** (Cline — 28 Nov 2026 ~22:45 WIB)
   - **Alasan wajib dulu**: tombol request OTP (WA maupun Email) dinonaktifkan sampai kolom alasan terisi ≥5 karakter; backend `delete-account-request-otp` juga menolak permintaan tanpa `reason`.
@@ -102,12 +125,25 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
   - **Frontend**: tombol "Hapus Akun" di header (muncul hanya untuk role pemohon via `applyUserRoleUI`, disembunyikan di `applyUnauthenticatedUI`). Modal `#modalDeleteAccount` berisi textarea alasan + tombol "Kirim Kode OTP" + input OTP 6 digit + tombol konfirmasi yang aktif hanya jika alasan ≥5 karakter & OTP lengkap. Setelah sukses, state lokal dibersihkan dan diarahkan ke halaman Masuk.
   - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` OK, `python3 -m py_compile server.py database.py` OK.
 
+- **Audit Claude atas commit `6d73cd2` (Rename Gesekan→Foto Rangka/Mesin + Fix Bug Akordion, Cline)** (Claude — 28 Nov 2026 ~22:30 WIB)
+  - Pertama kali dipakai: `scripts/audit_check.py` dengan manifest `scripts/manifests/poin62_cline_rename_gesekan.json` — 10/10 cek mekanis+existence PASS.
+  - Review manual logika `renderProgressiveAccordion()`: `gatingKeys` (yang mengecualikan item `optional:true`) benar dipakai untuk menentukan `activeKey`, bukan daftar `keys` penuh — bug lama (Surat Pernyataan terkunci menunggu foto rangka/mesin) **benar-benar fixed**, bukan rename kosmetik saja.
+  - Rename "gesekan"→"fotoRangkaMesin" tuntas di 7 titik, 0 sisa kata "gesekan" di index.html.
+  - Klaim investigasi Surat Jalan Polda (tidak ada mekanisme upload file, hanya input teks + checkbox) diverifikasi ulang dan benar.
+  - **Tidak ada temuan baru** — ini audit pertama di proyek ini yang 100% bersih.
+
 - **Koreksi Konsep "Hasil Gesekan Rangka & Mesin" → "Foto Nomor Rangka & Nomor Mesin" + Fix Bug Regresi Akordion Tahap 4** (Cline — 28 Nov 2026 ~22:00 WIB)
   - **Koreksi konsep (pembacaan ulang IK 001/KPUB.02/2025)**: "Hasil penggesekan nomor rangka dan nomor mesin" ternyata SATU PAKET dengan "Surat Jalan dari Polda Kepulauan Riau" (dokumen yang dilampirkan/diterbitkan Polda bersamaan Surat Jalan, diurus SETELAH jaminan PPN dibayar), BUKAN sesuatu yang pemohon kerjakan sendiri di awal. Sedangkan "Foto kendaraan (tampak samping, depan, belakang, nomor mesin, dan nomor rangka)" adalah FOTO BIASA bagian berkas legalitas kendaraan pemohon (Tahap 4). Dua hal ini selama ini tercampur jadi satu kartu.
   - **Rename konsisten**: kartu Tahap 4 `#accCardGesekan` (key `gesekan`) → `#accCardFotoRangkaMesin` (key `fotoRangkaMesin`), judul "Foto Nomor Rangka & Nomor Mesin". Semua referensi di-rename: elemen `imgFotoRangkaMesinPreview`/`phFotoRangkaMesin`/`badgeFotoRangkaMesinStatus`/`previewFotoRangkaMesinBox`/`fileFotoRangkaMesinInput`/`handleFotoRangkaMesinUpload`, `ACC_CONFIG`, `accIsDone`, `accSummary`, `SMART_RESUME_ORDER`, `removeUploadedDoc`, berkas map submit, teks PDF LAMPIRAN 8, subjudul Tahap 4, validasi silang BPKB, tabel panduan dokumen. Fungsi tetap identik (opsional, non-blocking, tidak dihitung progress 8 dokumen).
   - **Fix bug regresi (commit `e779b72`)**: item opsional kini `optional: true` dan DIKECUALIKAN dari rantai kunci `renderProgressiveAccordion()` (`gatingKeys`), sehingga "Surat Pernyataan Komitmen" tetap bisa dibuka walau foto nomor rangka/mesin belum diunggah; item opsional tampil independen (terbuka jika belum, menciut jika selesai). `findFirstIncompleteAccordion()` juga skip item opsional.
   - **TEMUAN INVESTIGASI Surat Jalan Polda**: BELUM ADA mekanisme unggah file/foto untuk Surat Jalan Polda di seluruh alur. Saat ini hanya: (a) input teks `no_surat_jalan` oleh Petugas Loket di aksi approval (`actionLoketNoSuratJalan` → `/api/loket/approve`), dan (b) checkbox "Surat Jalan Asli dari Polda" oleh Pemeriksa Barang (`chkAsliPolda` → `cek_surat_jalan_polda` di `/api/pemeriksaan/rekam-lhp`). Tidak ada entri `surat_jalan` di berkas map pemohon maupun `_label_map` arsip server. **Field unggah "Surat Jalan Polda + Hasil Penggesekan Nomor Rangka & Mesin dari Polda" belum dibuat** (di luar cakupan sesi ini) — disarankan ditambahkan di dashboard/portal petugas setelah status jaminan dibayar, BUKAN di formulir pengajuan Tahap 1-4.
   - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` OK, `python3 -m py_compile server.py database.py` OK.
+
+- **Audit Claude atas commit `e779b72` (Model 2 Akordion Vertikal Progresif, Cline/DeepSeek V4 Pro)** (Claude — 28 Nov 2026 ~21:45 WIB)
+  - Eliminasi NPWP ganda & field `wakil_nama`/`wakil_nik`: diverifikasi benar, `npwp_pemberi_kuasa` sudah 0 referensi di seluruh kode.
+  - Engine akordion (`ACC_CONFIG`, `renderProgressiveAccordion()`, dll) nyata berfungsi — bukan klaim kosong, CSS state & 9 titik hook re-render dicek langsung. Autosave reaktif (`scheduleAutosave()`) & smart resume juga nyata.
+  - **🐞 Temuan regresi**: urutan akordion Tahap 4 (`sim → foto → gesekan → pernyataan`) dirangkai sebagai rantai terkunci sekuensial, dan `gesekan` tidak dikecualikan — akibatnya akordion "Surat Pernyataan Komitmen" **terkunci total** sampai pemohon mengunggah foto Hasil Gesekan Rangka & Mesin, padahal item itu berlabel "(Opsional)" dan sudah disepakati non-blocking (progress-bar 8-dokumen buatan Antigravity sengaja tidak menghitungnya). Pemohon yang wajar belum punya foto gesekan (karena akan diambil ulang petugas saat pemeriksaan fisik) akan buntu di Tahap 4. Saran: keluarkan `gesekan` dari rantai-kunci atau pindahkan ke akhir urutan tanpa menggerbangi item sesudahnya. Belum diperbaiki — menunggu keputusan.
+  - `diff -u` = 0, `py_compile` OK dikonfirmasi ulang.
 
 - **Implementasi Model 2 (Akordion Vertikal Progresif) & Standardisasi Istilah Pemohon/Kuasa (Opsi 1) — SELESAI** (Cline — 28 Nov 2026 ~20:50 WIB)
   - **Standardisasi istilah & eliminasi NPWP ganda**: Kolom `npwp_pemberi_kuasa` (beserta `#groupNpwpPemberiKuasa`) DIHAPUS dari HTML, snapshot draf (`_collectDraftFieldsSnapshot`), dan payload submit. NPWP kini satu kolom tunggal `pemohon_npwp` milik Pemohon. Ditambahkan field `wakil_nama` & `wakil_nik` di kartu KTP Penerima Kuasa, diisi otomatis dari OCR KTP Wakil (`runRealOCR`), disimpan ke draf + payload + `new_record` di `server.py`.

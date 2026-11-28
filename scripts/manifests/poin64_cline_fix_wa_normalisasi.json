@@ -1,0 +1,39 @@
+{
+  "task": "Audit Poin 64 - Cline 47551fe (Fix: normalisasi nomor WA pada OTP hapus akun)",
+  "root": ".",
+  "mechanical": {
+    "zero_diff_pairs": [["index.html", "Formulir_Pemohon_CEISA_PENGSEM_KBM.html"]],
+    "py_compile": ["server.py", "database.py"],
+    "node_check_inline_scripts": ["index.html"]
+  },
+  "existence_checks": [
+    {
+      "id": "phone_normalized_via_shared_helper",
+      "description": "phone harus dinormalisasi lewat _normalize_phone_id() yang sudah ada (bukan fungsi baru)",
+      "file": "server.py",
+      "pattern": "phone = _normalize_phone_id(user.get('phone') or '')",
+      "min_count": 1
+    },
+    {
+      "id": "empty_phone_guard",
+      "description": "Harus ada guard kalau akun tidak punya nomor WA",
+      "file": "server.py",
+      "pattern": "/if not phone:/",
+      "min_count": 1
+    },
+    {
+      "id": "honest_failure_message",
+      "description": "Pesan gagal kirim WA harus jujur (bukan selalu 'sedang diproses')",
+      "file": "server.py",
+      "pattern": "Gagal mengirim kode OTP ke WhatsApp",
+      "min_count": 1
+    },
+    {
+      "id": "three_tier_status_logic",
+      "description": "Logika anti-halusinasi 3-tingkat (sukses/gagal pasti/ambigu) harus ada",
+      "file": "server.py",
+      "pattern": "/elif meta_res is None:/",
+      "min_count": 1
+    }
+  ]
+}

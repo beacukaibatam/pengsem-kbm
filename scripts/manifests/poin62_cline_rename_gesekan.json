@@ -1,0 +1,54 @@
+{
+  "task": "Audit Poin 62 - Cline 6d73cd2 (Rename Gesekan->Foto Rangka/Mesin + Fix Lock-Chain)",
+  "root": ".",
+  "mechanical": {
+    "zero_diff_pairs": [["index.html", "Formulir_Pemohon_CEISA_PENGSEM_KBM.html"]],
+    "py_compile": ["server.py", "database.py"],
+    "node_check_inline_scripts": ["index.html"]
+  },
+  "existence_checks": [
+    {
+      "id": "gesekan_fully_removed",
+      "description": "Kata 'gesekan' (case-insensitive) harus 0 sisa di index.html",
+      "file": "index.html",
+      "pattern": "/[Gg]esekan/",
+      "min_count": 0,
+      "max_count": 0
+    },
+    {
+      "id": "new_card_id_exists",
+      "description": "Kartu baru #accCardFotoRangkaMesin harus ada",
+      "file": "index.html",
+      "pattern": "accCardFotoRangkaMesin",
+      "min_count": 1
+    },
+    {
+      "id": "new_label_exists",
+      "description": "Label 'Foto Nomor Rangka' harus ada (ganti 'Hasil Gesekan')",
+      "file": "index.html",
+      "pattern": "/Foto Nomor Rangka/",
+      "min_count": 1
+    },
+    {
+      "id": "acc_config_optional_flag",
+      "description": "ACC_CONFIG harus punya flag optional: true pada minimal 1 item",
+      "file": "index.html",
+      "pattern": "optional: true",
+      "min_count": 1
+    },
+    {
+      "id": "gating_excludes_optional",
+      "description": "renderProgressiveAccordion harus membentuk gatingKeys yang mengecualikan item optional",
+      "file": "index.html",
+      "pattern": "/gatingKeys\\s*=\\s*keys\\.filter/",
+      "min_count": 1
+    },
+    {
+      "id": "smart_resume_skips_optional",
+      "description": "findFirstIncompleteAccordion harus tetap ada (untuk dicek manual apakah skip optional)",
+      "file": "index.html",
+      "pattern": "function findFirstIncompleteAccordion",
+      "min_count": 1
+    }
+  ]
+}

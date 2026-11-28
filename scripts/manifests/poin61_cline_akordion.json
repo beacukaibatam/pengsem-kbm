@@ -1,0 +1,84 @@
+{
+  "task": "Audit Poin 61 - Cline e779b72 (Akordion Vertikal Progresif & Standardisasi Istilah)",
+  "root": ".",
+  "mechanical": {
+    "zero_diff_pairs": [["index.html", "Formulir_Pemohon_CEISA_PENGSEM_KBM.html"]],
+    "py_compile": ["server.py", "database.py"],
+    "node_check_inline_scripts": ["index.html"]
+  },
+  "existence_checks": [
+    {
+      "id": "npwp_pemberi_kuasa_removed",
+      "description": "npwp_pemberi_kuasa harus SUDAH DIHAPUS (0 kemunculan) - eliminasi NPWP ganda",
+      "file": "index.html",
+      "pattern": "npwp_pemberi_kuasa",
+      "min_count": 0,
+      "max_count": 0
+    },
+    {
+      "id": "wakil_nama_field_exists",
+      "description": "Field wakil_nama harus ada di form (ganti npwp_pemberi_kuasa)",
+      "file": "index.html",
+      "pattern": "id=\"wakil_nama\"",
+      "min_count": 1
+    },
+    {
+      "id": "wakil_nik_field_exists",
+      "description": "Field wakil_nik harus ada di form",
+      "file": "index.html",
+      "pattern": "id=\"wakil_nik\"",
+      "min_count": 1
+    },
+    {
+      "id": "server_handles_wakil_fields",
+      "description": "server.py harus menyimpan wakil_nama dari body request",
+      "file": "server.py",
+      "pattern": "wakil_nama",
+      "min_count": 1
+    },
+    {
+      "id": "terminology_pemohon_standardized",
+      "description": "Istilah 'Pemohon (Pemilik Kendaraan / Pemberi Kuasa)' harus dipakai",
+      "file": "index.html",
+      "pattern": "Pemohon (Pemilik Kendaraan / Pemberi Kuasa)",
+      "min_count": 1
+    },
+    {
+      "id": "accordion_engine_exists",
+      "description": "Engine akordion renderProgressiveAccordion() harus ada",
+      "file": "index.html",
+      "pattern": "function renderProgressiveAccordion",
+      "min_count": 1,
+      "max_count": 1
+    },
+    {
+      "id": "accordion_config_exists",
+      "description": "ACC_CONFIG (konfigurasi tahapan akordion) harus ada",
+      "file": "index.html",
+      "pattern": "const ACC_CONFIG",
+      "min_count": 1,
+      "max_count": 1
+    },
+    {
+      "id": "autosave_reactive_hook",
+      "description": "scheduleAutosave() harus dipanggil di titik OCR Surat Kuasa selesai",
+      "file": "index.html",
+      "pattern": "scheduleAutosave();",
+      "min_count": 5
+    },
+    {
+      "id": "simpan_draf_button_count",
+      "description": "Tombol 'Simpan Draf' harus ada di Tahap 1-4 (4 titik)",
+      "file": "index.html",
+      "pattern": "Simpan Draf",
+      "min_count": 4
+    },
+    {
+      "id": "smart_resume_exists",
+      "description": "Fungsi smart resume openFirstIncompleteAccordion harus ada",
+      "file": "index.html",
+      "pattern": "function openFirstIncompleteAccordion",
+      "min_count": 1
+    }
+  ]
+}
