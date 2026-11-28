@@ -77,6 +77,11 @@ Dokumen estafet bersama untuk **Antigravity** dan **Claude** (di Mac Mini maupun
 
 ## 5. Log Estafet Terbaru
 
+- **Tambah Pernyataan Data Pihak Ketiga ke "Rincian Pernyataan & Ketentuan" (Registrasi)** (Cline — 28 Nov 2026 ~23:25 WIB)
+  - Menambahkan butir ke-4 "Persetujuan Penggunaan Data Pihak Ketiga" pada daftar `<ol>` di dalam details "Lihat Rincian Pernyataan & Ketentuan" (form registrasi). Teks lengkap: "Apabila permohonan ini memuat data pihak lain (seperti pemilik kendaraan, penyewa, pemberi sewa, pemberi kuasa, dan/atau anggota keluarga, atau lainnya), saya menyatakan telah mendapat persetujuan dari pihak yang bersangkutan untuk mengunggah dan menggunakan data identitasnya dalam permohonan ini, dan bertanggung jawab penuh atas keabsahan persetujuan tersebut."
+  - Checkbox persetujuan data pihak ketiga terpisah (`#landingRegThirdPartyAgree`) tetap dipertahankan.
+  - **Verifikasi**: `diff -u index.html Formulir_Pemohon_CEISA_PENGSEM_KBM.html` = 0, `node --check` OK, `python3 -m py_compile server.py database.py` OK.
+
 - **Root Cause & Fix: OTP Hapus Akun Gagal Terkirim ke WhatsApp (nomor tidak dinormalisasi)** (Cline — 28 Nov 2026 ~23:15 WIB)
   - **Root cause**: Di `delete-account-request-otp`, nomor WA diambil dari `user.get('phone')` lalu dikirim apa adanya ke `send_whatsapp_otp_template()`. Nomor tersimpan format lokal `081229783836` (awalan 0), sedangkan Meta WA wajib `6281229783836`. Ini satu-satunya titik pengiriman OTP yang tidak menormalisasi (registrasi & reset password sudah normalisasi via `_normalize_phone_id`).
   - **Perbaikan**: `phone = _normalize_phone_id(user.get('phone') or '')` dipakai konsisten untuk seluruh pemakaian `phone` di endpoint (simpan ke `otps[otp_key]['phone']`, `send_whatsapp_otp_template`, `log_chat_message`, `_mask_phone`). Tidak membuat fungsi normalisasi baru — memakai helper `_normalize_phone_id()` yang sudah ada.
