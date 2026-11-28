@@ -3421,18 +3421,10 @@
                                             <li><strong>Pemrosesan Data Kepabeanan:</strong> Dengan mendaftarkan akun ini, saya memahami dan menyetujui bahwa data identitas diri dan kendaraan saya diproses untuk keperluan pelayanan pabean pengeluaran sementara kendaraan bermotor dari KPBPB Batam ke TLDDP serta pengawasan rekonsiliasi pemasukan kembali ke KPBPB Batam.</li>
                                             <li><strong>Kepatuhan Prosedur &amp; Jaminan PPN 11%:</strong> Saya menyatakan bersedia mematuhi dan mengikuti seluruh tahapan prosedur kepabeanan yang berlaku, termasuk menghadiri pemeriksaan fisik kendaraan, menerima penetapan dan menyerahkan jaminan tunai/bank garansi PPN 11%, serta mengurus penerbitan surat jalan Polri.</li>
                                             <li><strong>Pernyataan Kebenaran Data &amp; Tanggung Jawab Hukum:</strong> Saya menyatakan dengan sebenar-benarnya bahwa seluruh data, keterangan, dan berkas fisik yang saya sampaikan adalah benar, sah, dan otentik. Apabila di kemudian hari ditemukan ketidaksesuaian atau pemalsuan data, saya bersedia mempertanggungjawabkannya dan dikenakan sanksi sesuai ketentuan peraturan perundang-undangan.</li>
-                                            <li><strong>Persetujuan Penggunaan Data Pihak Ketiga:</strong> Apabila permohonan ini memuat data pihak lain (mis. pemilik kendaraan, penyewa, pemberi kuasa, atau anggota keluarga), berlaku pernyataan persetujuan tersendiri yang wajib dicentang pada kotak di bawah formulir ini.</li>
+                                            <li><strong>Persetujuan Penggunaan Data Pihak Ketiga:</strong> Apabila permohonan ini memuat data pihak lain (seperti pemilik kendaraan, penyewa, pemberi sewa, pemberi kuasa, dan/atau anggota keluarga), saya menyatakan telah mendapat persetujuan dari pihak yang bersangkutan untuk mengunggah dan menggunakan data identitasnya dalam permohonan ini, dan bertanggung jawab penuh atas keabsahan persetujuan tersebut.</li>
                                         </ol>
                                     </div>
                                 </details>
-                            </div>
-
-                            <!-- ================= PERSETUJUAN PENGGUNAAN DATA PIHAK KETIGA ================= -->
-                            <div class="landing-thirdparty-box" style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:10px 12px; margin-bottom:14px; box-shadow:0 1px 3px rgba(16,185,129,0.05);">
-                                <label class="landing-thirdparty-check-label" style="display:flex; align-items:flex-start; gap:8px; font-size:0.71rem; font-weight:600; color:#14532D; cursor:pointer; line-height:1.4;">
-                                    <input type="checkbox" id="landingRegThirdPartyAgree" onchange="updateLandingRegButtonState()" style="width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:#059669; cursor:pointer;">
-                                    <span>Apabila permohonan ini memuat data pihak lain (seperti pemilik kendaraan, penyewa, pemberi sewa, pemberi kuasa, dan/atau anggota keluarga, atau lainnya), saya menyatakan telah mendapat persetujuan dari pihak yang bersangkutan untuk mengunggah dan menggunakan data identitasnya dalam permohonan ini, dan bertanggung jawab penuh atas keabsahan persetujuan tersebut.</span>
-                                </label>
                             </div>
 
                             <button type="button" class="landing-btn-submit" id="btnLandingRegSubmit" onclick="submitLandingRegisterOtp()" disabled style="background:#059669; box-shadow:0 4px 12px rgba(5,150,105,0.25); opacity:0.5; cursor:not-allowed;">
@@ -15298,10 +15290,9 @@
 
         function updateLandingRegButtonState() {
             const termsAgree = document.getElementById('landingRegTermsAgree')?.checked;
-            const thirdPartyAgree = document.getElementById('landingRegThirdPartyAgree')?.checked;
             const btn = document.getElementById('btnLandingRegSubmit');
             if (!btn) return;
-            const isReady = termsAgree && thirdPartyAgree;
+            const isReady = !!termsAgree;
             btn.disabled = !isReady;
             btn.style.opacity = isReady ? '1' : '0.5';
             btn.style.cursor = isReady ? 'pointer' : 'not-allowed';
@@ -15314,7 +15305,6 @@
             const password = (document.getElementById('landingRegPassword')?.value || '').trim();
             const confirmPassword = (document.getElementById('landingRegConfirmPassword')?.value || '').trim();
             const termsAgree = document.getElementById('landingRegTermsAgree')?.checked;
-            const thirdPartyAgree = document.getElementById('landingRegThirdPartyAgree')?.checked;
             const btn = document.getElementById('btnLandingRegSubmit');
             const nik = '';
 
@@ -15361,12 +15351,6 @@
             if (!termsAgree) {
                 showLandingAlert('Anda wajib mencentang persetujuan Syarat, Ketentuan, dan Pernyataan Integritas Layanan sebelum melanjutkan registrasi.', 'error');
                 document.getElementById('landingRegTermsAgree')?.focus();
-                return;
-            }
-
-            if (!thirdPartyAgree) {
-                showLandingAlert('Anda wajib mencentang pernyataan persetujuan penggunaan data pihak ketiga sebelum melanjutkan registrasi.', 'error');
-                document.getElementById('landingRegThirdPartyAgree')?.focus();
                 return;
             }
 
